@@ -1,0 +1,663 @@
+Rusted Hatchet|2
+Jade Hatchet|6
+Boarding Axe|11
+Cleaver|16
+Broad Axe|21
+Arming Axe|25
+Decorative Axe|29
+Spectral Axe|33
+Etched Hatchet|35
+Jasper Axe|36
+Tomahawk|39
+Wrist Chopper|42
+War Axe|45
+Chest Splitter|48
+Ceremonial Axe|51
+Wraith Axe|54
+Engraved Hatchet|56
+Karui Axe|57
+Siege Axe|59
+Reaver Axe|61
+Butcher Axe|63
+Vaal Hatchet|65
+Royal Axe|67
+Infernal Axe|69
+Runic Hatchet|71
+Stone Axe|4
+Jade Chopper|9
+Woodsplitter|13
+Poleaxe|18
+Double Axe|23
+Gilded Axe|28
+Shadow Axe|33
+Dagger Axe|36
+Jasper Chopper|37
+Timber Axe|41
+Headsman Axe|45
+Labrys|49
+Noble Axe|52
+Abyssal Axe|55
+Karui Chopper|58
+Talon Axe|60
+Sundering Axe|60
+Ezomyte Axe|62
+Vaal Axe|64
+Despot Axe|66
+Void Axe|68
+Fleshripper|70
+Crude Bow|1
+Short Bow|5
+Long Bow|10
+Composite Bow|15
+Recurve Bow|20
+Bone Bow|24
+Royal Bow|28
+Death Bow|32
+Grove Bow|35
+Reflex Bow|36
+Decurve Bow|38
+Compound Bow|41
+Sniper Bow|44
+Ivory Bow|47
+Highborn Bow|50
+Decimation Bow|53
+Thicket Bow|56
+Steelwood Bow|57
+Citadel Bow|58
+Ranger Bow|60
+Assassin Bow|62
+Spine Bow|64
+Imperial Bow|66
+Harbinger Bow|68
+Maraketh Bow|71
+Nailed Fist|3
+Sharktooth Claw|7
+Awl|12
+Cat's Paw|17
+Blinder|22
+Timeworn Claw|26
+Sparkling Claw|30
+Fright Claw|34
+Double Claw|36
+Thresher Claw|37
+Gouger|40
+Tiger's Paw|43
+Gut Ripper|46
+Prehistoric Claw|49
+Noble Claw|52
+Eagle Claw|55
+Twin Claw|57
+Great White Claw|58
+Throat Stabber|60
+Hellion's Paw|62
+Eye Gouger|64
+Vaal Claw|66
+Imperial Claw|68
+Terror Claw|70
+Gemini Claw|72
+Glass Shank|1
+Skinning Knife|5
+Carving Knife|10
+Stiletto|15
+Boot Knife|20
+Copper Kris|24
+Skean|28
+Imp Dagger|32
+Flaying Knife|35
+Prong Dagger|36
+Butcher Knife|38
+Poignard|41
+Boot Blade|44
+Golden Kris|47
+Royal Skean|50
+Fiend Dagger|53
+Trisula|55
+Gutting Knife|56
+Slaughter Knife|58
+Ambusher|60
+Ezomyte Dagger|62
+Platinum Kris|64
+Imperial Skean|66
+Demon Dagger|68
+Sai|70
+Driftwood Club|1
+Tribal Club|5
+Spiked Club|10
+Stone Hammer|15
+War Hammer|20
+Bladed Mace|24
+Ceremonial Mace|28
+Dream Mace|32
+Wyrm Mace|34
+Petrified Club|35
+Barbed Club|38
+Rock Breaker|41
+Battle Hammer|44
+Flanged Mace|47
+Ornate Mace|50
+Phantom Mace|53
+Dragon Mace|55
+Ancestral Club|56
+Tenderizer|58
+Gavel|60
+Legion Hammer|62
+Pernarch|64
+Auric Mace|66
+Nightmare Mace|68
+Behemoth Mace|70
+Driftwood Sceptre|1
+Darkwood Sceptre|5
+Bronze Sceptre|10
+Quartz Sceptre|15
+Iron Sceptre|20
+Ochre Sceptre|24
+Ritual Sceptre|28
+Shadow Sceptre|32
+Grinning Fetish|35
+Horned Sceptre|36
+Sekhem|38
+Crystal Sceptre|41
+Lead Sceptre|44
+Blood Sceptre|47
+Royal Sceptre|50
+Abyssal Sceptre|53
+Stag Sceptre|55
+Karui Sceptre|56
+Tyrant's Sekhem|58
+Opal Sceptre|60
+Platinum Sceptre|62
+Vaal Sceptre|64
+Carnal Sceptre|66
+Void Sceptre|68
+Sambar Sceptre|70
+Driftwood Maul|3
+Tribal Maul|8
+Mallet|12
+Sledgehammer|17
+Jagged Maul|22
+Brass Maul|27
+Fright Maul|32
+Morning Star|34
+Totemic Maul|36
+Great Mallet|40
+Steelhead|44
+Spiny Maul|48
+Plated Maul|51
+Dread Maul|54
+Solar Maul|56
+Karui Maul|57
+Colossus Mallet|59
+Piledriver|61
+Meatgrinder|63
+Imperial Maul|65
+Terror Maul|67
+Coronal Maul|69
+Gnarled Branch|4
+Primitive Staff|9
+Long Staff|13
+Iron Staff|18
+Coiled Staff|23
+Royal Staff|28
+Vile Staff|33
+Crescent Staff|36
+Woodful Staff|37
+Quarterstaff|41
+Military Staff|45
+Serpentine Staff|49
+Highborn Staff|52
+Foul Staff|55
+Moon Staff|57
+Primordial Staff|58
+Lathi|60
+Ezomyte Staff|62
+Maelström Staff|64
+Imperial Staff|66
+Judgement Staff|68
+Eclipse Staff|70
+Rusted Sword|1
+Copper Sword|5
+Sabre|10
+Broad Sword|15
+War Sword|20
+Ancient Sword|24
+Elegant Sword|28
+Dusk Blade|32
+Hook Sword|34
+Variscite Blade|35
+Cutlass|38
+Baselard|41
+Battle Sword|44
+Elder Sword|47
+Graceful Sword|50
+Twilight Blade|53
+Grappler|55
+Gemstone Sword|56
+Corsair Sword|58
+Gladius|60
+Legion Sword|62
+Vaal Blade|64
+Eternal Sword|66
+Midnight Blade|68
+Tiger Hook|70
+Rusted Spike|3
+Whalebone Rapier|7
+Battered Foil|12
+Basket Rapier|17
+Jagged Foil|22
+Antique Rapier|26
+Elegant Foil|30
+Thorn Rapier|34
+Smallsword|36
+Wyrmbone Rapier|37
+Burnished Foil|40
+Estoc|43
+Serrated Foil|46
+Primeval Rapier|49
+Fancy Foil|52
+Apex Rapier|55
+Courtesan Sword|57
+Dragonbone Rapier|58
+Tempered Foil|60
+Pecoraro|62
+Spiraled Foil|64
+Vaal Rapier|66
+Jewelled Foil|68
+Harpy Rapier|70
+Dragoon Sword|72
+Corroded Blade|3
+Longsword|8
+Bastard Sword|12
+Two-Handed Sword|17
+Etched Greatsword|22
+Ornate Sword|27
+Spectral Sword|32
+Curved Blade|35
+Butcher Sword|36
+Footman Sword|40
+Highland Blade|44
+Engraved Greatsword|48
+Tiger Sword|51
+Wraith Sword|54
+Headman's Sword|57
+Reaver Sword|59
+Ezomyte Blade|61
+Vaal Greatsword|63
+Lion Sword|65
+Infernal Sword|67
+Exquisite Blade|70
+Driftwood Wand|1
+Goat's Horn|6
+Carved Wand|12
+Quartz Wand|18
+Spiraled Wand|24
+Sage Wand|30
+Pagan Wand|34
+Faun's Horn|35
+Engraved Wand|40
+Crystal Wand|45
+Serpent Wand|49
+Omen Wand|53
+Heathen Wand|55
+Demon's Horn|56
+Imbued Wand|59
+Opal Wand|62
+Tornado Wand|65
+Prophecy Wand|68
+Profane Wand|70
+Plate Vest|1
+Chestplate|6
+Copper Plate|17
+War Plate|21
+Full Plate|28
+Arena Plate|32
+Lordly Plate|35
+Bronze Plate|37
+Battle Plate|41
+Sun Plate|45
+Colosseum Plate|49
+Majestic Plate|53
+Golden Plate|56
+Crusader Plate|59
+Astral Plate|62
+Gladiator Plate|65
+Glorious Plate|68
+Shabby Jerkin|2
+Strapped Leather|9
+Buckskin Tunic|17
+Wild Leather|25
+Full Leather|28
+Sun Leather|32
+Thief's Garb|35
+Eelskin Tunic|37
+Frontier Leather|41
+Glorious Leather|45
+Coronal Leather|49
+Cutthroat's Garb|53
+Sharkskin Tunic|56
+Destiny Leather|59
+Exquisite Leather|62
+Zodiac Leather|65
+Assassin's Garb|68
+Simple Robe|3
+Silken Vest|11
+Scholar's Robe|18
+Silken Garb|25
+Mage's Vestment|28
+Silk Robe|32
+Cabalist Regalia|35
+Sage's Robe|37
+Silken Wrap|41
+Conjurer's Vestment|45
+Spidersilk Robe|49
+Destroyer Regalia|53
+Savant's Robe|56
+Necromancer Silks|59
+Occultist's Vestment|62
+Widowsilk Robe|65
+Vaal Regalia|68
+Scale Vest|4
+Light Brigandine|8
+Scale Doublet|17
+Infantry Brigandine|21
+Full Scale Armour|28
+Soldier's Brigandine|32
+Field Lamellar|35
+Wyrmscale Doublet|38
+Hussar Brigandine|42
+Full Wyrmscale|46
+Commander's Brigandine|50
+Battle Lamellar|54
+Dragonscale Doublet|57
+Desert Brigandine|60
+Full Dragonscale|63
+General's Brigandine|66
+Triumphant Lamellar|69
+Chainmail Vest|4
+Chainmail Tunic|8
+Ringmail Coat|17
+Chainmail Doublet|21
+Full Ringmail|28
+Full Chainmail|32
+Holy Chainmail|35
+Latticed Ringmail|39
+Crusader Chainmail|43
+Ornate Ringmail|47
+Chain Hauberk|51
+Devout Chainmail|55
+Loricated Ringmail|58
+Conquest Chainmail|61
+Elegant Ringmail|64
+Saint's Hauberk|67
+Saintly Chainmail|70
+Padded Vest|4
+Oiled Vest|9
+Padded Jacket|18
+Oiled Coat|22
+Scarlet Raiment|28
+Waxed Garb|32
+Bone Armour|35
+Quilted Jacket|40
+Sleek Coat|44
+Crimson Raiment|48
+Lacquered Garb|52
+Crypt Armour|56
+Sentinel Jacket|59
+Varnished Coat|62
+Blood Raiment|65
+Sadist Garb|68
+Carnal Armour|71
+Sacrificial Garb|72
+Iron Greaves|1
+Steel Greaves|9
+Plated Greaves|23
+Reinforced Greaves|33
+Antique Greaves|37
+Ancient Greaves|46
+Goliath Greaves|54
+Vaal Greaves|62
+Titan Greaves|68
+Rawhide Boots|3
+Goathide Boots|12
+Deerskin Boots|22
+Nubuck Boots|34
+Eelskin Boots|39
+Sharkskin Boots|44
+Shagreen Boots|55
+Stealth Boots|62
+Slink Boots|69
+Wool Shoes|3
+Velvet Slippers|9
+Silk Slippers|22
+Scholar Boots|32
+Satin Slippers|38
+Samite Slippers|44
+Conjurer Boots|53
+Arcanist Slippers|61
+Sorcerer Boots|67
+Leatherscale Boots|6
+Ironscale Boots|18
+Bronzescale Boots|30
+Steelscale Boots|36
+Serpentscale Boots|42
+Wyrmscale Boots|51
+Hydrascale Boots|59
+Dragonscale Boots|65
+Chain Boots|5
+Ringmail Boots|13
+Mesh Boots|28
+Riveted Boots|36
+Zealot Boots|40
+Soldier's Boots|49
+Legion Boots|58
+Crusader Boots|64
+Wrapped Boots|6
+Strapped Boots|16
+Clasped Boots|27
+Shackled Boots|34
+Trapper Boots|41
+Ambush Boots|47
+Carnal Boots|55
+Assassin's Boots|63
+Murder Boots|69
+Iron Gauntlets|1
+Plated Gauntlets|11
+Bronze Gauntlets|23
+Steel Gauntlets|35
+Antique Gauntlets|39
+Ancient Gauntlets|47
+Goliath Gauntlets|53
+Vaal Gauntlets|63
+Titan Gauntlets|69
+Rawhide Gloves|3
+Goathide Gloves|9
+Deerskin Gloves|21
+Nubuck Gloves|33
+Eelskin Gloves|38
+Sharkskin Gloves|45
+Shagreen Gloves|54
+Stealth Gloves|62
+Slink Gloves|70
+Wool Gloves|3
+Velvet Gloves|12
+Silk Gloves|25
+Embroidered Gloves|36
+Satin Gloves|41
+Samite Gloves|47
+Conjurer Gloves|55
+Arcanist Gloves|60
+Sorcerer Gloves|69
+Fishscale Gauntlets|4
+Ironscale Gauntlets|15
+Bronzescale Gauntlets|27
+Steelscale Gauntlets|36
+Serpentscale Gauntlets|43
+Wyrmscale Gauntlets|49
+Hydrascale Gauntlets|59
+Dragonscale Gauntlets|67
+Chain Gloves|7
+Ringmail Gloves|19
+Mesh Gloves|32
+Riveted Gloves|37
+Zealot Gloves|43
+Soldier Gloves|51
+Legion Gloves|57
+Crusader Gloves|66
+Wrapped Mitts|5
+Strapped Mitts|16
+Clasped Mitts|31
+Trapper Mitts|36
+Ambush Mitts|45
+Carnal Mitts|50
+Assassin's Mitts|58
+Murder Mitts|67
+Iron Hat|1
+Cone Helmet|7
+Barbute Helmet|18
+Close Helmet|26
+Gladiator Helmet|35
+Reaver Helmet|40
+Siege Helmet|48
+Samite Helmet|55
+Ezomyte Burgonet|60
+Royal Burgonet|65
+Eternal Burgonet|69
+Leather Cap|3
+Tricorne|10
+Leather Hood|20
+Wolf Pelt|30
+Hunter Hood|41
+Noble Tricorne|47
+Ursine Pelt|55
+Silken Hood|60
+Sinner Tricorne|64
+Lion Pelt|70
+Vine Circlet|3
+Iron Circlet|8
+Torture Cage|17
+Tribal Circlet|26
+Bone Circlet|34
+Lunaris Circlet|39
+Steel Circlet|48
+Necromancer Circlet|54
+Solaris Circlet|59
+Mind Cage|65
+Hubris Circlet|69
+Battered Helm|4
+Sallet|13
+Visored Sallet|23
+Gilded Sallet|33
+Secutor Helm|36
+Fencer Helm|43
+Lacquered Helmet|51
+Fluted Bascinet|58
+Pig Faced Bascinet|63
+Nightmare Bascinet|67
+Rusted Coif|5
+Soldier Helmet|12
+Great Helmet|22
+Crusader Helmet|31
+Aventail Helmet|37
+Zealot Helmet|44
+Great Crown|53
+Magistrate Crown|58
+Prophet Crown|63
+Praetor Crown|68
+Scare Mask|4
+Plague Mask|10
+Iron Mask|17
+Festival Mask|28
+Golden Mask|35
+Raven Mask|38
+Callous Mask|45
+Regicide Mask|52
+Harlequin Mask|57
+Vaal Mask|62
+Deicide Mask|67
+Splintered Tower Shield|1
+Corroded Tower Shield|5
+Rawhide Tower Shield|11
+Cedar Tower Shield|17
+Copper Tower Shield|24
+Reinforced Tower Shield|30
+Painted Tower Shield|35
+Buckskin Tower Shield|39
+Mahogany Tower Shield|43
+Bronze Tower Shield|47
+Girded Tower Shield|51
+Crested Tower Shield|55
+Shagreen Tower Shield|58
+Ebony Tower Shield|61
+Ezomyte Tower Shield|64
+Colossal Tower Shield|67
+Pinnacle Tower Shield|70
+Goathide Buckler|2
+Pine Buckler|8
+Painted Buckler|16
+Hammered Buckler|23
+War Buckler|29
+Gilded Buckler|34
+Oak Buckler|38
+Enameled Buckler|42
+Corrugated Buckler|46
+Battle Buckler|50
+Golden Buckler|54
+Ironwood Buckler|57
+Lacquered Buckler|60
+Vaal Buckler|63
+Crusader Buckler|66
+Imperial Buckler|69
+Twig Spirit Shield|3
+Yew Spirit Shield|9
+Bone Spirit Shield|15
+Tarnished Spirit Shield|23
+Jingling Spirit Shield|28
+Brass Spirit Shield|33
+Walnut Spirit Shield|37
+Ivory Spirit Shield|41
+Ancient Spirit Shield|45
+Chiming Spirit Shield|49
+Thorium Spirit Shield|53
+Lacewood Spirit Shield|56
+Fossilised Spirit Shield|59
+Vaal Spirit Shield|62
+Harmonic Spirit Shield|65
+Titanium Spirit Shield|68
+Rotted Round Shield|5
+Fir Round Shield|12
+Studded Round Shield|20
+Scarlet Round Shield|27
+Splendid Round Shield|33
+Maple Round Shield|39
+Spiked Round Shield|45
+Crimson Round Shield|49
+Baroque Round Shield|54
+Teak Round Shield|58
+Spiny Round Shield|62
+Cardinal Round Shield|66
+Elegant Round Shield|70
+Plank Kite Shield|7
+Linden Kite Shield|13
+Reinforced Kite Shield|20
+Layered Kite Shield|27
+Ceremonial Kite Shield|34
+Etched Shield|40
+Steel Kite Shield|46
+Laminated Kite Shield|50
+Angelic Kite Shield|55
+Branded Kite Shield|59
+Champion Kite Shield|62
+Mosaic Kite Shield|65
+Archon Kite Shield|68
+Spiked Bundle|5
+Driftwood Spiked Shield|12
+Alloyed Spiked Shield|20
+Burnished Spiked Shield|27
+Ornate Spiked Shield|33
+Redwood Spiked Shield|39
+Compound Spiked Shield|45
+Polished Spiked Shield|49
+Sovereign Spiked Shield|54
+Alder Spiked Shield|58
+Ezomyte Spiked Shield|62
+Mirrored Spiked Shield|66
+Supreme Spiked Shield|70

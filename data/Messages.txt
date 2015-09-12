@@ -1,0 +1,4 @@
+Msg := Object()
+
+Msg["Unhandled"] := "Please report the following item to the script's forum thread.`nThanks so much for helping out!`n`n(Note: items with crafted or exalted mods are currently  unsupported)"
+Msg["DataDirNotFound"] := "Error 37`n`n'data' directory not found at '" . A_ScriptDir . "'.`n`nPlease make sure the data directory is present at the same location where you are executing the script from."

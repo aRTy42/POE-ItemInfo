@@ -1,0 +1,32 @@
+; Data from http://www.poepro.net/currency/#more-259, http://exilestats.com/ex, ingame trade chat
+; Preloaded with standard league rates.
+; Adjust these to reflect current rates in your league.
+; The base currency item is Orb of Chaos.
+; The format is <exact name to match>|<number of source orbs>:<number of chaos orbs>
+; Comments with semicolon. Blank lines will be ignored.
+; Last updated (manually): 2015-03-19
+Scroll of Wisdom|250:1
+Portal Scroll|200:1
+Armourer's Scrap|40:1
+Orb of Transmutation|40:1
+Orb of Augmentation|30:1
+Blacksmith's Whetstone|30:1
+Chromatic Orb|14.25:1
+Orb of Alteration|12:1
+Jeweller's Orb|7.25:1
+Orb of Chance|7:1
+Cartographer's Chisel|3:1
+Glassblower's Bauble|10:1
+Orb of Fusing|2:1
+Orb of Alchemy|2.5:1
+Orb of Scouring|2:1
+Blessed Orb|1.3:1
+Chaos Orb|1:1
+Vaal Orb|1:1
+Orb of Regret|1:1.5
+Regal Orb|1:1.75
+Gemcutter's Prism|1:2.75
+Divine Orb|1:9
+Exalted Orb|1:39
+Eternal Orb|1:91
+Mirror of Kalandra|1:2500

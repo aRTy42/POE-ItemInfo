@@ -1,0 +1,89 @@
+; One exact item name per line.
+; Line comments with semicolon. Blank lines will be ignored.
+Abyssus
+Aegis Aurora
+Alpha's Howl
+Andvarius
+Atziri's Acuity
+Atziri's Disfavour
+Atziri's Mirror
+Atziri's Promise
+Auxium
+Belly of the Beast
+Berek's Respite
+Bino's Kitchen Knife
+Blood of Corruption
+Bloodseeker
+Carcass Jack
+Carnage Heart
+Crown of Eyes
+Daresso's Defiance
+Death Rush
+Death's Hand
+Death's Oath
+Divination Distillate
+Doedre's Damning
+Doryani's Invitation
+Dream Fragments
+Drillneck
+Essentia Sanguis
+Eye of Chayula
+Gifts from Above
+Headhunter
+Heartbreaker
+Kaom's Heart
+Kaom's Primacy
+Kongor's Undying Rage
+Le Heup of All
+Lion's Roar
+Lioneye's Glare
+Maligaro's Virtuosity
+Marylene's Fallacy
+Meginord's Girdle
+Midnight Bargain
+Ming's Heart
+Mon'tregul's Grasp
+Null's Inclination
+Olmec's Sanctum
+Oro's Sacrifice
+Prism Guardian
+Rat's Nest
+Rathpith Globe
+Reaper's Pursuit
+Rearguard
+Rime Gaze
+Romira's Banquet
+Saffell's Frame
+Shavronne's Revelation
+Shavronne's Wrappings
+Skullhead
+Snakebite
+Solaris Lorica
+Song of the Sirens
+Soul Taker
+Steppan Eard
+Tabula Rasa
+Taryn's Shiver
+Taste of Hate
+The Anvil
+The Bringer of Rain
+The Covenant
+The Goddess Bound
+The Goddess Scorned
+The Supreme Truth
+The Taming
+The Vertex
+The Whispering Ice
+Thief's Torment
+Thunderfist
+Vaults of Atziri
+Ventor's Gamble
+Vis Mortis
+Void Battery
+Voidbringer
+Voideye
+Voll's Devotion
+Voltaxic Rift
+Wheel of the Stormsail
+Windscream
+Wings of Entropy

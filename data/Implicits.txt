@@ -1,0 +1,141 @@
+; jewelry data from http://www.pathofexile.com/item-data/jewelry/order-by/implicit_mods/order/asc
+; quiver data from http://pathofexile.gamepedia.com/Quivers
+
+; Amulets
+Paua Amulet|20-30
+Coral Amulet|2-4
+Jade Amulet|20-30
+Amber Amulet|20-30
+Lapis Amulet|20-30
+Gold Amulet|12-20
+Turquoise Amulet|16-24
+Agate Amulet|16-24
+Citrine Amulet|16-24
+Onyx Amulet|10-16
+
+; Belts
+Chain Belt|9-20
+Rustic Sash|12-24
+Heavy Belt|25-35
+Leather Belt|25-40
+Golden Obi|20-30
+Cloth Belt|15-25
+Studded Belt|20-30
+
+; Rings
+Coral Ring|20-30
+Paua Ring|20-25
+Gold Ring|6-15
+Topaz Ring|20-30
+Ruby Ring|20-30
+Sapphire Ring|20-30
+Golden Hoop|8-12
+Two-Stone Ring|12-16
+Two-Stone Ring|12-16
+Two-Stone Ring|12-16
+Moonstone Ring|15-25
+Diamond Ring|20-30
+Prismatic Ring|8-10
+Amethyst Ring|9-13
+
+; Quivers
+Two-Point Arrow Quiver|20-30
+Sharktooth Arrow Quiver|3-4
+Blunt Arrow Quiver|25-35
+Spike-Point Arrow Quiver|20-30
+Light Quiver|30-40
+
+; Bows
+Recurve Bow|6-12
+Death Bow|30-50
+Sniper Bow|6-12
+Decimation Bow|30-50
+Maraketh Bow|6-12
+Harbinger Bow|30-50
+
+; Wands
+Driftwood Wand|8-12
+Goat's Horn|9-12
+Carved Wand|9-13
+Quartz Wand|11-15
+Spiraled Wand|10-14
+Sage Wand|11-14
+Faun's Horn|12-15
+Engraved Wand|12-16
+Crystal Wand|14-18
+Serpent Wand|13-17
+Omen Wand|14-17
+Demon's Horn|15-18
+Imbued Wand|15-19
+Opal Wand|17-20
+Tornado Wand|16-19
+Prophecy Wand|16-20
+
+; One Handed Maces
+Driftwood Club|20
+Tribal Club|20
+Spiked Club|20
+Stone Hammer|20
+War Hammer|20
+Bladed Mace|20
+Ceremonial Mace|40
+Dream Mace|20
+Petrified Club|20
+Barbed Club|20
+Rock Breaker|20
+Battle Hammer|20
+Flanged Mace|20
+Ornate Mace|20
+Phantom Mace|20
+Ancestral Club|20
+Tenderizer|20
+Gavel|40
+Legion Hammer|20
+Pernarch|20
+Auric Mace|40
+Nightmare Mace|20
+
+; Scepters
+Driftwood Sceptre|10
+Darkwood Sceptre|10
+Bronze Sceptre|10
+Quartz Sceptre|20
+Iron Sceptre|10
+Ochre Sceptre|10
+Ritual Sceptre|10
+Shadow Sceptre|15
+Grinning Fetish|10
+Sekhem|10
+Crystal Sceptre|20
+Lead Sceptre|10
+Blood Sceptre|10
+Royal Sceptre|10
+Abyssal Sceptre|15
+Karui Sceptre|10
+Tyrant's Sekhem|10
+Opal Sceptre|20
+Platinum Sceptre|10
+Carnal Sceptre|10
+Vaal Sceptre|10
+Void Sceptre|15
+
+; Two Handed Maces
+Driftwood Maul|20
+Tribal Maul|20
+Mallet|20
+Sledgehammer|40
+Spiked Maul|20
+Brass Maul|20
+Fright Maul|20
+Totemic Maul|20
+Great Mallet|20
+Steelhead|40
+Spiny Maul|20
+Plated Maul|20
+Dread Maul|20
+Karui Maul|20
+Colossus Mallet|20
+Piledriver|40
+Meatgrinder|20
+Imperial Maul|20
+Terror Maul|20
