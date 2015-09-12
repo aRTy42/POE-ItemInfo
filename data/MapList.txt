@@ -1,7 +1,7 @@
 mapList := Object()
 uniqueMapList := Object()
 
-matchList := ["Crypt Map","Pit Map","Desert Map","Dried Lake Map","Dunes Map","Dungeon Map","Grotto Map","Orchard Map","Overgrown Ruin Map","Tropical Island Map","Arcade Map","Arsenal Map","Cemetery Map","Channel Map","Mountain Ledge Map","Sewer Map","Thicket Map","Wharf Map","Ghetto Map","Mud Geyser Map","Museum Map","Quarry Map","Reef Map","Spider Lair Map","Springs Map","Vaal Pyramid Map","Arena Map","Catacomb Map","Overgrown Shrine Map","Promenade Map","Phantasmagoria Map","Shore Map","Spider Forest Map","Tunnel Map","Bog Map","Coves Map","Graveyard Map","Pier Map","Underground Sea Map","Villa Map","Arachnid Nest Map","Colonnade Map","Dry Woods Map","Strand Map","Temple Map","Jungle Valley Map","Labyrinth Map","Mine Map","Torture Chamber Map","Waste Pool Map","Canyon Map","Cells Map","Arid Lake Map","Malformation Map","Volcano Map","Dark Forest Map","Dry Peninsula","Gorge Map","Maze Map","Residence Map","Underground River Map","Bazaar Map","Necropolis Map","Plateau Map","Academy Map","Crematorium Map","Precinct Map","Shipyard Map","Shrine Map","Courtyard Map","Palace Map","Village Ruin Map","Excavation Map","Wasteland Map","Waterways Map","Abyss Map","Colosseum Map","Core Map","Terrace Map"]
+matchList := ["Crypt Map","Pit Map","Desert Map","Dried Lake Map","Dunes Map","Dungeon Map","Grotto Map","Orchard Map","Overgrown Ruin Map","Tropical Island Map","Arcade Map","Arsenal Map","Cemetery Map","Channel Map","Mountain Ledge Map","Sewer Map","Thicket Map","Wharf Map","Ghetto Map","Mud Geyser Map","Museum Map","Quarry Map","Reef Map","Spider Lair Map","Springs Map","Vaal Pyramid Map","Arena Map","Catacomb Map","Overgrown Shrine Map","Promenade Map","Phantasmagoria Map","Shore Map","Spider Forest Map","Tunnel Map","Bog Map","Coves Map","Graveyard Map","Pier Map","Underground Sea Map","Villa Map","Arachnid Nest Map","Colonnade Map","Dry Woods Map","Strand Map","Temple Map","Jungle Valley Map","Labyrinth Map","Mine Map","Torture Chamber Map","Waste Pool Map","Canyon Map","Cells Map","Arid Lake Map","Malformation Map","Volcano Map","Dark Forest Map","Dry Peninsula","Gorge Map","Maze Map","Residence Map","Underground River Map","Bazaar Map","Necropolis Map","Plateau Map","Academy Map","Crematorium Map","Precinct Map","Shipyard Map","Shrine Map","Courtyard Map","Palace Map","Village Ruin Map","Excavation Map","Wasteland Map","Waterways Map","Abyss Map","Colosseum Map","Core Map","Terrace Map","Conservatory Map"]
 
 
 ;----------------------Normal Map List--------------------
@@ -165,6 +165,8 @@ mapList["Colosseum Map"] := "`nThe first area is based on Daresso's Dream, while
 mapList["Core Map"] := "`n4 Bosses: Prodigy of Pain. Prodigy of Hexes, Prodigy of Darkness, Eater of Souls."
 
 mapList["Terrace Map"] := "`nThis map is based on the The Hedge Maze zone in Act 3.`nMap Type: Outdoors`nBoss: Sallazzang"
+
+mapList["Conservatory Map"] := "`nThis map is based on the Ancient Pyramid zone in Act 2.`nBoss: Shadow of the Vaal"
 ;----------------------Unique Map List--------------------
 
 uniqueMapList["Unknown Map"] := "`nYou've found a new unique map, please report it!"
