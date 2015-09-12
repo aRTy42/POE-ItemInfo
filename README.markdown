@@ -66,6 +66,7 @@ Attribution
 
 Created by Nipper4369 and original authors.  
 Created by hazydoc / IGN: Sadou
+
 Updated/Curated by Slinkston and Bahnzo
 
 Supersedes the POE_iLVL_DPS-Revealer script.
