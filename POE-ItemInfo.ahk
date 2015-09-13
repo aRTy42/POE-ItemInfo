@@ -2577,7 +2577,7 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        IfInString, A_LoopField, Life gained for each Enemy hit by your Attacks
+        IfInString, A_LoopField, Life gained for each Enemy hit by Attacks
         {
             NumSuffixes += 1
             ValueRange := LookupAffixData("data\LifeOnHit.txt", ItemLevel, CurrValue, "", CurrTier)
