@@ -2398,16 +2398,16 @@ ParseAffixes(ItemDataAffixes, Item)
 
         IfInString, A_LoopField, increased Attack Speed
         {
-			; Slinkston edit
+	    ; Slinkston edit
             NumSuffixes += 1
             If (ItemSubType == "Mace" or  ItemSubType == "Axe" or ItemSubType == "Claw" or ItemSubType == "Sword" or ItemSubType == "Staff" or ItemSubType == "Dagger" or ItemSubType == "Sceptre") ; ItemBaseType is Global!
             {
                 ValueRange := LookupAffixData("data\AttackSpeed_Weapons.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-				Else If (ItemSubType == "Wand" or ItemSubType == "Bow")
-				{
-					ValueRange := LookupAffixData("data\AttackSpeed_BowsAndWands.txt", ItemLevel, CurrValue, "", CurrTier)
-				}
+		Else If (ItemSubType == "Wand" or ItemSubType == "Bow")
+		{
+		     ValueRange := LookupAffixData("data\AttackSpeed_BowsAndWands.txt", ItemLevel, CurrValue, "", CurrTier)
+		}
             Else
             {
                 ValueRange := LookupAffixData("data\AttackSpeed_ArmourAndItems.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -2454,7 +2454,7 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, increased Cast Speed
         {
-			; Slinkston edit
+	    ; Slinkston edit
             If (BaseType = Weapon)
             {
                 ValueRange := LookupAffixData("data\CastSpeedWeapon.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -2463,7 +2463,7 @@ ParseAffixes(ItemDataAffixes, Item)
             {
                 ValueRange := LookupAffixData("data\CastSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-			NumSuffixes += 1
+	    NumSuffixes += 1
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
@@ -2477,7 +2477,7 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, Critical Strike Chance
         {
-			; Slinkston edit
+	    ; Slinkston edit
             If (ItemSubType == "Quiver" or ItemSubType == "Amulet")
             {
                 ValueRange := LookupAffixData("data\CritChance_AmuletsAndQuivers.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -2492,7 +2492,7 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, Critical Strike Multiplier
         {
-			; Slinkston edit
+	    ; Slinkston edit
             If (ItemSubType == "Quiver" or ItemSubType == "Amulet")
             {
                 ValueRange := LookupAffixData("data\CritMultiplier_AmuletsAndQuivers.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -2579,7 +2579,7 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, Life gained for each Enemy hit ; Cuts off the rest to accommodate both "by Attacks" and "by your Attacks"
         {
-		; Slinkston edit. This isn't necessary at this point in time, but if either were to gain an additional ilvl affix down the road this would already be in place
+	    ; Slinkston edit. This isn't necessary at this point in time, but if either were to gain an additional ilvl affix down the road this would already be in place
 	    If (ItemBaseType == "Weapon")
             {
 	       	ValueRange := LookupAffixData("data\LifeOnHitLocal.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -3134,20 +3134,19 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, to maximum Energy Shield
         {
-			; Slinkston Edit
+	    ; Slinkston Edit
             PrefixType := "Prefix"
             If (ItemSubType == "Amulet" or ItemSubType == "Belt")
             {
                 ValueRange := LookupAffixData("data\ToMaxEnergyShield.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-				Else If (ItemSubType == "Ring")
-				{
-					ValueRange := LookupAffixData("data\ToMaxEnergyShieldRing.txt", ItemLevel, CurrValue, "", CurrTier)
-				}
+		Else If (ItemSubType == "Ring")
+		{
+		    ValueRange := LookupAffixData("data\ToMaxEnergyShieldRing.txt", ItemLevel, CurrValue, "", CurrTier)
+		}
             Else
             {
                 ValueRange := LookupAffixData("data\ToEnergyShield.txt", ItemLevel, CurrValue, "", CurrTier)
-
             }
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             NumPrefixes += 1
@@ -3272,57 +3271,57 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Cold Damage") 
         {
-			; Slinkston edit: Thanks to Moth1 on the forums for the suggestion of nesting the ele dmg and ele dmg to spells!
+	    ; Slinkston edit: Thanks to Moth1 on the forums for the suggestion of nesting the ele dmg and ele dmg to spells!
             If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Cold Damage to Spells")
+	    {
+		If (ItemGripType == "1H")
+		{
+		    ValueRange := LookupAffixData("data\SpellAddedCold1H.txt", ItemLevel, CurrValue, "", CurrTier)
+		}
+		Else ; 2 handed weapons. This may need to be changed if bows get added spell damage since they are categorized as 1H, but doubtful.
+		{
+			ValueRange := LookupAffixData("data\SpellAddedCold2H.txt", ItemLevel, CurrValue, "", CurrTier)
+		}		
+	    }			
+	    Else
+	    {
+		If (ItemSubType == "Amulet" or ItemSubType == "Ring")
+		{
+		    ValueRange := LookupAffixData("data\AddedColdDamage_RingsAndAmulets.txt", ItemLevel, CurrValue, "", CurrTier)
+		}
+		Else
+		{
+			If (ItemSubType == "Gloves")
 			{
-				If (ItemGripType == "1H")
-				{
-					ValueRange := LookupAffixData("data\SpellAddedCold1H.txt", ItemLevel, CurrValue, "", CurrTier)
-				}
-				Else ; 2 handed weapons. This may need to be changed if bows get added spell damage since they are categorized as 1H, but doubtful.
-				{
-					ValueRange := LookupAffixData("data\SpellAddedCold2H.txt", ItemLevel, CurrValue, "", CurrTier)
-				}		
-			}			
+			    ValueRange := LookupAffixData("data\AddedColdDamage_Gloves.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
 			Else
 			{
-				If (ItemSubType == "Amulet" or ItemSubType == "Ring")
+				If (ItemSubType == "Quiver")
 				{
-					ValueRange := LookupAffixData("data\AddedColdDamage_RingsAndAmulets.txt", ItemLevel, CurrValue, "", CurrTier)
+					ValueRange := LookupAffixData("data\AddedColdDamage_Quivers.txt", ItemLevel, CurrValue, "", CurrTier)
 				}
 				Else
 				{
-					If (ItemSubType == "Gloves")
-					{
-						ValueRange := LookupAffixData("data\AddedColdDamage_Gloves.txt", ItemLevel, CurrValue, "", CurrTier)
-					}
-					Else
-					{
-						If (ItemSubType == "Quiver")
+					If (ItemGripType == "1H")
 						{
-							ValueRange := LookupAffixData("data\AddedColdDamage_Quivers.txt", ItemLevel, CurrValue, "", CurrTier)
+							ValueRange := LookupAffixData("data\AddedColdDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
 						}
 						Else
 						{
-							If (ItemGripType == "1H")
-							{
-								ValueRange := LookupAffixData("data\AddedColdDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
-							}
-							Else
-							{
-								ValueRange := LookupAffixData("data\AddedColdDamage_2H.txt", ItemLevel, CurrValue, "", CurrTier)
-							}
+							ValueRange := LookupAffixData("data\AddedColdDamage_2H.txt", ItemLevel, CurrValue, "", CurrTier)
 						}
-					}
 				}
-			}	
+			}
+		}
+	    }	
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             NumPrefixes += 1
             Continue
         }
         If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Fire Damage") 
         {
-			; Slinkston edit: Thanks to Moth1 on the forums for the suggestion of nesting the ele dmg and ele dmg to spells!
+	    ; Slinkston edit: Thanks to Moth1 on the forums for the suggestion of nesting the ele dmg and ele dmg to spells!
             If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Fire Damage to Spells")
 			{
 				If (ItemGripType == "1H")
@@ -3373,7 +3372,7 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Lightning Damage")
         {
-			; Slinkston edit: Thanks to Moth1 on the forums for the suggestion of nesting the ele dmg and ele dmg to spells!
+	    ; Slinkston edit: Thanks to Moth1 on the forums for the suggestion of nesting the ele dmg and ele dmg to spells!
             If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Lightning Damage to Spells")
 			{
 				If (ItemGripType == "1H")
@@ -3477,23 +3476,23 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, maximum Life
         {
-			; Slinkston edit
+	    ; Slinkston edit
             If (ItemSubType == "Amulet")
-            {
-				ValueRange := LookupAffixData("data\MaxLifeAmulet.txt", ItemLevel, CurrValue, "", CurrTier)
+        	{
+			ValueRange := LookupAffixData("data\MaxLifeAmulet.txt", ItemLevel, CurrValue, "", CurrTier)
+		}
+			Else If (ItemSubType == "Shield")
+			{
+				ValueRange := LookupAffixData("data\MaxLifeShield.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
-				Else If (ItemSubType == "Shield")
-				{
-					ValueRange := LookupAffixData("data\MaxLifeShield.txt", ItemLevel, CurrValue, "", CurrTier)
-				}
 				Else If (ItemSubType == "Armour")
 				{
 					ValueRange := LookupAffixData("data\MaxLifeBodyArmour.txt", ItemLevel, CurrValue, "", CurrTier)
 				}
-			Else
-			{
-				ValueRange := LookupAffixData("data\MaxLife.txt", ItemLevel, CurrValue, "", CurrTier)
-			}
+		Else
+		{
+			ValueRange := LookupAffixData("data\MaxLife.txt", ItemLevel, CurrValue, "", CurrTier)
+		}
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             NumPrefixes += 1
             Continue
@@ -3512,18 +3511,18 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
-		IfInString, A_LoopField, increased Elemental Damage with Weapons
+	IfInString, A_LoopField, increased Elemental Damage with Weapons
         {
-			; Slinkston edit
+	    ; Slinkston edit
             If (ItemSubType == "Ring" or ItemSubType == "Amulet")
             {
                 ValueRange := LookupAffixData("data\IncrWeaponEleDmgRingsAmmys.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             Else
-				{
-					ValueRange := LookupAffixData("data\IncrWeaponElementalDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-				}
-			NumPrefixes += 1
+	    {
+		ValueRange := LookupAffixData("data\IncrWeaponElementalDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+	    }
+	    NumPrefixes += 1
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
