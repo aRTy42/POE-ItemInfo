@@ -94,8 +94,8 @@
 ;	- Valuable Gems and Valuable Uniques needs to be updated as well.  Will work on this keeping in mind both default leagues and temp leagues
 ;	- Divination card info would be great such as a) what you can possibly get for the collection, b) where that card drops, and c) what supporter 
 ;	  created it (if known).
-;	- Jewel support for min/max rolls and what is a suffix and what is a prefix so you know what you may be able to exalt.  I do not even know
-;	  of a place where one can obtain the jewel specific affixes, besides asking GGG.
+;	- Jewel support for min/max rolls and what is a suffix and what is a prefix so you know what you may be able to exalt.  9/15/2015 - I just noticed that
+;	  GGG added jewel affixes, both prefix and suffix, for jewels to their item database.
 ;	- Legacy item alert on the item would be useful for those players that take breaks and come back without reading all the patch notes and/or
 ;	  not recognizing some item may have changed or not.  This alert can be placed along the bottom with 'quality, valuable, mirrored, etc.'
 ;	  I imagine that this would not be hard to do, but would require a lot of small detail work.  Because all uniques are nerfed/buffed in 
@@ -2577,10 +2577,18 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        IfInString, A_LoopField, Life gained for each Enemy hit by Attacks
+        IfInString, A_LoopField, Life gained for each Enemy hit ; Cuts off the rest to accommodate both "by Attacks" and "by your Attacks"
         {
+			; Slinkston edit. This isn't necessary at this point in time, but if either were to gain an additional ilvl affix down the road this would already be in place
+	    	If (ItemBaseType == "Weapon")
+            {
+	        	ValueRange := LookupAffixData("data\LifeOnHitLocal.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
+	    	Else
+			{
+		        ValueRange := LookupAffixData("data\LifeOnHit.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
             NumSuffixes += 1
-            ValueRange := LookupAffixData("data\LifeOnHit.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
