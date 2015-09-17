@@ -2455,7 +2455,7 @@ ParseAffixes(ItemDataAffixes, Item)
         IfInString, A_LoopField, increased Cast Speed
         {
 	    ; Slinkston edit
-            If (BaseType = Weapon)
+            If (ItemBaseType == "Weapon")
             {
                 ValueRange := LookupAffixData("data\CastSpeedWeapon.txt", ItemLevel, CurrValue, "", CurrTier)
             }
@@ -3134,20 +3134,28 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, to maximum Energy Shield
         {
-	    ; Slinkston Edit
+            ; Slinkston Edit. Seems I may have to do the same for EV and AR.
             PrefixType := "Prefix"
             If (ItemSubType == "Amulet" or ItemSubType == "Belt")
             {
-                ValueRange := LookupAffixData("data\ToMaxEnergyShield.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\ToMaxESAmuletandBelt.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-		Else If (ItemSubType == "Ring")
+				Else If (ItemSubType == "Ring")
+				{
+					ValueRange := LookupAffixData("data\ToMaxESRing.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+					Else If (ItemSubType == "Gloves" or ItemSubtype == "Boots")
+					{
+						ValueRange := LookupAffixData("data\ToMaxESGlovesandBoots.txt", ItemLevel, CurrValue, "", CurrTier)
+					}
+						Else If (ItemSubType == "Helmet")
+						{
+							ValueRange := LookupAffixData("data\ToMaxESHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
+						}			
+		Else
 		{
-		    ValueRange := LookupAffixData("data\ToMaxEnergyShieldRing.txt", ItemLevel, CurrValue, "", CurrTier)
+			ValueRange := LookupAffixData("data\ToMaxESArmourandShield.txt", ItemLevel, CurrValue, "", CurrTier)
 		}
-            Else
-            {
-                ValueRange := LookupAffixData("data\ToEnergyShield.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             NumPrefixes += 1
             Continue
