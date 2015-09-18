@@ -2478,13 +2478,13 @@ ParseAffixes(ItemDataAffixes, Item)
         IfInString, A_LoopField, Critical Strike Chance
         {
 	    ; Slinkston edit
-            If (ItemSubType == "Quiver" or ItemSubType == "Amulet")
+            If (ItemSubType == "Weapon")
             {
-                ValueRange := LookupAffixData("data\CritChance_AmuletsAndQuivers.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\CritChanceLocal.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             Else
             {
-                ValueRange := LookupAffixData("data\CritChance_Weapons.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\CritChanceGlobal.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             NumSuffixes += 1
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
@@ -2493,13 +2493,13 @@ ParseAffixes(ItemDataAffixes, Item)
         IfInString, A_LoopField, Critical Strike Multiplier
         {
 	    ; Slinkston edit
-            If (ItemSubType == "Quiver" or ItemSubType == "Amulet")
+            If (ItemSubType == "Weapon")
             {
-                ValueRange := LookupAffixData("data\CritMultiplier_AmuletsAndQuivers.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\CritMultiplierLocal.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             Else
             {
-                ValueRange := LookupAffixData("data\CritMultiplier_Weapons.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\CritMultiplierGlobal.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             NumSuffixes += 1
