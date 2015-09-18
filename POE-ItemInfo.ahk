@@ -3037,17 +3037,27 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, to Evasion Rating
         {
-            NumPrefixes += 1
-            If (ItemBaseType == "Item")
+            ; Slinkston edit. I am not sure if using 'else if' statements are the best way here, but it seems to work.
+            ; AR, EV, and ES items are all correct for Armour, Shields, Helmets, Boots, Gloves, and different jewelry.
+            ; to Evasion Rating has Ring, but does not have Belt or Amulet.
+            If (ItemSubType == "Ring")
             {
-                ValueRange := LookupAffixData("data\ToEvasion_Items.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                ValueRange := LookupAffixData("data\ToEvasionRing.txt", ItemLevel, CurrValue, "", CurrTier)
             }
+		Else If (ItemSubType == "Helmet")
+		{
+			ValueRange := LookupAffixData("data\ToEvasionHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
+		}
+			Else If (ItemSubType == "Gloves" or ItemSubType == "Boots")
+			{
+				ValueRange := LookupAffixData("data\ToEvasionGlovesandBoots.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
             Else
             {
-                ValueRange := LookupAffixData("data\ToEvasion_Armour.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                ValueRange := LookupAffixData("data\ToEvasionArmourandShield.txt", ItemLevel, CurrValue, "", CurrTier)      
             }
+            NumPrefixes += 1
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
         IfInString, A_LoopField, increased Evasion Rating
@@ -3135,23 +3145,25 @@ ParseAffixes(ItemDataAffixes, Item)
         IfInString, A_LoopField, to maximum Energy Shield
         {
             ; Slinkston Edit. Seems I may have to do the same for EV and AR.
+            ; AR, EV, and ES items are all correct for Armour, Shields, Helmets, Boots, Gloves, and different jewelry.
+            ; to max ES is found is all jewelry; Amulet, Belt, and Ring.
             PrefixType := "Prefix"
             If (ItemSubType == "Amulet" or ItemSubType == "Belt")
             {
                 ValueRange := LookupAffixData("data\ToMaxESAmuletandBelt.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-				Else If (ItemSubType == "Ring")
+		Else If (ItemSubType == "Ring")
+		{
+			ValueRange := LookupAffixData("data\ToMaxESRing.txt", ItemLevel, CurrValue, "", CurrTier)
+		}
+			Else If (ItemSubType == "Gloves" or ItemSubtype == "Boots")
+			{
+				ValueRange := LookupAffixData("data\ToMaxESGlovesandBoots.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
+				Else If (ItemSubType == "Helmet")
 				{
-					ValueRange := LookupAffixData("data\ToMaxESRing.txt", ItemLevel, CurrValue, "", CurrTier)
-				}
-					Else If (ItemSubType == "Gloves" or ItemSubtype == "Boots")
-					{
-						ValueRange := LookupAffixData("data\ToMaxESGlovesandBoots.txt", ItemLevel, CurrValue, "", CurrTier)
-					}
-						Else If (ItemSubType == "Helmet")
-						{
-							ValueRange := LookupAffixData("data\ToMaxESHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
-						}			
+					ValueRange := LookupAffixData("data\ToMaxESHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
+				}			
 		Else
 		{
 			ValueRange := LookupAffixData("data\ToMaxESArmourandShield.txt", ItemLevel, CurrValue, "", CurrTier)
