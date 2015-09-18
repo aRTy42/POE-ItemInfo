@@ -2706,19 +2706,26 @@ ParseAffixes(ItemDataAffixes, Item)
         
         IfInString, A_LoopField, to Armour
         {
-            NumPrefixes += 1
-            If (ItemBaseType == "Item")
+            ; Slinkston edit. AR, EV, and ES items are all correct for Armour, Shields, Helmets, Boots, Gloves, and different jewelry.
+            ; to Armour has Belt, but does not have Ring or Amulet.
+            If (ItemSubType == "Belt")
             {
-                ; Global
-                ValueRange := LookupAffixData("data\ToArmour_Items.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                ValueRange := LookupAffixData("data\ToArmourBelt.txt", ItemLevel, CurrValue, "", CurrTier)
             }
+		Else If (ItemSubtype == "Helmet")
+		{
+			ValueRange := LookupAffixData("data\ToArmourHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
+		}
+			Else If (ItemSubtype == "Gloves" or ItemSubType == "Boots")
+			{
+				ValueRange := LookupAffixData("data\ToArmourGlovesandBoots.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
             Else
             {
-                ; Local
-                ValueRange := LookupAffixData("data\ToArmour_WeaponsAndArmour.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                ValueRange := LookupAffixData("data\ToArmourArmourandShield.txt", ItemLevel, CurrValue, "", CurrTier)
             }
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            NumPrefixes += 1
             Continue
         }
         IfInString, A_LoopField, increased Armour and Evasion
