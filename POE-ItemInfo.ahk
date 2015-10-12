@@ -445,6 +445,7 @@ class Item {
     SubType := ""
     GripType := ""
     Level := ""
+	MapLevel := ""
     MaxSockets := ""
     IsUnidentified := ""
     IsCorrupted := ""
@@ -649,7 +650,9 @@ CheckBaseLevel(ItemTypeName)
 
     Loop %ItemListArray% {
         element := Array%A_Index%1
-        If(ItemTypeName == element) 
+		
+        ;;If(ItemTypeName == element) 
+		IfInString, ItemTypeName, %element%
         {
             BaseLevel := Array%A_Index%2
             Break
@@ -1563,6 +1566,36 @@ ParseItemLevel(ItemDataText)
         }
     }
 }
+
+;;hixxie fixed. Shows MapLevel for any map base.
+ParseMapLevel(ItemDataText)
+{
+    ItemDataChunk := GetItemDataChunk(ItemDataText, "MapTier:")
+    If (StrLen(ItemDataChunk) <= 0)
+    {
+        ItemDataChunk := GetItemDataChunk(ItemDataText, "Map Tier:")
+    }
+    
+    Assert(StrLen(ItemDataChunk) > 0, "ParseMapLevel: couldn't parse item data chunk")
+    
+    Loop, Parse, ItemDataChunk, `n, `r
+    {
+        IfInString, A_LoopField, MapTier:
+        {
+            StringSplit, MapLevelParts, A_LoopField, %A_Space%
+            Result := StrTrimWhitespace(MapLevelParts2)
+            return Result
+        }
+        IfInString, A_LoopField, Map Tier:
+        {
+            StringSplit, MapLevelParts, A_LoopField, %A_Space%
+            Result := StrTrimWhitespace(MapLevelParts3) + 67
+            return Result
+        }
+    }
+}
+
+
 
 ParseGemLevel(ItemDataText, PartialString="Level:")
 {
@@ -5321,6 +5354,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     }
     Else
     {
+			
         If (Item.IsCurrency and Opts.ShowCurrencyValueInChaos == 1)
         {
             ValueInChaos := ConvertCurrency(Item.Name, ItemData.Stats)
@@ -5402,7 +5436,22 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         TT := TT . ItemLevelWord . "   " . StrPad(Item.Level, 3, Side="left")
         If (Not Item.IsFlask)
         {
-            Item.BaseLevel := CheckBaseLevel(Item.TypeName)
+            ;;Item.BaseLevel := CheckBaseLevel(Item.TypeName)
+			
+			;;Hixxie: fixed! Shows base level for any item rarity, rings/jewelry, etc
+			If(Item.RarityLevel < 3)
+			{
+				Item.BaseLevel := CheckBaseLevel(Item.Name)
+			}
+			else if (Item.IsUnidentified)
+			{
+				Item.BaseLevel := CheckBaseLevel(Item.Name)
+			}
+			Else
+			{
+				Item.BaseLevel := CheckBaseLevel(Item.TypeName)
+			}
+			
             If (Item.BaseLevel)
             {
                 TT := TT . "`n" . "Base Level:   " . StrPad(Item.BaseLevel, 3, Side="left")
@@ -5490,6 +5539,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
  
     If (Item.IsMap)
     {
+		Item.MapLevel := ParseMapLevel(ItemDataText)
+			
+		;;hixxie fixed
+		MapLevelText := Item.MapLevel
+		TT = %TT%`nMap Level: %MapLevelText%
+		
         If (Item.IsUnique)
         {
             MapDescription := uniqueMapList[Item.SubType]
