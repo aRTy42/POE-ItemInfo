@@ -2510,7 +2510,7 @@ ParseAffixes(ItemDataAffixes, Item)
         IfInString, A_LoopField, Critical Strike Chance
         {
 	    ; Slinkston edit
-            If (ItemSubType == "Weapon")
+            If (ItemBaseType == "Weapon")
             {
                 ValueRange := LookupAffixData("data\CritChanceLocal.txt", ItemLevel, CurrValue, "", CurrTier)
             }
@@ -2525,7 +2525,7 @@ ParseAffixes(ItemDataAffixes, Item)
         IfInString, A_LoopField, Critical Strike Multiplier
         {
 	    ; Slinkston edit
-            If (ItemSubType == "Weapon")
+            If (ItemBaseType == "Weapon")
             {
                 ValueRange := LookupAffixData("data\CritMultiplierLocal.txt", ItemLevel, CurrValue, "", CurrTier)
             }
@@ -2564,7 +2564,7 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        IfInString, A_LoopField, Block Chance
+        IfInString, A_LoopField, Chance to Block
         {
             NumSuffixes += 1
             ValueRange := LookupAffixData("data\BlockChance.txt", ItemLevel, CurrValue, "", CurrTier)
