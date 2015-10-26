@@ -1,0 +1,8 @@
+The following is a list of what has been updated, starting with 1.9.3.
+Current Script Caretaker: Bahnzo 
+
+1.9.3
+=================================
+Updated Uniques list: Hixxie
+Sockets corrected: Portent
+Various fixes to tiers: Slinkston

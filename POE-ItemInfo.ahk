@@ -1,7 +1,7 @@
 ﻿; Path of Exile Item Info Tooltip
 ;
-; Version: 1.8.6 (hazydoc / IGN:Sadou)
-;
+; Version: 1.9.2 (hazydoc / IGN:Sadou) Original Author
+; Script is currently maintained by various people and kept up to date by Bahnzo / IGN:Bahnzo
 ; This script was originally based on the POE_iLVL_DPS-Revealer script (v1.2d) found here:
 ; https://www.pathofexile.com/forum/view-thread/594346
 ; New Thread: https://www.pathofexile.com/forum/view-thread/790438
@@ -5473,7 +5473,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         {
             Item.MaxSockets := 4
         }
-        Else If (Item.Level >= 15)
+        Else If (Item.Level >= 1)
         {
             Item.MaxSockets := 3
         }
