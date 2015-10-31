@@ -447,7 +447,7 @@ Ringmail Boots|13
 Mesh Boots|28
 Riveted Boots|36
 Zealot Boots|40
-Soldier's Boots|49
+Soldier Boots|49
 Legion Boots|58
 Crusader Boots|64
 Wrapped Boots|6

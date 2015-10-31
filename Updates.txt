@@ -1,6 +1,12 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo 
 
+1.9.4
+=================================
+Fixes for base item level: sirmanky
+Added code at very end of script giving examples of quick key 
+combinations to add some easy macros.
+
 1.9.3
 =================================
 Updated Uniques list: Hixxie

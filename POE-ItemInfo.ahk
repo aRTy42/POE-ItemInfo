@@ -638,6 +638,10 @@ ParseElementalDamage(String, DmgType, ByRef DmgLo, ByRef DmgHi)
 ; Added by kongyuyu, changed by hazydoc
 CheckBaseLevel(ItemTypeName)
 {
+    ; Added to correctly id Superior items
+    ; code by sirmanky
+    If(InStr(ItemTypeName, "Superior") == 1)
+        ItemTypeName := SubStr(ItemTypeName, 10)
     ItemListArray = 0
     Loop, Read, %A_ScriptDir%\data\ItemList.txt 
     {  
@@ -651,8 +655,9 @@ CheckBaseLevel(ItemTypeName)
     Loop %ItemListArray% {
         element := Array%A_Index%1
 		
-        ;;If(ItemTypeName == element) 
-		IfInString, ItemTypeName, %element%
+        ;original line restored by Bahnzo to restore Base Item Level
+        ;IfInString, ItemTypeName, %element%
+        If(ItemTypeName == element) 
         {
             BaseLevel := Array%A_Index%2
             Break
@@ -6753,3 +6758,10 @@ UnhandledDlg_OK:
     return
 
 ; ############ ADD YOUR OWN MACROS HERE #############
+;#IfWinActive Path of Exile ahk_class Direct3DWindowClass ahk_exe PathOfExile.exe
+;{
+;   F1::^c  ;changes the control-c to F1 key
+;	F5::Send {Enter}/remaining{Enter}  	;mobs remaining
+;	F9::Send {Enter}/hideout{Enter}		;goto hideout
+;	F10::Send {Enter}/global 666{Enter}	;join a channel
+;} ;*/
