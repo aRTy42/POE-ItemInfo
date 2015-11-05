@@ -6713,11 +6713,11 @@ AboutDlg_AhkHome:
     return
 
 AboutDlg_GitHub:
-    Run, http://github.com/andreberg/PoE-Item-Info
+    Run, http://github.com/Bahnzo/POE-ItemInfo
     return 
     
 VisitForumsThread:
-    Run, http://www.pathofexile.com/forum/view-thread/790438
+    Run, http://www.pathofexile.com/forum/view-thread/1463814
     return
 
 2ButtonClose:

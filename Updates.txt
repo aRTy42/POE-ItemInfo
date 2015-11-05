@@ -1,5 +1,12 @@
 The following is a list of what has been updated, starting with 1.9.3.
-Current Script Caretaker: Bahnzo 
+Current Script Caretaker: Bahnzo
+
+1.9.5
+=================================
+Updated info screen
+Maps updated with new vendor info &
+Divination Cards which can be found 
+within map. 
 
 1.9.4
 =================================
