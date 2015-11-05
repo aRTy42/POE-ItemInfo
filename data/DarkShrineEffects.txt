@@ -1,0 +1,90 @@
+# Life Regenerated per second|Refills flasks |Drink Deeply |Player mod - Special |0
+# Mana Gained on kill|Grants permanent Replenishing shrine |Restore that which was lost |Player mod - Shrine |0
+#% Additional Chance To Block Spells While Dual Wielding (needs confirmation)|An Arcanist's Strongbox spawns in the area |A trove of magic awaits you |Spawn - Strongbox |0
+#% Additional Chance To Block Spells With Staves (needs confirmation)|An Arcanist's Strongbox spawns in the area |A trove of magic awaits you |Spawn - Strongbox |0
+#% increased Armour|Beyond is added to the area |Two worlds collide |Map mod - League |0
+#% increased Armour and Energy Shield|Spawns the unique enemies from Kaom's Cache around the darkshrine |Ancestral magic |Spawn - Special |0
+#% increased Armour and Evasion|Three packs of magic monsters spawn around the darkshrine |Surprise is a problem only for the unprepared |Spawn - Monsters |0
+#% increased Attack Speed|Grants permanent Acceleration shrine |Death doesn't wait |Player mod - Shrine |0
+#% increased Cast Speed|All unequipped items are scoured and you are rewarded with currency equal to the value of the removed mods. |All rewards have their cost |Reward - Currency |0
+#% increased Cold Damage|Monsters deal (90? to 110?)% extra Damage as Cold, 8% increased rarity, 15% increased quantity |No adversary in nature is more deadly than the cold |Map mod - Common |0
+#% increased Critical Strike Chance|An unequipped white item in your inventory is turned into a rare |Lead turns to gold |Reward - Item Upgrade |0
+#% increased Critical Strike Chance for Spells|one mob drops 5 rare staves|Keeper of the stave|Unknown|0
+#% increased Elemental Damage with Weapons|Dropped weapons have 20% quality |An armoury of exquisite craftsmanship |Map mod - Special |0
+#% increased Evasion and Energy Shield|Invasion is added to the area |A strange foe from a strange land |Map mod - League |0
+#% increased Evasion Rating|Three packs of normal monsters spawn around the darkshrine |Beware those who lie in ambush |Spawn - Monsters |0
+#% increased Fire Damage|Monsters deal (90? to 110?)% extra Damage as Fire, 8% increased rarity, 15% increased quantity |No force of nature holds more fear than fire |Map mod - Common |0
+#% Increased Flask Charges Gained|No mana cost for skills |Power without limit |Player mod - Special |0
+#% increased Flask Life Recovery Rate|A Chemist's Strongbox spawns in the area |The secrets of chemistry await you |Spawn - Strongbox |0
+#% increased Global Critical Strike Multiplier|One item in your inventory, equipped or unequipped, becomes 20% quality |Perfection |Reward - Item Upgrade |0
+#% increased Light Radius|Identifies every item in your inventory |The light of reason still shines |Reward - Special |0
+#% increased Lightning Damage|Monsters deal (90? to 110?)% extra Damage as Lightning, 8% increased rarity, 15% increased quantity |No fury in nature is greater than that of lightning. |Map mod - Common |0
+#% increased Mana Regeneration Rate|Spawns a Tormented Embezzler, transmutations turned into augmentations (needs confirmation), 8% increased rarity, 15% increased quantity |He stole that which he was entrusted with |Spawn - Tormented Spirit |0
+#% increased maximum Energy Shield|Magic monsters on the map are cloned |Brothers in arms |Map mod - Special |0
+#% increased Physical Damage|A Blacksmith's Strongbox spawns in the area |The secrets of the forge await you |Spawn - Strongbox |0
+#% increased Projectile Speed|Enemy projectiles have chaining |Some challenges are best faced alone |Map mod - Common |0
+#% increased Stun Duration on Enemies|Spawns a clone of yourself to follow you around (Only auto attacks) |If you want a job done well, there is nobody better than yourself |Player mod - Special |0
+#% increased Stun Recovery|An Armourer's Strongbox spawns in the area |The garb of the warrior awaits you |Spawn - Strongbox |0
+#% increased Rarity of Items found|Every open inventory slot is filled with 1 scroll fragment |Even the wisest are given menial chores |Reward - Currency |0
+#% of Physical Attack Damage Leeched as Life|fills the zone with rare devourers|The ground beneath you tremors|Unknown|0
+#% of Physical Attack Damage Leeched As Mana|An ilvl 100 map appears in the Eternal Laboratory's Map Device in Act 3 Merciless (details needed) |Journeys await you |Reward - Item |0
+#% reduced Attribute Requirements|The rare item sacrificed appears in another darkshrine |Perhaps next time |Special |0
+#% reduced Enemy Stun Threshold|Grants permanent Massive shrine |Courage stands tall |Player mod - Shrine |0
+#% Reduced Flask Charges Used|No mana cost for skills |Power without limit |Player mod - Special |0
++# Life gained for each Enemy hit by your Attacks|Rampage is added to the area |Your anger rises |Map mod - League |0
++# Life gained on Kill|(40 to 50)% increased monster life, 8% increased rarity, 15% increased quantity |Tough as Nails |Map mod - Common |0
++# Mana Gained on Kill|permanent replenishing shrine|Restore that which was lost|Unknown|0
++# to maximum Life|Grants permanent Diamond shrine |Deliver pain exquisite |Player mod - Shrine |0
++# to Accuracy Rating|Enemies have 4 additional projectiles, 8% increased rarity, 15% increased quantity |Nothing is more intimidating on the battlefront than a wall of arrows |Map mod - Common |0
++# to All Attributes|A random Rogue Exile spawns in the area |Any and Everything |Spawn - Rogue Exile |0
++# to Armour|Nemesis is added to the area |Your nemeses hunt you |Map mod - League |0
++# to Dexterity|Antalie Napora or Thena Moga spawns in the area |Bow and Arrow |Spawn - Rogue Exile |0
++# to Dexterity and Intelligence|Wilorin Demontamer or Ion Darkshroud spawns in the area |Dagger and Claw |Spawn - Rogue Exile |0
++# to Evasion Rating|Three packs of normal monsters spawn around the darkshrine |Beware those who lie in ambush |Spawn - Monsters |0
++# to Intelligence|Minara Anemina or Igna Phoenix spawns in the area |Wand and Focus |Spawn - Rogue Exile |0
++# to Level of Socketed Cold Gems|A Jeweller's Strongbox spawns in the area |Trinkets await you |Spawn - Strongbox |0
++# to Level of Socketed Fire Gems|A Gemcutter's Strongbox spawns in the area |Power awaits you |Spawn - Strongbox |0
++# to Level of Socketed Gems|Resets master dailies |The reward for a job well done is often another job |Special |0
++# to Level of Socketed Lightning Gems|An Ornate Strongbox spawns in the area |A valued prize awaits you |Spawn - Strongbox |0
++# to Level of Socketed Melee Gems|A Large Strongbox spawns in the area |A hoard awaits you |Spawn - Strongbox |0
++# to Level of Socketed Minion Gems|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
++# to maximum Energy Shield|Rare monsters on the map are cloned |Prepared for trouble? How about double? |Map mod - Special |0
++# to Maximum Mana|Spawns a Tormented Necromancer in the area |He loved the dead. Too much |Spawn - Tormented Spirit |0
++# to Strength|Jonah Unchained, Xandro Blooddrinker, Damoi Tui or Vickas Giantbone spawns in the area |Axe and Maul |Spawn - Rogue Exile |0
++# to Strength and Dexterity|Armios Bell, Torr Olgosso or Zacharie Desmarais spawns in the area |Sword and Board |Spawn - Rogue Exile |0
++# to Strength and Intelligence|Eoin Greyfur, Magnus Stonethorn or Tinevin Highdove spawns in the area |Sceptre and Staff |Spawn - Rogue Exile |0
++#% Chance to Block|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
++#% Chance to Block with Shields|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
++#% to all Elemental Resistances|Packs from different warbands spawn in the area |Heart of the conflict |Spawn - Warband |0
++#% to Chaos Resistance|chaos warband leader|The Renegades rise|Unknown|0
++#% to Cold Resistance|spawns 1 group of Mutewinds|The Mutewind rises|Unknown|0
++#% to Fire Resistance|spawns 1 group of Redblades|The Redblade rises|Unknown|0
++#% to Lightning Resistance|spawns 1 group of Brinerots|The Brinerot rises|Unknown|0
++% chance to shock|You are rewarded with 20 Cartographer's Chisels|An accurate maps makes for a rewarding journey |Reward - Currency |0
++% Cold Resistance|A rare monster in the area will drop five rare belt. |Keeper of the buckle |Map mod - Item |0
++% Increased Cast Speed while Dual wielding|A rare monster in the area will drop five rare belt. |Keeper of the buckle |Map mod - Item |0
++% Increased critical strike multiplier with lighting skills|A rare monster in the area will drop five rare belt. |Keeper of the buckle |Map mod - Item |0
++% increased shock duration on enemies|You are rewarded with 20 Cartographer's Chisels|An accurate maps makes for a rewarding journey |Reward - Currency |0
++% increased totem life|Unknown|Your natural vitality deserts you |Player Effect |0
++% Mine Damage|Random monsters drop a sacrifice fragment (not limited to one) |Seek the Apex |Map mod - Item |0
++% Spell Critical Strike Chance|A rare monster in the area will drop five rare staves. |Keeper of the stave |Map mod - Item |0
++% trap throwing speed|A random monster will drop ten rares |Keeper of the hoard |Map mod - Item |0
+Adds #-# Cold Damage|Shivering Tempest |An Ice wind whips up around you |Map mod - Tempest |0
+Adds #-# Cold Damage to Spells|does what it says (Rivsoft/Wiki differ)|The Mutewind trial begins in 30 seconds. It ends if you run away. Be prepared to die.|Unknown|0
+Adds #-# Fire Damage|Seething Tempest |A wind brings a scent of smoke |Map mod - Tempest |0
+Adds #-# Lightning Damage|Galvanizing Tempest |A storm approaches |Map mod - Tempest |0
+Adds #-# Physical Damage|Monsters fracture after death, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
+Adds #-# Physical Damage to Attacks|Monsters fracture after death, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
+Area has patches of burning ground|The Redblade Trial|The Redblade Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Warband |0
+Area has patches of chilled ground|The Mutewind Trial|The Mutewind Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Warband |0
+Area has patches of shocking ground|The Brinerot|The Brinerot Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Warband |0
+Area has patches of desecrated ground|The Renegades|The Renegade Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Warband |0
+Corrupted|opens portals to a vaal side area|The influence of the Vaal continues long after their civilization has crumbled|Unknown|0
++#% to Fire and Cold Resitances|Spawns A Tormented Vaal Cultist |He found power in sacrifice |Spawn - Tormented Spirit |0
++#% to Cold and Lightning resistances|Spawns A Tormented Vaal Cultist |He found power in sacrifice |Spawn - Tormented Spirit |0
++#% to Fire and Lightning resistances|Spawns A Tormented Vaal Cultist |He found power in sacrifice |Spawn - Tormented Spirit |0
+#% Increased Damage over Time|Perandus Bank spawns in the area |The treasures of the wealthy await you |Spawn - Strongbox |0
+#% increased Movement Speed|Gain speed and perhaps other item affixes as bonus stats (needs confirmation?) |Become one with your offering |Player mod - Item |0
+Reflects # Physical Damage to Melee Attackers|Grants HeadhunterHeadhunter|The hunted becomes the hunter |Player mod - Special |0
+Reflects # Physical Damage to Melee Attackers|headhunter effect (get powers from slain enemies)|The hunted becomes the hunter|Unknown|0
+#% of Physical Attack Damage Leeched as Life|Spawns aprox 20 rare devourers around the zone |The ground beneath you tremors |Spawn - Monsters |0

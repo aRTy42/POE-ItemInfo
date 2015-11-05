@@ -192,6 +192,9 @@ class UserOptions {
                                     
     ShowAffixBracketTierTotal := 1  ; Appends the total number of tiers for a given affix in parentheses T/#Total
                                     ; T4/8 would represent the fourth highest tier, in eight total tiers.
+									
+	ShowDarkShrineInfo := 1  		; Appends info about DarkShrine effects of affixes to rares
+									; TODO: add this options to settings dialog if darkshrines are added to the game permanently
 
     TierRelativeToItemLevel := 0    ; When determining the affix bracket tier, take item level into consideration.
                                     ; However, this also means that the lower the item level the less the diversity
@@ -1126,7 +1129,7 @@ LookupAffixBracket(Filename, ItemLevel, Value="", ByRef BracketLevel="", ByRef B
             UBMax := UB
             IfInString, LB, -
             {
-                ; Lower bound is a range: #-#
+                ; Lower bound is a range: #-#q
                 ParseRange(LB, LBMax, LBMin)
             }
             IfInString, UB, -
@@ -1829,6 +1832,70 @@ AssembleAffixDetails()
         Result := Result . "`n" . ProcessedLine
     }
     return Result
+}
+
+; function based on AssembleAffixDetails
+AssembleDarkShrineInfo()
+{
+    Global AffixLines
+	
+	AffixLine =
+    ;AffixType =
+    ;ValueRange =
+    ;AffixTier =
+    NumAffixLines := AffixLines.MaxIndex()
+	AffixLineParts := 0
+	
+	affixloop:
+    Loop, %NumAffixLines%
+    {
+        CurLine := AffixLines[A_Index]
+		
+		StringSplit, AffixLineParts, CurLine, |
+        AffixLine := AffixLineParts1
+        ;ValueRange := AffixLineParts2
+        ;AffixType := AffixLineParts3
+        ;AffixTier := AffixLineParts4
+		
+		DsAffix := ""
+		If (RegExMatch(AffixLine,"^[0-9.]+% "))
+		{
+			DsAffix := RegExReplace(AffixLine,"^[0-9.]+% ","#% ")
+		}
+		Else If (RegExMatch(AffixLine,"^\+[0-9]+ ")) {
+			DsAffix := RegExReplace(AffixLine,"^\+[0-9]+ ","+# ")
+		} Else If (RegExMatch(AffixLine," [0-9]+-[0-9]+ ")) {
+			DsAffix := RegExReplace(AffixLine," [0-9]+-[0-9]+ "," #-# ")
+		} Else If (RegExMatch(AffixLine,"^\+[0-9.]+% ")) {
+			DsAffix := RegExReplace(AffixLine,"^\+[0-9.]+% ","+#% ")
+		}Else {
+			DsAffix := AffixLine
+		}
+		
+		Result := Result . "`n " . DsAffix . ":"
+		Found := 0
+		
+		; DarkShrineEffects.txt
+		; File with known effects based on POE wiki and http://poe.rivsoft.net/shrines/shrines.js  by https://www.reddit.com/user/d07RiV
+		Loop, Read, %A_ScriptDir%\data\DarkShrineEffects.txt 
+		{  
+			; This loop retrieves each line from the file, one at a time.
+			StringSplit, DsEffect, A_LoopReadLine, |,
+			if (DsAffix == DsEffect1) {
+				Found := 1
+				Result := Result . "`n  - " . DsEffect3 . "`n  -- " . DsEffect2
+				; TODO: maybe use DsEffect 5 to display warning about complex affixes
+				; We found the affix so we can continue with the next affix
+				continue affixloop
+			}
+		}
+		
+		Result := Result . "`n   " . "Unknown"
+		
+	}
+	
+	return Result
+		
 }
 
 ; Same as AdjustRangeForQuality, except that Value is just
@@ -5643,7 +5710,15 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     {
         TT = %TT%`n--------`nMirrored
     }
-
+	
+	If (Opts.ShowDarkShrineInfo == 1 and RarityLevel == 3)
+	{
+		TT = %TT%`n--------`nPossible DarkShrine effects:
+		
+		DarkShrineInfo := AssembleDarkShrineInfo()
+		TT = %TT%%DarkShrineInfo%
+	}
+	
     return TT
     
     ParseItemDataEnd:
