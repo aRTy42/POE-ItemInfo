@@ -88,3 +88,4 @@ Corrupted|opens portals to a vaal side area|The influence of the Vaal continues 
 Reflects # Physical Damage to Melee Attackers|Grants HeadhunterHeadhunter|The hunted becomes the hunter |Player mod - Special |0
 Reflects # Physical Damage to Melee Attackers|headhunter effect (get powers from slain enemies)|The hunted becomes the hunter|Unknown|0
 #% of Physical Attack Damage Leeched as Life|Spawns aprox 20 rare devourers around the zone |The ground beneath you tremors |Spawn - Monsters |0
+#% Increased Spell Damage|Random Darkshrine Effect|Random Darkshrine Effect|Special|0
