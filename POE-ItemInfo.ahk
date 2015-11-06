@@ -193,8 +193,7 @@ class UserOptions {
     ShowAffixBracketTierTotal := 1  ; Appends the total number of tiers for a given affix in parentheses T/#Total
                                     ; T4/8 would represent the fourth highest tier, in eight total tiers.
 									
-	ShowDarkShrineInfo := 1  		; Appends info about DarkShrine effects of affixes to rares
-									; TODO: add this options to settings dialog if darkshrines are added to the game permanently
+	ShowDarkShrineInfo := 0  		; Appends info about DarkShrine effects of affixes to rares
 
     TierRelativeToItemLevel := 0    ; When determining the affix bracket tier, take item level into consideration.
                                     ; However, this also means that the lower the item level the less the diversity
@@ -302,7 +301,8 @@ class UserOptions {
         this.ShowAffixMaxPossible := GuiGet("ShowAffixMaxPossible") 
         this.ShowAffixBracketTier := GuiGet("ShowAffixBracketTier") 
         this.ShowAffixBracketTierTotal := GuiGet("ShowAffixBracketTierTotal") 
-        this.TierRelativeToItemLevel := GuiGet("TierRelativeToItemLevel") 
+        this.TierRelativeToItemLevel := GuiGet("TierRelativeToItemLevel")
+        this.ShowDarkShrineInfo := GuiGet("ShowDarkShrineInfo")
         this.ShowCurrencyValueInChaos := GuiGet("ShowCurrencyValueInChaos")
         this.DisplayToolTipAtFixedCoords := GuiGet("DisplayToolTipAtFixedCoords")
         this.ScreenOffsetX := GuiGet("ScreenOffsetX")
@@ -6238,7 +6238,7 @@ CreateSettingsUI()
     
     ; Display - Affixes 
 
-    GuiAddGroupBox("Display - Affixes", "x277 y15 w260 h330")
+    GuiAddGroupBox("Display - Affixes", "x277 y15 w260 h360")
 
     GuiAddCheckbox("Show affix totals", "x287 y35 w210 h30", Opts.ShowAffixTotals, "ShowAffixTotals", "ShowAffixTotalsH")
     AddToolTip(ShowAffixTotalsH, "Show a statistic how many prefixes and suffixes`nthe item has")
@@ -6261,25 +6261,27 @@ CreateSettingsUI()
         AddToolTip(TierRelativeToItemLevelH, "When showing affix bracket tier, make T1 being best possible`ntaking item level into account.")
         GuiAddCheckbox("Show affix bracket tier total", "x307 y315 w190 h20", Opts.ShowAffixBracketTierTotal, "ShowAffixBracketTierTotal", "ShowAffixBracketTierTotalH")
         AddToolTip(ShowAffixBracketTierTotalH, "Show number of total affix bracket tiers in format T/N,`n where T = tier on item, N = number of total tiers available")
+    GuiAddCheckbox("Show Darkshrine information", "x287 y345 w210 h20", Opts.ShowDarkShrineInfo, "ShowDarkShrineInfo", "ShowDarkShrineInfoH")
+    AddToolTip(ShowDarkShrineInfoH, "Show information about possible Darkshrine effects")
         
     ; Display - Results 
 
-    GuiAddGroupBox("Display - Results", "x277 y355 w260 h210")
+    GuiAddGroupBox("Display - Results", "x277 y385 w260 h210")
     
-    GuiAddCheckbox("Compact double ranges", "x287 y375 w210 h30", Opts.CompactDoubleRanges, "CompactDoubleRanges", "CompactDoubleRangesH")
+    GuiAddCheckbox("Compact double ranges", "x287 y400  w210 h30", Opts.CompactDoubleRanges, "CompactDoubleRanges", "CompactDoubleRangesH")
     AddToolTip(CompactDoubleRangesH, "Show double ranges as one range,`ne.g. x-y (to) z-w becomes x-w")
-    GuiAddCheckbox("Compact affix types", "x287 y405 w210 h30", Opts.CompactAffixTypes, "CompactAffixTypes", "CompactAffixTypesH")
+    GuiAddCheckbox("Compact affix types", "x287 y435 w210 h30", Opts.CompactAffixTypes, "CompactAffixTypes", "CompactAffixTypesH")
     AddToolTip(CompactAffixTypesH, "Replace affix type with a short-hand version,`ne.g. P=Prefix, S=Suffix, CP=Composite")
 
-    GuiAddText("Mirror line field width:", "x287 y447 w110 h20", "LblMirrorLineFieldWidth")
-    GuiAddEdit(Opts.MirrorLineFieldWidth, "x407 y445 w40 h20", "MirrorLineFieldWidth")
-    GuiAddText("Value range field width:", "x287 y487 w120 h20", "LblValueRangeFieldWidth")
-    GuiAddEdit(Opts.ValueRangeFieldWidth, "x407 y485 w40 h20", "ValueRangeFieldWidth")
-    GuiAddText("Affix detail delimiter:", "x287 y507 w120 h20", "LblAffixDetailDelimiter")
-    GuiAddEdit(Opts.AffixDetailDelimiter, "x407 y505 w40 h20", "AffixDetailDelimiter")
-    GuiAddText("Affix detail ellipsis:", "x287 y537 w120 h20", "LblAffixDetailEllipsis")
-    GuiAddEdit(Opts.AffixDetailEllipsis, "x407 y535 w40 h20", "AffixDetailEllipsis")
-    
+    GuiAddText("Mirror line field width:", "x287 y477 w110 h20", "LblMirrorLineFieldWidth")
+    GuiAddEdit(Opts.MirrorLineFieldWidth, "x407 y475 w40 h20", "MirrorLineFieldWidth")
+    GuiAddText("Value range field width:", "x287 y517 w120 h20", "LblValueRangeFieldWidth")
+    GuiAddEdit(Opts.ValueRangeFieldWidth, "x407 y515 w40 h20", "ValueRangeFieldWidth")
+    GuiAddText("Affix detail delimiter:", "x287 y537 w120 h20", "LblAffixDetailDelimiter")
+    GuiAddEdit(Opts.AffixDetailDelimiter, "x407 y535 w40 h20", "AffixDetailDelimiter")
+    GuiAddText("Affix detail ellipsis:", "x287 y567 w120 h20", "LblAffixDetailEllipsis")
+    GuiAddEdit(Opts.AffixDetailEllipsis, "x407 y565 w40 h20", "AffixDetailEllipsis")
+
     ; Tooltip 
 
     GuiAddGroupBox("Tooltip", "x7 y515 w260 h185")
@@ -6303,7 +6305,7 @@ CreateSettingsUI()
     GuiAddText("Font Size:", "x17 y672 w160 h20", "LblFontSize")
     GuiAddEdit(Opts.FontSize, "x187 y670 w50 h20", "FontSize")
 
-    GuiAddText("Mouse over settings or see the beginning of the PoE-Item-Info.ahk script for comments on what these settings do exactly.", "x277 y575 w250 h60")
+    GuiAddText("Mouse over settings or see the beginning of the PoE-Item-Info.ahk script for comments on what these settings do exactly.", "x277 y605 w250 h60")
 
     GuiAddButton("&Defaults", "x287 y670 w80 h23", "SettingsUI_BtnDefaults")
     GuiAddButton("&OK", "Default x372 y670 w75 h23", "SettingsUI_BtnOK")
@@ -6410,6 +6412,8 @@ UpdateSettingsUI()
         GuiControl, Enable, ShowAffixBracketTierTotal
     }
     GuiControl,, TierRelativeToItemLevel, % Opts.TierRelativeToItemLevel
+    GuiControl,, ShowDarkShrineInfo, % Opts.ShowDarkShrineInfo
+    
     GuiControl,, CompactDoubleRanges, % Opts.CompactDoubleRanges
     GuiControl,, CompactAffixTypes, % Opts.CompactAffixTypes
     GuiControl,, MirrorLineFieldWidth, % Opts.MirrorLineFieldWidth
@@ -6496,6 +6500,7 @@ ReadConfig(ConfigPath="config.ini")
         Opts.ShowAffixBracketTier := IniRead(ConfigPath, "DisplayAffixes", "ShowAffixBracketTier", Opts.ShowAffixBracketTier)
         Opts.TierRelativeToItemLevel := IniRead(ConfigPath, "DisplayAffixes", "TierRelativeToItemLevel", Opts.TierRelativeToItemLevel)
         Opts.ShowAffixBracketTierTotal := IniRead(ConfigPath, "DisplayAffixes", "ShowAffixBracketTierTotal", Opts.ShowAffixBracketTierTotal)
+        Opts.ShowDarkShrineInfo := IniRead(ConfigPath, "DisplayAffixes", "ShowDarkShrineInfo", Opts.ShowDarkShrineInfo)
         
         ; Display - Results
         
@@ -6560,6 +6565,7 @@ WriteConfig(ConfigPath="config.ini")
     IniWrite(Opts.ShowAffixBracketTier, ConfigPath, "DisplayAffixes", "ShowAffixBracketTier")
     IniWrite(Opts.TierRelativeToItemLevel, ConfigPath, "DisplayAffixes", "TierRelativeToItemLevel")
     IniWrite(Opts.ShowAffixBracketTierTotal, ConfigPath, "DisplayAffixes", "ShowAffixBracketTierTotal")
+    IniWrite(Opts.ShowDarkShrineInfo, ConfigPath, "DisplayAffixes", "ShowDarkShrineInfo")
     
     ; Display - Results
     
