@@ -1856,7 +1856,7 @@ AssembleAffixDetails()
 
 AssembleDarkShrineInfo()
 {
-    Global ItemData
+    Global Item, ItemData
     
     AffixString := ItemData.Affixes
     Found := 0
@@ -1906,10 +1906,15 @@ AssembleDarkShrineInfo()
         Result := Result . "`n   " . "Unknown"
         
     }
-    
+      
     If (Found <= 2) {
         ; 2 affix rares are consumed
         Result := "`n Try again`n  Consumes the item, Darkshrine may be used again"
+        return Result
+    }
+    
+    If (Item.IsCorrupted) {
+        Result := Result .  "`n The influence of vaal continues long after their civilization has crumbled`n  Opens portals to a corrupted area"
     }
     
     return Result
