@@ -5757,6 +5757,11 @@ GetNegativeAffixOffset(Item)
         ; so decrement item index to get to the item before last one
         NegativeAffixOffset := NegativeAffixOffset + 1
     }
+    If (Item.IsMap) 
+    {
+        ; Maps have a descriptive text as the last item
+        NegativeAffixOffset := NegativeAffixOffset + 1
+    }
     If (Item.IsJewel) 
     {
         ; Jewels, like maps and flask, have a descriptive text as the last item
