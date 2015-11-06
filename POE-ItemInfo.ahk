@@ -1914,7 +1914,7 @@ AssembleDarkShrineInfo()
     }
     
     If (Item.IsCorrupted) {
-        Result := Result .  "`n The influence of vaal continues long after their civilization has crumbled`n  Opens portals to a corrupted area"
+        Result := Result .  "`n Corrupted:`n  The influence of vaal continues long after their civilization has crumbled`n   Opens portals to a corrupted area"
     }
     
     return Result
