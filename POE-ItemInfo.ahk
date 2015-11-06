@@ -877,7 +877,27 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
             SubType = Dry%A_Space%Peninsula
             return
         }       
-
+		
+		; Jewels
+		IfInString, A_LoopField, Cobalt%A_Space%Jewel
+        {
+            BaseType = Jewel
+            SubType = Cobalt Jewel
+            return
+        }
+		IfInString, A_LoopField, Crimson%A_Space%Jewel
+        {
+            BaseType = Jewel
+            SubType = Crimson Jewel
+            return
+        }
+		IfInString, A_LoopField, Viridian%A_Space%Jewel
+        {
+            BaseType = Jewel
+            SubType = Viridian Jewel
+            return
+        }
+		
         ; Shields 
         IfInString, A_LoopField, Shield
         {
@@ -5337,6 +5357,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsFourSocket := False   
     Item.IsThreeSocket := False
     Item.IsMap := False
+    Item.IsJewel := False
     Item.IsUnique := False
     Item.IsRare := False
     Item.IsCorrupted := False
@@ -5461,6 +5482,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsQuiver := (Item.SubType == "Quiver")
     Item.IsWeapon := (Item.BaseType == "Weapon")
     Item.IsMap := (Item.BaseType == "Map")
+    Item.IsJewel := (Item.BaseType == "Jewel")
     Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
     Item.HasEffect := (InStr(ItemData.PartsLast, "Has"))
     
@@ -5531,7 +5553,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         }
     }
     
-    If (Opts.ShowMaxSockets == 1 and Not (Item.IsFlask or Item.IsGem or Item.IsCurrency or Item.IsBelt or Item.IsQuiver or Item.IsMap or Item.IsAmulet))
+    If (Opts.ShowMaxSockets == 1 and Not (Item.IsFlask or Item.IsGem or Item.IsCurrency or Item.IsBelt or Item.IsQuiver or Item.IsMap or Item.IsJewel or Item.IsAmulet))
     {
         If (Item.Level >= 50)
         {
@@ -5629,7 +5651,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         TT = %TT%`n%MapDescription%
     }
     
-    If (RarityLevel > 1 and RarityLevel < 4) 
+    ; Hide jewel affixes as they not yet properly recognized
+    If (RarityLevel > 1 and RarityLevel < 4 and Not Item.IsJewel) 
     {
         ; Append affix info if rarity is greater than normal (white)
         ; Affix total statistic
@@ -5734,6 +5757,11 @@ GetNegativeAffixOffset(Item)
         ; so decrement item index to get to the item before last one
         NegativeAffixOffset := NegativeAffixOffset + 1
     }
+    If (Item.IsJewel) 
+    {
+        ; Jewels, like maps and flask, have a descriptive text as the last item
+        NegativeAffixOffset := NegativeAffixOffset + 1
+    }
     If (Item.HasEffect) 
     {
         ; Same with weapon skins or other effects
@@ -5749,6 +5777,7 @@ GetNegativeAffixOffset(Item)
         ; And mirrored items
         NegativeAffixOffset := NegativeAffixOffset + 1
     }
+	
     return NegativeAffixOffset
 }
 
