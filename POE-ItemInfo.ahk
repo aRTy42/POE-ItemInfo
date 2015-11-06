@@ -1854,68 +1854,60 @@ AssembleAffixDetails()
     return Result
 }
 
-; function based on AssembleAffixDetails
 AssembleDarkShrineInfo()
 {
-    Global AffixLines
-	
-	AffixLine =
-    ;AffixType =
-    ;ValueRange =
-    ;AffixTier =
-    NumAffixLines := AffixLines.MaxIndex()
-	AffixLineParts := 0
-	
-	affixloop:
-    Loop, %NumAffixLines%
+    Global ItemData
+    
+    AffixString := ItemData.Affixes
+    
+    affixloop:
+    Loop, Parse, AffixString, `n, `r
     {
-        CurLine := AffixLines[A_Index]
-		
-		StringSplit, AffixLineParts, CurLine, |
-        AffixLine := AffixLineParts1
-        ;ValueRange := AffixLineParts2
-        ;AffixType := AffixLineParts3
-        ;AffixTier := AffixLineParts4
-		
-		DsAffix := ""
-		If (RegExMatch(AffixLine,"^[0-9.]+% "))
-		{
-			DsAffix := RegExReplace(AffixLine,"^[0-9.]+% ","#% ")
-		}
-		Else If (RegExMatch(AffixLine,"^\+[0-9]+ ")) {
-			DsAffix := RegExReplace(AffixLine,"^\+[0-9]+ ","+# ")
-		} Else If (RegExMatch(AffixLine," [0-9]+-[0-9]+ ")) {
-			DsAffix := RegExReplace(AffixLine," [0-9]+-[0-9]+ "," #-# ")
-		} Else If (RegExMatch(AffixLine,"^\+[0-9.]+% ")) {
-			DsAffix := RegExReplace(AffixLine,"^\+[0-9.]+% ","+#% ")
-		}Else {
-			DsAffix := AffixLine
-		}
-		
-		Result := Result . "`n " . DsAffix . ":"
-		Found := 0
-		
-		; DarkShrineEffects.txt
-		; File with known effects based on POE wiki and http://poe.rivsoft.net/shrines/shrines.js  by https://www.reddit.com/user/d07RiV
-		Loop, Read, %A_ScriptDir%\data\DarkShrineEffects.txt 
-		{  
-			; This loop retrieves each line from the file, one at a time.
-			StringSplit, DsEffect, A_LoopReadLine, |,
-			if (DsAffix == DsEffect1) {
-				Found := 1
-				Result := Result . "`n  - " . DsEffect3 . "`n  -- " . DsEffect2
-				; TODO: maybe use DsEffect 5 to display warning about complex affixes
-				; We found the affix so we can continue with the next affix
-				continue affixloop
-			}
-		}
-		
-		Result := Result . "`n   " . "Unknown"
-		
-	}
-	
-	return Result
-		
+        AffixLine := A_LoopField
+        
+        If (AffixLine == "") {
+            ; ignore empty affixes
+            continue affixloop
+        }
+        
+        DsAffix := ""
+        If (RegExMatch(AffixLine,"^[0-9.]+% "))
+        {
+            DsAffix := RegExReplace(AffixLine,"^[0-9.]+% ","#% ")
+        } Else If (RegExMatch(AffixLine,"^\+[0-9]+ ")) {
+            DsAffix := RegExReplace(AffixLine,"^\+[0-9]+ ","+# ")
+        } Else If (RegExMatch(AffixLine," [0-9]+-[0-9]+ ")) {
+            DsAffix := RegExReplace(AffixLine," [0-9]+-[0-9]+ "," #-# ")
+        } Else If (RegExMatch(AffixLine,"^\+[0-9.]+% ")) {
+            DsAffix := RegExReplace(AffixLine,"^\+[0-9.]+% ","+#% ")
+        } Else {
+            DsAffix := AffixLine
+        }
+        
+        Result := Result . "`n " . DsAffix . ":"
+        Found := 0
+        
+        ; DarkShrineEffects.txt
+        ; File with known effects based on POE wiki and http://poe.rivsoft.net/shrines/shrines.js  by https://www.reddit.com/user/d07RiV
+        Loop, Read, %A_ScriptDir%\data\DarkShrineEffects.txt 
+        {  
+            ; This loop retrieves each line from the file, one at a time.
+            StringSplit, DsEffect, A_LoopReadLine, |,
+            if (DsAffix == DsEffect1) {
+                Found := 1
+                Result := Result . "`n  - " . DsEffect3 . "`n  -- " . DsEffect2
+                ; TODO: maybe use DsEffect 5 to display warning about complex affixes
+                ; We found the affix so we can continue with the next affix
+                continue affixloop
+            }
+        }
+        
+        Result := Result . "`n   " . "Unknown"
+        
+    }
+    
+    return Result
+    
 }
 
 ; Same as AdjustRangeForQuality, except that Value is just
