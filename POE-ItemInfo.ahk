@@ -5737,7 +5737,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         TT = %TT%`n--------`nMirrored
     }
 	
-	If (Opts.ShowDarkShrineInfo == 1 and RarityLevel == 3)
+	If (Opts.ShowDarkShrineInfo == 1 and RarityLevel == 3 and Not Item.IsUnidentified)
 	{
 		TT = %TT%`n--------`nPossible DarkShrine effects:
 		
