@@ -1859,6 +1859,7 @@ AssembleDarkShrineInfo()
     Global ItemData
     
     AffixString := ItemData.Affixes
+    Found := 0
     
     affixloop:
     Loop, Parse, AffixString, `n, `r
@@ -1869,6 +1870,8 @@ AssembleDarkShrineInfo()
             ; ignore empty affixes
             continue affixloop
         }
+        
+        Found := Found + 1
         
         DsAffix := ""
         If (RegExMatch(AffixLine,"^[0-9.]+% "))
@@ -1885,7 +1888,6 @@ AssembleDarkShrineInfo()
         }
         
         Result := Result . "`n " . DsAffix . ":"
-        Found := 0
         
         ; DarkShrineEffects.txt
         ; File with known effects based on POE wiki and http://poe.rivsoft.net/shrines/shrines.js  by https://www.reddit.com/user/d07RiV
@@ -1894,7 +1896,6 @@ AssembleDarkShrineInfo()
             ; This loop retrieves each line from the file, one at a time.
             StringSplit, DsEffect, A_LoopReadLine, |,
             if (DsAffix == DsEffect1) {
-                Found := 1
                 Result := Result . "`n  - " . DsEffect3 . "`n  -- " . DsEffect2
                 ; TODO: maybe use DsEffect 5 to display warning about complex affixes
                 ; We found the affix so we can continue with the next affix
@@ -1904,6 +1905,11 @@ AssembleDarkShrineInfo()
         
         Result := Result . "`n   " . "Unknown"
         
+    }
+    
+    If (Found <= 2) {
+        ; 2 affix rares are consumed
+        Result := "`n Try again`n  Consumes the item, Darkshrine may be used again"
     }
     
     return Result
