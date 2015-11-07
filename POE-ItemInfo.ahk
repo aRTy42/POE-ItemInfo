@@ -1915,6 +1915,10 @@ AssembleDarkShrineInfo()
         Result := Result .  "`n Corrupted:`n  The influence of vaal continues long after their civilization has crumbled`n   Opens portals to a corrupted area"
     }
     
+    If (Item.Quality == 20) {
+        Result := Result .  "`n 20% Quality:`n  - Wait, what was that sound?`n   -- Random item gets a skin transfer"
+    }
+    
     return Result
     
 }

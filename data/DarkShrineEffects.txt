@@ -1,5 +1,5 @@
 # Life Regenerated per second|Refills flasks |Drink Deeply |Player mod - Special |0
-# Mana Gained on kill|Grants permanent Replenishing shrine |Restore that which was lost |Player mod - Shrine |0
++# Mana Gained on kill|Grants permanent Replenishing shrine |Restore that which was lost |Player mod - Shrine |0
 #% Additional Chance To Block Spells While Dual Wielding|An Arcanist's Strongbox spawns in the area |A trove of magic awaits you |Spawn - Strongbox |0
 #% Additional Chance To Block Spells With Staves|An Arcanist's Strongbox spawns in the area |A trove of magic awaits you |Spawn - Strongbox |0
 #% increased Armour|Beyond is added to the area |Two worlds collide |Map mod - League |0
@@ -20,21 +20,20 @@
 #% increased Global Critical Strike Multiplier|One item in your inventory, equipped or unequipped, becomes 20% quality |Perfection |Reward - Item Upgrade |0
 #% increased Light Radius|Identifies every item in your inventory |The light of reason still shines |Reward - Special |0
 #% increased Lightning Damage|Monsters deal (90 to 110)% extra Damage as Lightning, 8% increased rarity, 15% increased quantity |No fury in nature is greater than that of lightning. |Map mod - Common |0
-#% increased Mana Regeneration Rate|Spawns a Tormented Embezzler, 8% increased rarity, 15% increased quantity |He stole that which he was entrusted with |Spawn - Tormented Spirit |0
+#% increased Mana Regeneration Rate|Spawns a Tormented Embezzler (wiki: also 8% increased rarity, 15% increased quantity)|He stole that which he was entrusted with |Spawn - Tormented Spirit |0
 #% increased maximum Energy Shield|Magic monsters on the map are cloned |Brothers in arms |Map mod - Special |0
 #% increased Physical Damage|A Blacksmith's Strongbox spawns in the area |The secrets of the forge await you |Spawn - Strongbox |0
 #% increased Projectile Speed|Enemy projectiles have chaining |Some challenges are best faced alone |Map mod - Common |0
 #% increased Stun Duration on Enemies|Spawns a clone of yourself to follow you around (Only auto attacks) |If you want a job done well, there is nobody better than yourself |Player mod - Special |0
 #% increased Stun Recovery|An Armourer's Strongbox spawns in the area |The garb of the warrior awaits you |Spawn - Strongbox |0
 #% increased Rarity of Items found|Every open inventory slot is filled with 1 scroll fragment |Even the wisest are given menial chores |Reward - Currency |0
-#% of Physical Attack Damage Leeched as Life|fills the zone with rare devourers|The ground beneath you tremors|Unknown|0
+#% of Physical Attack Damage Leeched as Life|Spawns several rare devourers throughout the area|The ground beneath you tremors|Unknown|0
 #% of Physical Attack Damage Leeched As Mana|An ilvl 100 map appears in the Eternal Laboratory's Map Device in Act 3 Merciless (details needed) |Journeys await you |Reward - Item |0
-#% reduced Attribute Requirements|The rare item sacrificed appears in another darkshrine |Perhaps next time |Special |0
+#% reduced Attribute Requirements|The rare item sacrificed appears in the next darkshrine |Perhaps next time |Special |0
 #% reduced Enemy Stun Threshold|Grants permanent Massive shrine |Courage stands tall |Player mod - Shrine |0
 #% Reduced Flask Charges Used|No mana cost for skills |Power without limit |Player mod - Special |0
 +# Life gained for each Enemy hit by your Attacks|Rampage is added to the area |Your anger rises |Map mod - League |0
 +# Life gained on Kill|(40 to 50)% increased monster life, 8% increased rarity, 15% increased quantity |Tough as Nails |Map mod - Common |0
-+# Mana Gained on Kill|permanent replenishing shrine|Restore that which was lost|Unknown|0
 +# to maximum Life|Grants permanent Diamond shrine |Deliver pain exquisite |Player mod - Shrine |0
 +# to Accuracy Rating|Enemies have 4 additional projectiles, 8% increased rarity, 15% increased quantity |Nothing is more intimidating on the battlefront than a wall of arrows |Map mod - Common |0
 +# to All Attributes|A random Rogue Exile spawns in the area |Any and Everything |Spawn - Rogue Exile |0
@@ -61,38 +60,36 @@
 +#% to Cold Resistance|Spawns 1 group of Mutewinds|The Mutewind rises|Unknown|0
 +#% to Fire Resistance|Spawns 1 group of Redblades|The Redblade rises|Unknown|0
 +#% to Lightning Resistance|Spawns 1 group of Brinerots|The Brinerot rises|Unknown|0
-+#% chance to shock|You are rewarded with 20 Cartographer's Chisels|An accurate maps makes for a rewarding journey |Reward - Currency |0
-#% increased Cast Speed with Lightning Skills|A rare monster in the area will drop five rare belt. |Keeper of the buckle |Map mod - Item |0
-#% Increased critical strike multiplier with lighting skills|A rare monster in the area will drop five rare belt. |Keeper of the buckle |Map mod - Item |0
-#% increased shock duration on enemies|You are rewarded with 20 Cartographer's Chisels|An accurate maps makes for a rewarding journey |Reward - Currency |0
+#% chance to shock|You are rewarded with 20 Cartographer's Chisels|An accurate maps makes for a rewarding journey |Reward - Currency |0
+#% increased shock duration on enemies|You are rewarded with 20 Cartographer's Chisels|An accurate maps makes for a rewarding journey |Reward - Currency |1
+#% increased Cast Speed with Lightning Skills|A rare monster in the area will drop five rare belt.|Keeper of the buckle|Map mod - Item|0
+#% increased Critical Strike Chance with Lightning Skills|A rare monster in the area will drop five rare belt.|Keeper of the buckle|Map mod - Item 0
+#% increased Critical Strike Multiplier with Lightning Skills|A rare monster in the area will drop five rare belt.|Keeper of the buckle|Map mod - Item|0
 #% increased totem life|Unknown|Your natural vitality deserts you |Player Effect |0
 +#% Mine Damage|Random monsters drop a sacrifice fragment (not limited to one) |Seek the Apex |Map mod - Item |0
 #% increased Mine Damage|Random monsters drop a sacrifice fragment (not limited to one) |Seek the Apex |Map mod - Item |0
 #% increased Mine Laying Speed|Random monsters drop a sacrifice fragment (not limited to one) |Seek the Apex |Map mod - Item |0
 +#% Spell Critical Strike Chance|A rare monster in the area will drop five rare staves. |Keeper of the stave |Map mod - Item |0
-+#% trap throwing speed|A random monster will drop ten rares |Keeper of the hoard |Map mod - Item |0
-Adds #-# Cold Damage|Shivering Tempest |An Ice wind whips up around you |Map mod - Tempest |0
+#% trap throwing speed|A random monster will drop ten rares |Keeper of the hoard |Map mod - Item |0
+Adds #-# Cold Damage to Attacks|Shivering Tempest |An Ice wind whips up around you |Map mod - Tempest|0
 Adds #-# Cold Damage to Spells|does what it says (Rivsoft/Wiki differ)|The Mutewind trial begins in 30 seconds. It ends if you run away. Be prepared to die.|Unknown|0
-Adds #-# Fire Damage|Seething Tempest |A wind brings a scent of smoke |Map mod - Tempest |0
-Adds #-# Lightning Damage|Galvanizing Tempest |A storm approaches |Map mod - Tempest |0
-Adds #-# Physical Damage|Monsters fracture after death, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
-Adds #-# Physical Damage to Attacks|Monsters fracture after death, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
+Adds #-# Fire Damage to Attacks|Seething Tempest |A wind brings a scent of smoke |Map mod - Tempest |0
+Adds #-# Lightning Damage to Attacks|Galvanizing Tempest |A storm approaches |Map mod - Tempest |0
+Adds #-# Physical Damage|Monsters fracture, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
+Adds #-# Physical Damage to Attacks|Monsters fracture, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
 Area has patches of burning ground|A Redblade warband spawns with 3 leaders|The Redblade Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Warband |0
 Area has patches of chilled ground|A Mutewind warband spawns with 3 leaders|The Mutewind Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Warband |0
 Area has patches of shocking ground|A Brinerot warband spawns with 3 leaders|The Brinerot Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Warband |0
-Area has patches of desecrated ground|A Renegade warband spawns with 3 leaders|The Renegade Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Warband |0
 Corrupted|opens portals to a vaal side area|The influence of the Vaal continues long after their civilization has crumbled|Unknown|0
 +#% to Fire and Cold Resitances|Spawns A Tormented Vaal Cultist |He found power in sacrifice |Spawn - Tormented Spirit |0
 +#% to Cold and Lightning resistances|Spawns A Tormented Vaal Cultist |He found power in sacrifice |Spawn - Tormented Spirit |0
 +#% to Fire and Lightning resistances|Spawns A Tormented Vaal Cultist |He found power in sacrifice |Spawn - Tormented Spirit |0
 #% Increased Damage over Time|Perandus Bank spawns in the area |The treasures of the wealthy await you |Spawn - Strongbox |0
-#% increased Movement Speed|Become the nightmare|Grants permanent Divine shrine|Player mod - Shrine|0
 #% increased Monster Attack Speed|Become the nightmare|Grants permanent Divine shrine|Player mod - Shrine|0
-#% increased Monster Cast Speed|Become the nightmare|Grants permanent Divine shrine|Player mod - Shrine|0
 Reflects # Physical Damage to Melee Attackers|Grants HeadhunterHeadhunter|The hunted becomes the hunter |Player mod - Special |0
 Reflects # Physical Damage to Melee Attackers|headhunter effect (get powers from slain enemies)|The hunted becomes the hunter|Unknown|0
 #% of Physical Attack Damage Leeched as Life|Spawns aprox 20 rare devourers around the zone |The ground beneath you tremors |Spawn - Monsters |0
-#% Increased Spell Damage|Random Darkshrine Effect|Random Darkshrine Effect|Special|0
+#% increased Spell Damage|Random Darkshrine Effect|Random Darkshrine Effect|Special|0
 Monsters have #% increased Area of Effect|Grants permanent Echoing shrine|Let your rage flow freely|Player mod - Shrine|0
 Players Recover Life, Mana and Energy Shield #% slower|A regular Strongbox spawns in the area|A miser's trove awaits you|Spawn - Strongbox|0
 #% increased Monster Damage|Strange Barrel spawns in the area|Sensible objects await you|Spawn - Strongbox|0
@@ -100,16 +97,85 @@ Area contains many Totems|Kaom's Cache spawns in the area|The secrets of the anc
 Players have Elemental Equilibrium|Empyrean Apparatus spawns in the area|Locations far and wide await you|Spawn - Strongbox|0
 +#% Monster Fire Resistance|Molten Tempest|A wind brings a whiff of ash|Map mod - Tempest|0
 +#% Monster Lightning Resistance|Electrocuting Tempest|The air feels charged somehow|Map mod - Tempest|0
-+#% chance to Ignite|You are rewarded with 20 Blacksmith's Whetstone|Fortify yourself|Reward - Currency|0
-+#% more Rare Monsters|Drops 5 normal rarity jewels|No power but what you can make of them|Reward - Item|0
-Rare Monsters each have a Nemesis Mod|Drops 5 normal rarity jewels|No power but what you can make of them|Reward - Item|0
+#% chance to Ignite|You are rewarded with 20 Blacksmith's Whetstones|Fortify yourself|Reward - Currency|0
+#% increased Ignite Duration on Enemies|You are rewarded with 20 Blacksmith's Whetstones|Fortify yourself|Reward - Currency|1
+#% more Rare Monsters|Drops 5 normal rarity jewels|No power but what you can make of them|Reward - Item|0
+Rare Monsters each have a Nemesis Mod|Drops 5 normal rarity jewels|No power but what you can make of them|Reward - Item|1
 #% increased Movement Speed|Gain all stats on the item as if it was equipped|You become one with your offering|Player mod - Item|0
 #% increased Area Damage|Sockets a new random jewel into an empty (even unallocated) jewel slot (needs confirmation)|Power can be found in unexpected places|Special|0
-#% increased Chaos Damage|Monsters poison on hit, 8% increased rarity, 16% increased quantity (needs confirmation)|Feel the corruption in your veins|Map mod - Common|0
+#% increased Chaos Damage|Monsters poison on hit, 8% increased rarity, 16% increased quantity|Feel the corruption in your veins|Map mod - Common|0
 #% increased maximum Mana|Players Recover Life, Mana and Energy Shield 60% slower|Your natural vitality deserts you|Map mod - Common|0
-Slaying Enemies close together can attract monsters from Beyond|All enemies affected by Blasphemer's Touch|The touch of the damned|Map Mod - Special|0
-#% increased Critical Strike Multiplier with One Handed Melee Weapons|A rare monster in the area will drop five rare daggers (needs confirmation)|Keeper of the knife|Map mod - Item|0
+Slaying Enemies close together can attract monsters from Beyond|All enemies affected by a random spirit's touch (all by the same one)|The touch of the damned|Map Mod - Special|0
+#% increased Critical Strike Multiplier with One Handed Melee Weapons|A rare monster in the area will drop five rare daggers|Keeper of the knife|Map mod - Item|0
 #% increased Projectile Damage|A rare monster in the area will drop five rare jewels|Keeper of the jewels|Map mod - Item|0
-#% increased Totem Damage|A rare monster in the area will drop a large amount of currency, as though it was possessed by a Tormented Embezzeler.|Keeper of wealth|Map mod - Item|0
-Totems gain +#% to all Elemental Resistances|A rare monster in the area will drop a large amount of currency, as though it was possessed by a Tormented Embezzeler.|Keeper of wealth|Map mod - Item|0
+#% increased Totem Damage|A rare monster in the area will drop a large amount of currency|Keeper of wealth|Map mod - Item|0
+Totems gain +#% to all Elemental Resistances|A rare monster in the area will drop a large amount of currency|Keeper of wealth|Map mod - Item|0
 #% increased Trap Damage|A random monster will drop ten rares |Keeper of the hoard |Map mod - Item |0
+Monsters deal #% extra Damage as Cold|Spawns a Tormented Storm Cultist|He craved understanding no matter the cost|Spawn - Tormented Spirit|0
++#% Monster Physical Damage Reduction|Battering tempest|You feel buffeted by a strong gust|Map mod - Tempest|0
+Area contains two Unique Bosses|Echoing tempest|You hear a voice on the wind|Map mod - Tempest|0
+Area is inhabited by Sea Witches and their Spawn|Spawns Murk Fiends throughout the area|A situation is only dangerous if can't run away from it|Spawn - Monsters|0
+#% increased Attack Speed with Axes|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed with Bows|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed with Claws|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed with Daggers|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed with Maces|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed with Staves|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed with Swords|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed with One Handed Melee Weapons|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed with Two Handed Melee Weapons|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed with Wands|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed while Dual wielding|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Attack Speed while holding a shield|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
+#% increased Cast speed while wielding a staff|Spawns a Tormented Forger|He was a stickler for the details|Spawn - Tormented Spirit|0
+#% increased Cast speed while Dual Wielding|Spawns a Tormented Forger|He was a stickler for the details|Spawn - Tormented Spirit|0
+#% increased Cast speed while holding a shield|Spawns a Tormented Forger|He was a stickler for the details|Spawn - Tormented Spirit|0
+Unique Boss deals #% increased Damage|Spawns a Tormented Seditionist|He spoke the truths as he saw them|Spawn - Tormented Spirit|0
+Unique Boss has #% increased Attack and Cast Speed|Spawns a Tormented Seditionist|He spoke the truths as he saw them|Spawn - Tormented Spirit|1
+Monsters Poison on Hit|Spawns a Tormented Arsonist|He loved to play with fire|Spawn - Tormented Spirit|0
+#% increased Attack and Cast Speed|Spawns a Tormented Thug|His strength made him arrogant|Spawn - Tormented Spirit|0
+#% chance to Freeze|You are rewarded with 20 Armourer's Scraps|Fortify yourself|Reward - Currency|0
+#% increased Freeze Duration on Enemies|You are rewarded with 20 Armourer's Scraps|Fortify yourself|Reward - Currency|0
+#% more Monster Life|Drops random currency after 30 seconds|Good things come to those who wait|Reward - Currency|0
+Area is inhabited by 2 additional Rogue Exiles|SLOWLY drops lots of whetstones, scraps, baubles, chisels and GCPs|Better yourself|Reward - Currency|0
+#% increased Melee Critical Strike Multiplier|Keeper of the hammer|A rare monster in the area will drop five rare maces|Map mod - Item|0
+#% increased Cast Speed with Fire Skills|A rare monster in the area will drop five rare amulets|Keeper of the trinkets|Map mod - Item|0
+#% increased Critical Strike Chance with Fire Skills|A rare monster in the area will drop five rare amulets|Keeper of the trinkets|Map mod - Item|0
+#% increased Critical Strike Multiplier with Fire Skills|A rare monster in the area will drop five rare amulets|Keeper of the trinkets|Map mod - Item|0
+#% increased Cast Speed with Cold Skills|A rare monster in the area will drop five rare rings|Keeper of the ring|Map mod - Item|0
+#% increased Critical Strike Chance with Cold Skills|A rare monster in the area will drop five rare rings|Keeper of the ring|Map mod - Item|0
+#% increased Critical Strike Multiplier with Cold Skills|A rare monster in the area will drop five rare rings|Keeper of the ring|Map mod - Item|0
+Area has increased monster variety|+80% Monster Fire Resistance|Pyromancer's bane|Map mod - Common|0
+Area is inhabited by Undead|+80% Monster Cold Resistance|Auromancer's bane|Map mod - Common|0
+#% increased Lightning Damage|Monsters deal (90 to 110)% extra Damage as Lightning, 8% increased rarity, 15% increased quantity|No fury in nature is greater than that of lightning|Map mod - Common|0
+Area is inhabited by Skeletons|Monsters gain 3 Frenzy Charges every 20 seconds|Whipped into a frenzy|Map mod - Common|0
+#% reduced Mana Cost of Skills|-(12-16)% maximum Player Resistances|Your protections fail you|Map mod - Common|0
+-# to Mana Cost of Skills|Opens 6 portals to Oba's Cursed Trove|Don't tarry|Portal|0
+Unique Boss has #% increased Life|Every enemy's health is reduced to 1|Deliver the killing blow|Map mod - Special|0
+Unique Boss has #% increased Area of Effect|Every enemy's health is reduced to 1|Deliver the killing blow|Map mod - Special|1
+Minions deal #% increased Damage|All enemies are immobilized|Fear will root even the mighty in place|Map mod - Special|0
+Minions have #% Chance to Block|All enemies are immobilized|Fear will root even the mighty in place|Map mod - Special|0
+Minions have #% increased maximum Life|All enemies are immobilized|Fear will root even the mighty in place|Map mod - Special|0
+#% increased maximum Life|Check all clickables in the area|Leave no stone unturned||0
+Monsters gain # Endurance Charges every 20 seconds|Clears all your vendors|Not for sale||0
+Monsters gain # Endurance Charge every 20 seconds|Clears all your vendors|Not for sale||0
+Monsters gain # Frenzy Charges every 20 seconds|Clears all your vendors|Not for sale||0
+Monsters gain # Frenzy Charge every 20 seconds|Clears all your vendors|Not for sale||0
+Monsters gain # Power Charges every 20 seconds|Clears all your vendors|Not for sale||0
+Monsters gain # Power Charge every 20 seconds|Clears all your vendors|Not for sale||0
+Monsters' skills Chain 2 additional times|Summons an allied Grandmaster|A worthy ally||0
+Monsters fire # additional Projectiles|Summons an allied Grandmaster|A worthy ally||0
+Monsters have #% increased Critical Strike Chance|Empties all flasks|Your sustenance is depleted||0
+Monsters have #% increased Critical Strike Multiplier|Empties all flasks|Your sustenance is depleted||1
+#% increased Spell Damage while dual wielding|Replaces all items on the ground with their vendor price|The riches you sought were all around you||0
+#% increased Spell Damage while wielding a staff|Replaces all items on the ground with their vendor price|The riches you sought were all around you||0
+#% increased Spell Damage while holding a shield|Replaces all items on the ground with their vendor price|The riches you sought were all around you||0
+#% more Magic Monsters|Some of the monsters become allied with you|Mutiny in the ranks||0
+Magic Monster Packs each have a Bloodline Mod|Some of the monsters become allied with you|Mutiny in the ranks||1
+Monsters have #% chance to Avoid Elemental Status Ailments|Spawns another Darkshrine|I am Twinned||0
+Monsters are immune to Elemental Status Ailments|Spawns another Darkshrine|I am Twinned||0
+#% increased Flask effect duration|Unknown (possibly fills Vaal skills)|Atziri's power fills you||0
+Monsters reflect #% of Elemental Damage|Unknown (possibly changes loot allocation to free for all)|Rewards are seized only by those quick enough to find them||0
+Monsters reflect #% of Physical Damage|Unknown (possibly changes loot allocation to free for all)|Rewards are seized only by those quick enough to find them||0
++# Mana gained for each Enemy hit by your Attacks|Area turns dark (similar to act 2 event)|Greust would not approve||0
+
