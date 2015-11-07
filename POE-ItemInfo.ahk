@@ -1921,6 +1921,10 @@ AssembleDarkShrineInfo()
         Result := Result .  "`n 20% Quality:`n  - Wait, what was that sound?`n   -- Random item gets a skin transfer"
     }
     
+    If (Item.IsMirrored) {
+        Result := Result .  "`n Mirrored:`n  - The little things add up`n   -- Unknown effect"
+    }
+    
     return Result
     
 }
