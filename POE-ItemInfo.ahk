@@ -1905,7 +1905,12 @@ AssembleDarkShrineInfo()
             ; This loop retrieves each line from the file, one at a time.
             StringSplit, DsEffect, A_LoopReadLine, |,
             if (DsAffix = DsEffect1) {
-                Result := Result . "`n  - " . DsEffect3 . "`n  -- " . DsEffect2
+                If ((Item.IsRing or Item.IsAmulet or Item.IsBelt) and DsAffix = "+# to Evasion Rating") {
+                    ; Evasion rating on jewelry has a different effect than Evasion rating on other rares
+                    Result := Result . "`n  - Always watch your back (jewelry only)`n  -- Three rare monsters spawn around the darkshrine"
+                } Else {
+                    Result := Result . "`n  - " . DsEffect3 . "`n  -- " . DsEffect2
+                }
                 ; TODO: maybe use DsEffect 5 to display warning about complex affixes
                 ; We found the affix so we can continue with the next affix
                 continue affixloop
