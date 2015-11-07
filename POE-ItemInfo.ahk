@@ -1874,15 +1874,13 @@ AssembleDarkShrineInfo()
         Found := Found + 1
         
         DsAffix := ""
-        If (RegExMatch(AffixLine,"^[0-9.]+% "))
+        If (RegExMatch(AffixLine,"[0-9.]+% "))
         {
-            DsAffix := RegExReplace(AffixLine,"^[0-9.]+% ","#% ")
+            DsAffix := RegExReplace(AffixLine,"[0-9.]+% ","#% ")
         } Else If (RegExMatch(AffixLine,"^\+[0-9]+ ")) {
             DsAffix := RegExReplace(AffixLine,"^\+[0-9]+ ","+# ")
         } Else If (RegExMatch(AffixLine," [0-9]+-[0-9]+ ")) {
             DsAffix := RegExReplace(AffixLine," [0-9]+-[0-9]+ "," #-# ")
-        } Else If (RegExMatch(AffixLine,"^\+[0-9.]+% ")) {
-            DsAffix := RegExReplace(AffixLine,"^\+[0-9.]+% ","+#% ")
         } Else {
             DsAffix := AffixLine
         }
