@@ -1879,10 +1879,19 @@ AssembleDarkShrineInfo()
             DsAffix := RegExReplace(AffixLine,"[0-9.]+% ","#% ")
         } Else If (RegExMatch(AffixLine,"^\+[0-9.]+ ")) {
             DsAffix := RegExReplace(AffixLine,"^\+[0-9.]+ ","+# ")
+        } Else If (RegExMatch(AffixLine,"^\-[0-9.]+ ")) {
+            ; Needed for Elreon's mod on jewelry
+            DsAffix := RegExReplace(AffixLine,"^\-[0-9.]+ ","-# ")
         } Else If (RegExMatch(AffixLine,"^[0-9.]+ ")) {
             DsAffix := RegExReplace(AffixLine,"^[0-9.]+ ","# ")
-        }Else If (RegExMatch(AffixLine," [0-9]+-[0-9]+ ")) {
+        } Else If (RegExMatch(AffixLine," [0-9]+-[0-9]+ ")) {
             DsAffix := RegExReplace(AffixLine," [0-9]+-[0-9]+ "," #-# ")
+        } Else If (RegExMatch(AffixLine,"gain [0-9]+ (Power|Frenzy|Endurance) Charge")) {
+            ; Fixes recognition of affixes like "Monsters gain # Endurance Charges every 20 seconds"
+            DsAffix := RegExReplace(AffixLine,"gain [0-9]+ ","gain # ")
+        } Else If (RegExMatch(AffixLine,"fire [0-9]+ additional Projectiles")) {
+            ; Fixes recognition of "Monsters fire # additional Projectiles" affix
+            DsAffix := RegExReplace(AffixLine,"[0-9]+","#")
         } Else {
             DsAffix := AffixLine
         }
