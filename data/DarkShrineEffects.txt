@@ -33,6 +33,7 @@
 #% reduced Enemy Stun Threshold|Grants permanent Massive shrine |Courage stands tall |Player mod - Shrine |0
 #% Reduced Flask Charges Used|No mana cost for skills |Power without limit |Player mod - Special |0
 +# Life gained for each Enemy hit by your Attacks|Rampage is added to the area |Your anger rises |Map mod - League |0
++# Life gained for each Enemy hit by Attacks|Rampage is added to the area |Your anger rises |Map mod - League |0
 +# Life gained on Kill|(40 to 50)% increased monster life, 8% increased rarity, 15% increased quantity |Tough as Nails |Map mod - Common |0
 +# to maximum Life|Grants permanent Diamond shrine |Deliver pain exquisite |Player mod - Shrine |0
 +# to Accuracy Rating|Enemies have 4 additional projectiles, 8% increased rarity, 15% increased quantity |Nothing is more intimidating on the battlefront than a wall of arrows |Map mod - Common |0
