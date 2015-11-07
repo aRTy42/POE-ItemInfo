@@ -1877,9 +1877,11 @@ AssembleDarkShrineInfo()
         If (RegExMatch(AffixLine,"[0-9.]+% "))
         {
             DsAffix := RegExReplace(AffixLine,"[0-9.]+% ","#% ")
-        } Else If (RegExMatch(AffixLine,"^\+[0-9]+ ")) {
-            DsAffix := RegExReplace(AffixLine,"^\+[0-9]+ ","+# ")
-        } Else If (RegExMatch(AffixLine," [0-9]+-[0-9]+ ")) {
+        } Else If (RegExMatch(AffixLine,"^\+[0-9.]+ ")) {
+            DsAffix := RegExReplace(AffixLine,"^\+[0-9.]+ ","+# ")
+        } Else If (RegExMatch(AffixLine,"^[0-9.]+ ")) {
+            DsAffix := RegExReplace(AffixLine,"^[0-9.]+ ","# ")
+        }Else If (RegExMatch(AffixLine," [0-9]+-[0-9]+ ")) {
             DsAffix := RegExReplace(AffixLine," [0-9]+-[0-9]+ "," #-# ")
         } Else {
             DsAffix := AffixLine
@@ -1893,7 +1895,7 @@ AssembleDarkShrineInfo()
         {  
             ; This loop retrieves each line from the file, one at a time.
             StringSplit, DsEffect, A_LoopReadLine, |,
-            if (DsAffix == DsEffect1) {
+            if (DsAffix = DsEffect1) {
                 Result := Result . "`n  - " . DsEffect3 . "`n  -- " . DsEffect2
                 ; TODO: maybe use DsEffect 5 to display warning about complex affixes
                 ; We found the affix so we can continue with the next affix
