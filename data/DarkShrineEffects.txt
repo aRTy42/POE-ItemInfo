@@ -21,7 +21,7 @@
 #% increased Light Radius|Identifies every item in your inventory |The light of reason still shines |Reward - Special |0
 #% increased Lightning Damage|Monsters deal (90 to 110)% extra Damage as Lightning, 8% increased rarity, 15% increased quantity |No fury in nature is greater than that of lightning. |Map mod - Common |0
 #% increased Mana Regeneration Rate|Spawns a Tormented Embezzler (wiki: also 8% increased rarity, 15% increased quantity)|He stole that which he was entrusted with |Spawn - Tormented Spirit |0
-#% increased maximum Energy Shield|Magic monsters on the map are cloned |Brothers in arms |Map mod - Special |0
+#% increased maximum Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms |Map mod - Special |0
 #% increased Physical Damage|A Blacksmith's Strongbox spawns in the area |The secrets of the forge await you |Spawn - Strongbox |0
 #% increased Projectile Speed|Enemy projectiles have chaining |Some challenges are best faced alone |Map mod - Common |0
 #% increased Stun Duration on Enemies|Spawns a clone of yourself to follow you around (Only auto attacks) |If you want a job done well, there is nobody better than yourself |Player mod - Special |0
@@ -111,7 +111,7 @@ Slaying Enemies close together can attract monsters from Beyond|All enemies affe
 #% increased Totem Damage|A rare monster in the area will drop a large amount of currency|Keeper of wealth|Map mod - Item|0
 Totems gain +#% to all Elemental Resistances|A rare monster in the area will drop a large amount of currency|Keeper of wealth|Map mod - Item|0
 #% increased Trap Damage|A random monster will drop ten rares |Keeper of the hoard |Map mod - Item |0
-Monsters deal #% extra Damage as Cold|Spawns a Tormented Storm Cultist|He craved understanding no matter the cost|Spawn - Tormented Spirit|0
+Monsters deal #% extra Damage as Lightning|Spawns a Tormented Storm Cultist|He craved understanding no matter the cost|Spawn - Tormented Spirit|0
 +#% Monster Physical Damage Reduction|Battering tempest|You feel buffeted by a strong gust|Map mod - Tempest|0
 Area contains two Unique Bosses|Echoing tempest|You hear a voice on the wind|Map mod - Tempest|0
 Area is inhabited by Sea Witches and their Spawn|Spawns Murk Fiends throughout the area|A situation is only dangerous if can't run away from it|Spawn - Monsters|0
@@ -153,9 +153,9 @@ Area is inhabited by Skeletons|Monsters gain 3 Frenzy Charges every 20 seconds|W
 -# to Mana Cost of Skills|Opens 6 portals to Oba's Cursed Trove|Don't tarry|Portal|0
 Unique Boss has #% increased Life|Every enemy's health is reduced to 1|Deliver the killing blow|Map mod - Special|0
 Unique Boss has #% increased Area of Effect|Every enemy's health is reduced to 1|Deliver the killing blow|Map mod - Special|1
-Minions deal #% increased Damage|All enemies are immobilized|Fear will root even the mighty in place|Map mod - Special|0
-Minions have #% Chance to Block|All enemies are immobilized|Fear will root even the mighty in place|Map mod - Special|0
-Minions have #% increased maximum Life|All enemies are immobilized|Fear will root even the mighty in place|Map mod - Special|0
+Minions deal #% increased Damage|Monsters are rooted in place|Fear will root even the mighty in place|Map mod - Special|0
+Minions have #% Chance to Block|Monsters are rooted in place|Fear will root even the mighty in place|Map mod - Special|0
+Minions have #% increased maximum Life|Monsters are rooted in place|Fear will root even the mighty in place|Map mod - Special|0
 #% increased maximum Life|Check all clickables in the area|Leave no stone unturned||0
 Monsters gain # Endurance Charges every 20 seconds|Clears all your vendors|Not for sale||0
 Monsters gain # Endurance Charge every 20 seconds|Clears all your vendors|Not for sale||0
@@ -178,4 +178,6 @@ Monsters are immune to Elemental Status Ailments|Spawns another Darkshrine|I am 
 Monsters reflect #% of Elemental Damage|Unknown (possibly changes loot allocation to free for all)|Rewards are seized only by those quick enough to find them||0
 Monsters reflect #% of Physical Damage|Unknown (possibly changes loot allocation to free for all)|Rewards are seized only by those quick enough to find them||0
 +# Mana gained for each Enemy hit by your Attacks|Area turns dark (similar to act 2 event)|Greust would not approve||0
-
+#% increased Melee Damage|Grants permanent Brutal shrine|Player mod - Shrine|Hit hard, hit once|0
++#% Monster Cold Resistance|Glacial Tempest|You feel a sudden cold breeze|Map mod - Tempest|0
+#%chance to Knock Enemies Back on hit|A rare monster in the area will drop 100 Scrolls of Wisdom.|Keeper of wisdom|Map mod - Item|0
