@@ -1914,15 +1914,15 @@ AssembleDarkShrineInfo()
     }
     
     If (Item.IsCorrupted) {
-        Result := Result .  "`n Corrupted:`n  The influence of vaal continues long after their civilization has crumbled`n   Opens portals to a corrupted area"
+        Result := Result .  "`n Corrupted:`n  - The influence of vaal continues long after their civilization has crumbled`n  -- Opens portals to a corrupted area"
     }
     
     If (Item.Quality == 20) {
-        Result := Result .  "`n 20% Quality:`n  - Wait, what was that sound?`n   -- Random item gets a skin transfer"
+        Result := Result .  "`n 20% Quality:`n  - Wait, what was that sound?`n  -- Random item gets a skin transfer"
     }
     
     If (Item.IsMirrored) {
-        Result := Result .  "`n Mirrored:`n  - The little things add up`n   -- Unknown effect"
+        Result := Result .  "`n Mirrored:`n  - The little things add up`n  -- Unknown effect"
     }
     
     return Result
