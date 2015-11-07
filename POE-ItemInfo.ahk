@@ -1912,7 +1912,7 @@ AssembleDarkShrineInfo()
             }
         }
         
-        Result := Result . "`n   " . "Unknown"
+        Result := Result . "`n  - Unknown"
         
     }
       
