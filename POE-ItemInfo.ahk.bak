@@ -6900,9 +6900,6 @@ UnhandledDlg_OK:
 ; ############ ADD YOUR OWN MACROS HERE #############
 ;#IfWinActive Path of Exile ahk_class Direct3DWindowClass ahk_exe PathOfExile.exe
 ;{
-;   ^RButton::Send ^c   ;cntl-right mouse button send's cntl-c
-;   ^WheelUp::Send {Left}  ;cntl-mouse wheel up toggles stash tabs left
-;   ^WheelDown::Send {Right}  ;cntl-mouse wheel down toggles stash tabs right.
 ;   F1::^c  ;changes the control-c to F1 key
 ;	F5::Send {Enter}/remaining{Enter}  	;mobs remaining
 ;	F9::Send {Enter}/hideout{Enter}		;goto hideout
