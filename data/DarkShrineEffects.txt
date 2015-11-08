@@ -6,7 +6,7 @@
 #% increased Armour and Energy Shield|Spawns the unique enemies from Kaom's Cache around the darkshrine |Ancestral magic |Spawn - Special |0
 #% increased Armour and Evasion|Three packs of magic monsters spawn around the darkshrine |Surprise is a problem only for the unprepared |Spawn - Monsters |0
 #% increased Attack Speed|Grants permanent Acceleration shrine |Death doesn't wait |Player mod - Shrine |0
-#% increased Cast Speed|All unequipped items are scoured and you are rewarded with currency equal to the value of the removed mods. |All rewards have their cost |Reward - Currency |0
+#% increased Cast Speed|All unequipped items are scoured and you are rewarded with alchemy and transmutation orbs. |All rewards have their cost |Reward - Currency |0
 #% increased Cold Damage|Monsters deal (90 to 110)% extra Damage as Cold, 8% increased rarity, 15% increased quantity |No adversary in nature is more deadly than the cold |Map mod - Common |0
 #% increased Critical Strike Chance|An unequipped white item in your inventory is turned into a rare |Lead turns to gold |Reward - Item Upgrade |0
 #% increased Critical Strike Chance for Spells|one mob drops 5 rare staves|Keeper of the stave|Unknown|0
@@ -48,7 +48,18 @@
 +# to Level of Socketed Gems|Resets master dailies |The reward for a job well done is often another job |Special |0
 +# to Level of Socketed Lightning Gems|An Ornate Strongbox spawns in the area |A valued prize awaits you |Spawn - Strongbox |0
 +# to Level of Socketed Melee Gems|A Large Strongbox spawns in the area |A hoard awaits you |Spawn - Strongbox |0
-+# to Level of Socketed Minion Gems|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage with Axes|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage with Bows|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage with Claws|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage with Daggers|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage with Maces|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage with Staves|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage with Swords|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage with One Handed Melee Weapons|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage with Two Handed Melee Weapons|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage with Wands|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage while Dual wielding|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Damage while holding a shield|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
 +# to maximum Energy Shield|Rare monsters on the map are cloned |Prepared for trouble? How about double? |Map mod - Special |0
 +# to Maximum Mana|Spawns a Tormented Necromancer in the area |He loved the dead. Too much |Spawn - Tormented Spirit |0
 +# to Strength|Jonah Unchained, Xandro Blooddrinker, Damoi Tui or Vickas Giantbone spawns in the area |Axe and Maul |Spawn - Rogue Exile |0
@@ -73,10 +84,13 @@
 +#% Spell Critical Strike Chance|A rare monster in the area will drop five rare staves. |Keeper of the stave |Map mod - Item |0
 #% trap throwing speed|A random monster will drop ten rares |Keeper of the hoard |Map mod - Item |0
 Adds #-# Cold Damage to Attacks|Shivering Tempest|An Ice wind whips up around you|Map mod - Tempest|0
+Adds #-# Cold Damage|Shivering Tempest|An Ice wind whips up around you|Map mod - Tempest|0
 Adds #-# Cold Damage to Spells|Shivering Tempest|An Ice wind whips up around you|Map mod - Tempest|0
 Adds #-# Fire Damage to Attacks|Seething Tempest|A wind brings a scent of smoke|Map mod - Tempest|0
+Adds #-# Fire Damage|Seething Tempest|A wind brings a scent of smoke|Map mod - Tempest|0
 Adds #-# Fire Damage to Spells|Seething Tempest|A wind brings a scent of smoke|Map mod - Tempest|0
 Adds #-# Lightning Damage to Attacks|Galvanizing Tempest|A storm approaches |Map mod - Tempest|0
+Adds #-# Lightning Damage|Galvanizing Tempest|A storm approaches |Map mod - Tempest|0
 Adds #-# Lightning Damage to Spells|Galvanizing Tempest|A storm approaches |Map mod - Tempest|0
 Adds #-# Chaos Damage to Attacks|Corrupting Tempest|You catch a faint smell of corruption on the wind|Map mod - Tempest|0
 Adds #-# Physical Damage|Monsters fracture, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
@@ -137,11 +151,11 @@ Area is inhabited by Sea Witches and their Spawn|Spawns Murk Fiends throughout t
 #% increased Cast speed while holding a shield|Spawns a Tormented Forger|He was a stickler for the details|Spawn - Tormented Spirit|0
 Unique Boss deals #% increased Damage|Spawns a Tormented Seditionist|He spoke the truths as he saw them|Spawn - Tormented Spirit|0
 Unique Boss has #% increased Attack and Cast Speed|Spawns a Tormented Seditionist|He spoke the truths as he saw them|Spawn - Tormented Spirit|1
-Monsters Poison on Hit|Spawns a Tormented Arsonist|He loved to play with fire|Spawn - Tormented Spirit|0
+Monsters Poison on Hit|Spawns a Tormented Poisoner|He loved the thrill of killing his enemies. From far away.|Spawn - Tormented Spirit|0
 #% increased Attack and Cast Speed|Spawns a Tormented Thug|His strength made him arrogant|Spawn - Tormented Spirit|0
 #% chance to Freeze|You are rewarded with 20 Armourer's Scraps|Fortify yourself|Reward - Currency|0
 #% increased Freeze Duration on Enemies|You are rewarded with 20 Armourer's Scraps|Fortify yourself|Reward - Currency|0
-#% more Monster Life|Drops random currency after 30 seconds|Good things come to those who wait|Reward - Currency|0
+#% more Monster Life|Drops a regal orb after 30 seconds|Good things come to those who wait|Reward - Currency|0
 Area is inhabited by 2 additional Rogue Exiles|SLOWLY drops lots of whetstones, scraps, baubles, chisels and GCPs|Better yourself|Reward - Currency|0
 #% increased Melee Critical Strike Multiplier|A rare monster in the area will drop five rare maces|Keeper of the hammer|Map mod - Item|0
 #% increased Cast Speed with Fire Skills|A rare monster in the area will drop five rare amulets|Keeper of the trinkets|Map mod - Item|0
@@ -191,6 +205,7 @@ Monsters are Immune to Curses|Blasphemous Tempest|You catch a foul smell on the 
 +# to Maximum Number of Skeletons|You are rewarded with 40 Orbs of Transmutation|You are rewarded with 40 {{il|Orb of Transmutation|Reward - Currency|0
 #% Critical Strike Multiplier with Elemental Skills|You are rewarded with 1 Divine Orb|A gift from the divine|Reward - Currency|0
 #% increased Energy Shield Recharge Rate|Drops a Divination Card|More than the paper its printed on|Reward - Item|0
++# Energy Shield gained for each Enemy hit by your Attacks|Drops a Divination Card|More than the paper its printed on|Reward - Item|0
 #% increased Meelee Critical Strike Chance|A rare monster in the area will drop five rare two-handed maces|Keeper of the maul|Map mod - Item|0
 #% increased Critical Strike Chance for Spells|A rare monster in the area will drop five rare wands|Keeper of the wand|Map mod - Item|0
 #% increased Critical Strike Chance with One Handed Melee Weapons|A rare monster in the area will drop five rare claws|Keeper of the claw|Map mod - Item|0
