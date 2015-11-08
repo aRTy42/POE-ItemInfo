@@ -1,6 +1,11 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+1.9.6
+=================================
+Darkshrine affixes added by XiMMiX
+Added current info to the "About" screen. 
+
 1.9.5
 =================================
 Updated info screen
