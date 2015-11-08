@@ -222,3 +222,6 @@ Area is inhabited by Animals|Unknown effect|Unflinching||0
 #% Fire Damage Leeched as Life|Stack of currency|Roll the dice|Reward - Currency|0
 #% Cold Damage Leeched as Life|Stack of currency|Roll the dice|Reward - Currency|0
 #% Lightning Damage Leeched as Life|Stack of currency|Roll the dice|Reward - Currency|0
++# to Level of Socketed Lightning Gems|True craftsmanship awaits you|An Artisan's Strongbox spawns in the area|Spawn - Strongbox|0
+Area is inhabited by one additional Invasion Boss|Opens six portals to Acton's Nightmare|A soft melody plays|Portal|0
+Hits can't be evaded|Opens six portals to Maelström of Chaos|Travel back in time|Portal|0
