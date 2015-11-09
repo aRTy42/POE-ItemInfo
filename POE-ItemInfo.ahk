@@ -1905,7 +1905,7 @@ AssembleDarkShrineInfo()
             ; This loop retrieves each line from the file, one at a time.
             StringSplit, DsEffect, A_LoopReadLine, |,
             if (DsAffix = DsEffect1) {
-                If ((Item.IsRing or Item.IsAmulet or Item.IsBelt) and DsAffix = "+# to Evasion Rating") {
+                If ((Item.IsRing or Item.IsAmulet or Item.IsBelt) and (DsAffix = "+# to Evasion Rating" or DsAffix = "#% Increased Evasion Rating")) {
                     ; Evasion rating on jewelry has a different effect than Evasion rating on other rares
                     Result := Result . "`n  - Always watch your back (jewelry only)`n  -- Three rare monsters spawn around the darkshrine"
                 } Else {

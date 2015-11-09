@@ -22,6 +22,7 @@
 #% increased Lightning Damage|Monsters deal (90 to 110)% extra Damage as Lightning, 8% increased rarity, 15% increased quantity |No fury in nature is greater than that of lightning. |Map mod - Common |0
 #% increased Mana Regeneration Rate|Spawns a Tormented Embezzler (wiki: also 8% increased rarity, 15% increased quantity)|He stole that which he was entrusted with |Spawn - Tormented Spirit |0
 #% increased maximum Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms |Map mod - Special |0
+#% increased Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms|Map mod - Special|0
 #% increased Physical Damage|A Blacksmith's Strongbox spawns in the area |The secrets of the forge await you |Spawn - Strongbox |0
 #% increased Projectile Speed|Enemy projectiles have chaining |Some challenges are best faced alone |Map mod - Common |0
 #% increased Stun Duration on Enemies|Spawns a clone of yourself to follow you around (Only auto attacks) |If you want a job done well, there is nobody better than yourself |Player mod - Special |0
@@ -92,7 +93,9 @@ Adds #-# Fire Damage to Spells|Seething Tempest|A wind brings a scent of smoke|M
 Adds #-# Lightning Damage to Attacks|Galvanizing Tempest|A storm approaches |Map mod - Tempest|0
 Adds #-# Lightning Damage|Galvanizing Tempest|A storm approaches |Map mod - Tempest|0
 Adds #-# Lightning Damage to Spells|Galvanizing Tempest|A storm approaches |Map mod - Tempest|0
+Adds #-# Chaos Damage|Corrupting Tempest|You catch a faint smell of corruption on the wind|Map mod - Tempest|0
 Adds #-# Chaos Damage to Attacks|Corrupting Tempest|You catch a faint smell of corruption on the wind|Map mod - Tempest|0
+Adds #-# Chaos Damage to Spells|Corrupting Tempest|You catch a faint smell of corruption on the wind|Map mod - Tempest|0
 Adds #-# Physical Damage|Monsters fracture, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
 Adds #-# Physical Damage to Attacks|Monsters fracture, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
 Area has patches of burning ground|A Redblade warband spawns with 3 leaders|The Redblade Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Warband |0
@@ -232,3 +235,4 @@ Equipped Animated Guardian Drops Item on Death|You are rewarded with a stack of 
 #% increased Melee Physical Damage while holding a Shield|A rare monster in the area will drop five rare shields|Keeper of the shield|Map mod - Item|0
 -#% maximum Player Resistances|100% increased experience gained|You always were a fast learner|Map mod - Special|0
 Causes Bleeding On Hit|Opens 6 portals to Vaults of Atziri|The riches of a queen|Portal|0
++1 to Socketed Support Gems|Opens six portals to Whakawairua Tuahu|A sacred place in the shadows|Portal|0
