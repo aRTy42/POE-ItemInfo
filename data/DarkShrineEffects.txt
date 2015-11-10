@@ -9,6 +9,7 @@
 #% increased Cast Speed|All unequipped items are scoured and you are rewarded with alchemy and transmutation orbs. |All rewards have their cost |Reward - Currency |0
 #% increased Cold Damage|Monsters deal (90 to 110)% extra Damage as Cold, 8% increased rarity, 15% increased quantity |No adversary in nature is more deadly than the cold |Map mod - Common |0
 #% increased Critical Strike Chance|An unequipped white item in your inventory is turned into a rare |Lead turns to gold |Reward - Item Upgrade |0
+#% increased Global Critical Strike Chance|An unequipped white item in your inventory is turned into a rare |Lead turns to gold |Reward - Item Upgrade |0
 #% increased Critical Strike Chance for Spells|one mob drops 5 rare staves|Keeper of the stave|Unknown|0
 #% increased Elemental Damage with Weapons|Dropped weapons have 20% quality |An armoury of exquisite craftsmanship |Map mod - Special |0
 #% increased Evasion and Energy Shield|Invasion is added to the area |Strange foe from a strange land |Map mod - League |0
@@ -22,6 +23,7 @@
 #% increased Lightning Damage|Monsters deal (90 to 110)% extra Damage as Lightning, 8% increased rarity, 15% increased quantity |No fury in nature is greater than that of lightning. |Map mod - Common |0
 #% increased Mana Regeneration Rate|Spawns a Tormented Embezzler (wiki: also 8% increased rarity, 15% increased quantity)|He stole that which he was entrusted with |Spawn - Tormented Spirit |0
 #% increased maximum Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms |Map mod - Special |0
+#% increased Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms|Map mod - Special|0
 #% increased Physical Damage|A Blacksmith's Strongbox spawns in the area |The secrets of the forge await you |Spawn - Strongbox |0
 #% increased Projectile Speed|Enemy projectiles have chaining |Some challenges are best faced alone |Map mod - Common |0
 #% increased Stun Duration on Enemies|Spawns a clone of yourself to follow you around (Only auto attacks) |If you want a job done well, there is nobody better than yourself |Player mod - Special |0
@@ -66,6 +68,8 @@
 +# to Strength and Dexterity|Armios Bell, Torr Olgosso or Zacharie Desmarais spawns in the area |Sword and Board |Spawn - Rogue Exile |0
 +# to Strength and Intelligence|Eoin Greyfur, Magnus Stonethorn or Tinevin Highdove spawns in the area |Sceptre and Staff |Spawn - Rogue Exile |0
 +#% Chance to Block|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
+#% additional Chance to Block with Staves|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
+#% additional Block Chance while Dual Wielding|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
 +#% Chance to Block with Shields|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
 +#% to all Elemental Resistances|Packs from different warbands spawn in the area |Heart of the conflict |Spawn - Warband |0
 +#% to Chaos Resistance|chaos warband leader|The Renegades rise|Unknown|0
@@ -92,7 +96,9 @@ Adds #-# Fire Damage to Spells|Seething Tempest|A wind brings a scent of smoke|M
 Adds #-# Lightning Damage to Attacks|Galvanizing Tempest|A storm approaches |Map mod - Tempest|0
 Adds #-# Lightning Damage|Galvanizing Tempest|A storm approaches |Map mod - Tempest|0
 Adds #-# Lightning Damage to Spells|Galvanizing Tempest|A storm approaches |Map mod - Tempest|0
+Adds #-# Chaos Damage|Corrupting Tempest|You catch a faint smell of corruption on the wind|Map mod - Tempest|0
 Adds #-# Chaos Damage to Attacks|Corrupting Tempest|You catch a faint smell of corruption on the wind|Map mod - Tempest|0
+Adds #-# Chaos Damage to Spells|Corrupting Tempest|You catch a faint smell of corruption on the wind|Map mod - Tempest|0
 Adds #-# Physical Damage|Monsters fracture, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
 Adds #-# Physical Damage to Attacks|Monsters fracture, 12% increased rarity, 25% increased quantity |Kill one head and more will rise to take its place |Map mod - Common |0
 Area has patches of burning ground|A Redblade warband spawns with 3 leaders|The Redblade Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Warband |0
@@ -196,8 +202,8 @@ Magic Monster Packs each have a Bloodline Mod|Some of the monsters become allied
 Monsters have #% chance to Avoid Elemental Status Ailments|Spawns another Darkshrine|I am Twinned||0
 Monsters are immune to Elemental Status Ailments|Spawns another Darkshrine|I am Twinned||0
 #% increased Flask effect duration|Unknown (possibly fills Vaal skills)|Atziri's power fills you||0
-Monsters reflect #% of Elemental Damage|Unknown (possibly changes loot allocation to free for all)|Rewards are seized only by those quick enough to find them||0
-Monsters reflect #% of Physical Damage|Unknown (possibly changes loot allocation to free for all)|Rewards are seized only by those quick enough to find them||0
+Monsters reflect #% of Elemental Damage|Rare monsters killed in the next 20~ seconds drop a unique item|Rewards are seized only by those quick enough to find them||0
+Monsters reflect #% of Physical Damage|Rare monsters killed in the next 20~ seconds drop a unique item|Rewards are seized only by those quick enough to find them||0
 +# Mana gained for each Enemy hit by your Attacks|Area turns dark (similar to act 2 event)|Greust would not approve||0
 #% increased Melee Damage|Grants permanent Brutal shrine|Player mod - Shrine|Hit hard, hit once|0
 +#% Monster Cold Resistance|Glacial Tempest|You feel a sudden cold breeze|Map mod - Tempest|0
@@ -209,7 +215,6 @@ Monsters are Immune to Curses|Blasphemous Tempest|You catch a foul smell on the 
 #% increased Energy Shield Recharge Rate|Drops a Divination Card|More than the paper its printed on|Reward - Item|0
 +# Energy Shield gained for each Enemy hit by your Attacks|Drops a Divination Card|More than the paper its printed on|Reward - Item|0
 #% increased Melee Critical Strike Chance|A rare monster in the area will drop five rare two-handed maces|Keeper of the maul|Map mod - Item|0
-#% increased Critical Strike Chance for Spells|A rare monster in the area will drop five rare wands|Keeper of the wand|Map mod - Item|0
 #% increased Critical Strike Chance with One Handed Melee Weapons|A rare monster in the area will drop five rare claws|Keeper of the claw|Map mod - Item|0
 #% increased Critical Strike Multiplier with Two Handed Melee Weapons|A rare monster in the area will drop five rare bows|Keeper of the bow|Keeper of the bow|0
 #% increased Weapon Critical Strike Chance while Dual Wielding|A rare monster in the area will drop five rare swords|Keeper of the blades|Map mod - Item|0
@@ -220,8 +225,8 @@ Players are cursed with Temporal Chains|A random monster drops a unique item|An 
 Players are cursed with Vulnerability|A random monster drops a unique item|An unlikely guard for such valuable treasure|Map mod - Item|0
 Players are cursed with Warlord's Mark|A random monster drops a unique item|An unlikely guard for such valuable treasure|Map mod - Item|0
 Area is inhabited by Demons|Monsters have 360-400% increased Critical Strike Chance, Monsters have 35% increased Critical Strike Multiplier|Your enemies have all the luck|Map mod - Common|0
-Area is inhabited by ranged monsters|Unknown effect|Careful now||0
-Area is inhabited by Animals|Unknown effect|Unflinching||0
+Area is inhabited by ranged monsters|25-30% increased Monster Damage|Careful now||0
+Area is inhabited by Animals|25-30% more Monster Life, Monsters cannot be Stunned|Unflinching||0
 #% Fire Damage Leeched as Life|You are rewarded with a stack of Chance Orbs|Roll the dice|Reward - Currency|0
 #% Cold Damage Leeched as Life|You are rewarded with a stack of Chance Orbs|Roll the dice|Reward - Currency|0
 #% Lightning Damage Leeched as Life|You are rewarded with a stack of Chance Orbs|Roll the dice|Reward - Currency|0
@@ -232,3 +237,8 @@ Equipped Animated Guardian Drops Item on Death|You are rewarded with a stack of 
 #% increased Melee Physical Damage while holding a Shield|A rare monster in the area will drop five rare shields|Keeper of the shield|Map mod - Item|0
 -#% maximum Player Resistances|100% increased experience gained|You always were a fast learner|Map mod - Special|0
 Causes Bleeding On Hit|Opens 6 portals to Vaults of Atziri|The riches of a queen|Portal|0
++# to Level of Socketed Support Gems|Opens six portals to Whakawairua Tuahu|A sacred place in the shadows|Portal|0
+#% increased Critical Strike Multiplier for Spells|A rare monster in the area will drop five rare sceptres|Keeper of the sceptre|Map mod - Item|0
++#% to Quality of Socketed Support Gems|Opens six portals to Coward's Trial|A true test of nerves|Portal|0
+#% increased Life Leeched per second|Opens six portals to Mao Kun|Shiver me timbers|Portal|0
+Monsters Fracture|A Cartographer's Strongbox spawns in the area|A map of all the world awaits you|Spawn - Strongbox|0
