@@ -241,3 +241,4 @@ Causes Bleeding On Hit|Opens 6 portals to Vaults of Atziri|The riches of a queen
 #% increased Critical Strike Multiplier for Spells|A rare monster in the area will drop five rare sceptres|Keeper of the sceptre|Map mod - Item|0
 +#% to Quality of Socketed Support Gems|Opens six portals to Coward's Trial|A true test of nerves|Portal|0
 #% increased Life Leeched per second|Opens six portals to Mao Kun|Shiver me timbers|Portal|0
+Monsters Fracture|A Cartographer's Strongbox spawns in the area|A map of all the world awaits you|Spawn - Strongbox|0
