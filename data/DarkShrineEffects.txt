@@ -24,7 +24,8 @@
 #% increased Mana Regeneration Rate|Spawns a Tormented Embezzler (wiki: also 8% increased rarity, 15% increased quantity)|He stole that which he was entrusted with |Spawn - Tormented Spirit |0
 #% increased maximum Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms |Map mod - Special |0
 #% increased Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms|Map mod - Special|0
-#% increased Physical Damage|A Blacksmith's Strongbox spawns in the area |The secrets of the forge await you |Spawn - Strongbox |0
+#% increased Physical Damage|A Blacksmith's Strongbox spawns in the area|The secrets of the forge await you|Spawn - Strongbox |0
++# to Level of Socketed Bow Gems|A Blacksmith's Strongbox spawns in the area|The secrets of the forge await you|Spawn - Strongbox |0
 #% increased Projectile Speed|Enemy projectiles have chaining |Some challenges are best faced alone |Map mod - Common |0
 #% increased Stun Duration on Enemies|Spawns a clone of yourself to follow you around (Only auto attacks) |If you want a job done well, there is nobody better than yourself |Player mod - Special |0
 #% increased Stun Recovery|An Armourer's Strongbox spawns in the area |The garb of the warrior awaits you |Spawn - Strongbox |0
@@ -64,6 +65,7 @@
 #% increased Physical Damage while holding a shield|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
 +# to maximum Energy Shield|Rare monsters on the map are cloned |Prepared for trouble? How about double? |Map mod - Special |0
 +# to Maximum Mana|Spawns a Tormented Necromancer in the area |He loved the dead. Too much |Spawn - Tormented Spirit |0
+Area has patches of desecrated ground|Spawns a Tormented Necromancer in the area |He loved the dead. Too much |Spawn - Tormented Spirit |0
 +# to Strength|Jonah Unchained, Xandro Blooddrinker, Damoi Tui or Vickas Giantbone spawns in the area |Axe and Maul |Spawn - Rogue Exile |0
 +# to Strength and Dexterity|Armios Bell, Torr Olgosso or Zacharie Desmarais spawns in the area |Sword and Board |Spawn - Rogue Exile |0
 +# to Strength and Intelligence|Eoin Greyfur, Magnus Stonethorn or Tinevin Highdove spawns in the area |Sceptre and Staff |Spawn - Rogue Exile |0
@@ -212,11 +214,13 @@ Players have no Life or Mana Regeneration|A regular Strongbox spawns in the area
 Monsters are Immune to Curses|Blasphemous Tempest|You catch a foul smell on the wind|Map mod - Tempest|0
 +# to Maximum Number of Skeletons|You are rewarded with 40 Orbs of Transmutation|Success lies in having the right tools|Reward - Currency|0
 #% Critical Strike Multiplier with Elemental Skills|You are rewarded with 1 Divine Orb|A gift from the divine|Reward - Currency|0
+#% Critical Strike Chance with Elemental Skills|You are rewarded with 1 Divine Orb|A gift from the divine|Reward - Currency|0
 #% increased Energy Shield Recharge Rate|Drops a Divination Card|More than the paper its printed on|Reward - Item|0
 +# Energy Shield gained for each Enemy hit by your Attacks|Drops a Divination Card|More than the paper its printed on|Reward - Item|0
 #% increased Melee Critical Strike Chance|A rare monster in the area will drop five rare two-handed maces|Keeper of the maul|Map mod - Item|0
 #% increased Critical Strike Chance with One Handed Melee Weapons|A rare monster in the area will drop five rare claws|Keeper of the claw|Map mod - Item|0
 #% increased Critical Strike Multiplier with Two Handed Melee Weapons|A rare monster in the area will drop five rare bows|Keeper of the bow|Keeper of the bow|0
+#% increased Critical Strike Chance with Two Handed Melee Weapons|A rare monster in the area will drop five rare maces|Keeper of the axe|Keeper of the bow|0
 #% increased Weapon Critical Strike Chance while Dual Wielding|A rare monster in the area will drop five rare swords|Keeper of the blades|Map mod - Item|0
 #% increased Critical Strike Multiplier while Dual Wielding|A rare monster in the area will drop five rare two-handed swords|Keeper of the swords|Map mod - Item|0
 Players are cursed with Elemental Weakness|A random monster drops a unique item|An unlikely guard for such valuable treasure|Map mod - Item|0
@@ -242,3 +246,6 @@ Causes Bleeding On Hit|Opens 6 portals to Vaults of Atziri|The riches of a queen
 +#% to Quality of Socketed Support Gems|Opens six portals to Coward's Trial|A true test of nerves|Portal|0
 #% increased Life Leeched per second|Opens six portals to Mao Kun|Shiver me timbers|Portal|0
 Monsters Fracture|A Cartographer's Strongbox spawns in the area|A map of all the world awaits you|Spawn - Strongbox|0
+Players have Blood Magic|Spawns a hostile Grandmaster|A worthy adversary|Spawn - Grandmaster|0
+Area is inhabited by Goatmen|Monsters have 40% increased Area of Effect|Size often matters||0
+Cannot be Frozen|Opens 6 portals to Olmec's Sanctum|Vaal guardians survive long after their empire has fallen|Portal|0

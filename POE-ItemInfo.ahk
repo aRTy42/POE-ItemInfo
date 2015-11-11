@@ -1911,6 +1911,9 @@ AssembleDarkShrineInfo()
                 } Else If ((Item.IsJewel) and (DsAffix = "#% increased Critical Strike Chance for Spells")) {
                     ; Crit chance for spells on jewels has a different effect than on other rares
                     Result := Result . "`n  - Keeper of the wand (jewel only)`n  -- A rare monster in the area will drop five rare wands"
+                } Else If ((Item.IsJewel) and (DsAffix = "#% increased Accuracy Rating")) {
+                    ; Accuracy on jewels has a different effect than on other rares
+                    Result := Result . "`n  - Shroud your path in the fog of war (jewel only)`n  -- Grants permanent Shrouded shrine"
                 } Else {
                     Result := Result . "`n  - " . DsEffect3 . "`n  -- " . DsEffect2
                 }
