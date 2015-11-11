@@ -72,10 +72,10 @@
 #% additional Block Chance while Dual Wielding|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
 +#% Chance to Block with Shields|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
 +#% to all Elemental Resistances|Packs from different warbands spawn in the area |Heart of the conflict |Spawn - Warband |0
-+#% to Chaos Resistance|chaos warband leader|The Renegades rise|Unknown|0
-+#% to Cold Resistance|Spawns 1 group of Mutewinds|The Mutewind rises|Unknown|0
-+#% to Fire Resistance|Spawns 1 group of Redblades|The Redblade rises|Unknown|0
-+#% to Lightning Resistance|Spawns 1 group of Brinerots|The Brinerot rises|Unknown|0
++#% to Chaos Resistance|The Renegades Warband spawns in the area|The Renegades rise|Spawn - Warband|0
++#% to Cold Resistance|The Mutewind Warband spawns in the area|The Mutewind rises|Spawn - Warband|0
++#% to Fire Resistance|The Redblade Warband spawns in the area|The Redblade rises|Spawn - Warband|0
++#% to Lightning Resistance|The Brinerot Warband spawns in the area|The Brinerot rises|Spawn - Warband|0
 #% chance to shock|You are rewarded with 20 Cartographer's Chisels|An accurate maps makes for a rewarding journey |Reward - Currency |0
 #% increased shock duration on enemies|You are rewarded with 20 Cartographer's Chisels|An accurate maps makes for a rewarding journey |Reward - Currency |1
 #% increased Cast Speed with Lightning Skills|A rare monster in the area will drop five rare belt.|Keeper of the buckle|Map mod - Item|0
