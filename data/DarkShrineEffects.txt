@@ -40,6 +40,7 @@
 +# Life gained on Kill|(40 to 50)% increased monster life, 8% increased rarity, 15% increased quantity |Tough as Nails |Map mod - Common |0
 +# to maximum Life|Grants permanent Diamond shrine |Deliver pain exquisite |Player mod - Shrine |0
 +# to Accuracy Rating|Enemies have 4 additional projectiles, 8% increased rarity, 15% increased quantity |Nothing is more intimidating on the battlefront than a wall of arrows |Map mod - Common |0
+#% increased Accuracy Rating|Enemies have 4 additional projectiles, 8% increased rarity, 15% increased quantity |Nothing is more intimidating on the battlefront than a wall of arrows |Map mod - Common |0
 +# to All Attributes|A random Rogue Exile spawns in the area |Any and Everything |Spawn - Rogue Exile |0
 +# to Armour|Nemesis is added to the area |Your nemeses hunt you |Map mod - League |0
 +# to Dexterity|Antalie Napora or Thena Moga spawns in the area |Bow and Arrow |Spawn - Rogue Exile |0
@@ -249,3 +250,6 @@ Monsters Fracture|A Cartographer's Strongbox spawns in the area|A map of all the
 Players have Blood Magic|Spawns a hostile Grandmaster|A worthy adversary|Spawn - Grandmaster|0
 Area is inhabited by Goatmen|Monsters have 40% increased Area of Effect|Size often matters||0
 Cannot be Frozen|Opens 6 portals to Olmec's Sanctum|Vaal guardians survive long after their empire has fallen|Portal|0
+#% increased Armour, Evasion and Energy Shield|Summons Abaxoth|You sense a great evil|Spawn - Special|0
+Cannot Leech Life from Monsters|Get extra reputation (or an instant level up?) with a master in your hideout|The forsaken favour you|Special|0
+Cannot Leech Mana from Monsters|Get extra reputation (or an instant level up?) with a master in your hideout|The forsaken favour you|Special|0
