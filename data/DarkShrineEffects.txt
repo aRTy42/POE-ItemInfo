@@ -113,7 +113,7 @@ Corrupted|opens portals to a vaal side area|The influence of the Vaal continues 
 +#% to Fire and Lightning resistances|Spawns A Tormented Vaal Cultist |He found power in sacrifice |Spawn - Tormented Spirit |0
 #% Increased Damage over Time|Perandus Bank spawns in the area |The treasures of the wealthy await you |Spawn - Strongbox |0
 #% increased Monster Attack Speed|Grants permanent Divine shrine|Become the nightmare|Player mod - Shrine|0
-Reflects # Physical Damage to Melee Attackers|Grants HeadhunterHeadhunter|The hunted becomes the hunter |Player mod - Special |0
+Reflects # Physical Damage to Melee Attackers|Grants Headhunter's ability to steal mods from rare monsters|The hunted becomes the hunter|Player mod - Special|0
 #% of Physical Attack Damage Leeched as Life|Spawns aprox 20 rare devourers around the zone |The ground beneath you tremors |Spawn - Monsters |0
 #% increased Spell Damage|Random Darkshrine Effect|Random Darkshrine Effect|Special|0
 Monsters have #% increased Area of Effect|Grants permanent Echoing shrine|Let your rage flow freely|Player mod - Shrine|0

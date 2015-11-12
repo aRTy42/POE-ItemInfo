@@ -1892,7 +1892,10 @@ AssembleDarkShrineInfo()
         } Else If (RegExMatch(AffixLine,"fire [0-9]+ additional Projectiles")) {
             ; Fixes recognition of "Monsters fire # additional Projectiles" affix
             DsAffix := RegExReplace(AffixLine,"[0-9]+","#")
-        } Else {
+        } Else If (RegExMatch(AffixLine,"^Reflects [0-9]+")) {
+            ; Fixes recognition of "Reflects # Physical Damage to Melee Attackers" affix
+            DsAffix := RegExReplace(AffixLine,"[0-9]+","#")
+        }Else {
             DsAffix := AffixLine
         }
         
