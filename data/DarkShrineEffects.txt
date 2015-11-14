@@ -24,7 +24,8 @@
 #% increased Mana Regeneration Rate|Spawns a Tormented Embezzler (wiki: also 8% increased rarity, 15% increased quantity)|He stole that which he was entrusted with |Spawn - Tormented Spirit |0
 #% increased maximum Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms |Map mod - Special |0
 #% increased Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms|Map mod - Special|0
-#% increased Physical Damage|A Blacksmith's Strongbox spawns in the area |The secrets of the forge await you |Spawn - Strongbox |0
+#% increased Physical Damage|A Blacksmith's Strongbox spawns in the area|The secrets of the forge await you|Spawn - Strongbox |0
++# to Level of Socketed Bow Gems|A Blacksmith's Strongbox spawns in the area|The secrets of the forge await you|Spawn - Strongbox |0
 #% increased Projectile Speed|Enemy projectiles have chaining |Some challenges are best faced alone |Map mod - Common |0
 #% increased Stun Duration on Enemies|Spawns a clone of yourself to follow you around (Only auto attacks) |If you want a job done well, there is nobody better than yourself |Player mod - Special |0
 #% increased Stun Recovery|An Armourer's Strongbox spawns in the area |The garb of the warrior awaits you |Spawn - Strongbox |0
@@ -39,6 +40,7 @@
 +# Life gained on Kill|(40 to 50)% increased monster life, 8% increased rarity, 15% increased quantity |Tough as Nails |Map mod - Common |0
 +# to maximum Life|Grants permanent Diamond shrine |Deliver pain exquisite |Player mod - Shrine |0
 +# to Accuracy Rating|Enemies have 4 additional projectiles, 8% increased rarity, 15% increased quantity |Nothing is more intimidating on the battlefront than a wall of arrows |Map mod - Common |0
+#% increased Accuracy Rating|Identifies every item in your inventory |The light of reason still shines|Special|0
 +# to All Attributes|A random Rogue Exile spawns in the area |Any and Everything |Spawn - Rogue Exile |0
 +# to Armour|Nemesis is added to the area |Your nemeses hunt you |Map mod - League |0
 +# to Dexterity|Antalie Napora or Thena Moga spawns in the area |Bow and Arrow |Spawn - Rogue Exile |0
@@ -60,10 +62,12 @@
 #% increased Physical Damage with One Handed Melee Weapons|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
 #% increased Physical Damage with Two Handed Melee Weapons|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
 #% increased Physical Damage with Wands|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
-#% increased Physical Damage while Dual wielding|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
-#% increased Physical Damage while holding a shield|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Weapon Damage while Dual wielding|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
+#% increased Physical Weapon Damage while holding a shield|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
++# to Level of Socketed Minion Gems|An Artisan's Strongbox spawns in the area |True craftsmanship awaits you |Spawn - Strongbox |0
 +# to maximum Energy Shield|Rare monsters on the map are cloned |Prepared for trouble? How about double? |Map mod - Special |0
 +# to Maximum Mana|Spawns a Tormented Necromancer in the area |He loved the dead. Too much |Spawn - Tormented Spirit |0
+Area has patches of desecrated ground|Spawns a Tormented Necromancer in the area |He loved the dead. Too much |Spawn - Tormented Spirit |0
 +# to Strength|Jonah Unchained, Xandro Blooddrinker, Damoi Tui or Vickas Giantbone spawns in the area |Axe and Maul |Spawn - Rogue Exile |0
 +# to Strength and Dexterity|Armios Bell, Torr Olgosso or Zacharie Desmarais spawns in the area |Sword and Board |Spawn - Rogue Exile |0
 +# to Strength and Intelligence|Eoin Greyfur, Magnus Stonethorn or Tinevin Highdove spawns in the area |Sceptre and Staff |Spawn - Rogue Exile |0
@@ -72,10 +76,10 @@
 #% additional Block Chance while Dual Wielding|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
 +#% Chance to Block with Shields|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
 +#% to all Elemental Resistances|Packs from different warbands spawn in the area |Heart of the conflict |Spawn - Warband |0
-+#% to Chaos Resistance|chaos warband leader|The Renegades rise|Unknown|0
-+#% to Cold Resistance|Spawns 1 group of Mutewinds|The Mutewind rises|Unknown|0
-+#% to Fire Resistance|Spawns 1 group of Redblades|The Redblade rises|Unknown|0
-+#% to Lightning Resistance|Spawns 1 group of Brinerots|The Brinerot rises|Unknown|0
++#% to Chaos Resistance|The Renegades Warband spawns in the area|The Renegades rise|Spawn - Warband|0
++#% to Cold Resistance|The Mutewind Warband spawns in the area|The Mutewind rises|Spawn - Warband|0
++#% to Fire Resistance|The Redblade Warband spawns in the area|The Redblade rises|Spawn - Warband|0
++#% to Lightning Resistance|The Brinerot Warband spawns in the area|The Brinerot rises|Spawn - Warband|0
 #% chance to shock|You are rewarded with 20 Cartographer's Chisels|An accurate maps makes for a rewarding journey |Reward - Currency |0
 #% increased shock duration on enemies|You are rewarded with 20 Cartographer's Chisels|An accurate maps makes for a rewarding journey |Reward - Currency |1
 #% increased Cast Speed with Lightning Skills|A rare monster in the area will drop five rare belt.|Keeper of the buckle|Map mod - Item|0
@@ -109,8 +113,9 @@ Corrupted|opens portals to a vaal side area|The influence of the Vaal continues 
 +#% to Cold and Lightning resistances|Spawns A Tormented Vaal Cultist |He found power in sacrifice |Spawn - Tormented Spirit |0
 +#% to Fire and Lightning resistances|Spawns A Tormented Vaal Cultist |He found power in sacrifice |Spawn - Tormented Spirit |0
 #% Increased Damage over Time|Perandus Bank spawns in the area |The treasures of the wealthy await you |Spawn - Strongbox |0
+#% Increased Damage|Perandus Bank spawns in the area |The treasures of the wealthy await you |Spawn - Strongbox |0
 #% increased Monster Attack Speed|Grants permanent Divine shrine|Become the nightmare|Player mod - Shrine|0
-Reflects # Physical Damage to Melee Attackers|Grants HeadhunterHeadhunter|The hunted becomes the hunter |Player mod - Special |0
+Reflects # Physical Damage to Melee Attackers|Grants Headhunter's ability to steal mods from rare monsters|The hunted becomes the hunter|Player mod - Special|0
 #% of Physical Attack Damage Leeched as Life|Spawns aprox 20 rare devourers around the zone |The ground beneath you tremors |Spawn - Monsters |0
 #% increased Spell Damage|Random Darkshrine Effect|Random Darkshrine Effect|Special|0
 Monsters have #% increased Area of Effect|Grants permanent Echoing shrine|Let your rage flow freely|Player mod - Shrine|0
@@ -138,6 +143,7 @@ Monsters deal #% extra Damage as Lightning|Spawns a Tormented Storm Cultist|He c
 Monsters deal #% extra Damage as Cold|Spawns a Tormented Aurora Cultist|He was never bothered by the cold|Spawn - Tormented Spirit|0
 Monsters deal #% extra Damage as Fire|Spawns a Tormented Arsonist Cultist|He loved to play with fire|Spawn - Tormented Spirit|0
 +#% Monster Physical Damage Reduction|Battering tempest|You feel buffeted by a strong gust|Map mod - Tempest|0
+#% reduced Enemy Block Chance|Battering tempest|You feel buffeted by a strong gust|Map mod - Tempest|0
 Area contains two Unique Bosses|Echoing tempest|You hear a voice on the wind|Map mod - Tempest|0
 Area is inhabited by Sea Witches and their Spawn|Spawns Murk Fiends throughout the area|A situation is only dangerous if can't run away from it|Spawn - Monsters|0
 #% increased Attack Speed with Axes|Summons hostile animated weapons|Never discard a Weapon. It could be the blade that strikes you in the back|Spawn - Monsters|0
@@ -212,11 +218,14 @@ Players have no Life or Mana Regeneration|A regular Strongbox spawns in the area
 Monsters are Immune to Curses|Blasphemous Tempest|You catch a foul smell on the wind|Map mod - Tempest|0
 +# to Maximum Number of Skeletons|You are rewarded with 40 Orbs of Transmutation|Success lies in having the right tools|Reward - Currency|0
 #% Critical Strike Multiplier with Elemental Skills|You are rewarded with 1 Divine Orb|A gift from the divine|Reward - Currency|0
+#% Critical Strike Chance with Elemental Skills|You are rewarded with 1 Divine Orb|A gift from the divine|Reward - Currency|0
 #% increased Energy Shield Recharge Rate|Drops a Divination Card|More than the paper its printed on|Reward - Item|0
+#% faster start of Energy Shield Recharge|Drops a Divination Card|More than the paper its printed on|Reward - Item|0
 +# Energy Shield gained for each Enemy hit by your Attacks|Drops a Divination Card|More than the paper its printed on|Reward - Item|0
 #% increased Melee Critical Strike Chance|A rare monster in the area will drop five rare two-handed maces|Keeper of the maul|Map mod - Item|0
 #% increased Critical Strike Chance with One Handed Melee Weapons|A rare monster in the area will drop five rare claws|Keeper of the claw|Map mod - Item|0
 #% increased Critical Strike Multiplier with Two Handed Melee Weapons|A rare monster in the area will drop five rare bows|Keeper of the bow|Keeper of the bow|0
+#% increased Critical Strike Chance with Two Handed Melee Weapons|A rare monster in the area will drop five rare maces|Keeper of the axe|Keeper of the bow|0
 #% increased Weapon Critical Strike Chance while Dual Wielding|A rare monster in the area will drop five rare swords|Keeper of the blades|Map mod - Item|0
 #% increased Critical Strike Multiplier while Dual Wielding|A rare monster in the area will drop five rare two-handed swords|Keeper of the swords|Map mod - Item|0
 Players are cursed with Elemental Weakness|A random monster drops a unique item|An unlikely guard for such valuable treasure|Map mod - Item|0
@@ -227,9 +236,9 @@ Players are cursed with Warlord's Mark|A random monster drops a unique item|An u
 Area is inhabited by Demons|Monsters have 360-400% increased Critical Strike Chance, Monsters have 35% increased Critical Strike Multiplier|Your enemies have all the luck|Map mod - Common|0
 Area is inhabited by ranged monsters|25-30% increased Monster Damage|Careful now||0
 Area is inhabited by Animals|25-30% more Monster Life, Monsters cannot be Stunned|Unflinching||0
-#% Fire Damage Leeched as Life|You are rewarded with a stack of Chance Orbs|Roll the dice|Reward - Currency|0
-#% Cold Damage Leeched as Life|You are rewarded with a stack of Chance Orbs|Roll the dice|Reward - Currency|0
-#% Lightning Damage Leeched as Life|You are rewarded with a stack of Chance Orbs|Roll the dice|Reward - Currency|0
+#% of Fire Damage Leeched as Life|You are rewarded with a stack of Chance Orbs|Roll the dice|Reward - Currency|0
+#% of Cold Damage Leeched as Life|You are rewarded with a stack of Chance Orbs|Roll the dice|Reward - Currency|0
+#% of Lightning Damage Leeched as Life|You are rewarded with a stack of Chance Orbs|Roll the dice|Reward - Currency|0
 +# to Level of Socketed Lightning Gems|True craftsmanship awaits you|An Artisan's Strongbox spawns in the area|Spawn - Strongbox|0
 Area is inhabited by one additional Invasion Boss|Opens six portals to Acton's Nightmare|A soft melody plays|Portal|0
 Hits can't be evaded|Opens six portals to Maelström of Chaos|Travel back in time|Portal|0
@@ -242,3 +251,10 @@ Causes Bleeding On Hit|Opens 6 portals to Vaults of Atziri|The riches of a queen
 +#% to Quality of Socketed Support Gems|Opens six portals to Coward's Trial|A true test of nerves|Portal|0
 #% increased Life Leeched per second|Opens six portals to Mao Kun|Shiver me timbers|Portal|0
 Monsters Fracture|A Cartographer's Strongbox spawns in the area|A map of all the world awaits you|Spawn - Strongbox|0
+Players have Blood Magic|Spawns a hostile Grandmaster|A worthy adversary|Spawn - Grandmaster|0
+Area is inhabited by Goatmen|Monsters have 40% increased Area of Effect|Size often matters||0
+Cannot be Frozen|Opens 6 portals to Olmec's Sanctum|Vaal guardians survive long after their empire has fallen|Portal|0
+#% increased Armour, Evasion and Energy Shield|Summons Abaxoth|You sense a great evil|Spawn - Special|0
+Cannot Leech Life from Monsters|Get extra reputation (or an instant level up?) with a master in your hideout|The forsaken favour you|Special|0
+Cannot Leech Mana from Monsters|Get extra reputation (or an instant level up?) with a master in your hideout|The forsaken favour you|Special|0
+Area is inhabited by Humanoids|40-49% more Monster Life|Tough as nails|Map mod|0
