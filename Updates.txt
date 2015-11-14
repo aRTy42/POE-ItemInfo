@@ -1,6 +1,10 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+1.9.6c
+=================================
+Darkshrine Updates by XiMMiX
+
 1.9.6b
 =================================
 More Darkshrine updates by XiMMiX
