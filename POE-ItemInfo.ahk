@@ -1917,6 +1917,9 @@ AssembleDarkShrineInfo()
                 } Else If ((Item.IsJewel) and (DsAffix = "#% increased Accuracy Rating")) {
                     ; Accuracy on jewels has a different effect than on other rares
                     Result := Result . "`n  - Shroud your path in the fog of war (jewel only)`n  -- Grants permanent Shrouded shrine"
+                } Else If ((Item.IsRing or Item.IsAmulet or Item.IsBelt) and InStr(DsAffix,"Adds #-# Chaos Damage")) {
+                    ; Flat added chaos damage on jewelry (elreon mod) has a different effect than on weapons (according to wiki)
+                    Result := Result . "`n  - Feel the corruption in your veins (jewelry only)`n  -- Monsters poison on hit"
                 } Else {
                     Result := Result . "`n  - " . DsEffect3 . "`n  -- " . DsEffect2
                 }
