@@ -22,7 +22,7 @@ mapList["Dungeon Map"] := "`nThis map is based on The Prison zones in Act 1.`nTh
 
 mapList["Grotto Map"] := "`nThis map is based on The Caverns zones in Act 2.`n`nMap type: Indoors`n`nBoss: Fire and Fury (based on Ambrosia, Daughter of Merveil).`nShe deals fire damage using Fireball and Firestorm. She also has`nan aura that increases the fire damage of her allies.`nDifficulty: 1/5`nDivination Cards: Hope, The Gambler, Hunter's Reward`n`nVendor: 3 Grotto maps yields 1 Thicket map"
 
-mapList["Orchard Map"] := "`nThis map is based on The Imperial Gardens zone in Act 3.`n`nMap type: Outdoors`n`nBoss: Tunneltrap, unique Devourer, is located in a`nseparate door room at one end of the map. He hits like`na truck and considered to be the hardest 66 lvl map boss.`n- Far Shot`n- Shoots fire projectiles`n- Burrow`nDifficulty: 5/5`nDivination Cards: Emperor's Luck`n`nVendor:Produced by 3 Terrace Maps. 3 Orchard maps yields 1 Underground River map"
+mapList["Orchard Map"] := "`nThis map is based on The Imperial Gardens zone in Act 3.`n`nMap type: Outdoors`n`nBoss: Tunneltrap, unique Devourer, is located in a`nseparate door room at one end of the map. He hits like`na truck and considered to be the hardest tier 8 map boss.`n- Far Shot`n- Shoots fire projectiles`n- Burrow`nDifficulty: 5/5`nDivination Cards: Emperor's Luck`n`nVendor:Produced by 3 Terrace Maps. 3 Orchard maps yields 1 Underground River map"
 
 mapList["Overgrown Ruin Map"] := "`nThis map is based on the Chamber of Sins zones in Act 2.`nThe map is divided into several floors connected by multiple stairways.`n`nMap type: Indoors`n`nBoss: Loathe, based on Fidelitis, the Mourning from the Chamber of Sins Level 3.`nHe deals Lightning Damage using Lightning Strike.`n- Resist Lightning`nDifficulty: 3/5`nDivination Cards: The Artist, The Dark Mage`n`nVendor: Produced by 3 Precinct Maps. 3 Overgrown Ruin maps yields 1 Courtyard map."
 
@@ -118,7 +118,7 @@ mapList["Arid Lake Map"] := "`nThis map uses the Fetid Pool tileset. It is a lar
 
 mapList["Malformation Map"] := "`nThis map is based on The Belly of the Beast Level 2 zone in Act 4.`n`nBoss: Nightmare Manifest (Based on Piety, the Abomination from Act 4). Boss room is seperate.`nDifficulty: 4/5`nDivination Cards: The Hunger`n`nVendor: 3 Malformation Maps yield 1 Necropolis Map."
 
-mapList["Volcano Map"] := "`nBoss: Forest of Flames (resists elemental and chaos damage). Totem boss that's similar to the Jikeji invasion boss. Spawns sapling totems that use Lightning Warp, Magma Orb, and ice attacks, with Elemental Equilibrium.`nDifficulty: 4/5`nDivination Cards: The Battle Born`n`nVendor: Produced by 3 Residence Maps. 3 Volcano Maps yield 1 Springs Map."
+mapList["Volcano Map"] := "`nThis map is based on Kaom's Dream zone in Act 4.`n`nMap Type: Outdoors`n`nBoss: Forest of Flames (resists elemental and chaos damage).`nTotem boss that's similar to the Jikeji invasion boss. Spawns`nsapling totems that use Lightning Warp, Magma Orb, and`nice attacks, with Elemental Equilibrium.`nDifficulty: 4/5`nDivination Cards: The Battle Born, The King's Heart`n`nVendor:`n- Produced by 3 Residence Maps.`n- 3 Volcano Maps yield 1 Springs Map."
 
 mapList["Dark Forest Map"] := "`nThis map is based on the Western Forest in Act 2.`n`nMap Type: Outdoors`n`nBoss: Oak the Mighty is based on Oak. He is located`ninside an encampment similar to that of Oak in Act 2.`nDifficulty: 2/5`n`nVendor:`n- Produced by 3 Mine Maps`n- 3 Dark Forest Maps yield one Gorge Map"
 
