@@ -2434,8 +2434,10 @@ ParseAffixes(ItemDataAffixes, Item)
     ; The following values are used for new style complex affix support
     CAIncAccuracy := 0
     CAIncAccuracyAffixLine := ""
+    CAIncAccuracyAffixLineNo := 0
     CAGlobalCritChance := 0
-    CAGlovalCritChanceAffixLine := ""
+    CAGlobalCritChanceAffixLine := ""
+    CAGlobalCritChanceAffixLineNo := 0
     
     ; Max mana already accounted for in case of Composite Prefix+Prefix 
     ; "Spell Damage / Max Mana" + "Max Mana"
@@ -2719,8 +2721,9 @@ ParseAffixes(ItemDataAffixes, Item)
                 ValueRange := LookupAffixData("data\IncrAccuracyRating_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else If (Item.SubType = "Viridian Jewel") {
                 ; increased Accuracy Rating on viridian jewels is a complex affix and handled later
-                CAIncAccuracy = CurrValue
-                CAIncAccuracyAffixLine = %A_LoopField%
+                CAIncAccuracy := CurrValue
+                CAIncAccuracyAffixLine := A_LoopField
+                CAIncAccuracyAffixLineNo := A_Index
                 Continue
             } Else {
                 AffixType := "Comp. Suffix"
@@ -2957,8 +2960,9 @@ ParseAffixes(ItemDataAffixes, Item)
                 ValueRange := LookupAffixData("data\CritChanceGlobal_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else If (Item.SubType = "Viridian Jewel") {
                 ; Crit chance on Viridian Jewels is a complex affix that is handled later
-                CAGlobalCritChance = CurrValue
-                CAGlobalCritChanceAffixLine = %A_LoopField%
+                CAGlobalCritChance := CurrValue
+                CAGlobalCritChanceAffixLine := A_LoopField
+                CAGlobalCritChanceAffixLineNo := A_Index
                 Continue
             } Else {
                 ValueRange := LookupAffixData("data\CritChanceGlobal.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -4815,6 +4819,15 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; Needs to come before pure increased Physical Damage
+        IfInString, A_LoopField, increased Physical Damage with Axes
+        {
+            ; Only valid for Jewels at this time
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\IncrPhysicalDamageWithAxes.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        ; Needs to come before pure increased Physical Damage
         IfInString, A_LoopField, increased Physical Damage with Bows
         {
             ; Only valid for Jewels at this time
@@ -5626,7 +5639,6 @@ ParseAffixes(ItemDataAffixes, Item)
     
     ; --- COMPLEX AFFIXES NEW STYLE --- (Proof of Concept, for Jewels only)
     If (Item.SubType == "Viridian Jewel" and (CAIncAccuracy or CAGlobalCritChance)) {
-        NextAffixPos := AffixLines.MaxIndex() + 1
         If (CAIncAccuracy and CAGlobalCritChance) {
             ; The item has both increased accuracy and global crit chance, this could be the result of a complex affix
             ; TODO: fix complex affixes once prefixes have been added. Prefixes have to be parsed first since some interfere with the suffixes
@@ -5634,10 +5646,10 @@ ParseAffixes(ItemDataAffixes, Item)
                 ; Jewels with another suffix already or jewels that can only have 1 suffix (magic items) that single suffix must be the combined one
                 NumSuffixes += 1
                 ValueRange := LookupAffixData("data\CritChanceGlobal_Jewels_Acc.txt", ItemLevel, CAGlobalCritChance, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, CurrTier), NextAffixPos)
+                AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, CurrTier), CAGlobalCritChanceAffixLineNo)
                 NextAffixPos += 1
                 ValueRange := LookupAffixData("data\IncrAccuracyRating_Jewels_Crit.txt", ItemLevel, CAIncAccuracy, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, CurrTier), NextAffixPos)
+                AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, CurrTier), CAIncAccuracyAffixLineNo)
             } Else {
                 
             }
@@ -5645,13 +5657,13 @@ ParseAffixes(ItemDataAffixes, Item)
             ; The item only has a global crit chance affix so it isn't complex
             NumSuffixes += 1
             ValueRange := LookupAffixData("data\CritChanceGlobal_Jewels.txt", ItemLevel, CAGlobalCritChance, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, CurrTier), NextAffixPos)
+            AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, CurrTier), CAGlobalCritChanceAffixLineNo)
             NextAffixPos += 1
         } Else {
             ; The item only has a increased accuracy affix so it isn't complex
             NumSuffixes += 1
             ValueRange := LookupAffixData("data\IncrAccuracyRating_Jewels.txt", ItemLevel, CAIncAccuracy, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, CurrTier), NextAffixPos)
+            AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, CurrTier), CAIncAccuracyAffixLineNo)
             NextAffixPos += 1
         }
     }
