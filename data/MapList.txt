@@ -76,7 +76,7 @@ mapList["Shore Map"] := "`nThis map is based on The Climb/The Prisoner's Gate zo
 
 mapList["Spider Forest Map"] := "`nThis map is based on the The Blackwood zone in Act 2.`n`nMap Type: Outdoors`n`nBoss: The Blacksmith (based on Hillock)`n- Uses Leap Slam and Heavy Strike when on half life.`n- Spawns Zombies from the ground where his leap slam lands.`nThe zombies leave a poison cloud on death, dealing Chaos`nDamage over time.`nDifficulty: 3/5`n`nVendor:`n- Produced by 3 Vaal Pyramid Maps`n- 3 Spider Forest Maps yield 1 Bog Map"
 
-mapList["Tunnel Map"] := "`nThis map is based on the Flooded Depths zone in Act 1.`n`nMap Type: Indoors`n`nBoss: Lady of the Brood (a Siren's Daughter from`nAct 1 Upper Submerged Passage). The boss chamber`nis a square area, filled with golden items on the ground,`nmuch like Merveils chamber.`nDifficulty: 1/5`n`nVendor:`n- Produced by 3 Vaal Pyramid Maps`n- 3 Tunnel Maps yield 1 Underground Sea Map"
+mapList["Tunnel Map"] := "`nThis map is based on the Flooded Depths zone in Act 1.`n`nMap Type: Indoors`n`nBoss: Lady of the Brood (a Siren's Daughter from`nAct 1 Upper Submerged Passage). The boss chamber`nis a square area, filled with golden items on the ground,`nmuch like Merveils chamber.`nDifficulty: 1/5`n`nVendor:`n- Produced by 3 Vaal Pyramid Maps`n- 3 Tunnel Maps yield 1 Bog"
 
 mapList["Bog Map"] := "`nThis map is based on the Fetid Pool zone in Act 1.`n`nMap type: Outdoor`n`nBoss: Slitherskin (a Unique Cobra, who does`nchaos damage).`nDifficulty: 1/5`nDivination Cards: Death`n`nVendor:`n- Produced by 3 Tunnel Maps`n- 3 Bog Maps yield 1 Strand Map"
 

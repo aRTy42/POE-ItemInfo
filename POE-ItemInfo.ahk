@@ -3436,6 +3436,7 @@ ParseAffixes(ItemDataAffixes, Item)
                 {
                     ValueRange := LookupAffixData("data\AddedPhysDamage_Amulets.txt", ItemLevel, CurrValue, "", CurrTier)
                 }
+                        
                 Else
                 {
                     If (ItemSubType == "Quiver")
@@ -3450,9 +3451,17 @@ ParseAffixes(ItemDataAffixes, Item)
                         }
                         Else
                         {
+                            ;Gloves added by Bahnzo
+                            If (ItemSubType == "Gloves")
+                            {
+                                ValueRange := LookupAffixData("data\AddedPhysDamage_Gloves.txt", ItemLevel, CurrValue, "", CurrTier)
+                            }
+                            Else
+                            {
                             ; There is no Else for rare items, but some uniques have added phys damage.
                             ; Just lookup in 1H for now...
                             ValueRange := LookupAffixData("data\AddedPhysDamage_Amulets.txt", ItemLevel, CurrValue, "", CurrTier)
+                            }
                         }
                     }
                 }
@@ -3672,15 +3681,28 @@ ParseAffixes(ItemDataAffixes, Item)
             If (ItemSubType == "Amulet")
         	{
 		    ValueRange := LookupAffixData("data\MaxLifeAmulet.txt", ItemLevel, CurrValue, "", CurrTier)
-		}
-		    Else If (ItemSubType == "Shield")
+            }
+            Else If (ItemSubType == "Shield")
 			{
-			    ValueRange := LookupAffixData("data\MaxLifeShield.txt", ItemLevel, CurrValue, "", CurrTier)
+            ValueRange := LookupAffixData("data\MaxLifeShield.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
 			    Else If (ItemSubType == "Armour")
 			    {
 				ValueRange := LookupAffixData("data\MaxLifeBodyArmour.txt", ItemLevel, CurrValue, "", CurrTier)
 			    }
+                ;Bahnzo Edit for Boots, Gloves and Rings
+                    Else If (ItemSubType == "Boots")
+                    {
+                    ValueRange := LookupAffixData("data\MaxLifeBootsGloves.txt", ItemLevel, CurrValue, "", CurrTier)
+                    }
+                        Else If (ItemSubType == "Gloves")
+                        {
+                        ValueRange := LookupAffixData("data\MaxLifeBootsGloves.txt", ItemLevel, CurrValue, "", CurrTier)
+                        }
+                            Else If (ItemSubType == "Ring")
+                            {
+                            ValueRange := LookupAffixData("data\MaxLifeRing.txt", ItemLevel, CurrValue, "", CurrTier)
+                            }
 	    Else
 	    {
 		ValueRange := LookupAffixData("data\MaxLife.txt", ItemLevel, CurrValue, "", CurrTier)
