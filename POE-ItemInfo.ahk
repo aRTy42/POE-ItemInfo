@@ -1866,8 +1866,8 @@ AssembleDarkShrineInfo()
     {
         AffixLine := A_LoopField
         
-        If (AffixLine == "") {
-            ; ignore empty affixes
+        If (AffixLine == "" or AffixLine == "Unidentified" ) {
+            ; ignore empty affixes and unidentified items
             continue affixloop
         }
         
@@ -1892,7 +1892,10 @@ AssembleDarkShrineInfo()
         } Else If (RegExMatch(AffixLine,"fire [0-9]+ additional Projectiles")) {
             ; Fixes recognition of "Monsters fire # additional Projectiles" affix
             DsAffix := RegExReplace(AffixLine,"[0-9]+","#")
-        } Else {
+        } Else If (RegExMatch(AffixLine,"^Reflects [0-9]+")) {
+            ; Fixes recognition of "Reflects # Physical Damage to Melee Attackers" affix
+            DsAffix := RegExReplace(AffixLine,"[0-9]+","#")
+        }Else {
             DsAffix := AffixLine
         }
         
@@ -1905,9 +1908,18 @@ AssembleDarkShrineInfo()
             ; This loop retrieves each line from the file, one at a time.
             StringSplit, DsEffect, A_LoopReadLine, |,
             if (DsAffix = DsEffect1) {
-                If ((Item.IsRing or Item.IsAmulet or Item.IsBelt) and DsAffix = "+# to Evasion Rating") {
-                    ; Evasion rating on jewelry has a different effect than Evasion rating on other rares
+                If ((Item.IsRing or Item.IsAmulet or Item.IsBelt or Item.IsJewel) and (DsAffix = "+# to Evasion Rating" or DsAffix = "#% Increased Evasion Rating")) {
+                    ; Evasion rating on jewelry and jewels has a different effect than Evasion rating on other rares
                     Result := Result . "`n  - Always watch your back (jewelry only)`n  -- Three rare monsters spawn around the darkshrine"
+                } Else If ((Item.IsJewel) and (DsAffix = "#% increased Critical Strike Chance for Spells")) {
+                    ; Crit chance for spells on jewels has a different effect than on other rares
+                    Result := Result . "`n  - Keeper of the wand (jewel only)`n  -- A rare monster in the area will drop five rare wands"
+                } Else If ((Item.IsJewel) and (DsAffix = "#% increased Accuracy Rating")) {
+                    ; Accuracy on jewels has a different effect than on other rares
+                    Result := Result . "`n  - Shroud your path in the fog of war (jewel only)`n  -- Grants permanent Shrouded shrine"
+                } Else If ((Item.IsRing or Item.IsAmulet or Item.IsBelt) and InStr(DsAffix,"Adds #-# Chaos Damage")) {
+                    ; Flat added chaos damage on jewelry (elreon mod) has a different effect than on weapons (according to wiki)
+                    Result := Result . "`n  - Feel the corruption in your veins (jewelry only)`n  -- Monsters poison on hit"
                 } Else {
                     Result := Result . "`n  - " . DsEffect3 . "`n  -- " . DsEffect2
                 }
@@ -1921,7 +1933,7 @@ AssembleDarkShrineInfo()
         
     }
       
-    If (Found <= 2) {
+    If (Found <= 2 and not Item.IsUnidentified) {
         ; 2 affix rares are consumed
         Result := "`n Try again`n  Consumes the item, Darkshrine may be used again"
         return Result
@@ -1936,7 +1948,11 @@ AssembleDarkShrineInfo()
     }
     
     If (Item.IsMirrored) {
-        Result := Result .  "`n Mirrored:`n  - The little things add up`n  -- Unknown effect"
+        Result := Result .  "`n Mirrored:`n  - The little things add up`n  -- Possibly rerolls an implicit mod on one item"
+    }
+    
+    If (Item.IsUnidentified) {
+        Result := Result .  "`n Unidentified:`n  - Same effect as if the item is identified first"
     }
     
     return Result
@@ -5759,7 +5775,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         TT = %TT%`n--------`nMirrored
     }
 	
-	If (Opts.ShowDarkShrineInfo == 1 and RarityLevel == 3 and Not Item.IsUnidentified)
+	If (Opts.ShowDarkShrineInfo == 1 and RarityLevel == 3)
 	{
 		TT = %TT%`n--------`nPossible DarkShrine effects:
 		

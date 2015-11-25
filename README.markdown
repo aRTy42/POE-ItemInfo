@@ -28,7 +28,7 @@ into this version.
 PoE Forums Thread
 -----------------
 
-http://www.pathofexile.com/forum/view-thread/790438
+http://www.pathofexile.com/forum/view-thread/1463814
 
 Requirements
 ------------
