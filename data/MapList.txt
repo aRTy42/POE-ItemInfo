@@ -166,7 +166,7 @@ mapList["Colosseum Map"] := "`nThe first area is based on Daresso's Dream, while
 
 mapList["Core Map"] := "`n4 Bosses: Prodigy of Pain. Prodigy of Hexes, Prodigy of Darkness, Eater of Souls.`nDivination Cards: Doedre's Madness, The Aesthete`n`nVendor: Produced by 3 Palace Maps."
 
-mapList["Terrace Map"] := "`nThis map is based on the The Hedge Maze zone in Act 3.`nMap Type: Outdoors`nBoss: Sallazzang`n`nVendor: Produced by 3 Excavation Maps, 3 Terrace Maps yield 1 Colosseum Map"
+mapList["Terrace Map"] := "`nThis map is based on the The Hedge Maze zone in Act 3.`nMap Type: Outdoors`nBoss: Sallazzang`n`nVendor: Produced by 3 Excavation Maps, 3 Terrace Maps yield 1 Orchard Map"
 
 mapList["Conservatory Map"] := "`nThis map is based on the Ancient Pyramid zone in Act 2.`nBoss: Shadow of the Vaal`n`nVendor: Produced by 3 Excavation Maps. 3 Conservatory Maps yield one Colosseum Map."
 ;----------------------Unique Map List--------------------
