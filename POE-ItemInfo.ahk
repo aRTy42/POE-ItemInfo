@@ -4882,6 +4882,15 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; Needs to come before pure increased Physical Damage
+        IfInString, A_LoopField, increased Physical Damage with One Handed Melee Weapons
+        {
+            ; Only valid for Jewels at this time
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\IncrPhysicalDamage1HMelee.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        ; Needs to come before pure increased Physical Damage
         IfInString, A_LoopField, increased Physical Damage with Wands
         {
             ; Only valid for Jewels at this time
@@ -5643,7 +5652,7 @@ ParseAffixes(ItemDataAffixes, Item)
             ; The item has both increased accuracy and global crit chance, this could be the result of a complex affix
             ; TODO: fix complex affixes once prefixes have been added. Prefixes have to be parsed first since some interfere with the suffixes
             If (Item.Rarity == 2 or NumSuffixes == 1) {
-                ; Jewels with another suffix already or jewels that can only have 1 suffix (magic items) that single suffix must be the combined one
+                ; On jewels with another suffix already or jewels that can only have 1 suffix (magic items) that single suffix must be the combined one
                 NumSuffixes += 1
                 ValueRange := LookupAffixData("data\CritChanceGlobal_Jewels_Acc.txt", ItemLevel, CAGlobalCritChance, "", CurrTier)
                 AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, CurrTier), CAGlobalCritChanceAffixLineNo)
@@ -5651,7 +5660,24 @@ ParseAffixes(ItemDataAffixes, Item)
                 ValueRange := LookupAffixData("data\IncrAccuracyRating_Jewels_Crit.txt", ItemLevel, CAIncAccuracy, "", CurrTier)
                 AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, CurrTier), CAIncAccuracyAffixLineNo)
             } Else {
-                
+                Loop, Read, "data\IncrAccuracyRating_Jewels_Crit.txt" 
+                {
+                    StringSplit, Affix1Parts, A_LoopReadLine, |,
+                    
+                    If (InStr(Affix1Parts2,"-"))
+                    {
+                        ParseRange(Affix1Parts2, Range1Max, Range1Min)
+                    } Else If (InStr(Affix1Parts2, ",")) {
+                        ; Code to handle affixes with a double range (like Adds #-# Fire Damage to Attacks) should be put here, skipped for now as Jewels don't have this
+                    } Else {
+                        Range1Max := Affix1Parts2
+                        Range1Min := Affix1Parts2
+                    }
+                    If (CAIncAccuracy >= Range1Min and CAIncAccuracy <= Range1Max) {
+                        
+                    }
+                    
+                }
             }
         } Else If (CAGlobalCritChance) {
             ; The item only has a global crit chance affix so it isn't complex
