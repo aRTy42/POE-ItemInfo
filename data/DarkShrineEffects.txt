@@ -41,7 +41,7 @@
 +# to maximum Life|Grants permanent Diamond shrine |Deliver pain exquisite |Player mod - Shrine |0
 +# to Accuracy Rating|Enemies have 4 additional projectiles, 8% increased rarity, 15% increased quantity |Nothing is more intimidating on the battlefront than a wall of arrows |Map mod - Common |0
 #% increased Accuracy Rating|Identifies every item in your inventory |The light of reason still shines|Special|0
-+# to All Attributes|A random Rogue Exile spawns in the area |Any and Everything |Spawn - Rogue Exile |0
++# to All Attributes|A random Rogue Exile spawns in the area (wiki: usually Augustina Solaria)|Any and Everything |Spawn - Rogue Exile|0
 +# to Armour|Nemesis is added to the area |Your nemeses hunt you |Map mod - League |0
 +# to Dexterity|Antalie Napora or Thena Moga spawns in the area |Bow and Arrow |Spawn - Rogue Exile |0
 +# to Dexterity and Intelligence|Wilorin Demontamer or Ion Darkshroud spawns in the area |Dagger and Claw |Spawn - Rogue Exile |0
