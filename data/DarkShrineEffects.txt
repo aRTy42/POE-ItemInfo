@@ -258,3 +258,6 @@ Cannot be Frozen|Opens 6 portals to Olmec's Sanctum|Vaal guardians survive long 
 Cannot Leech Life from Monsters|Get extra reputation (or an instant level up?) with a master in your hideout|The forsaken favour you|Special|0
 Cannot Leech Mana from Monsters|Get extra reputation (or an instant level up?) with a master in your hideout|The forsaken favour you|Special|0
 Area is inhabited by Humanoids|40-49% more Monster Life|Tough as nails|Map mod|0
+#% increased Monster Movement Speed|Grants permanent Divine shrine|Become the nightmare|Player mod - Shrine|0
+#% increased Monster Attack Speed|Grants permanent Divine shrine|Become the nightmare|Player mod - Shrine|0
+#% increased Monster Cast Speed|Grants permanent Divine shrine|Become the nightmare|Player mod - Shrine|0
