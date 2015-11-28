@@ -22,7 +22,7 @@
 #% increased Light Radius|Identifies every item in your inventory |The light of reason still shines |Reward - Special |0
 #% increased Lightning Damage|Monsters deal (90 to 110)% extra Damage as Lightning, 8% increased rarity, 15% increased quantity |No fury in nature is greater than that of lightning. |Map mod - Common |0
 #% increased Mana Regeneration Rate|Spawns a Tormented Embezzler (wiki: also 8% increased rarity, 15% increased quantity)|He stole that which he was entrusted with |Spawn - Tormented Spirit |0
-#% increased maximum Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms |Map mod - Special |0
+#% increased maximum Energy Shield|Doubles the size of magic monster packs|Brothers in arms |Map mod - Special |0
 #% increased Energy Shield|Magic Monster Packs each have a Bloodline Mod|Brothers in arms|Map mod - Special|0
 #% increased Physical Damage|A Blacksmith's Strongbox spawns in the area|The secrets of the forge await you|Spawn - Strongbox |0
 +# to Level of Socketed Bow Gems|A Blacksmith's Strongbox spawns in the area|The secrets of the forge await you|Spawn - Strongbox |0
@@ -261,3 +261,4 @@ Area is inhabited by Humanoids|40-49% more Monster Life|Tough as nails|Map mod|0
 #% increased Monster Movement Speed|Grants permanent Divine shrine|Become the nightmare|Player mod - Shrine|0
 #% increased Monster Attack Speed|Grants permanent Divine shrine|Become the nightmare|Player mod - Shrine|0
 #% increased Monster Cast Speed|Grants permanent Divine shrine|Become the nightmare|Player mod - Shrine|0
+#% of Physical Damage taken as Fire Damage|Opens 6 portals to Poorjoy's Asylum|Its all in your head|Portal|0

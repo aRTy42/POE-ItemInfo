@@ -1939,6 +1939,10 @@ AssembleDarkShrineInfo()
         return Result
     }
     
+    If (ItemData.Links == 5) {
+        Result := Result .  "`n 5-Linked:`n  - You win some and you lose some`n  -- Randomizes the numerical values of explicit mods on a random item"
+    }
+    
     If (Item.IsCorrupted) {
         Result := Result .  "`n Corrupted:`n  - The influence of vaal continues long after their civilization has crumbled`n  -- Opens portals to a corrupted area"
     }
