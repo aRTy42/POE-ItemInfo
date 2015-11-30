@@ -1,6 +1,10 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+1.9.7a
+=================================
+Darkshrine Updates by XiMMiX
+
 1.9.7
 =================================
 Updates to show correct life tiers for Gloves/Boots/Rings
