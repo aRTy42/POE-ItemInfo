@@ -5630,7 +5630,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         {
             Item.MaxSockets := 5
         }
-        Else If (Item.Level >= 28)
+        Else If (Item.Level >= 25)
         {
             Item.MaxSockets := 4
         }

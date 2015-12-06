@@ -1939,6 +1939,10 @@ AssembleDarkShrineInfo()
         return Result
     }
     
+    If (ItemData.Links == 5) {
+        Result := Result .  "`n 5-Linked:`n  - You win some and you lose some`n  -- Randomizes the numerical values of explicit mods on a random item"
+    }
+    
     If (Item.IsCorrupted) {
         Result := Result .  "`n Corrupted:`n  - The influence of vaal continues long after their civilization has crumbled`n  -- Opens portals to a corrupted area"
     }
@@ -3681,15 +3685,28 @@ ParseAffixes(ItemDataAffixes, Item)
             If (ItemSubType == "Amulet")
         	{
 		    ValueRange := LookupAffixData("data\MaxLifeAmulet.txt", ItemLevel, CurrValue, "", CurrTier)
-		}
-		    Else If (ItemSubType == "Shield")
+            }
+            Else If (ItemSubType == "Shield")
 			{
-			    ValueRange := LookupAffixData("data\MaxLifeShield.txt", ItemLevel, CurrValue, "", CurrTier)
+            ValueRange := LookupAffixData("data\MaxLifeShield.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
 			    Else If (ItemSubType == "Armour")
 			    {
 				ValueRange := LookupAffixData("data\MaxLifeBodyArmour.txt", ItemLevel, CurrValue, "", CurrTier)
 			    }
+                ;Bahnzo Edit for Boots, Gloves and Rings
+                    Else If (ItemSubType == "Boots")
+                    {
+                    ValueRange := LookupAffixData("data\MaxLifeBootsGloves.txt", ItemLevel, CurrValue, "", CurrTier)
+                    }
+                        Else If (ItemSubType == "Gloves")
+                        {
+                        ValueRange := LookupAffixData("data\MaxLifeBootsGloves.txt", ItemLevel, CurrValue, "", CurrTier)
+                        }
+                            Else If (ItemSubType == "Ring")
+                            {
+                            ValueRange := LookupAffixData("data\MaxLifeRing.txt", ItemLevel, CurrValue, "", CurrTier)
+                            }
 	    Else
 	    {
 		ValueRange := LookupAffixData("data\MaxLife.txt", ItemLevel, CurrValue, "", CurrTier)
