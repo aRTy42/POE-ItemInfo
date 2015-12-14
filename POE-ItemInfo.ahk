@@ -462,6 +462,7 @@ class Item {
     IsRing := ""
     IsUnsetRing := ""
     IsAmulet := ""
+    IsTalisman := ""
     IsSingleSocket := ""
     IsFourSocket := ""
     IsThreeSocket := ""
@@ -815,7 +816,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
             SubType = BodyArmour
             return
         }
-
+        
         ; Belts, Amulets, Rings, Quivers, Flasks
         IfInString, A_LoopField, Rustic Sash
         {
@@ -829,12 +830,13 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
             SubType = Belt
             return
         }
-        IfInString, A_LoopField, Amulet
+        If (InStr(A_LoopField, "Amulet") or InStr(A_LoopField, "Talisman"))
         {
             BaseType = Item
             SubType = Amulet
             return
         }
+        
         If(RegExMatch(A_LoopField, "\bRing\b"))
         {
             BaseType = Item
@@ -5544,6 +5546,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsRing := (Item.SubType == "Ring")
     Item.IsUnsetRing := (Item.IsRing and InStr(ItemData.NamePlate, "Unset Ring"))
     Item.IsAmulet := (Item.SubType == "Amulet")
+    Item.IsTalisman := (Item.IsAmulet and InStr(ItemData.NamePlate, "Talisman"))
     Item.IsSingleSocket := (IsUnsetRing)
     Item.IsFourSocket := (Item.SubType == "Gloves" or Item.SubType == "Boots" or Item.SubType == "Helmet")
     Item.IsThreeSocket := ((Item.GripType == "1H" or Item.SubType == "Shield") and Not Item.IsBow)
@@ -5819,7 +5822,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 GetNegativeAffixOffset(Item)
 {
     NegativeAffixOffset := 0
-    If (Item.IsFlask or Item.IsUnique)
+    If (Item.IsFlask or Item.IsUnique or Item.IsTalisman)
     {
         ; Uniques as well as flasks have descriptive text as last item,
         ; so decrement item index to get to the item before last one
