@@ -5646,11 +5646,13 @@ ParseAffixes(ItemDataAffixes, Item)
         }
     }
     
-    ; --- COMPLEX AFFIXES NEW STYLE --- (Proof of Concept, for Jewels only)
+    ; --- COMPLEX AFFIXES JEWELS ---
+    ; The plan was to use a recursive function to test all possible combinations in a way that could be easily adapted for any complex affix. 
+    ; Unfortunately AutoHotkey doesn't like combining recursive functions and ByRef.  
+    ; https://autohotkey.com/board/topic/70635-byref-limitation/
+    ; Until this problem in AutoHotkey is solved or an alternative, universal, method is found the code below handles accuracy/crit chance on jewels only.
     If (Item.SubType == "Viridian Jewel" and (CAIncAccuracy or CAGlobalCritChance)) {
         If (CAIncAccuracy and CAGlobalCritChance) {
-            ; The item has both increased accuracy and global crit chance, this could be the result of a complex affix
-            ; TODO: fix complex affixes once prefixes have been added. Prefixes have to be parsed first since some interfere with the suffixes
             If (Item.Rarity == 2 or NumSuffixes == 1) {
                 ; On jewels with another suffix already or jewels that can only have 1 suffix (magic items) that single suffix must be the combined one
                 NumSuffixes += 1
@@ -5660,24 +5662,59 @@ ParseAffixes(ItemDataAffixes, Item)
                 ValueRange := LookupAffixData("data\IncrAccuracyRating_Jewels_Crit.txt", ItemLevel, CAIncAccuracy, "", CurrTier)
                 AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, CurrTier), CAIncAccuracyAffixLineNo)
             } Else {
-                Loop, Read, "data\IncrAccuracyRating_Jewels_Crit.txt" 
-                {
-                    StringSplit, Affix1Parts, A_LoopReadLine, |,
-                    
-                    If (InStr(Affix1Parts2,"-"))
-                    {
-                        ParseRange(Affix1Parts2, Range1Max, Range1Min)
-                    } Else If (InStr(Affix1Parts2, ",")) {
-                        ; Code to handle affixes with a double range (like Adds #-# Fire Damage to Attacks) should be put here, skipped for now as Jewels don't have this
-                    } Else {
-                        Range1Max := Affix1Parts2
-                        Range1Min := Affix1Parts2
-                    }
-                    If (CAIncAccuracy >= Range1Min and CAIncAccuracy <= Range1Max) {
-                        
-                    }
-                    
+                ; Item has both increased accuracy and global crit chance and can have 2 suffixes: complex affix possible
+                If (CAIncAccuracy >= 6 and CAIncAccuracy <= 9) {
+                    ; Accuracy is the result of the combined accuracy/crit_chance affix
+                    NumSuffixes += 1
+                    ValueRange := "  6-10   6-10"
+                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
+                    NextAffixPos += 1
+                } Else If (CAIncAccuracy = 10) {
+                    ; IncAccuracy can be either the combined affix or pure accuracy
+                    NumSuffixes += 1
+                    ValueRange := "  6-14   6-14"
+                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
+                    NextAffixPos += 1
+                } Else If (CAIncAccuracy >= 11 and CAIncAccuracy <= 14) {
+                    ; Increased accuracy can only be the pure accuracy roll
+                    NumSuffixes += 1
+                    ValueRange := " 10-14  10-14"
+                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
+                    NextAffixPos += 1
+                } Else If (CAIncAccuracy >= 16) {
+                    ; Increased accuracy can only be a combination of the complex and pure affixes
+                    NumSuffixes += 1
+                    ValueRange := " 16-24  16-24"
+                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
+                    NextAffixPos += 1
                 }
+                
+                If (CAGlobalCritChance >= 6 and CAGlobalCritChance <= 7) {
+                    ; Crit chance is the result of the combined accuracy/crit_chance affix
+                    NumSuffixes += 1
+                    ValueRange := "  6-10   6-10"
+                    AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, 1), CAGlobalCritChanceAffixLineNo)
+                    NextAffixPos += 1
+                } Else If (CAGlobalCritChance >= 8 and CAGlobalCritChance <= 10) {
+                    ; Crit chance can be either the combined affix or pure crit chance
+                    NumSuffixes += 1
+                    ValueRange := "  6-12   6-12"
+                    AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, 1), CAGlobalCritChanceAffixLineNo)
+                    NextAffixPos += 1
+                } Else If (CAGlobalCritChance >= 11 and CAGlobalCritChance <= 12) {
+                    ; Crit chance can only be the pure crit chance roll
+                    NumSuffixes += 1
+                    ValueRange := "  8-12   8-12"
+                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
+                    NextAffixPos += 1
+                } Else If (CAGlobalCritChance >= 14) {
+                    ; Crit chance can only be a combination of the complex and pure affixes
+                    NumSuffixes += 1
+                    ValueRange := " 14-22  14-22"
+                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
+                    NextAffixPos += 1
+                }
+                
             }
         } Else If (CAGlobalCritChance) {
             ; The item only has a global crit chance affix so it isn't complex
@@ -5686,7 +5723,7 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, CurrTier), CAGlobalCritChanceAffixLineNo)
             NextAffixPos += 1
         } Else {
-            ; The item only has a increased accuracy affix so it isn't complex
+            ; The item only has an increased accuracy affix so it isn't complex
             NumSuffixes += 1
             ValueRange := LookupAffixData("data\IncrAccuracyRating_Jewels.txt", ItemLevel, CAIncAccuracy, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, CurrTier), CAIncAccuracyAffixLineNo)
@@ -5697,6 +5734,8 @@ ParseAffixes(ItemDataAffixes, Item)
     AffixTotals.NumPrefixes := NumPrefixes
     AffixTotals.NumSuffixes := NumSuffixes
 }
+
+;
 
 ; Change a detail line that was already processed and added to the 
 ; AffixLines "stack". This can be used for example to change the
@@ -6749,15 +6788,15 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     {
         TT = %TT%`n--------`nMirrored
     }
-	
-	If (Opts.ShowDarkShrineInfo == 1 and RarityLevel == 3)
-	{
-		TT = %TT%`n--------`nPossible DarkShrine effects:
-		
-		DarkShrineInfo := AssembleDarkShrineInfo()
-		TT = %TT%%DarkShrineInfo%
-	}
-	
+    
+    If (Opts.ShowDarkShrineInfo == 1 and (RarityLevel == 3 or RarityLevel == 2))
+    {
+        TT = %TT%`n--------`nPossible DarkShrine effects:
+        
+        DarkShrineInfo := AssembleDarkShrineInfo()
+        TT = %TT%%DarkShrineInfo%
+    }
+    
     return TT
     
     ParseItemDataEnd:
