@@ -1934,14 +1934,15 @@ AssembleDarkShrineInfo()
     }
       
     If (Found <= 2 and not Item.IsUnidentified) {
-        ; 2 affix rares are consumed
-        Result := "`n Try again`n  Consumes the item, Darkshrine may be used again"
-        return Result
+        Result := Result . "`n 2-affix rare:`n  - Try again`n  -- Consumes the item, Darkshrine may be used again"
     }
     
     If (ItemData.Links == 5) {
         Result := Result .  "`n 5-Linked:`n  - You win some and you lose some`n  -- Randomizes the numerical values of explicit mods on a random item"
+    } Else If (ItemData.Links == 6) {
+        Result := Result .  "`n 6-Linked:`n  - The ultimate gamble, but only for those who are prepared`n  -- All items on the ground are affected by an Orb of Chance"
     }
+    
     
     If (Item.IsCorrupted) {
         Result := Result .  "`n Corrupted:`n  - The influence of vaal continues long after their civilization has crumbled`n  -- Opens portals to a corrupted area"
@@ -1952,7 +1953,7 @@ AssembleDarkShrineInfo()
     }
     
     If (Item.IsMirrored) {
-        Result := Result .  "`n Mirrored:`n  - The little things add up`n  -- Possibly rerolls an implicit mod on one item"
+        Result := Result .  "`n Mirrored:`n  - The little things add up`n  -- Rerolls the implicit mod on a random item"
     }
     
     If (Item.IsUnidentified) {
