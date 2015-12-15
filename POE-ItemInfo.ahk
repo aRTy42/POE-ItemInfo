@@ -5557,6 +5557,17 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
     Item.HasEffect := (InStr(ItemData.PartsLast, "Has"))
     
+    If Item.IsTalisman {
+        Loop, Read, %A_ScriptDir%\data\TalismanTiers.txt 
+        {  
+            ; This loop retrieves each line from the file, one at a time.
+            StringSplit, TalismanData, A_LoopReadLine, |,
+            If InStr(ItemData.NamePlate, TalismanData1) {
+                Item.TalismanTier := TalismanData2
+            }
+        }
+    }
+    
     ItemDataIndexAffixes := ItemData.IndexLast - GetNegativeAffixOffset(Item)
     If (ItemDataIndexAffixes <= 0)
     {
@@ -5599,6 +5610,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     {
         TT := TT . "`n"
         TT := TT . ItemLevelWord . "   " . StrPad(Item.Level, 3, Side="left")
+        
+        If Item.IsTalisman {
+            TT := TT . "`nTalisman Tier: " . StrPad(Item.TalismanTier, 2, Side="left")
+        }
         If (Not Item.IsFlask)
         {
             ;;Item.BaseLevel := CheckBaseLevel(Item.TypeName)

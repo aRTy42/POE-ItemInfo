@@ -1,0 +1,24 @@
+Breakrib Talisman|1
+Ashscale Talisman|1
+Deep One Talisman|1
+Lone Antler Talisman|1
+Deadhand Talisman|1
+Bonespire Talisman|1
+Black Maw Talisman|1
+Undying Flesh Talisman|1
+Rot Head Talisman|1
+Fangjaw Talisman|2
+Avian Twins Talisman|2
+Splitnewt Talisman|2
+Hexclaw Talisman|2
+Wereclaw Talisman|2
+Clutching Talisman|2
+Primal Skull Talisman|2
+Monkey Twins Talisman|3
+Three Rat Talisman|3
+Longtooth Talisman|3
+Rotfeather Talisman|3
+Three Hands Talisman|3
+Spinefuse Talisman|3
+Monkey Paw Talisman|3
+Greatwolf Talisman |4
