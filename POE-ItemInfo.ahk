@@ -3628,6 +3628,27 @@ ParseAffixes(ItemDataAffixes, Item)
             NumPrefixes += 1
             Continue
         }
+        
+        If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Chaos Damage") 
+        {
+            If (ItemGripType == "1H")
+            {
+                ValueRange := LookupAffixData("data\AddedChaosDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
+            Else If (ItemGripType == "2H")
+            {
+                ValueRange := LookupAffixData("data\AddedChaosDamage_2H.txt", ItemLevel, CurrValue, "", CurrTier)
+            } 
+            Else If (ItemSubType == "Amulet" or ItemSubType == "Ring")
+            {
+                ; Master modded prefix
+                ValueRange := LookupAffixData("data\AddedChaosDamage_RingsAndAmulets.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            NumPrefixes += 1
+            Continue
+        }
+        
         IfInString, A_LoopField, Physical Damage to Melee Attackers
         {
             NumPrefixes += 1
