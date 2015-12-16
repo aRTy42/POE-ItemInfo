@@ -3693,7 +3693,7 @@ ParseAffixes(ItemDataAffixes, Item)
             {
                 ValueRange := LookupAffixData("data\MaxLifeShield.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-            Else If (ItemSubType == "Armour")
+            Else If (ItemSubType == "BodyArmour")
             {
                 ValueRange := LookupAffixData("data\MaxLifeBodyArmour.txt", ItemLevel, CurrValue, "", CurrTier)
             }
