@@ -1,6 +1,13 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+1.9.8a from XiMMiX
+=================================
+Cleaning up indents on max life detection to make things readable again
+Bugfix for max life detection on bodyarmours missing the new T1 roll (bug reported by didii)
+Show tiers on magic items (bug reported by didii)
+Added detection of flat chaos damage on weapons, rings and amulets.
+
 1.9.8
 =================================
 Final (?) darkshrine updates
