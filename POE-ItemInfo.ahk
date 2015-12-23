@@ -5686,6 +5686,7 @@ ParseAffixes(ItemDataAffixes, Item)
                     } Else {
                         ValueRange := "   6-14    6-14"
                         AffixType := "Comp. Suffix"
+                        ; TODO: fix handling unknown number of affixes
                     }
                     NumSuffixes += 1
                 } Else If (CAIncAccuracy >= 11 and CAIncAccuracy <= 14) {
@@ -5696,7 +5697,7 @@ ParseAffixes(ItemDataAffixes, Item)
                 } Else If (CAIncAccuracy >= 16) {
                     ; Increased accuracy can only be a combination of the complex and pure affixes
                     has_combined_acc_crit := 1
-                    NumSuffixes += 1
+                    NumSuffixes += 2
                     ValueRange := "  16-24   16-24"
                     AffixType := "Comp. Suffix"
                 }
@@ -5706,20 +5707,25 @@ ParseAffixes(ItemDataAffixes, Item)
                 
                 If (CAGlobalCritChance >= 6 and CAGlobalCritChance <= 7) {
                     ; Crit chance is the result of the combined accuracy/crit_chance affix
-                    NumSuffixes += 1
+                    ; don't update suffix count, should this should have already been done during Inc Accuracy detection
+                    ; NumSuffixes += 1
                     ValueRange := "   6-10    6-10"
                     AffixType := "Comp. Suffix"
                 } Else If (CAGlobalCritChance >= 8 and CAGlobalCritChance <= 10) {
                     ; Crit chance can be either the combined affix or pure crit chance
                     If ((CAIncAccuracy >= 6 and CAIncAccuracy <= 9) or (CAIncAccuracy >= 16)) {
                         ; Because the inc accuracy is only possible with the combined affix the global crit chance also has to be the result of that
+                        ; don't update suffix count, should this should have already been done during Inc Accuracy detection
+                        ; NumSuffixes += 1
                         ValueRange := "   6-10    6-10"
                         AffixType := "Comp. Suffix"
                     } Else If (CAIncAccuracy >= 11 and CAIncAccuracy <= 14) {
                         ; Inc Accuracy can only be the pure affix, this means global crit chance can't be the combined affix
+                        NumSuffixes += 1
                         ValueRange := "   8-12    8-12"
                         AffixType := "Suffix"
                     } Else {
+                        ; TODO: fix handling unknown number of affixes
                         ValueRange := "   6-12    6-12"
                         AffixType := "Comp. Suffix"
                     }
