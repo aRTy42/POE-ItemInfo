@@ -3116,7 +3116,7 @@ ParseAffixes(ItemDataAffixes, Item)
         IfInString, A_LoopField, increased Lightning Damage
         {
             If (Item.IsJewel) {
-                AffixType := "Prfix"
+                AffixType := "Prefix"
                 NumPrefixes += 1
                 ValueRange := LookupAffixData("data\IncrLightningDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else {
