@@ -5657,31 +5657,34 @@ ParseAffixes(ItemDataAffixes, Item)
                 ; On jewels with another suffix already or jewels that can only have 1 suffix (magic items) that single suffix must be the combined one
                 NumSuffixes += 1
                 ValueRange := LookupAffixData("data\CritChanceGlobal_Jewels_Acc.txt", ItemLevel, CAGlobalCritChance, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, CurrTier), CAGlobalCritChanceAffixLineNo)
+                AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Comp. Suffix", ValueRange, CurrTier), CAGlobalCritChanceAffixLineNo)
                 NextAffixPos += 1
                 ValueRange := LookupAffixData("data\IncrAccuracyRating_Jewels_Crit.txt", ItemLevel, CAIncAccuracy, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, CurrTier), CAIncAccuracyAffixLineNo)
+                AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Comp. Suffix", ValueRange, CurrTier), CAIncAccuracyAffixLineNo)
             } Else {
                 ; Item has both increased accuracy and global crit chance and can have 2 suffixes: complex affix possible
                 If (CAIncAccuracy >= 6 and CAIncAccuracy <= 9) {
                     ; Accuracy is the result of the combined accuracy/crit_chance affix
                     NumSuffixes += 1
                     ValueRange := "   6-10    6-10"
-                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
+                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Comp. Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
                     NextAffixPos += 1
                 } Else If (CAIncAccuracy = 10) {
                     ; IncAccuracy can be either the combined affix or pure accuracy
                     If ((CAGlobalCritChance >= 6 and CAGlobalCritChance <= 7) or (CAGlobalCritChance >= 14)) {
                         ; Because the global crit chance is only possible with the combined affix the accuracy has to be the result of that
                         ValueRange := "   6-10    6-10"
+                        AffixType := "Comp. Suffix"
                     } Else If (CAGlobalCritChance >= 11 and CAGlobalCritChance <= 12) {
                         ; Global crit chance can only be the pure affix, this means accuracy can't be the combined affix
                         ValueRange := "  10-14   10-14"
+                        AffixType := "Suffix"
                     } Else {
                         ValueRange := "   6-14    6-14"
+                        AffixType := "Comp. Suffix"
                     }
                     NumSuffixes += 1
-                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
+                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, AffixType, ValueRange, 1), CAIncAccuracyAffixLineNo)
                     NextAffixPos += 1
                 } Else If (CAIncAccuracy >= 11 and CAIncAccuracy <= 14) {
                     ; Increased accuracy can only be the pure accuracy roll
@@ -5693,7 +5696,7 @@ ParseAffixes(ItemDataAffixes, Item)
                     ; Increased accuracy can only be a combination of the complex and pure affixes
                     NumSuffixes += 1
                     ValueRange := "  16-24   16-24"
-                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
+                    AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Comp. Suffix", ValueRange, 1), CAIncAccuracyAffixLineNo)
                     NextAffixPos += 1
                 }
                 
@@ -5701,21 +5704,24 @@ ParseAffixes(ItemDataAffixes, Item)
                     ; Crit chance is the result of the combined accuracy/crit_chance affix
                     NumSuffixes += 1
                     ValueRange := "   6-10    6-10"
-                    AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, 1), CAGlobalCritChanceAffixLineNo)
+                    AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Comp. Suffix", ValueRange, 1), CAGlobalCritChanceAffixLineNo)
                     NextAffixPos += 1
                 } Else If (CAGlobalCritChance >= 8 and CAGlobalCritChance <= 10) {
                     ; Crit chance can be either the combined affix or pure crit chance
                     If ((CAIncAccuracy >= 6 and CAIncAccuracy <= 9) or (CAIncAccuracy >= 16)) {
                         ; Because the inc accuracy is only possible with the combined affix the global crit chance also has to be the result of that
                         ValueRange := "   6-10    6-10"
+                        AffixType := "Comp. Suffix"
                     } Else If (CAIncAccuracy >= 11 and CAIncAccuracy <= 14) {
                         ; Inc Accuracy can only be the pure affix, this means global crit chance can't be the combined affix
                         ValueRange := "   8-12    8-12"
+                        AffixType := "Suffix"
                     } Else {
                         ValueRange := "   6-12    6-12"
+                        AffixType := "Comp. Suffix"
                     }
                     NumSuffixes += 1
-                    AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, 1), CAGlobalCritChanceAffixLineNo)
+                    AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, AffixType, ValueRange, 1), CAGlobalCritChanceAffixLineNo)
                     NextAffixPos += 1
                 } Else If (CAGlobalCritChance >= 11 and CAGlobalCritChance <= 12) {
                     ; Crit chance can only be the pure crit chance roll
@@ -5727,7 +5733,7 @@ ParseAffixes(ItemDataAffixes, Item)
                     ; Crit chance can only be a combination of the complex and pure affixes
                     NumSuffixes += 1
                     ValueRange := "  14-22   14-22"
-                    AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, 1), CAGlobalCritChanceAffixLineNo)
+                    AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Comp. Suffix", ValueRange, 1), CAGlobalCritChanceAffixLineNo)
                     NextAffixPos += 1
                 }
                 
