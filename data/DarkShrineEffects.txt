@@ -2,6 +2,7 @@
 +# Mana Gained on kill|Grants permanent Replenishing shrine |Restore that which was lost |Player mod - Shrine |0
 #% Additional Chance To Block Spells While Dual Wielding|An Arcanist's Strongbox spawns in the area |A trove of magic awaits you |Spawn - Strongbox |0
 #% Additional Chance To Block Spells With Staves|An Arcanist's Strongbox spawns in the area |A trove of magic awaits you |Spawn - Strongbox |0
+#% Additional Chance To Block Spells With Shields|An Arcanist's Strongbox spawns in the area |A trove of magic awaits you |Spawn - Strongbox |0
 #% increased Armour|Beyond is added to the area |Two worlds collide |Map mod - League |0
 #% increased Armour and Energy Shield|Spawns the unique enemies from Kaom's Cache around the darkshrine |Ancestral magic |Spawn - Special |0
 #% increased Armour and Evasion|Three packs of magic monsters spawn around the darkshrine |Surprise is a problem only for the unprepared |Spawn - Monsters |0
@@ -75,7 +76,7 @@ Area has patches of desecrated ground|Spawns a Tormented Necromancer in the area
 #% additional Chance to Block with Staves|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
 #% additional Block Chance while Dual Wielding|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
 +#% Chance to Block with Shields|Grants permanent Impenetrable shrine |None shall stop you |Player mod - Shrine |0
-+#% to all Elemental Resistances|Packs from different warbands spawn in the area |Heart of the conflict |Spawn - Warband |0
++#% to all Elemental Resistances|Three warbands spawn in the area |Heart of the conflict |Spawn - Warband |0
 +#% to Chaos Resistance|The Renegades Warband spawns in the area|The Renegades rise|Spawn - Warband|0
 +#% to Cold Resistance|The Mutewind Warband spawns in the area|The Mutewind rises|Spawn - Warband|0
 +#% to Fire Resistance|The Redblade Warband spawns in the area|The Redblade rises|Spawn - Warband|0
@@ -85,7 +86,7 @@ Area has patches of desecrated ground|Spawns a Tormented Necromancer in the area
 #% increased Cast Speed with Lightning Skills|A rare monster in the area will drop five rare belt.|Keeper of the buckle|Map mod - Item|0
 #% increased Critical Strike Chance with Lightning Skills|A rare monster in the area will drop five rare belt.|Keeper of the buckle|Map mod - Item 0
 #% increased Critical Strike Multiplier with Lightning Skills|A rare monster in the area will drop five rare belt.|Keeper of the buckle|Map mod - Item|0
-#% increased totem life|Unknown|Your natural vitality deserts you |Player Effect |0
+#% increased totem life|A rare monster in the area will drop a large amount of currency|Keeper of wealth|Map mod - Item|0
 +#% Mine Damage|Random monsters drop a sacrifice fragment (not limited to one) |Seek the Apex |Map mod - Item |0
 #% increased Mine Damage|Random monsters drop a sacrifice fragment (not limited to one) |Seek the Apex |Map mod - Item |0
 #% increased Mine Laying Speed|Random monsters drop a sacrifice fragment (not limited to one) |Seek the Apex |Map mod - Item |0
@@ -207,7 +208,7 @@ Monsters have #% increased Critical Strike Multiplier|Empties all flasks|Your su
 Magic Monster Packs each have a Bloodline Mod|Some of the monsters become allied with you|Mutiny in the ranks||1
 Monsters have #% chance to Avoid Elemental Status Ailments|Spawns another Darkshrine|I am Twinned||0
 Monsters are immune to Elemental Status Ailments|Spawns another Darkshrine|I am Twinned||0
-#% increased Flask effect duration|Unknown (possibly fills Vaal skills)|Atziri's power fills you||0
+#% increased Flask effect duration|It fills vaal skills to full souls|Atziri's power fills you||0
 Monsters reflect #% of Elemental Damage|Rare monsters killed in the next 20~ seconds drop a unique item|Rewards are seized only by those quick enough to find them||0
 Monsters reflect #% of Physical Damage|Rare monsters killed in the next 20~ seconds drop a unique item|Rewards are seized only by those quick enough to find them||0
 +# Mana gained for each Enemy hit by your Attacks|Area turns dark (similar to act 2 event)|Greust would not approve||0
@@ -262,3 +263,13 @@ Area is inhabited by Humanoids|40-49% more Monster Life|Tough as nails|Map mod|0
 #% increased Monster Attack Speed|Grants permanent Divine shrine|Become the nightmare|Player mod - Shrine|0
 #% increased Monster Cast Speed|Grants permanent Divine shrine|Become the nightmare|Player mod - Shrine|0
 #% of Physical Damage taken as Fire Damage|Opens 6 portals to Poorjoy's Asylum|Its all in your head|Portal|0
+Cannot roll Attack Mods|Sawbones , Thorn and Rose spawns in the area|Catarina's Trial begins in 30 seconds. It ends if you run away. Be prepared to die.|Spawn - Special|0
+Prefixes Cannot Be Changed|Triskeriaki , Kuduku, the False God , M'gaska, the Living Pyre , Forest of Flames , Boka , Jikeji , Rua , Wha , Sapling with few rare and magic monsters spawns in the area|Haku's Trial begins in 30 seconds. It ends if you run away. Be prepared to die.|Spawn - Special|0
+Cannot roll Caster Mods|Spawn every version of Vagan, Weaponmaster to attack you|Vagan's Trial begins in 30 seconds. It ends if you run away. Be prepared to die.|Spawn - Special|0
+Can have multiple Crafted Mods|Unknown|Elreon's Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Special|0
+Suffixes Cannot Be Changed|Unknown|Tora's Trial begins in 30 seconds. It ends if you run away. Be prepared to die. |Spawn - Special|0
+Cannot roll Mods with Required Level above 28|[Unconfirmed]Open six portals to Hall of Grandmasters|Leo's Trial begins in 30 seconds. It ends if you run away. Be prepared to die.|Spawn - Special|0
+#% increased rarity during flask effect|Opens six portals to Death and Taxes|Head towards sunset|Portal|0
+Damage Penetrates #% Cold Resistance|Opens six portals to Untainted Paradise|Where no man has tread|Portal|0
+Attack Projectiles return to you|You are rewarded with 10 Orbs of Alchemy|The best tools are the ones you make yourself|Reward - Currency|0
++# to Weapon Range|You are rewarded with 20 Orbs of Alteration|Magic isn't constant. It can be mutated into many forms|Reward - Currency|0

@@ -1,6 +1,27 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.0 Jewel Support by XiMMiX
+=================================
+I've added support for jewels to the script.
+
+There is a known problem with the suffix count in those cases where we don't know if the item has 1 or 2 suffixes. At the moment the output says the item has 2 suffixes but it should be "1 or 2". But otherwise the code should work.
+
+The second problem is that I haven't yet been able to test very much, especially the complex affixes. I'm planning to test all edge cases with complex affixes, but would appreciate any help with testing the simple affixes.
+
+1.9.8a from XiMMiX
+=================================
+Cleaning up indents on max life detection to make things readable again
+Bugfix for max life detection on bodyarmours missing the new T1 roll (bug reported by didii)
+Show tiers on magic items (bug reported by didii)
+Added detection of flat chaos damage on weapons, rings and amulets.
+
+1.9.8
+=================================
+Final (?) darkshrine updates
+Uniques updated &
+Talisman Support, by XiMMiX
+
 1.9.7a
 =================================
 Darkshrine Updates by XiMMiX
