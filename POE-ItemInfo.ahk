@@ -2867,7 +2867,13 @@ ParseAffixes(ItemDataAffixes, Item)
                 ValueRange := LookupAffixData("data\CastSpeedWeapon.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else If (Item.IsJewel) {
                 ValueRange := LookupAffixData("data\CastSpeed_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+            } Else If (Item.IsAmulet) {
+                ValueRange := LookupAffixData("data\CastSpeedAmulets.txt", ItemLevel, CurrValue, "", CurrTier)
+            } Else If (Item.IsRing) {
+                ValueRange := LookupAffixData("data\CastSpeedRings.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else {
+                ; After weapons, jewels, amulets and rings only shields are left. Which can receive a cast speed master mod.
+                ; Leaving this as non shield specific if the master mod ever applicable on something else
                 ValueRange := LookupAffixData("data\CastSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             NumSuffixes += 1
@@ -4537,7 +4543,19 @@ ParseAffixes(ItemDataAffixes, Item)
                 ValueRange := LookupAffixData("data\SpellDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
                 AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
                 Continue
+            } Else If (Item.IsAmulet) {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\SpellDamage_Amulets.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            } Else If (Item.SubType == "Shield") {
+                NumPrefixes += 1
+                ; Shield have the same pure spell damage affixes as 1 handers, but can't get the hybrid spell dmg/mana
+                ValueRange := LookupAffixData("data\SpellDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
             }
+            
             AffixType := "Prefix"
             If (HasMaxMana)
             {
@@ -4684,20 +4702,13 @@ ParseAffixes(ItemDataAffixes, Item)
             }
             Else
             {
-                If (ItemSubType == "Amulet")
+                If (ItemSubType == "Staff")
                 {
-                    ValueRange := LookupAffixData("data\SpellDamage_Amulets.txt", ItemLevel, CurrValue, "", CurrTier)
+                    ValueRange := LookupAffixData("data\SpellDamage_Staff.txt", ItemLevel, CurrValue, "", CurrTier)
                 }
                 Else
                 {
-                    If (ItemSubType == "Staff")
-                    {
-                        ValueRange := LookupAffixData("data\SpellDamage_Staff.txt", ItemLevel, CurrValue, "", CurrTier)
-                    }
-                    Else
-                    {
-                        ValueRange := LookupAffixData("data\SpellDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
-                    }
+                    ValueRange := LookupAffixData("data\SpellDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
                 }
                 NumPrefixes += 1
             }
