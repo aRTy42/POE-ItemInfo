@@ -1,6 +1,11 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.0.1 Bug Fixes by XiMMiX
+=================================
+Fixed typo in FlaskChargesUsed
+Fixed buugs reported by FleshRocket
+
 2.0 Jewel Support by XiMMiX
 =================================
 I've added support for jewels to the script.
