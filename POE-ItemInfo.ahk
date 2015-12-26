@@ -2867,7 +2867,13 @@ ParseAffixes(ItemDataAffixes, Item)
                 ValueRange := LookupAffixData("data\CastSpeedWeapon.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else If (Item.IsJewel) {
                 ValueRange := LookupAffixData("data\CastSpeed_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+            } Else If (Item.IsAmulet) {
+                ValueRange := LookupAffixData("data\CastSpeedAmulets.txt", ItemLevel, CurrValue, "", CurrTier)
+            } Else If (Item.IsRing) {
+                ValueRange := LookupAffixData("data\CastSpeedRings.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else {
+                ; After weapons, jewels, amulets and rings only shields are left. Which can receive a cast speed master mod.
+                ; Leaving this as non shield specific if the master mod ever applicable on something else
                 ValueRange := LookupAffixData("data\CastSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             NumSuffixes += 1
