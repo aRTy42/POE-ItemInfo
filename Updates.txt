@@ -1,6 +1,11 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.0.2 Bug Fix and Unique update by XiMMiX
+=================================
+Fixed itemlevel requirement for Glyphic affix on 1-handers (bug reported by Patwor)
+Updated Uniques.txt
+
 2.0.1 Bug Fixes by XiMMiX
 =================================
 Fixed typo in FlaskChargesUsed
