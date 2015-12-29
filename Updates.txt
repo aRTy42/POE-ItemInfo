@@ -1,6 +1,10 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.0.3 by XiMMiX
+=================================
+Added handling of "increased Maximum Energy Shield" affix on Jewels
+
 2.0.2 Bug Fix and Unique update by XiMMiX
 =================================
 Fixed itemlevel requirement for Glyphic affix on 1-handers (bug reported by Patwor)
