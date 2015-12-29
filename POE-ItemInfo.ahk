@@ -4085,7 +4085,11 @@ ParseAffixes(ItemDataAffixes, Item)
         IfInString, A_LoopField, increased maximum Energy Shield
         {
             NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrMaxEnergyShield_Amulets.txt", ItemLevel, CurrValue, "", CurrTier)
+            If (Item.IsJewel) {
+                ValueRange := LookupAffixData("data\IncrMaxEnergyShield_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+            } Else {
+                ValueRange := LookupAffixData("data\IncrMaxEnergyShield_Amulets.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
