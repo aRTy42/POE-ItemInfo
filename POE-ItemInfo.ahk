@@ -3065,7 +3065,7 @@ ParseAffixes(ItemDataAffixes, Item)
             {
                 ValueRange := LookupAffixData("data\CritMultiplierLocal.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\CritMultiplier_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\CritMultiplierGlobal_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else
             {
                 ValueRange := LookupAffixData("data\CritMultiplierGlobal.txt", ItemLevel, CurrValue, "", CurrTier)
