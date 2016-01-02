@@ -4339,6 +4339,13 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
+        IfInString, A_LoopField, increased Totem Damage
+        {
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\IncrTotemDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
         IfInString, A_LoopField, increased Totem Life
         {
             NumPrefixes += 1
