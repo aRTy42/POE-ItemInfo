@@ -1,6 +1,12 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.0.4 by XiMMiX
+=================================
+Added "increased Totem Damage" affix (bug reported by vicrv)
+Fixed Global Crit Multi on Jewels (bug reported by vicrv)
+Updated uniques.txt
+
 2.0.3 by XiMMiX
 =================================
 Added handling of "increased Maximum Energy Shield" affix on Jewels
