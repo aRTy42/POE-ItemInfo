@@ -3065,7 +3065,7 @@ ParseAffixes(ItemDataAffixes, Item)
             {
                 ValueRange := LookupAffixData("data\CritMultiplierLocal.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\CritMultiplier_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\CritMultiplierGlobal_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else
             {
                 ValueRange := LookupAffixData("data\CritMultiplierGlobal.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -4336,6 +4336,13 @@ ParseAffixes(ItemDataAffixes, Item)
         {
             NumPrefixes += 1
             ValueRange := LookupAffixData("data\MineLayingSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        IfInString, A_LoopField, increased Totem Damage
+        {
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\IncrTotemDamage.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
