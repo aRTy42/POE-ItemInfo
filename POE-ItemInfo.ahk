@@ -4940,10 +4940,19 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         ; "Local Physical Damage +%" (simple Prefix) 
         ; "Local Physical Damage +%" / "Local Accuracy Rating" (complex Prefix)
-        ; - only on Weapons
+        ; - on Weapons (local)and Jewels (global)
         ; - needs to come before Accuracy Rating stuff (!)
         IfInString, A_LoopField, increased Physical Damage
         {
+            If (Item.IsJewel) {
+                ; On jewels Increased Physical Damage is always a simple suffixes
+                ; To prevent prefixes on jewels triggering the code below we handle jewels here and than continue to the next affix
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\IncrPhysDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            
             AffixType := "Prefix"
             IPDPath := "data\IncrPhysDamage.txt"
             If (HasToAccuracyRating)
