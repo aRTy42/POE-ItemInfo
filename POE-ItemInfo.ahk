@@ -2945,6 +2945,14 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
+        IfInString, A_LoopField, increased Critical Strike Chance with Two Handed Melee Weapons
+        {
+            ; Only valid for Jewels at this time
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\CritChanceWithMelee2H.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
         ; Needs to come before Critical Strike Chance
         IfInString, A_LoopField, increased Weapon Critical Strike Chance while Dual Wielding
         {
@@ -4859,6 +4867,15 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; Needs to come before pure increased Physical Damage
+        IfInString, A_LoopField, increased Physical Damage with Claws
+        {
+            ; Only valid for Jewels at this time
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\IncrPhysicalDamageWithClaws.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        ; Needs to come before pure increased Physical Damage
         IfInString, A_LoopField, increased Physical Damage with Daggers
         {
             ; Only valid for Jewels at this time
@@ -4923,10 +4940,19 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         ; "Local Physical Damage +%" (simple Prefix) 
         ; "Local Physical Damage +%" / "Local Accuracy Rating" (complex Prefix)
-        ; - only on Weapons
+        ; - on Weapons (local)and Jewels (global)
         ; - needs to come before Accuracy Rating stuff (!)
         IfInString, A_LoopField, increased Physical Damage
         {
+            If (Item.IsJewel) {
+                ; On jewels Increased Physical Damage is always a simple suffixes
+                ; To prevent prefixes on jewels triggering the code below we handle jewels here and than continue to the next affix
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\IncrPhysDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            
             AffixType := "Prefix"
             IPDPath := "data\IncrPhysDamage.txt"
             If (HasToAccuracyRating)
@@ -6567,7 +6593,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsRing := (Item.SubType == "Ring")
     Item.IsUnsetRing := (Item.IsRing and InStr(ItemData.NamePlate, "Unset Ring"))
     Item.IsAmulet := (Item.SubType == "Amulet")
-    Item.IsTalisman := (Item.IsAmulet and InStr(ItemData.NamePlate, "Talisman"))
+    Item.IsTalisman := (Item.IsAmulet and InStr(ItemData.NamePlate, "Talisman") and !InStr(ItemData.NamePlate, "Amulet"))
     Item.IsSingleSocket := (IsUnsetRing)
     Item.IsFourSocket := (Item.SubType == "Gloves" or Item.SubType == "Boots" or Item.SubType == "Helmet")
     Item.IsThreeSocket := ((Item.GripType == "1H" or Item.SubType == "Shield") and Not Item.IsBow)
