@@ -1,6 +1,14 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.0.5 by XiMMiX
+=================================
+Fix regular amulets with "Talisman" in their name (bug reported by Bahnzo).
+Fixes "Increased Physical Camage with Claws" (bug reported by vicrv)
+Fixes "increased Critical Strike Chance with Two Handed Melee Weapons" (bug reported by vicrv)
+Fixes "increased Physical Damage" on jewels (bug reported by vicrv)
+Updated Uniques.txt
+
 2.0.4 by XiMMiX
 =================================
 Added "increased Totem Damage" affix (bug reported by vicrv)
