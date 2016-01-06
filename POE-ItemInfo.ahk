@@ -2945,6 +2945,14 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
+        IfInString, A_LoopField, increased Critical Strike Chance with Two Handed Melee Weapons
+        {
+            ; Only valid for Jewels at this time
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\CritChanceWithMelee2H.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
         ; Needs to come before Critical Strike Chance
         IfInString, A_LoopField, increased Weapon Critical Strike Chance while Dual Wielding
         {
