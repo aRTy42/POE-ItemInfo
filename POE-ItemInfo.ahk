@@ -4859,6 +4859,15 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; Needs to come before pure increased Physical Damage
+        IfInString, A_LoopField, increased Physical Damage with Claws
+        {
+            ; Only valid for Jewels at this time
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\IncrPhysicalDamageWithClaws.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        ; Needs to come before pure increased Physical Damage
         IfInString, A_LoopField, increased Physical Damage with Daggers
         {
             ; Only valid for Jewels at this time
