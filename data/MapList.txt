@@ -114,7 +114,7 @@ mapList["Canyon Map"] := "`nThis map is based on the The Climb zone in Act 1.`n`
 
 mapList["Cells Map"] := "`nThis map is based on the Crematorium map.`n`nMap Type: Indoors`n`nBoss: Harbinger, based on Voidbearer monsters`n(fire breathing dogs) from The Docks zone in Act 3.`nDifficulty: 3/5`nDivination Cards: The Trial`n`nVendor:`n- Produced by 3 Torture Chamber Maps`n- 3 Cells Maps yield 1 Underground River Map"
 
-mapList["Arid Lake Map"] := "`nThis map uses the Fetid Pool tileset. It is a large, open area with a pool of water in the center, similar to the Fetid Pool in Act 1. Players start at the edge of the map, and the boss spawns on the opposite side close to the water.`n`nBoss: Drought Maddened Rhoa, based on Oozeback Bloom.`nDifficulty: 2/5`n`nVendor: Produced by 3 Canyon Maps. 3 Arid Lake yield 1 Plateau Map."
+mapList["Arid Lake Map"] := "`nThis map uses the Fetid Pool tileset.`nIt is a large, open area with a pool of water in the center, similar to the Fetid Pool in Act 1.`n`nPlayers start at the edge of the map, and the boss spawns on the opposite side close to the water.`n`nBoss: Drought Maddened Rhoa, based on Oozeback Bloom.`nDifficulty: 2/5`n`nVendor: Produced by 3 Canyon Maps. 3 Arid Lake yield 1 Plateau Map."
 
 mapList["Malformation Map"] := "`nThis map is based on The Belly of the Beast Level 2 zone in Act 4.`n`nBoss: Nightmare Manifest (Based on Piety, the Abomination from Act 4). Boss room is seperate.`nDifficulty: 4/5`nDivination Cards: The Hunger`n`nVendor: 3 Malformation Maps yield 1 Necropolis Map."
 
