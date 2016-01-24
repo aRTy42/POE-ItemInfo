@@ -573,6 +573,7 @@ IfNotExist, %A_ScriptDir%\data
 }
 
 #Include %A_ScriptDir%\data\MapList.txt
+#Include %A_ScriptDir%\data\DivinationCardList.txt
 
 Fonts.Init(Opts.FontSize, 9)
 
@@ -6436,7 +6437,7 @@ ItemIsMirrored(ItemDataText)
 ;
 ParseItemData(ItemDataText, ByRef RarityLevel="")
 {    
-    Global Item, ItemData, AffixTotals, uniqueMapList, mapList, matchList
+    Global Item, ItemData, AffixTotals, uniqueMapList, mapList, matchList, divinationCardList
 
     ItemDataPartsIndexLast = 
     ItemDataPartsIndexAffixes = 
@@ -6475,6 +6476,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsThreeSocket := False
     Item.IsMap := False
     Item.IsJewel := False
+    Item.IsDivinationCard := False
     Item.IsUnique := False
     Item.IsRare := False
     Item.IsCorrupted := False
@@ -6547,10 +6549,16 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         Item.IsRare := True
     }
 
+    ; Divination Card detection = Normal rarity with stack size (100% valid??)
+    If (InStr(ItemData.Rarity, "Normal") and InStr(ItemDataText, "Stack Size:"))
+    {
+        Item.IsDivinationCard := True
+    }
+
     Item.IsGem := (InStr(ItemData.Rarity, "Gem")) 
     Item.IsCurrency := (InStr(ItemData.Rarity, "Currency"))
     
-    If (Not (InStr(ItemDataText, "Itemlevel:") or InStr(ItemDataText, "Item Level:")) and Not Item.IsGem and Not Item.IsCurrency)
+    If (Not (InStr(ItemDataText, "Itemlevel:") or InStr(ItemDataText, "Item Level:")) and Not Item.IsGem and Not Item.IsCurrency and Not Item.IsDivinationCard)
     {
         return Item.Name
     }
@@ -6573,7 +6581,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
                 CurrencyDetails := ValueInChaos . " Chaos"
             }
         }
-        Else If (Not Item.IsCurrency)
+        ; Don't do this on Divination Cards or this script crashes on trying to do the ParseItemLevel
+        Else If (Not Item.IsCurrency and Not Item.IsDivinationCard)
         {
             RarityLevel := CheckRarityLevel(ItemData.Rarity)
             Item.Level := ParseItemLevel(ItemDataText)
@@ -6653,7 +6662,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         Goto, ParseItemDataEnd
     }
 
-    If (Opts.ShowItemLevel == 1 and Not (Item.IsMap or Item.IsCurrency))
+    If (Opts.ShowItemLevel == 1 and Not (Item.IsMap or Item.IsCurrency or Item.IsDivinationCard))
     {
         TT := TT . "`n"
         TT := TT . ItemLevelWord . "   " . StrPad(Item.Level, 3, Side="left")
@@ -6686,7 +6695,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         }
     }
     
-    If (Opts.ShowMaxSockets == 1 and Not (Item.IsFlask or Item.IsGem or Item.IsCurrency or Item.IsBelt or Item.IsQuiver or Item.IsMap or Item.IsJewel or Item.IsAmulet))
+    If (Opts.ShowMaxSockets == 1 and Not (Item.IsFlask or Item.IsGem or Item.IsCurrency or Item.IsBelt or Item.IsQuiver or Item.IsMap or Item.IsJewel or Item.IsAmulet or Item.IsDivinationCard))
     {
         If (Item.Level >= 50)
         {
@@ -6763,7 +6772,21 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     {
         TT := TT . AssembleDamageDetails(ItemDataText)
     }
- 
+
+    If (Item.IsDivinationCard)
+    {
+        If (divinationCardList[Item.Name] != "")
+        {
+            CardDescription := divinationCardList[Item.Name]
+        }
+        Else
+        {
+            CardDescription := divinationCardList["Unknown Card"]
+        }
+
+        TT := TT . "`n--------`n" . CardDescription
+    }
+
     If (Item.IsMap)
     {
 		Item.MapLevel := ParseMapLevel(ItemDataText)

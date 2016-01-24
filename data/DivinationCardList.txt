@@ -1,0 +1,9 @@
+divinationCardList := Object()
+
+;----------------------Card List--------------------
+; Most recent update: 24 januari 2016
+; Source:             http://pathofexile.gamepedia.com/Divination_card
+
+divinationCardList["Unknown Card"] := "You've found a new card, please report it!"
+
+divinationCardList["Three Faces in the Dark"] := "Drop Restrictions:`n- The Marketplace (any difficulty)`n- The Warehouse District (any difficulty)`n- Arsenal (map area)`n- Village Ruin (map area)"
