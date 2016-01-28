@@ -463,6 +463,8 @@ class Item {
     IsUnsetRing := ""
     IsAmulet := ""
     IsTalisman := ""
+    IsJewel := ""
+    IsDivinationCard := ""
     IsSingleSocket := ""
     IsFourSocket := ""
     IsThreeSocket := ""
@@ -6475,6 +6477,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsFourSocket := False   
     Item.IsThreeSocket := False
     Item.IsMap := False
+    Item.IsTalisman := False
     Item.IsJewel := False
     Item.IsDivinationCard := False
     Item.IsUnique := False
@@ -6553,6 +6556,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     If (InStr(ItemData.Rarity, "Normal") and InStr(ItemDataText, "Stack Size:"))
     {
         Item.IsDivinationCard := True
+        Item.BaseType := "Divination Card"
     }
 
     Item.IsGem := (InStr(ItemData.Rarity, "Gem")) 
