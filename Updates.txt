@@ -1,6 +1,13 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.0.8
+=================================
+Updated Uniques.txt
+Rewrote the web scraper used for getting
+the Uniques.txt
+Available at: https://github.com/Bahnzo
+
 2.0.7
 =================================
 Fixed issue with CritStrikeChance for spells
