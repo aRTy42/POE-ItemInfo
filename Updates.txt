@@ -1,6 +1,10 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.0.9 (future)
+=================================
+Added last max life tier. by Jeykey1990
+
 2.0.8
 =================================
 Updated Uniques.txt
