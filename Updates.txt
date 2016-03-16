@@ -5,6 +5,7 @@ Current Script Caretaker: Bahnzo
 =================================
 Added last max life tier. by Jeykey1990
 Changed name of Mine map to Abandoned Cavern
+Added Chateau Map
 
 2.0.8
 =================================
