@@ -4,6 +4,7 @@ Current Script Caretaker: Bahnzo
 2.0.9 (future)
 =================================
 Added last max life tier. by Jeykey1990
+Changed name of Mine map to Abandoned Cavern
 
 2.0.8
 =================================
