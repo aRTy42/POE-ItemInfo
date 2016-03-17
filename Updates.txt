@@ -1,7 +1,7 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
-2.0.9 (future)
+2.0.9
 =================================
 Added last max life tier. by Jeykey1990
 Changed name of Mine map to Abandoned Cavern
