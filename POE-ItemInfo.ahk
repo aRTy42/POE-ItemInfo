@@ -2650,6 +2650,14 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
+        IfInString, A_LoopField, increased Attack Speed with Daggers
+        {
+            ; Only valid for Jewels at this time
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\AttackSpeedWithDaggers.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
         ; Needs to come before pure increased attack speed
         IfInString, A_LoopField, increased Attack Speed with Maces
         {
