@@ -2989,7 +2989,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, increased Melee Critical Strike Multiplier
+        IfInString, A_LoopField, to Melee Critical Strike Multiplier
         {
             ; Only valid for jewels at the moment
             NumSuffixes += 1
@@ -2998,7 +2998,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, increased Critical Strike Multiplier for Spells
+        IfInString, A_LoopField, to Critical Strike Multiplier for Spells
         {
             ; Only valid for jewels at the moment
             NumSuffixes += 1
@@ -3007,7 +3007,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, increased Critical Strike Multiplier with Elemental Skills
+        IfInString, A_LoopField, to Critical Strike Multiplier with Elemental Skills
         {
             ; Only valid for jewels at the moment
             NumSuffixes += 1
@@ -3016,7 +3016,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, increased Critical Strike Multiplier with Cold Skills
+        IfInString, A_LoopField, to Critical Strike Multiplier with Cold Skills
         {
             ; Only valid for jewels at the moment
             NumPrefixes += 1
@@ -3025,7 +3025,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, increased Critical Strike Multiplier with Fire Skills
+        IfInString, A_LoopField, to Critical Strike Multiplier with Fire Skills
         {
             ; Only valid for jewels at the moment
             NumPrefixes += 1
@@ -3034,7 +3034,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, increased Critical Strike Multiplier with Lightning Skills
+        IfInString, A_LoopField, to Critical Strike Multiplier with Lightning Skills
         {
             ; Only valid for jewels at the moment
             NumPrefixes += 1
@@ -3043,7 +3043,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, increased Critical Strike Multiplier with One Handed Melee Weapons
+        IfInString, A_LoopField, to Critical Strike Multiplier with One Handed Melee Weapons
         {
             ; Only valid for jewels at the moment
             NumPrefixes += 1
@@ -3052,7 +3052,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, increased Critical Strike Multiplier with Two Handed Melee Weapons
+        IfInString, A_LoopField, to Critical Strike Multiplier with Two Handed Melee Weapons
         {
             ; Only valid for jewels at the moment
             NumPrefixes += 1
@@ -3061,7 +3061,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, increased Critical Strike Multiplier while Dual Wielding
+        IfInString, A_LoopField, to Critical Strike Multiplier while Dual Wielding
         {
             ; Only valid for jewels at the moment
             NumPrefixes += 1
