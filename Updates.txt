@@ -1,6 +1,10 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.0.10
+=================================
+Fixes for items with Prices/Notes
+
 2.0.9
 =================================
 Added last max life tier. by Jeykey1990

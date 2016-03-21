@@ -1061,14 +1061,30 @@ GetClipboardContents(DropNewlines=False)
     If Not DropNewlines
     {
         Loop, Parse, Clipboard, `n, `r
-        {
-            Result := Result . A_LoopField . "`r`n"
+        {   
+            IfInString, A_LoopField, note:  ; new code added by Bahnzo - The ability to add prices to items causes issues. Building the code sent from the clipboard
+            {                               ; differently, and ommiting the line with "Note:" on it partially fixes this. We also have to omit the \newline \return
+                break                       ; that gets added at the end
+            }
+            If A_Index = 1                  ; so we start with just adding the first line w/o either a `n or `r 
+            {
+                Result := Result . A_LoopField
+            }
+            else
+            {
+            Result := Result . "`r`n" . A_LoopField  ; and then adding those before adding lines. This makes sure there are no trailing `n or `r. 
+            ;Result := Result . A_LoopField . "`r`n"  ; the original line, left in for clarity. 
+        }
         }
     }
     Else
     {   
         Loop, Parse, Clipboard, `n, `r
         {
+            IfInString, A_LoopField, note:
+            {
+                break
+            }
             Result := Result . A_LoopField
         }
     }
