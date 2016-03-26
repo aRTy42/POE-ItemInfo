@@ -1,6 +1,10 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.0.11 (future)
+=================================
+Uniques.txt updated
+
 2.0.10
 =================================
 Fixes for items with Prices/Notes
