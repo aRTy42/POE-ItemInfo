@@ -41,3 +41,10 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+.idea/.name
+.idea/misc.xml
+.idea/encodings.xml
+.idea/modules.xml
+.idea/POE-ItemInfo.iml
+.idea/workspace.xml
+POE-ItemInfo.ahk.bak
