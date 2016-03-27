@@ -6668,7 +6668,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     {
         ParseFlaskAffixes(ItemData.Affixes)
     }
-    Else If (RarityLevel > 1 and RarityLevel < 4)
+    Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = False)  ; Code added by Bahnzo to avoid maps showing affixes
     {
         ParseAffixes(ItemData.Affixes, Item)
     }
