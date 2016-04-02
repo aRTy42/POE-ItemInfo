@@ -170,7 +170,7 @@ class Globals {
 Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
-
+global SuspendPOEItemScript = 0
 
 class UserOptions {
 
@@ -7828,19 +7828,22 @@ ToolTipTimer:
 
 OnClipBoardChange:
     Global Opts
-    If (Opts.OnlyActiveIfPOEIsFront)
+    if SuspendPOEItemScript = 0
     {
-        ; do nothing if Path of Exile isn't the foremost window
-        IfWinActive, Path of Exile ahk_class Direct3DWindowClass
+        If (Opts.OnlyActiveIfPOEIsFront)
         {
+            ; do nothing if Path of Exile isn't the foremost window
+            IfWinActive, Path of Exile ahk_class Direct3DWindowClass
+            {
+                ParseClipBoardChanges()
+            }
+        }
+        Else
+        {
+            ; if running tests parse clipboard regardless if PoE is foremost
+            ; so we can check individual cases from test case text files
             ParseClipBoardChanges()
         }
-    }
-    Else
-    {
-        ; if running tests parse clipboard regardless if PoE is foremost
-        ; so we can check individual cases from test case text files
-        ParseClipBoardChanges()
     }
     return
 
@@ -8055,14 +8058,30 @@ UnhandledDlg_OK:
     Gui, 3:Submit
     return
 
+TogglePOEItemScript()
+{
+    if SuspendPOEItemScript = 0
+    {
+        SuspendPOEItemScript = 1
+        ToolTip, POE ItemInfo Script is PAUSED!
+    }
+    else
+    {
+        SuspendPOEItemScript = 0
+        ToolTip
+    }
+        
+}
+
 ; ############ ADD YOUR OWN MACROS HERE #############
-;#IfWinActive Path of Exile ahk_class Direct3DWindowClass ahk_exe PathOfExile.exe
-;{
-;   ^RButton::Send ^c   ;cntl-right mouse button send's cntl-c
-;   ^WheelUp::Send {Left}  ;cntl-mouse wheel up toggles stash tabs left
-;   ^WheelDown::Send {Right}  ;cntl-mouse wheel down toggles stash tabs right.
-;   F1::^c  ;changes the control-c to F1 key
-;	F5::Send {Enter}/remaining{Enter}  	;mobs remaining
-;	F9::Send {Enter}/hideout{Enter}		;goto hideout
-;	F10::Send {Enter}/global 666{Enter}	;join a channel
-;} ;*/
+#IfWinActive Path of Exile ahk_class Direct3DWindowClass ahk_exe PathOfExile.exe
+{
+    Pause::TogglePOEItemScript()
+   ;^RButton::Send ^c   ;cntl-right mouse button send's cntl-c
+   ;^WheelUp::Send {Left}  ;cntl-mouse wheel up toggles stash tabs left
+   ;^WheelDown::Send {Right}  ;cntl-mouse wheel down toggles stash tabs right.
+   ;F1::^c  ;changes the control-c to F1 key
+    ;F5::Send {Enter}/remaining{Enter}  	;mobs remaining
+	;F9::Send {Enter}/hideout{Enter}		;goto hideout
+	;F10::Send {Enter}/global 666{Enter}	;join a channel
+} ;*/

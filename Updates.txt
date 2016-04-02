@@ -1,9 +1,18 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
-2.0.12 (future)
+2.0.12
 =================================
 Uniques.txt updated
+Added ability to "Pause" the script. 
+This allows users of other scripts
+that look for the clipboard change to 
+operate. Simply press the "Pause" key
+to pause, and then "Pause" again to 
+re-enable the script. Key can be
+remapped to whatever key the user
+may like in the section at the very
+end of the script. 
 
 2.0.11
 =================================
