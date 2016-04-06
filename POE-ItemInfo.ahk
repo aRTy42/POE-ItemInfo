@@ -4438,6 +4438,10 @@ ParseAffixes(ItemDataAffixes, Item)
             {
                 ValueRange := LookupAffixData("data\GemLevel_Bow.txt", ItemLevel, CurrValue, "", CurrTier)
             }
+            Else If (InStr(A_LoopField, "Chaos"))
+            {
+                ValueRange := LookupAffixData("data\GemLevel_Chaos.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
             Else If (InStr(A_LoopField, "Socketed Gems"))
             {
                 ValueRange := LookupAffixData("data\GemLevel.txt", ItemLevel, CurrValue, "", CurrTier)
