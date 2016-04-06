@@ -4422,46 +4422,25 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, to Level of Socketed
         {
-            If (ItemBaseType == "Weapon")
+            If (InStr(A_LoopField, "Minion"))
             {
-                If (ItemSubType == "Bow")
-                {
-                    ValueRange := LookupAffixData("data\GemLevel_Bow.txt", ItemLevel, CurrValue, "", CurrTier)
-                }
-                Else
-                {
-                    If (InStr(A_LoopField, "Fire") or InStr(A_LoopField, "Cold") or InStr(A_LoopField, "Lightning"))
-                    {
-                        ValueRange := LookupAffixData("data\GemLevel_Elemental.txt", ItemLevel, CurrValue, "", CurrTier)
-                    }
-                    Else
-                    {
-                        If (InStr(A_LoopField, "Melee"))
-                        {
-                            ValueRange := LookupAffixData("data\GemLevel_Melee.txt", ItemLevel, CurrValue, "", CurrTier)
-                        }
-                        Else
-                        {
-                            ; Paragorn's
-                            ValueRange := LookupAffixData("data\GemLevel.txt", ItemLevel, CurrValue, "", CurrTier)
-                        }
-                    }
-                }
+                ValueRange := LookupAffixData("data\GemLevel_Minion.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-            Else
+            Else If (InStr(A_LoopField, "Fire") or InStr(A_LoopField, "Cold") or InStr(A_LoopField, "Lightning"))
             {
-                If (InStr(A_LoopField, "Minion"))
-                {
-                    ValueRange := LookupAffixData("data\GemLevel_Minion.txt", ItemLevel, CurrValue, "", CurrTier)
-                }
-                Else If (InStr(A_LoopField, "Fire") or InStr(A_LoopField, "Cold") or InStr(A_LoopField, "Lightning"))
-                {
-                    ValueRange := LookupAffixData("data\GemLevel_Elemental.txt", ItemLevel, CurrValue, "", CurrTier)
-                }
-                Else If (InStr(A_LoopField, "Melee"))
-                {
-                    ValueRange := LookupAffixData("data\GemLevel_Melee.txt", ItemLevel, CurrValue, "", CurrTier)
-                }
+                ValueRange := LookupAffixData("data\GemLevel_Elemental.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
+            Else If (InStr(A_LoopField, "Melee"))
+            {
+                ValueRange := LookupAffixData("data\GemLevel_Melee.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
+            Else If (InStr(A_LoopField, "Bow"))
+            {
+                ValueRange := LookupAffixData("data\GemLevel_Bow.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
+            Else If (InStr(A_LoopField, "Socketed Gems"))
+            {
+                ValueRange := LookupAffixData("data\GemLevel.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             NumPrefixes += 1
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
