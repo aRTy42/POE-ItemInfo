@@ -1,6 +1,17 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.1
+=================================
+from underbent/master
+Two bugfixes and support for master signature mods
+from R3ality
+Added the Unique version of maps to the base map info. Mainly for making use of Chance Orbs
+Added the name of each Unique Map as a comment line before its definition to simplify readability for future changes
+Fixed Olmec's Sanctum Unique Map base type (was changed to Catacomb Map in v2.0.0)
+Added Caer Blaidd, Wolfpack's Den
+Added The Perandus Manor. Could use more detais, wiki article was rather short
+
 2.0.12
 =================================
 Uniques.txt updated
