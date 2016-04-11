@@ -3240,16 +3240,23 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, increased Damage
         {
-            ; Only valid on Jewels at this time
-            IfInString, A_LoopField, Minions deal 
-            {
+            ; Can be either Leo prefix or jewel suffix.
+            ; (I don't believe Leo prefixes can spawn on jewels so there should be no conflict)
+            If (Item.IsJewl) {
+                IfInString, A_LoopField, Minions deal 
+                {
+                    AffixType := "Prefix"
+                    NumPrefixes += 1
+                    ValueRange := LookupAffixData("data\IncDamageMinions.txt", ItemLevel, CurrValue, "", CurrTier)
+                } Else {
+                    AffixType := "Suffix"
+                    NumSuffixes += 1
+                    ValueRange := LookupAffixData("data\IncDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                }
+            } Else {
                 AffixType := "Prefix"
                 NumPrefixes += 1
-                ValueRange := LookupAffixData("data\IncDamageMinions.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                AffixType := "Suffix"
-                NumSuffixes += 1
-                ValueRange := LookupAffixData("data\IncDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\IncDamageLeo.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
             Continue
@@ -4422,46 +4429,34 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, to Level of Socketed
         {
-            If (ItemBaseType == "Weapon")
+            If (InStr(A_LoopField, "Minion"))
             {
-                If (ItemSubType == "Bow")
-                {
-                    ValueRange := LookupAffixData("data\GemLevel_Bow.txt", ItemLevel, CurrValue, "", CurrTier)
-                }
-                Else
-                {
-                    If (InStr(A_LoopField, "Fire") or InStr(A_LoopField, "Cold") or InStr(A_LoopField, "Lightning"))
-                    {
-                        ValueRange := LookupAffixData("data\GemLevel_Elemental.txt", ItemLevel, CurrValue, "", CurrTier)
-                    }
-                    Else
-                    {
-                        If (InStr(A_LoopField, "Melee"))
-                        {
-                            ValueRange := LookupAffixData("data\GemLevel_Melee.txt", ItemLevel, CurrValue, "", CurrTier)
-                        }
-                        Else
-                        {
-                            ; Paragorn's
-                            ValueRange := LookupAffixData("data\GemLevel.txt", ItemLevel, CurrValue, "", CurrTier)
-                        }
-                    }
-                }
+                ValueRange := LookupAffixData("data\GemLevel_Minion.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-            Else
+            Else If (InStr(A_LoopField, "Fire") or InStr(A_LoopField, "Cold") or InStr(A_LoopField, "Lightning"))
             {
-                If (InStr(A_LoopField, "Minion"))
-                {
-                    ValueRange := LookupAffixData("data\GemLevel_Minion.txt", ItemLevel, CurrValue, "", CurrTier)
-                }
-                Else If (InStr(A_LoopField, "Fire") or InStr(A_LoopField, "Cold") or InStr(A_LoopField, "Lightning"))
-                {
-                    ValueRange := LookupAffixData("data\GemLevel_Elemental.txt", ItemLevel, CurrValue, "", CurrTier)
-                }
-                Else If (InStr(A_LoopField, "Melee"))
-                {
-                    ValueRange := LookupAffixData("data\GemLevel_Melee.txt", ItemLevel, CurrValue, "", CurrTier)
-                }
+                ValueRange := LookupAffixData("data\GemLevel_Elemental.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
+            Else If (InStr(A_LoopField, "Melee"))
+            {
+                ValueRange := LookupAffixData("data\GemLevel_Melee.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
+            Else If (InStr(A_LoopField, "Bow"))
+            {
+                ValueRange := LookupAffixData("data\GemLevel_Bow.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
+            Else If (InStr(A_LoopField, "Chaos"))
+            {
+                ValueRange := LookupAffixData("data\GemLevel_Chaos.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
+            ; Catarina prefix
+            Else If (InStr(A_LoopField, "Support"))
+            {
+                ValueRange := LookupAffixData("data\GemLevel_Support.txt", ItemLevel, CurrValue, "", CurrTier)
+            }
+            Else If (InStr(A_LoopField, "Socketed Gems"))
+            {
+                ValueRange := LookupAffixData("data\GemLevel.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             NumPrefixes += 1
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
@@ -4543,6 +4538,47 @@ ParseAffixes(ItemDataAffixes, Item)
         {
             NumPrefixes += 1
             ValueRange := LookupAffixData("data\FlaskLifeRecoveryRate.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+
+        ; Haku prefix
+        IfInString, A_LoopField, to Quality of Socketed Support Gems
+        {
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\GemQuality_Support.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        ; Elreon prefix
+        IfInString, A_LoopField, to Mana Cost of Skills
+        {
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\ManaCostOfSkills.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        ; Vorici prefix
+        IfInString, A_LoopField, increased Life Leeched per Second
+        {
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\LifeLeechedPerSecond.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        ; Vagan prefix
+        IfInString, A_LoopField, Hits can't be Evaded
+        {
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\HitsCantBeEvaded.txt", ItemLevel, 1, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        ; Tora prefix
+        IfInString, A_LoopField, Causes Bleeding on Hit
+        {
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\CausesBleedingOnHit.txt", ItemLevel, 1, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
