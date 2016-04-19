@@ -869,6 +869,13 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 		
 
+        ; Matching armour types with regular expressions to reduce 
+        ;    potential mismatches due to the huge base item name variety and
+        ;    the word lists used for the randomly assigned (first line) item name. 
+        
+        ; "$" means line end, "|" is the usual "or" operator.
+        
+
         ; Shields
         If (RegExMatch(A_LoopField, "Buckler$|Bundle$|Shield$"))
         {
@@ -900,6 +907,10 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
             SubType = Helmet
             return
         }
+        
+        ; Note: Body armours can have "Pelt" in their randomly assigned name,
+        ;    explicitly matching the three pelt base items to be safe.
+        
         If (RegExMatch(A_LoopField, "Iron Hat|Leather Cap|Rusted Coif|Wolf Pelt|Ursine Pelt|Lion Pelt"))
         {
             BaseType = Armour
@@ -924,12 +935,6 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 	
     }
 
-    ; TODO: need a reliable way to determine sub type for armour
-    ; right now it's just determine anything else first if it's
-    ; not that, it's armour. 
-    ; DONE. Still need for a fallback value?
-    ; BaseType = Armour
-    ; SubType = Armour
 }
 
 GetClipboardContents(DropNewlines=False)
