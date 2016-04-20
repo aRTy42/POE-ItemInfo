@@ -550,7 +550,7 @@ CreateSettingsUI()
 
 Menu, TextFiles, Add, Valuable Uniques, EditValuableUniques
 Menu, TextFiles, Add, Valuable Gems, EditValuableGems
-Menu, TextFiles, Add, Dropy Only Gems, EditDropOnlyGems
+Menu, TextFiles, Add, Drop Only Gems, EditDropOnlyGems
 Menu, TextFiles, Add, Currency Rates, EditCurrencyRates
 
 
@@ -785,41 +785,6 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
     ; Check name plate section 
     Loop, Parse, ItemDataNamePlate, `n, `r
     {
-        ; a few cases that cause incorrect id later
-        ; and thus should come first
-        ; Note: still need to work on proper id for 
-        ; all armour types.
-        IfInString, A_LoopField, Ringmail Gloves
-        {
-            BaseType = Armour
-            SubType = Gloves
-            return
-        }
-        IfInString, A_LoopField, Ringmail Boots
-        {
-            BaseType = Armour
-            SubType = Gloves
-            return
-        }
-        If (RegExMatch(A_LoopField, "Ringmail$"))
-        {
-            BaseType = Armour
-            SubType = BodyArmour
-            return
-        }
-        IfInString, A_LoopField, Mantle
-        {
-            BaseType = Armour
-            SubType = BodyArmour
-            return
-        }
-        IfInString, A_LoopField, Shell
-        {
-            BaseType = Armour
-            SubType = BodyArmour
-            return
-        }
-        
         ; Belts, Amulets, Rings, Quivers, Flasks
         IfInString, A_LoopField, Rustic Sash
         {
@@ -883,176 +848,93 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
             return
         }       
 		
-		; Jewels
-		IfInString, A_LoopField, Cobalt%A_Space%Jewel
+        ; Jewels
+        IfInString, A_LoopField, Cobalt%A_Space%Jewel
         {
             BaseType = Jewel
             SubType = Cobalt Jewel
             return
         }
-		IfInString, A_LoopField, Crimson%A_Space%Jewel
+        IfInString, A_LoopField, Crimson%A_Space%Jewel
         {
             BaseType = Jewel
             SubType = Crimson Jewel
             return
         }
-		IfInString, A_LoopField, Viridian%A_Space%Jewel
+        IfInString, A_LoopField, Viridian%A_Space%Jewel
         {
             BaseType = Jewel
             SubType = Viridian Jewel
             return
         }
 		
-        ; Shields 
-        IfInString, A_LoopField, Shield
+
+        ; Matching armour types with regular expressions to reduce 
+        ;    potential mismatches due to the huge base item name variety and
+        ;    the word lists used for the randomly assigned (first line) item name. 
+        
+        ; "$" means line end, "|" is the usual "or" operator.
+        
+
+        ; Shields
+        If (RegExMatch(A_LoopField, "Buckler$|Bundle$|Shield$"))
         {
             BaseType = Armour
             SubType = Shield
             return
         }
-        IfInString, A_LoopField, Buckler
-        {
-            BaseType = Armour
-            SubType = Shield
-            return
-        }
-        IfInString, A_LoopField, Bundle
-        {
-            BaseType = Armour
-            SubType = Shield
-            return
-        }
-        IfInString, A_LoopField, Gloves
-        {
-            BaseType = Armour
-            SubType = Gloves
-            return
-        }
-        IfInString, A_LoopField, Mitts
-        {
-            BaseType = Armour
-            SubType = Gloves
-            return
-        }
-        IfInString, A_LoopField, Gauntlets
+
+        ; Gloves
+        If (RegExMatch(A_LoopField, "Gauntlets$|Gloves$|Mitts$"))
         {
             BaseType = Armour
             SubType = Gloves
             return
         }
 
+        ; Boots
+        If (RegExMatch(A_LoopField, "Boots$|Greaves$|Slippers$"))
+        {
+            BaseType = Armour
+            SubType = Boots
+            return
+        }
+
         ; Helmets
-        IfInString, A_LoopField, Helmet
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Helm
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        If (InStr(A_LoopField, "Hat") and (Not InStr(A_LoopField, "Hate")))
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Mask
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Hood
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Ursine Pelt
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Lion Pelt
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Circlet
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Sallet
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Burgonet
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Bascinet
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Crown
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Cage
-        {
-            BaseType = Armour
-            SubType = Helmet
-            return
-        }
-        IfInString, A_LoopField, Tricorne
+        If (RegExMatch(A_LoopField, "Bascinet$|Burgonet$|Cage$|Circlet$|Crown$|Hood$|Helm$|Helmet$|Mask$|Sallet$|Tricorne$"))
         {
             BaseType = Armour
             SubType = Helmet
             return
         }
         
-        ; Boots
-        IfInString, A_LoopField, Boots
+        ; Note: Body armours can have "Pelt" in their randomly assigned name,
+        ;    explicitly matching the three pelt base items to be safe.
+        
+        If (RegExMatch(A_LoopField, "Iron Hat|Leather Cap|Rusted Coif|Wolf Pelt|Ursine Pelt|Lion Pelt"))
         {
             BaseType = Armour
-            SubType = Boots
+            SubType = Helmet
             return
         }
-        IfInString, A_LoopField, Greaves
+
+        ; BodyArmour
+        If (RegExMatch(A_LoopField, "Armour$|Brigandine$|Chainmail$|Coat$|Doublet$|Garb$|Hauberk$|Jacket$|Lamellar$|Leather$|Plate$|Raiment$|Regalia$|Ringmail$|Robe$|Tunic$|Vest$|Vestment$"))
         {
             BaseType = Armour
-            SubType = Boots
+            SubType = BodyArmour
             return
-        }   
-        IfInString, A_LoopField, Slippers
+        }
+
+        If (RegExMatch(A_LoopField, "Chestplate|Full Dragonscale|Full Wyrmscale|Necromancer Silks|Shabby Jerkin|Silken Wrap"))
         {
             BaseType = Armour
-            SubType = Boots
+            SubType = BodyArmour
             return
-        }                   
+        }
+	
     }
 
-    ; TODO: need a reliable way to determine sub type for armour
-    ; right now it's just determine anything else first if it's
-    ; not that, it's armour.
-    BaseType = Armour
-    SubType = Armour
 }
 
 GetClipboardContents(DropNewlines=False)
@@ -4464,27 +4346,21 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, maximum Life
         {
-            ; Slinkston edit
-            If (ItemSubType == "Amulet")
+            If (ItemSubType == "Amulet" or ItemSubType == "Boots" or ItemSubType == "Gloves")
             {
-                ValueRange := LookupAffixData("data\MaxLifeAmulet.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\MaxLifeAmuletBootsGloves.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-            Else If (ItemSubType == "Shield")
+            Else If (ItemSubType == "Belt" or ItemSubType == "Helmet" or ItemSubType == "Quiver")
             {
-                ValueRange := LookupAffixData("data\MaxLifeShield.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\MaxLifeBeltHelmetQuiver.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             Else If (ItemSubType == "BodyArmour")
             {
                 ValueRange := LookupAffixData("data\MaxLifeBodyArmour.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-            ;Bahnzo Edit for Boots, Gloves and Rings
-            Else If (ItemSubType == "Boots")
+            Else If (ItemSubType == "Shield")
             {
-                ValueRange := LookupAffixData("data\MaxLifeBootsGloves.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            Else If (ItemSubType == "Gloves")
-            {
-                ValueRange := LookupAffixData("data\MaxLifeBootsGloves.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\MaxLifeShield.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             Else If (ItemSubType == "Ring")
             {
