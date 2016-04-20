@@ -1,6 +1,11 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: Bahnzo
 
+2.11
+================================
+from arty42
+Armour matching with RegEx. MaxLife fix & cleanup
+
 2.1
 =================================
 from underbent/master
