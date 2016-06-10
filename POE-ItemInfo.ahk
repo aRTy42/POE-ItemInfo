@@ -1703,11 +1703,22 @@ AssembleAffixDetails()
         {
             If (Opts.MirrorLineFieldWidth > 0)
             {
-                If(StrLen(AffixLine) > Opts.MirrorLineFieldWidth)
-                {   
-                    AffixLine := StrTrimSpaceRight(SubStr(AffixLine, 1, Opts.MirrorLineFieldWidth)) . Ellipsis
-                }
-                AffixLine := StrPad(AffixLine, Opts.MirrorLineFieldWidth + StrLen(Ellipsis))
+				If ( Not Item.IsUnique )
+				{
+					If(StrLen(AffixLine) > Opts.MirrorLineFieldWidth)
+					{   
+						AffixLine := StrTrimSpaceRight(SubStr(AffixLine, 1, Opts.MirrorLineFieldWidth)) . Ellipsis
+					}
+					AffixLine := StrPad(AffixLine, Opts.MirrorLineFieldWidth + StrLen(Ellipsis))
+				}
+				Else
+				{
+					If(StrLen(AffixLine) > Opts.MirrorLineFieldWidth + 10)
+					{   
+						AffixLine := StrTrimSpaceRight(SubStr(AffixLine, 1, Opts.MirrorLineFieldWidth + 10)) . Ellipsis
+					}
+					AffixLine := StrPad(AffixLine, Opts.MirrorLineFieldWidth + 10 + StrLen(Ellipsis))
+				}
             }
             ProcessedLine := AffixLine . Delim
         }
