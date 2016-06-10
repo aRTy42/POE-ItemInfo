@@ -1,6 +1,19 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.3.02
+================================
+from underbent, vdorie, aRTy42
+Improved data thanks to underbent's additions to the data fetch script: https://github.com/underbent/scrape_poe_info
+	This means divinition cards are now updated to today's wiki infos
+	and uniques with decimal point values (like 0.2% leech) no longer truncate the displayed value to 0
+Manually cleaned up the display for uniques with style variants (Doryani's Invitation, Atziri's Splendour, Vessel of Vinktar)
+The modifier/text column for uniques is now 10 characters wider than for other items (if truncation is used, which is the default),
+	as uniques don't need the space for displaying mod tiers but tend to have longer or more complicated wording.
+Included a fix from vdorie to how the base level of blue items was determined
+Included a fix from underbent so that the warning info of equipped items that you no longer meet the requirements for is not
+	displayed in the info script window anymore
+
 2.3.01
 ================================
 from aRTy42
