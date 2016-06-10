@@ -642,13 +642,9 @@ ParseElementalDamage(String, DmgType, ByRef DmgLo, ByRef DmgHi)
 
 ; Function that checks item type name against entries 
 ; from ItemList.txt to get the item's base level
-; Added by kongyuyu, changed by hazydoc
+; Added by kongyuyu, changed by hazydoc, vdorie
 CheckBaseLevel(ItemTypeName)
 {
-    ; Added to correctly id Superior items
-    ; code by sirmanky
-    If(InStr(ItemTypeName, "Superior") == 1)
-        ItemTypeName := SubStr(ItemTypeName, 10)
     ItemListArray = 0
     Loop, Read, %A_ScriptDir%\data\ItemList.txt 
     {  
@@ -658,17 +654,23 @@ CheckBaseLevel(ItemTypeName)
         Array%ItemListArray%1 := NameLevel1  ; Store this line in the next array element.
         Array%ItemListArray%2 := NameLevel2
     }
-
+    
+    ResultLength := 0
+    ResultIndex := 0
+    
     Loop %ItemListArray% {
         element := Array%A_Index%1
-		
-        ;original line restored by Bahnzo to restore Base Item Level
-        ;IfInString, ItemTypeName, %element%
-        If(ItemTypeName == element) 
+        
+        if (InStr(ItemTypeName, element) != 0 && StrLen(element) > ResultLength)
         {
-            BaseLevel := Array%A_Index%2
-            Break
+            ResultIndex := A_Index
+            ResultLength := StrLen(element)
         }
+    }
+    
+    BaseLevel := ""
+    if (ResultIndex > 0) {
+        BaseLevel := Array%ResultIndex%2
     }
     return BaseLevel
 }
