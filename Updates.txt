@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.9.3.
-Current Script Caretaker: Bahnzo
+Current Script Caretaker: uncertain
+
+2.3
+================================
+from /u/trecko1234 and /u/netarc: https://www.reddit.com/r/pathofexile/comments/4nd1mj/updated_bahnzos_item_info_script_for_23/
+Merged with the latest version from Bahnzo by arty42
 
 2.11
 ================================
