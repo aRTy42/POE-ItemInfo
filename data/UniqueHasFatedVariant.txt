@@ -1,0 +1,29 @@
+; One exact item name per line.
+; Line comments with semicolon. Blank lines will be ignored.
+; Items according to http://pathofexile.gamepedia.com/Category:Unique_items_with_fated_variants
+
+Araku Tiki
+Blackgleam
+Blackheart
+Bramblejack
+Chalice of Horrors
+Craghead
+Crown of Thorns
+Death's Harp
+Deidbell
+Doomfletch
+Ezomyte Peak
+Hrimnor's Hymn
+Hrimsorrow
+Kaltenhalt
+Kaom's Sign
+Karui Ward
+Limbsplit
+Queen's Decree
+Realmshaper
+Reverberation Rod
+Shavronne's Pace
+Silverbranch
+Springleaf
+Storm Cloud
+The Screaming Eagle
