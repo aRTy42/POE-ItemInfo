@@ -5,7 +5,7 @@ Current Script Caretaker: aRTy42
 ================================
 from underbent, vdorie, aRTy42
 Improved data thanks to underbent's additions to the data fetch script: https://github.com/underbent/scrape_poe_info
-	This means divinition cards are now updated to today's wiki infos
+	This means divination cards are now updated to today's wiki infos
 	and uniques with decimal point values (like 0.2% leech) no longer truncate the displayed value to 0
 Manually cleaned up the display for uniques with style variants (Doryani's Invitation, Atziri's Splendour, Vessel of Vinktar)
 The modifier/text column for uniques is now 10 characters wider than for other items (if truncation is used, which is the default),
