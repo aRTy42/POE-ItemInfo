@@ -6052,9 +6052,9 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName)
     }
 }
 
-GemIsValuable(ItemName)
+UniqueIsValuable(ItemName)
 {
-    Loop, Read, %A_ScriptDir%\data\ValuableGems.txt
+    Loop, Read, %A_ScriptDir%\data\ValuableUniques.txt
     {
         Line := StripLineCommentRight(A_LoopReadLine)
         If (SkipLine(Line))
@@ -6069,9 +6069,26 @@ GemIsValuable(ItemName)
     return False
 }
 
-UniqueIsValuable(ItemName)
+UniqueHasFatedVariant(ItemName)
 {
-    Loop, Read, %A_ScriptDir%\data\ValuableUniques.txt
+    Loop, Read, %A_ScriptDir%\data\UniqueHasFatedVariant.txt
+    {
+        Line := StripLineCommentRight(A_LoopReadLine)
+        If (SkipLine(Line))
+        {
+            Continue
+        }
+        IfInString, ItemName, %Line%
+        {
+            return True
+        }
+    }
+    return False
+}
+
+GemIsValuable(ItemName)
+{
+    Loop, Read, %A_ScriptDir%\data\ValuableGems.txt
     {
         Line := StripLineCommentRight(A_LoopReadLine)
         If (SkipLine(Line))
@@ -6399,6 +6416,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     TempResult =
 
     Item.IsWeapon := False
+	Item.IsArmour := False
     Item.IsQuiver := False
     Item.IsFlask := False
     Item.IsGem := False
@@ -6548,6 +6566,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsThreeSocket := ((Item.GripType == "1H" or Item.SubType == "Shield") and Not Item.IsBow)
     Item.IsQuiver := (Item.SubType == "Quiver")
     Item.IsWeapon := (Item.BaseType == "Weapon")
+	Item.IsArmour := (Item.BaseType == "Armour")
     Item.IsMap := (Item.BaseType == "Map")
     Item.IsJewel := (Item.BaseType == "Jewel")
     Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
@@ -6635,7 +6654,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         }
     }
     
-    If (Opts.ShowMaxSockets == 1 and Not (Item.IsFlask or Item.IsGem or Item.IsCurrency or Item.IsBelt or Item.IsQuiver or Item.IsMap or Item.IsJewel or Item.IsAmulet or Item.IsDivinationCard))
+    If (Opts.ShowMaxSockets == 1 and (Item.IsWeapon or Item.IsArmour))
     {
         If (Item.Level >= 50)
         {
@@ -6822,6 +6841,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     If ((Item.IsUnique and (Opts.ShowUniqueEvaluation == 1) and UniqueIsValuable(Item.Name)) or (Opts.MarkHighLinksAsValuable == 1 and (Item.IsUnique or Item.IsRare) and ItemData.Links >= 5))
     {
         TT = %TT%`n--------`nValuable
+    }
+	
+	If (UniqueHasFatedVariant(Item.Name))
+    {
+        TT = %TT%`n--------`nHas Fated Variant
     }
 
     If (Item.IsMirrored)

@@ -1,14 +1,21 @@
 The following is a list of what has been updated, starting with 1.9.3.
-Current Script Caretaker: uncertain
+Current Script Caretaker: aRTy42
+
+2.3.01
+================================
+from aRTy42
+Added "Has Fated Variant" line to info for respective uniques
+"Max Sockets" should no longer show up on non armour/weapon items
+Fixed Drillneck data that got lost due to an odd wiki entry
 
 2.3
 ================================
 from /u/trecko1234 and /u/netarc: https://www.reddit.com/r/pathofexile/comments/4nd1mj/updated_bahnzos_item_info_script_for_23/
-Merged with the latest version from Bahnzo by arty42
+Merged with the latest version from Bahnzo by aRTy42
 
 2.11
 ================================
-from arty42
+from aRTy42
 Armour matching with RegEx. MaxLife fix & cleanup
 
 2.1
