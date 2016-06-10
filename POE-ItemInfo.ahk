@@ -5829,7 +5829,7 @@ PreProcessContents(CBContents)
     ; --- Place fixes for data inconsistencies here ---
 
     ; Remove the line that indicates an item cannot be used due to missing character stats
-    Needle := "You cannot use this item. Its stats will be ignored. Please remove it.`r`n--------`r`n"
+    Needle := "You cannot use this item. Its stats will be ignored`r`n--------`r`n"
     StringReplace, CBContents, CBContents, %Needle%, 
     ; Replace double seperator lines with one seperator line
     Needle := "--------`r`n--------`r`n"
