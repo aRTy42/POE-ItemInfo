@@ -1,11 +1,11 @@
 mapList := Object()
 uniqueMapList := Object()
 
-matchList := ["Crypt Map","Pit Map","Desert Map","Dried Lake Map","Dunes Map","Dungeon Map","Grotto Map","Orchard Map","Overgrown Ruin Map","Tropical Island Map","Arcade Map","Arsenal Map","Cemetery Map","Channel Map","Mountain Ledge Map","Sewer Map","Thicket Map","Wharf Map","Ghetto Map","Mud Geyser Map","Museum Map","Quarry Map","Reef Map","Spider Lair Map","Springs Map","Vaal Pyramid Map","Arena Map","Catacomb Map","Overgrown Shrine Map","Promenade Map","Phantasmagoria Map","Shore Map","Spider Forest Map","Tunnel Map","Bog Map","Coves Map","Graveyard Map","Pier Map","Underground Sea Map","Villa Map","Arachnid Nest Map","Colonnade Map","Dry Woods Map","Strand Map","Temple Map","Jungle Valley Map","Labyrinth Map","Abandoned Cavern Map","Torture Chamber Map","Waste Pool Map","Canyon Map","Cells Map","Arid Lake Map","Malformation Map","Volcano Map","Dark Forest Map","Dry Peninsula","Gorge Map","Maze Map","Residence Map","Underground River Map","Bazaar Map","Chateau Map","Necropolis Map","Plateau Map","Academy Map","Crematorium Map","Precinct Map","Shipyard Map","Shrine Map","Courtyard Map","Palace Map","Village Ruin Map","Excavation Map","Wasteland Map","Waterways Map","Abyss Map","Colosseum Map","Core Map","Terrace Map","Conservatory Map"]
+matchList := ["Crypt Map","Pit Map","Desert Map","Dried Lake Map","Dunes Map","Dungeon Map","Grotto Map","Orchard Map","Overgrown Ruin Map","Tropical Island Map","Arcade Map","Arsenal Map","Cemetery Map","Channel Map","Mountain Ledge Map","Sewer Map","Thicket Map","Wharf Map","Ghetto Map","Mud Geyser Map","Museum Map","Quarry Map","Reef Map","Spider Lair Map","Springs Map","Vaal Pyramid Map","Arena Map","Catacomb Map","Overgrown Shrine Map","Promenade Map","Phantasmagoria Map","Shore Map","Spider Forest Map","Tunnel Map","Bog Map","Coves Map","Graveyard Map","Pier Map","Underground Sea Map","Villa Map","Arachnid Nest Map","Colonnade Map","Dry Woods Map","Strand Map","Temple Map","Jungle Valley Map","Labyrinth Map","Abandoned Cavern Map","Torture Chamber Map","Waste Pool Map","Canyon Map","Cells Map","Arid Lake Map","Malformation Map","Volcano Map","Dark Forest Map","Dry Peninsula","Gorge Map","Maze Map","Residence Map","Underground River Map","Bazaar Map","Chateau Map","Necropolis Map","Plateau Map","Academy Map","Crematorium Map","Precinct Map","Shipyard Map","Shrine Map","Courtyard Map","Palace Map","Village Ruin Map","Excavation Map","Wasteland Map","Waterways Map","Abyss Map","Colosseum Map","Core Map","Terrace Map","Conservatory Map","Plaza Map"]
 
 ;----------------------Normal Map List--------------------
 
-mapList["Unknown Map"] := "`nYou've found a new map type, please report it!"
+mapList["Unknown Map"] := "`nMap currently not supported"
 
 mapList["Crypt Map"] := "`nThis map is based on The Crypt zones in Act 2.`n`nMap type: Indoors`n`nBoss: Pagan Bishop of Agony (based on Archbishop Geofri the Abashed,`nthe Boss from The Crypt dungeon)`n- Resists Lightning`n- Immune To Curses`n- Casts Vulnerability`n- Casts Temporal Chains`nDifficulty: 2/5`nDivination Cards: Hope, The Celestial Justicar`n`nVendor: 3 Crypt maps yields 1 Sewer Map`nUnique: Coward's Trial"
 
@@ -153,7 +153,7 @@ mapList["Courtyard Map"] := "`nThis map is based on The Imperial Gardens in Act 
 
 mapList["Palace Map"] := "`nThis map is based on The Upper Sceptre of God in Act 3.`n`nMap Type: Indoors`n`nBoss: God's Chosen (or The Hallowed Husk in his`nAscendant form). He is based on Dominus.`nDifficulty: 5/5`nDivination Cards: The Conduit, The Twins`n`nVendor:`n- Produced by 3 Wasteland Maps or 3 Waterways Maps. 3 Palace Maps yield 1 Core Map."
 
-mapList["Village Ruin Map"] := "`nBoss: Stonebeak, Battle Fowl and Gnar, Eater of Carrion. Based on Eyepecker and Steelchaw.`nStonebeak gains the Vaal Rain of Arrows skill, and both bosses deal high damage. Furthermore, Gnar's hits poison targets and Stonebeak's hits cause bleeding. After killing one boss, the other will enrage, growing in size, increasing in damage significantly, and likely gaining total health as well.`n`nThey do not heal to maximum health when enraging, so the safest strategy is to seperate them and get them both below 10% HP before killing either, then finishing them off instantly with Culling Strike. This is similar in concept to the Vessel of the Vaal fight in the The Apex of Sacrifice.`nBoss location: The bosses are across a bridge similar to Kraityn's area, but can walk out of their room.`nDifficulty: 5/5`n`nVendor: Produced by 3 Academy Maps. 3 Village Ruin maps yield 1 Excavation Map."
+mapList["Village Ruin Map"] := "`nBoss: Stonebeak, Battle Fowl and Gnar, Eater of Carrion. Based on Eyepecker and Steelchaw.`nStonebeak gains the Vaal Rain of Arrows skill, and both bosses deal high damage.`nFurthermore, Gnar's hits poison targets and Stonebeak's hits cause bleeding.`nAfter killing one boss, the other will enrage, growing in size,`nincreasing in damage significantly, and likely gaining total health as well.`n`nThey do not heal to maximum health when enraging, so the safest strategy is`nto seperate them and get them both to low HP before killing either.`nBoss location: Across a bridge similar to Kraityn's area, but without a closing door.`nDifficulty: 5/5`n`nVendor: Produced by 3 Academy Maps. 3 Village Ruin maps yield 1 Excavation Map."
 
 mapList["Excavation Map"] := "`nThis map is based on the The Mines Level 2 zone in Act 4.`n`nBoss: Champion of the Hollows, Lord of the Hollows and Messenger of the Hollows based on Pocked Goliath, Pikerivet and The Burning Man (from The Mines Level 1 and The Crystal Veins in Act 4).`nDifficulty: 5/5`n`nVendor: Produced from 3 Village Ruin Maps. 3 Excavation Maps yield 1 Conservatory Map."
 
@@ -171,9 +171,11 @@ mapList["Terrace Map"] := "`nThis map is based on the The Hedge Maze zone in Act
 
 mapList["Conservatory Map"] := "`nThis map is based on the Ancient Pyramid zone in Act 2.`n`nBoss: Shadow of the Vaal`nDifficulty: 4/5`n`nVendor: Produced by 3 Excavation Maps. 3 Conservatory Maps yield one Colosseum Map."
 
+mapList["Plaza Map"] := "`nThis map is based on The Lord's Labyrinth.`n`nBoss: The Goddess`nDifficulty: 5/5`n`nVendor: Produced by 3 Waterways Maps. 3 Plaza Maps yield one Abyss Map."
+
 ;----------------------Unique Map List--------------------
 
-uniqueMapList["Unknown Map"] := "`nYou've found a new unique map, please report it!"
+uniqueMapList["Unknown Map"] := "`nMap currently not supported"
 
 ;The Coward's Trial
 uniqueMapList["Crypt Map"] := "`nThis map contains several floors with multiple waves`nof monster spawning per floor. The map is guaranteed`nto drop at least one unique item, regardless of item level.`nWhile the monster level stays the same, magic and rare`nmonsters increase with every wave. Additionally, at the`nend of every wave appears a rare Necromancer.`n`nMap type: Indoors`n`nBoss: Infector of Dreams (unique Necromancer)`n- Resists Lightning`n- Additional Life`n- Casts Elemental Weakness Curse`n- Raises Undead`n- Allies deal increased Elemental Damage`nDifficulty: 2/5"
