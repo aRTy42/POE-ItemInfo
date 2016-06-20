@@ -1,6 +1,14 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.3.03
+================================
+from aRTy42
+Uniques: Included more of the new 2.3 uniques. Updated implicits for Sceptres and Wands.
+	Manually adjusted the display for a few more uniques (notable: Ventor's Gamble and several Jewels)
+Updated Divination Cards
+Updated Maps
+
 2.3.02
 ================================
 from underbent, vdorie, aRTy42
