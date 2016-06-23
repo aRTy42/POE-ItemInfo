@@ -602,3 +602,4 @@ Poorjoy's Asylum|140-160:Increased Monster Life|140-160:Increased Monster Damage
 Vaults of Atziri|1800-2000:Chests Have Increased Item Rarity|Area Contains No Monsters
 The Vinktar Square|20:More Monster Life|Monsters Cannot Be Shocked|30:Increased Monster Damage|35:Monster Lightning Resistance|35:Monsters Deal Extra Damage As Lightning
 Whakawairua Tuahu|Area Contains Many Totems|50:Curses Have Reduced Effect On Monsters|120-160:Increased Rarity Of Items Found In This Area|Rare Monsters Each Have A Nemesis Mod
+Shavronne's Gambit|10:To Dexterity|20-30:To Intelligence|100-140:Increased Energy Shield|35:Increased Movement Speed When On Full Life|2:Of Energy Shield Regenerated Per Second While On Low Life|10-15:Increased Stun Recovery
