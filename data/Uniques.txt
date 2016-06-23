@@ -177,6 +177,7 @@ Three-step Assault|25-35:To Dexterity|20-40:Increased Evasion Rating|40:Increase
 Victario's Flight|15:To Dexterity|15:To Intelligence|100-150:Increased Evasion Rating|30:Increased Movement Speed When On Low Life|5-10:Of Damage Taken Gained As Mana When Hit
 Bones of Ullr|20:To Maximum Life|20:To Maximum Mana|40-60:Increased Energy Shield|5-15:Increased Movement Speed|1:To Maximum Number Of Zombies|1:To Maximum Number Of Spectres
 Rainbowstride|20-25:Of Block Chance Applied To Spells|40-60:To Maximum Mana|140-180:Increased Energy Shield|20:To All Elemental Resistances|20:Increased Movement Speed
+Shavronne's Gambit|10:To Dexterity|20-30:To Intelligence|100-140:Increased Energy Shield|35:Increased Movement Speed When On Full Life|2:Of Energy Shield Regenerated Per Second While On Low Life|10-15:Increased Stun Recovery
 Shavronne's Pace|10:To Dexterity|20-30:To Intelligence|100-140:Increased Energy Shield|35:Increased Movement Speed When On Full Life|10-15:Increased Stun Recovery
 Skyforth|60-120:To Maximum Mana|30:Increased Movement Speed|25:Chance To Gain A Power Charge On Critical Strike|6:Reduced Mana Reserved|You Have No Life Regeneration|500:Stun Threshold Is Based On Of Your Mana Instead Of Life
 Steppan Eard|110-140:Increased Energy Shield|20-30:To Maximum Energy Shield|30:Increased Movement Speed|20:Increased Movement Speed On Shocked Ground|50:Increased Damage On Burning Ground|2:Of Life Regenerated Per Second On Chilled Ground|Unaffected By Desecrated Ground
