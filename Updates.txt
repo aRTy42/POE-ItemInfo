@@ -1,6 +1,21 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.3.05
+================================
+from aRTy42
+The new label "Map Drop" introduced in PoE v2.3.2 is now accounted for and thus no longer breaks parsing items.
+Added new file "AdditionalMacros.txt" in the main folder. The user macros that used to be at the very end of the ahk-file
+	are now located here, for easier access. The macros are disabled by default, if you want to learn more about them,
+	check the opening post in the forum thread.
+Removed script function "Valuable Evaluation", meaning uniques and gems are no longer tagged as "Valuable" in the
+	last line, which was controlled via txt files. Lootfilters fulfill this role nowadays.
+	Similarly, drop only gems are no longer tagged, also because lootfilters and since there are almost none since
+	gems became available from vendors. If you miss one of these functions, please give feedback in the forum thread.
+DPS display: Fixed how additional ele/chaos damage was detected. It used to break for certain mods, which made the section display blanks.
+Fixed Divination Card detection that got broken with PoE v2.3.2 (the game now labels them with "Rarity: Divination Card" instead of "Normal")
+Updated Uniques, Maps, Divination Cards with wiki infos
+
 2.3.04
 ================================
 from Underbent, magus424
