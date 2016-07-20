@@ -1322,7 +1322,8 @@ ParseRarity(ItemData_NamePlate)
     {
         IfInString, A_LoopField, Rarity:
         {
-            StringSplit, RarityParts, A_LoopField, %A_Space%
+			StringReplace, RarityReplace, A_LoopField, :%A_Space%, :, All
+            StringSplit, RarityParts, RarityReplace, :
             Break
         }
     }
@@ -6533,7 +6534,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     }
 
     ; Divination Card detection = Normal rarity with stack size (100% valid??)
-    If (InStr(ItemData.Rarity, "Normal") and InStr(ItemDataText, "Stack Size:"))
+    If (InStr(ItemData.Rarity, "Divination Card") and InStr(ItemDataText, "Stack Size:"))
     {
         Item.IsDivinationCard := True
         Item.BaseType := "Divination Card"
