@@ -1,10 +1,11 @@
 ﻿; Path of Exile Item Info Tooltip
 ;
 ; Version: 1.9.2 (hazydoc / IGN:Sadou) Original Author
-; Script is currently maintained by various people and kept up to date by Bahnzo / IGN:Bahnzo
+; Script is currently maintained by various people and kept up to date by aRTy42 / IGN: Erinyen
+; Forum thread: https://www.pathofexile.com/forum/view-thread/1678678
+;
 ; This script was originally based on the POE_iLVL_DPS-Revealer script (v1.2d) found here:
 ; https://www.pathofexile.com/forum/view-thread/594346
-; New Thread: https://www.pathofexile.com/forum/view-thread/790438
 ;
 ; Changes to the POE_iLVL_DPS-Revealer script as recent as it's version 1.4.1 have been 
 ; brought over. Thank you Nipper4369 and Kislorod!
@@ -20,8 +21,6 @@
 ;   - show max socket info (thank you, Necrolis)
 ;   - has the ability to convert currency items to chaos orbs (you can adjust the rates by editing
 ;     <datadir>\CurrencyRates.txt)
-;   - can show which gems are valuable and/or drop-only (all user adjustable)
-;   - can show a reminder for uniques that are generally considered valuable (user adjustable as well)
 ;   - adds a system tray icon and proper system tray description tooltip
 ;
 ; All of these features are user-adjustable by using a "database" of text files which come 
@@ -90,8 +89,6 @@
 ;	  they are done improperly/sloppy.  I have tested all changes with stuff in my stash and with friends, but not every single possibility.
 ;	- Accuracy is a nightmare.  Anyhow, "of the Assassin - 321 to 360 Accuracy (80) (Bow and Wand)" needs
 ;	  to be addressed for 2.0 or not /shrug.  I have passed on the request to GGG to perhaps mark up their affixes so they are decipherable.
-;	- Uniques need to be updated.  Apparently poe_scrape.py has an error and is unable to run until fixed.
-;	- Valuable Gems and Valuable Uniques needs to be updated as well.  Will work on this keeping in mind both default leagues and temp leagues
 ;	- Divination card info would be great such as a) what you can possibly get for the collection, b) where that card drops, and c) what supporter 
 ;	  created it (if known).
 ;	- Jewel support for min/max rolls and what is a suffix and what is a prefix so you know what you may be able to exalt.  9/15/2015 - I just noticed that
@@ -141,6 +138,11 @@ RunTests := False
 #NoEnv ; Recommended for performance and compatibility with future AutoHotkey releases.
 #Persistent ; Stay open in background
 SendMode Input ; Recommended for new scripts due to its superior speed and reliability.
+
+;Define exe names for the regular and steam version, for later use at the very end of the script. This needs to be done early, in the "auto-execute section".
+GroupAdd, PoEexe, ahk_exe PathOfExile.exe
+GroupAdd, PoEexe, ahk_exe PathOfExileSteam.exe
+
 #Include %A_ScriptDir%\data\Version.txt
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
@@ -176,8 +178,10 @@ class UserOptions {
 
     OnlyActiveIfPOEIsFront := 1     ; Set to 1 to make it so the script does nothing if Path of Exile window isn't the frontmost.
                                     ; If 0, the script also works if PoE isn't frontmost. This is handy for have the script parse
-                                    ; textual item representations appearing somewhere else, like in the forums or text files. 
+                                    ; textual item representations appearing somewhere else, like in the forums or text files.
 
+    PutResultsOnClipboard := 0      ; Put result text on clipboard (overwriting the textual representation the game put there to begin with)
+	
     ShowItemLevel := 1              ; Show item level and the item type's base level (enabled by default change to 0 to disable)
     ShowMaxSockets := 1             ; Show the max sockets based on ilvl and type
     ShowDamageCalculations := 1     ; Show damage projections (for weapons only)
@@ -205,19 +209,9 @@ class UserOptions {
                                     ; If this option is set to 0, the tiers will always display relative to the full
                                     ; range of tiers available, ignoring the item level.
 
-    ShowCurrencyValueInChaos := 1   ; Convert the value of currency items into chaos orbs. 
+    ShowCurrencyValueInChaos := 0   ; Convert the value of currency items into chaos orbs. 
                                     ; This is based on the rates defined in <datadir>\CurrencyRates.txt
                                     ; You should edit this file with the current currency rates.
-
-    ShowUniqueEvaluation := 1       ; Display reminder when a unique is valuable. 
-                                    ; This is based on <datadir>\ValuableUniques.txt
-                                    ; You can edit this file to suit your own needs.
-
-    ShowGemEvaluation := 1          ; Display reminder when a gem is valuable and/or drop only. 
-                                    ; This is based on <datadir>\ValuableGems.txt and <datadir>\DropOnlyGems.txt
-                                    ; You can edit these files to suit your own needs.
-
-    GemQualityValueThreshold := 10  ; If the gem's added quality exceeds this value, consider it valuable regardless of which gem it is.
 
     MaxSpanStartingFromFirst := 1   ; When showing max possible, don't just show the highest possible affix bracket 
                                     ; but construct a pseudo range which spans the lower bound of the lowest possible 
@@ -230,8 +224,6 @@ class UserOptions {
 
     CompactDoubleRanges := 1        ; Show double ranges as "1-172" instead of "1-8 to 160-172"
     CompactAffixTypes := 1          ; Use compact affix type designations: Suffix = S, Prefix = P, Comp. Suffix = CS, Comp. Prefix = CP
-
-    MarkHighLinksAsValuable := 1    ; Mark rares or uniques with 5L or 6L as valuable.
 
     MirrorAffixLines := 1           ; Show a copy of the affix line in question when showing affix details. 
                                     ;
@@ -264,7 +256,6 @@ class UserOptions {
                                     ; Example: assume the affix line to be mirrored is '+#% increased Spell Damage'.
                                     ; If the MirrorLineFieldWidth is set to 18, this field would be shown as '+#% increased Spel…'
 
-    PutResultsOnClipboard := 0      ; Put result text on clipboard (overwriting the textual representation the game put there to begin with)
 
     ; Pixels mouse must move to auto-dismiss tooltip
     MouseMoveThreshold := 40
@@ -290,39 +281,35 @@ class UserOptions {
 
     ScanUI()
     {
-        this.OnlyActiveIfPOEIsFront := GuiGet("OnlyActiveIfPOEIsFront") 
-        this.ShowItemLevel := GuiGet("ShowItemLevel") 
-        this.ShowMaxSockets := GuiGet("ShowMaxSockets") 
-        this.ShowDamageCalculations := GuiGet("ShowDamageCalculations") 
-        this.ShowAffixTotals := GuiGet("ShowAffixTotals") 
-        this.ShowAffixDetails := GuiGet("ShowAffixDetails") 
-        this.ShowAffixLevel := GuiGet("ShowAffixLevel") 
-        this.ShowAffixBracket := GuiGet("ShowAffixBracket") 
-        this.ShowAffixMaxPossible := GuiGet("ShowAffixMaxPossible") 
-        this.ShowAffixBracketTier := GuiGet("ShowAffixBracketTier") 
-        this.ShowAffixBracketTierTotal := GuiGet("ShowAffixBracketTierTotal") 
+        this.OnlyActiveIfPOEIsFront := GuiGet("OnlyActiveIfPOEIsFront")
+		this.PutResultsOnClipboard := GuiGet("PutResultsOnClipboard")
+		this.ShowItemLevel := GuiGet("ShowItemLevel")
+        this.ShowMaxSockets := GuiGet("ShowMaxSockets")
+        this.ShowDamageCalculations := GuiGet("ShowDamageCalculations")
+        this.ShowAffixTotals := GuiGet("ShowAffixTotals")
+        this.ShowAffixDetails := GuiGet("ShowAffixDetails")
+        this.ShowAffixLevel := GuiGet("ShowAffixLevel")
+        this.ShowAffixBracket := GuiGet("ShowAffixBracket")
+        this.ShowAffixMaxPossible := GuiGet("ShowAffixMaxPossible")
+        this.ShowAffixBracketTier := GuiGet("ShowAffixBracketTier")
+        this.ShowAffixBracketTierTotal := GuiGet("ShowAffixBracketTierTotal")
         this.TierRelativeToItemLevel := GuiGet("TierRelativeToItemLevel")
         this.ShowDarkShrineInfo := GuiGet("ShowDarkShrineInfo")
         this.ShowCurrencyValueInChaos := GuiGet("ShowCurrencyValueInChaos")
         this.DisplayToolTipAtFixedCoords := GuiGet("DisplayToolTipAtFixedCoords")
         this.ScreenOffsetX := GuiGet("ScreenOffsetX")
         this.ScreenOffsetY := GuiGet("ScreenOffsetY")
-        this.ShowUniqueEvaluation := GuiGet("ShowUniqueEvaluation") 
-        this.ShowGemEvaluation := GuiGet("ShowGemEvaluation") 
-        this.GemQualityValueThreshold := GuiGet("GemQualityValueThreshold") 
-        this.MaxSpanStartingFromFirst := GuiGet("MaxSpanStartingFromFirst") 
-        this.CompactDoubleRanges := GuiGet("CompactDoubleRanges") 
-        this.CompactAffixTypes := GuiGet("CompactAffixTypes") 
-        this.MarkHighLinksAsValuable := GuiGet("MarkHighLinksAsValuable") 
-        this.MirrorAffixLines := GuiGet("MirrorAffixLines") 
-        this.MirrorLineFieldWidth := GuiGet("MirrorLineFieldWidth") 
-        this.ValueRangeFieldWidth := GuiGet("ValueRangeFieldWidth") 
+        this.MaxSpanStartingFromFirst := GuiGet("MaxSpanStartingFromFirst")
+        this.CompactDoubleRanges := GuiGet("CompactDoubleRanges")
+        this.CompactAffixTypes := GuiGet("CompactAffixTypes")
+        this.MirrorAffixLines := GuiGet("MirrorAffixLines")
+        this.MirrorLineFieldWidth := GuiGet("MirrorLineFieldWidth")
+        this.ValueRangeFieldWidth := GuiGet("ValueRangeFieldWidth")
         this.AffixDetailDelimiter := GuiGet("AffixDetailDelimiter")
-        this.AffixDetailEllipsis := GuiGet("AffixDetailEllipsis") 
-        this.PutResultsOnClipboard := GuiGet("PutResultsOnClipboard")  
-        this.MouseMoveThreshold := GuiGet("MouseMoveThreshold") 
-        this.UseTooltipTimeout := GuiGet("UseTooltipTimeout") 
-        this.ToolTipTimeoutTicks := GuiGet("ToolTipTimeoutTicks") 
+        this.AffixDetailEllipsis := GuiGet("AffixDetailEllipsis")
+        this.MouseMoveThreshold := GuiGet("MouseMoveThreshold")
+        this.UseTooltipTimeout := GuiGet("UseTooltipTimeout")
+        this.ToolTipTimeoutTicks := GuiGet("ToolTipTimeoutTicks")
         this.FontSize := GuiGet("FontSize")
     }
 }
@@ -548,9 +535,7 @@ ReadConfig()
 Sleep, 100
 CreateSettingsUI()
 
-Menu, TextFiles, Add, Valuable Uniques, EditValuableUniques
-Menu, TextFiles, Add, Valuable Gems, EditValuableGems
-Menu, TextFiles, Add, Drop Only Gems, EditDropOnlyGems
+Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
 Menu, TextFiles, Add, Currency Rates, EditCurrencyRates
 
 
@@ -606,37 +591,43 @@ OpenCreateDataTextFile(Filename)
     }
     Else
     {
-        
         File := FileOpen(Filepath, "w")
         if !IsObject(File)
         {
-            MsgBox, 16, Can't create %A_ScriptDir%\data\ValuableUniques.txt
+            MsgBox, 16, Error, File not found and can't write new file.
             return
         }
         File.Close()
         Run, % Filepath
     }
     return
-
-    Run, %A_ScriptDir%\data\%Filename%
-    return
+	
 }
 
-ParseElementalDamage(String, DmgType, ByRef DmgLo, ByRef DmgHi)
+OpenMainDirFile(Filename)
 {
-    IfInString, String, %DmgType% Damage 
+    Filepath := A_ScriptDir . "\" . Filename
+    IfExist, % Filepath
     {
-        IfInString, String, Converted to or IfInString, String, taken as
-        {
-            return
-        }
-        IfNotInString, String, increased 
-        {
-            StringSplit, Arr, String, %A_Space%
-            StringSplit, Arr, Arr2, -
-            DmgLo := Arr1
-            DmgHi := Arr2
-        }
+        Run, % Filepath
+    }
+    Else
+    {
+        MsgBox, 16, Error, File not found.
+        return
+    }
+    return
+
+}
+
+ParseAddedDamage(String, DmgType, ByRef DmgLo, ByRef DmgHi)
+{
+    If(RegExMatch(String, "Adds \d+\-\d+ " DmgType " Damage"))
+    {
+        StringSplit, Arr, String, %A_Space%
+        StringSplit, Arr, Arr2, -
+        DmgLo := Arr1
+        DmgHi := Arr2
     }
 }
 
@@ -950,6 +941,10 @@ GetClipboardContents(DropNewlines=False)
             {                               ; differently, and ommiting the line with "Note:" on it partially fixes this. We also have to omit the \newline \return
                 break                       ; that gets added at the end
             }
+			IfInString, A_LoopField, Map drop
+			{
+				break
+			}
             If A_Index = 1                  ; so we start with just adding the first line w/o either a `n or `r 
             {
                 Result := Result . A_LoopField
@@ -5924,20 +5919,39 @@ ParseClipBoardChanges()
 
 AssembleDamageDetails(FullItemData)
 {
-    PhysLo := 0
-    PhysHi := 0
     Quality := 0
     AttackSpeed := 0
     PhysMult := 0
-    ChaoLo := 0
-    ChaoHi := 0
-    ColdLo := 0
-    ColdHi := 0
+	PhysLo := 0
+    PhysHi := 0
     FireLo := 0
     FireHi := 0
+    ColdLo := 0
+    ColdHi := 0
     LighLo := 0
     LighHi := 0
-
+    ChaoLo := 0
+    ChaoHi := 0
+	
+    MainHFireLo := 0
+    MainHFireHi := 0
+    MainHColdLo := 0
+    MainHColdHi := 0
+    MainHLighLo := 0
+    MainHLighHi := 0
+    MainHChaoLo := 0
+    MainHChaoHi := 0
+	
+    OffHFireLo := 0
+    OffHFireHi := 0
+    OffHColdLo := 0
+    OffHColdHi := 0
+    OffHLighLo := 0
+    OffHLighHi := 0
+    OffHChaoLo := 0
+    OffHChaoHi := 0
+	
+	
     Loop, Parse, FullItemData, `n, `r
     {        
         ; Get quality
@@ -5958,12 +5972,6 @@ AssembleDamageDetails(FullItemData)
             Continue
         }
         
-        ; Fix for Elemental damage only weapons. Like the Oro's Sacrifice
-        IfInString, A_LoopField, Elemental Damage:
-        {
-            Continue
-        }
-
         ; Get attack speed
         IfInString, A_LoopField, Attacks per Second:
         {
@@ -5980,47 +5988,103 @@ AssembleDamageDetails(FullItemData)
             Continue
         }
         
-        ; Lines to skip fix for converted type damage. Like the Voltaxic Rift
-        IfInString, A_LoopField, Converted to
-            Goto, SkipDamageParse
-        IfInString, A_LoopField, can Shock
-            Goto, SkipDamageParse
-
-		; Slinkston Edit. Lines to skip ele damage to spells being added.	
-		IfInString, A_LoopField, %DmgType% Damage to Spells
-			Goto, SkipDamageParse
-        ; Lines to skip for weapons that alter damage based on if equipped as
-        ; main or off hand. In that case skipp the off hand calc and just use
-        ; main hand as determining factor. Examples: Dyadus, Wings of Entropy
-        IfInString, A_LoopField, in Off Hand
-            Goto, SkipDamageParse
-
-        ; Parse elemental damage
-        ParseElementalDamage(A_LoopField, "Chaos", ChaoLo, ChaoHi)
-        ParseElementalDamage(A_LoopField, "Cold", ColdLo, ColdHi)
-        ParseElementalDamage(A_LoopField, "Fire", FireLo, FireHi)
-        ParseElementalDamage(A_LoopField, "Lightning", LighLo, LighHi)
-        
-        SkipDamageParse:
-            DoNothing := True
+		; Skip ele/chaos damage to spells being added	
+		IfInString, A_LoopField, Damage to Spells
+			Goto, SkipAddedDamageParse
+		
+		; Parse added damage
+        ; Differentiate general mods from main hand and off hand only
+        ; Examples for main/off: Dyadus, Wings of Entropy
+        		
+		IfInString, A_LoopField, in Main Hand
+        {
+            ParseAddedDamage(A_LoopField, "Fire", MainHFireLo, MainHFireHi)
+	    	ParseAddedDamage(A_LoopField, "Cold", MainHColdLo, MainHColdHi)
+            ParseAddedDamage(A_LoopField, "Lightning", MainHLighLo, MainHLighHi)
+	    	ParseAddedDamage(A_LoopField, "Chaos", MainHChaoLo, MainHChaoHi)
+        }
+		else IfInString, A_LoopField, in Off Hand
+        {
+            ParseAddedDamage(A_LoopField, "Fire", OffHFireLo, OffHFireHi)
+	    	ParseAddedDamage(A_LoopField, "Cold", OffHColdLo, OffHColdHi)
+            ParseAddedDamage(A_LoopField, "Lightning", OffHLighLo, OffHLighHi)
+	    	ParseAddedDamage(A_LoopField, "Chaos", OffHChaoLo, OffHChaoHi)  
+        }
+		else
+        {
+            ParseAddedDamage(A_LoopField, "Fire", FireLo, FireHi)
+	    	ParseAddedDamage(A_LoopField, "Cold", ColdLo, ColdHi)
+            ParseAddedDamage(A_LoopField, "Lightning", LighLo, LighHi)
+	    	ParseAddedDamage(A_LoopField, "Chaos", ChaoLo, ChaoHi)
+        }
+		
+        SkipAddedDamageParse:
     }
     
     Result =
 
     SetFormat, FloatFast, 5.1
     PhysDps := ((PhysLo + PhysHi) / 2) * AttackSpeed
-    EleDps := ((ChaoLo + ChaoHi + ColdLo + ColdHi + FireLo + FireHi + LighLo + LighHi) / 2) * AttackSpeed
-    TotalDps := PhysDps + EleDps
-    
-    Result = %Result%`nPhys DPS:   %PhysDps%`nElem DPS:   %EleDps%`nTotal DPS:  %TotalDps%
-    
+    Result = %Result%`nPhys DPS:   %PhysDps%
+	
+    EleDps := ((FireLo + FireHi + ColdLo + ColdHi + LighLo + LighHi) / 2) * AttackSpeed
+    MainHEleDps := ((MainHFireLo + MainHFireHi + MainHColdLo + MainHColdHi + MainHLighLo + MainHLighHi) / 2) * AttackSpeed
+	OffHEleDps := ((OffHFireLo + OffHFireHi + OffHColdLo + OffHColdHi + OffHLighLo + OffHLighHi) / 2) * AttackSpeed
+	ChaosDps := ((ChaoLo + ChaoHi) / 2) * AttackSpeed
+	MainHChaosDps := ((MainHChaoLo + MainHChaoHi) / 2) * AttackSpeed
+	OffHChaosDps := ((OffHChaoLo + OffHChaoHi) / 2) * AttackSpeed
+	
+	If ( MainHEleDps > 0 or OffHEleDps > 0 or MainHChaosDps > 0 or OffHChaosDps > 0 )
+	{
+		twoColDisplay := true
+		TotalMainHEleDps := MainHEleDps + EleDps
+		TotalOffHEleDps := OffHEleDps + EleDps
+		TotalMainHChaosDps := MainHChaosDps + ChaosDps
+		TotalOffHChaosDps := OffHChaosDps + ChaosDps
+	}
+	else twoColDisplay := false
+	
+	If ( MainHEleDps > 0 or OffHEleDps > 0 )
+	{
+		Result = %Result%`nElem DPS:   %TotalMainHEleDps% MainH | %TotalOffHEleDps% OffH
+	}
+	else Result = %Result%`nElem DPS:   %EleDps%
+	
+	If ( MainHChaosDps > 0 or OffHChaosDps > 0 )
+	{
+		Result = %Result%`nChaos DPS:  %TotalMainHChaosDps% MainH | %TotalOffHChaosDps% OffH
+	}	
+	else Result = %Result%`nChaos DPS:  %ChaosDps%
+
+	If ( twoColDisplay )
+	{
+		TotalMainHDps := PhysDps + TotalMainHEleDps + TotalMainHChaosDps
+		TotalOffHDps := PhysDps + TotalOffHEleDps + TotalOffHChaosDps
+    	Result = %Result%`nTotal DPS:  %TotalMainHDps% MainH | %TotalOffHDps% OffH
+	}
+	else
+	{
+		TotalDps := PhysDps + EleDps + ChaosDps
+    	Result = %Result%`nTotal DPS:  %TotalDps%
+	}
+
     ; Only show Q20 values if item is not Q20
     If (Quality < 20) {
         TotalPhysMult := (PhysMult + Quality + 100) / 100
         BasePhysDps := PhysDps / TotalPhysMult
-        Q20Dps := BasePhysDps * ((PhysMult + 120) / 100) + EleDps
+        Q20Dps := BasePhysDps * ((PhysMult + 120) / 100)
         
-        Result = %Result%`nQ20 DPS:    %Q20Dps%
+		If ( twoColDisplay )
+		{
+			Q20MainHDps := Q20Dps + TotalMainHEleDps + TotalMainHChaosDps
+			Q20OffHDps := Q20Dps + TotalOffHEleDps + TotalOffHChaosDps
+			Result = %Result%`nQ20 DPS:    %Q20MainHDps% MainH | %Q20OffHDps% OffH
+		}
+		else
+		{
+			Q20Dps := Q20Dps + EleDps + ChaosDps
+			Result = %Result%`nQ20 DPS:    %Q20Dps%
+		}		
     }
 
     return Result
@@ -6065,60 +6129,9 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName)
     }
 }
 
-UniqueIsValuable(ItemName)
-{
-    Loop, Read, %A_ScriptDir%\data\ValuableUniques.txt
-    {
-        Line := StripLineCommentRight(A_LoopReadLine)
-        If (SkipLine(Line))
-        {
-            Continue
-        }
-        IfInString, ItemName, %Line%
-        {
-            return True
-        }
-    }
-    return False
-}
-
 UniqueHasFatedVariant(ItemName)
 {
     Loop, Read, %A_ScriptDir%\data\UniqueHasFatedVariant.txt
-    {
-        Line := StripLineCommentRight(A_LoopReadLine)
-        If (SkipLine(Line))
-        {
-            Continue
-        }
-        IfInString, ItemName, %Line%
-        {
-            return True
-        }
-    }
-    return False
-}
-
-GemIsValuable(ItemName)
-{
-    Loop, Read, %A_ScriptDir%\data\ValuableGems.txt
-    {
-        Line := StripLineCommentRight(A_LoopReadLine)
-        If (SkipLine(Line))
-        {
-            Continue
-        }
-        IfInString, ItemName, %Line%
-        {
-            return True
-        }
-    }
-    return False
-}
-
-GemIsDropOnly(ItemName)
-{
-    Loop, Read, %A_ScriptDir%\data\DropOnlyGems.txt
     {
         Line := StripLineCommentRight(A_LoopReadLine)
         If (SkipLine(Line))
@@ -6710,35 +6723,6 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
             TT := TT . Item.MaxSockets
         }
     }
-    
-    If (Opts.ShowGemEvaluation == 1 and Item.IsGem)
-    {
-        SepAdded := False
-        If (Item.Quality > 0)
-        {
-            TT = %TT%`n--------
-            SepAdded := True
-            TT := TT . "`n" . "+" . Item.Quality . "`%"
-        }
-        If (Item.Quality >= Opts.GemQualityValueThreshold or GemIsValuable(Item.Name))
-        {
-            If (Not SepAdded)
-            {
-                TT = %TT%`n--------
-                SepAdded := True
-            }
-            TT = %TT%`nValuable
-        }
-        If (GemIsDropOnly(Item.Name))
-        {
-            If (Not SepAdded)
-            {
-                TT = %TT%`n--------
-                SepAdded := True
-            }
-            TT = %TT%`nDrop Only
-        }
-    }
 
     If (Opts.ShowDamageCalculations == 1 and Item.IsWeapon)
     {
@@ -6851,11 +6835,6 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         TT = %TT%`n--------`nUnidentified
     }
 
-    If ((Item.IsUnique and (Opts.ShowUniqueEvaluation == 1) and UniqueIsValuable(Item.Name)) or (Opts.MarkHighLinksAsValuable == 1 and (Item.IsUnique or Item.IsRare) and ItemData.Links >= 5))
-    {
-        TT = %TT%`n--------`nValuable
-    }
-	
 	If (UniqueHasFatedVariant(Item.Name))
     {
         TT = %TT%`n--------`nHas Fated Variant
@@ -7330,41 +7309,42 @@ CreateSettingsUI()
     
     GuiAddCheckbox("Only show tooltip if PoE is frontmost", "x17 y35 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
     AddToolTip(OnlyActiveIfPOEIsFrontH, "If checked the script does nothing if the`nPath of Exile window isn't the frontmost")
-    GuiAddCheckbox("Put tooltip results on clipboard", "x17 y65 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
+	GuiAddCheckbox("Put tooltip results on clipboard", "x17 y65 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
     AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")
-    
-    ; Display - All Gear 
+	
+    ; Display
 
-    GuiAddGroupBox("Display - All Gear", "x7 y115 w260 h90")
+    GuiAddGroupBox("Display", "x7 y115 w260 h150")
     
-    GuiAddCheckbox("Show item level", "x17 y135 w210 h30", Opts.ShowItemLevel, "ShowItemLevel")
-    GuiAddCheckbox("Show max sockets based on item lvl", "x17 y165 w210 h30", Opts.ShowMaxSockets, "ShowMaxSockets", "ShowMaxSocketsH")
+    GuiAddCheckbox("Show item level (gear)", "x17 y135 w240 h30", Opts.ShowItemLevel, "ShowItemLevel")
+    GuiAddCheckbox("Show max sockets based on item lvl (gear)", "x17 y165 w240 h30", Opts.ShowMaxSockets, "ShowMaxSockets", "ShowMaxSocketsH")
     AddToolTip(ShowMaxSocketsH, "Show maximum amount of sockets the item can have`nbased on its item level")
+    GuiAddCheckbox("Show damage calculations (weapons)", "x17 y195 w240 h30", Opts.ShowDamageCalculations, "ShowDamageCalculations")
+    GuiAddCheckbox("Show currency value in chaos", "x17 y225 w240 h30", Opts.ShowCurrencyValueInChaos, "ShowCurrencyValueInChaos")   
 
-    ; Display - Weapons 
+    ; Tooltip 
 
-    GuiAddGroupBox("Display - Weapons", "x7 y215 w260 h60")
-
-    GuiAddCheckbox("Show damage calculations", "x17 y235 w210 h30", Opts.ShowDamageCalculations, "ShowDamageCalculations")
-
-    ; Display - Other 
-
-    GuiAddGroupBox("Display - Other", "x7 y285 w260 h60")
-
-    GuiAddCheckbox("Show currency value in chaos", "x17 y305 w210 h30", Opts.ShowCurrencyValueInChaos, "ShowCurrencyValueInChaos")
-
-    ; Valuable Evaluations 
-
-    GuiAddGroupBox("Valuable Evaluations", "x7 y355 w260 h150")
-
-    GuiAddCheckbox("Show unique evaluation", "x17 y375 w210 h30", Opts.ShowUniqueEvaluation, "ShowUniqueEvaluation", "ShowUniqueEvaluationH")
-    AddToolTip(ShowUniqueEvaluationH, "Mark unique as valuable based on its item name`n(can be edited in data\ValuableUniques.txt)")
-    GuiAddCheckbox("Show gem evaluation", "x17 y405 w210 h30", Opts.ShowGemEvaluation, "ShowGemEvaluation", "ShowGemEvaluationH", "SettingsUI_ChkShowGemEvaluation")
-    AddToolTip(ShowGemEvaluationH, "Mark gem as valuable if quality is higher`nthan the following threshold`n(can be edited in data\ValuableGems.txt)")
-        GuiAddText("Gem quality valuable threshold:", "x37 y439 w150 h20", "LblGemQualityThreshold")
-        GuiAddEdit(Opts.GemQualityValueThreshold, "x197 y437 w40 h20", "GemQualityValueThreshold")
-    GuiAddCheckbox("Mark high number of links as valuable", "x17 y465 w210 h30", Opts.MarkHighLinksAsValuable, "MarkHighLinksAsValuable")
+    GuiAddGroupBox("Tooltip", "x7 y275 w260 h185")
     
+    GuiAddCheckBox("Use tooltip timeout", "x17 y290 w210 h30", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
+    AddToolTip(UseTooltipTimeoutH, "Hide tooltip automatically after x amount of ticks have passed")
+        GuiAddText("Timeout ticks (1 tick = 100ms):", "x27 y322 w150 h20", "LblToolTipTimeoutTicks")
+        GuiAddEdit(Opts.ToolTipTimeoutTicks, "x187 y320 w50 h20", "ToolTipTimeoutTicks")
+
+    GuiAddCheckbox("Display at fixed coordinates", "x17 y340 w230 h30", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
+    AddToolTip(DisplayToolTipAtFixedCoordsH, "Show tooltip in virtual screen space at the fixed`ncoordinates given below. Virtual screen space means`nthe full desktop frame, including any secondary`nmonitors. Coords are relative to the top left edge`nand increase going down and to the right.")
+        GuiAddText("X:", "x37 y372 w20 h20", "LblScreenOffsetX")
+        GuiAddEdit(Opts.ScreenOffsetX, "x55 y370 w40 h20", "ScreenOffsetX")
+        GuiAddText("Y:", "x105 y372 w20 h20", "LblScreenOffsetY")
+        GuiAddEdit(Opts.ScreenOffsetY, "x125 y370 w40 h20", "ScreenOffsetY")
+
+    GuiAddText("Mousemove threshold (px):", "x17 y402 w160 h20", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
+    AddToolTip(LblMouseMoveThresholdH, "Hide tooltip automatically after the mouse has moved x amount of pixels")
+    GuiAddEdit(Opts.MouseMoveThreshold, "x187 y400 w50 h20", "MouseMoveThreshold", "MouseMoveThresholdH")
+
+    GuiAddText("Font Size:", "x17 y432 w160 h20", "LblFontSize")
+    GuiAddEdit(Opts.FontSize, "x187 y430 w50 h20", "FontSize")
+	
     ; Display - Affixes 
 
     GuiAddGroupBox("Display - Affixes", "x277 y15 w260 h360")
@@ -7395,50 +7375,29 @@ CreateSettingsUI()
         
     ; Display - Results 
 
-    GuiAddGroupBox("Display - Results", "x277 y385 w260 h210")
+    GuiAddGroupBox("Display - Results", "x277 y385 w260 h185")
     
     GuiAddCheckbox("Compact double ranges", "x287 y400  w210 h30", Opts.CompactDoubleRanges, "CompactDoubleRanges", "CompactDoubleRangesH")
     AddToolTip(CompactDoubleRangesH, "Show double ranges as one range,`ne.g. x-y (to) z-w becomes x-w")
-    GuiAddCheckbox("Compact affix types", "x287 y435 w210 h30", Opts.CompactAffixTypes, "CompactAffixTypes", "CompactAffixTypesH")
+    GuiAddCheckbox("Compact affix types", "x287 y430 w210 h30", Opts.CompactAffixTypes, "CompactAffixTypes", "CompactAffixTypesH")
     AddToolTip(CompactAffixTypesH, "Replace affix type with a short-hand version,`ne.g. P=Prefix, S=Suffix, CP=Composite")
 
-    GuiAddText("Mirror line field width:", "x287 y477 w110 h20", "LblMirrorLineFieldWidth")
-    GuiAddEdit(Opts.MirrorLineFieldWidth, "x407 y475 w40 h20", "MirrorLineFieldWidth")
-    GuiAddText("Value range field width:", "x287 y517 w120 h20", "LblValueRangeFieldWidth")
-    GuiAddEdit(Opts.ValueRangeFieldWidth, "x407 y515 w40 h20", "ValueRangeFieldWidth")
-    GuiAddText("Affix detail delimiter:", "x287 y537 w120 h20", "LblAffixDetailDelimiter")
-    GuiAddEdit(Opts.AffixDetailDelimiter, "x407 y535 w40 h20", "AffixDetailDelimiter")
-    GuiAddText("Affix detail ellipsis:", "x287 y567 w120 h20", "LblAffixDetailEllipsis")
-    GuiAddEdit(Opts.AffixDetailEllipsis, "x407 y565 w40 h20", "AffixDetailEllipsis")
+    GuiAddText("Mirror line field width:", "x287 y467 w110 h20", "LblMirrorLineFieldWidth")
+    GuiAddEdit(Opts.MirrorLineFieldWidth, "x407 y465 w40 h20", "MirrorLineFieldWidth")
+    GuiAddText("Value range field width:", "x287 y492 w120 h20", "LblValueRangeFieldWidth")
+    GuiAddEdit(Opts.ValueRangeFieldWidth, "x407 y490 w40 h20", "ValueRangeFieldWidth")
+    GuiAddText("Affix detail delimiter:", "x287 y517 w120 h20", "LblAffixDetailDelimiter")
+    GuiAddEdit(Opts.AffixDetailDelimiter, "x407 y515 w40 h20", "AffixDetailDelimiter")
+    GuiAddText("Affix detail ellipsis:", "x287 y542 w120 h20", "LblAffixDetailEllipsis")
+    GuiAddEdit(Opts.AffixDetailEllipsis, "x407 y540 w40 h20", "AffixDetailEllipsis")
 
-    ; Tooltip 
 
-    GuiAddGroupBox("Tooltip", "x7 y515 w260 h185")
-    
-    GuiAddCheckBox("Use tooltip timeout", "x17 y530 w210 h30", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
-    AddToolTip(UseTooltipTimeoutH, "Hide tooltip automatically after x amount of ticks have passed")
-        GuiAddText("Timeout ticks (1 tick = 100ms):", "x27 y562 w150 h20", "LblToolTipTimeoutTicks")
-        GuiAddEdit(Opts.ToolTipTimeoutTicks, "x187 y560 w50 h20", "ToolTipTimeoutTicks")
+	
+    GuiAddText("Mouse over settings or see the beginning of the PoE-Item-Info.ahk script for comments on what these settings do exactly.", "x277 y585 w250 h60")
 
-    GuiAddCheckbox("Display at fixed coordinates", "x17 y580 w230 h30", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
-    AddToolTip(DisplayToolTipAtFixedCoordsH, "Show tooltip in virtual screen space at the fixed`ncoordinates given below. Virtual screen space means`nthe full desktop frame, including any secondary`nmonitors. Coords are relative to the top left edge`nand increase going down and to the right.")
-        GuiAddText("X:", "x37 y612 w20 h20", "LblScreenOffsetX")
-        GuiAddEdit(Opts.ScreenOffsetX, "x55 y610 w40 h20", "ScreenOffsetX")
-        GuiAddText("Y:", "x105 y612 w20 h20", "LblScreenOffsetY")
-        GuiAddEdit(Opts.ScreenOffsetY, "x125 y610 w40 h20", "ScreenOffsetY")
-
-    GuiAddText("Mousemove threshold (px):", "x17 y642 w160 h20", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
-    AddToolTip(LblMouseMoveThresholdH, "Hide tooltip automatically after the mouse has moved x amount of pixels")
-    GuiAddEdit(Opts.MouseMoveThreshold, "x187 y640 w50 h20", "MouseMoveThreshold", "MouseMoveThresholdH")
-
-    GuiAddText("Font Size:", "x17 y672 w160 h20", "LblFontSize")
-    GuiAddEdit(Opts.FontSize, "x187 y670 w50 h20", "FontSize")
-
-    GuiAddText("Mouse over settings or see the beginning of the PoE-Item-Info.ahk script for comments on what these settings do exactly.", "x277 y605 w250 h60")
-
-    GuiAddButton("&Defaults", "x287 y670 w80 h23", "SettingsUI_BtnDefaults")
-    GuiAddButton("&OK", "Default x372 y670 w75 h23", "SettingsUI_BtnOK")
-    GuiAddButton("&Cancel", "x452 y670 w80 h23", "SettingsUI_BtnCancel")
+    GuiAddButton("&Defaults", "x287 y640 w80 h23", "SettingsUI_BtnDefaults")
+    GuiAddButton("&OK", "Default x372 y640 w75 h23", "SettingsUI_BtnOK")
+    GuiAddButton("&Cancel", "x452 y640 w80 h23", "SettingsUI_BtnCancel")
 }
 
 UpdateSettingsUI()
@@ -7447,7 +7406,7 @@ UpdateSettingsUI()
 
     GuiControl,, OnlyActiveIfPOEIsFront, % Opts.OnlyActiveIfPOEIsFront
     GuiControl,, PutResultsOnClipboard, % Opts.PutResultsOnClipboard
-    GuiControl,, ShowItemLevel, % Opts.ShowItemLevel
+	GuiControl,, ShowItemLevel, % Opts.ShowItemLevel
     GuiControl,, ShowMaxSockets, % Opts.ShowMaxSockets
     GuiControl,, ShowDamageCalculations, % Opts.ShowDamageCalculations
     GuiControl,, ShowCurrencyValueInChaos, % Opts.ShowCurrencyValueInChaos
@@ -7489,22 +7448,7 @@ UpdateSettingsUI()
         ;~ GuiControl, Disable, LblScreenOffsetY
         ;~ GuiControl, Disable, ScreenOffsetY
     ;~ }
-    
-    GuiControl,, ShowUniqueEvaluation, % Opts.ShowUniqueEvaluation
-    GuiControl,, ShowGemEvaluation, % Opts.ShowGemEvaluation
-    If (Opts.ShowGemEvaluation == False) 
-    {
-        GuiControl, Disable, LblGemQualityThreshold
-        GuiControl, Disable, GemQualityValueThreshold
-    }
-    Else
-    {
-        GuiControl, Enable, LblGemQualityThreshold
-        GuiControl, Enable, GemQualityValueThreshold
-    }
-    GuiControl,, GemQualityValueThreshold, % Opts.GemQualityValueThreshold
-    GuiControl,, MarkHighLinksAsValuable, % Opts.MarkHighLinksAsValuable
-    
+
     GuiControl,, ShowAffixTotals, % Opts.ShowAffixTotals
     GuiControl,, ShowAffixDetails, % Opts.ShowAffixDetails
     If (Opts.ShowAffixDetails == False) 
@@ -7596,26 +7540,13 @@ ReadConfig(ConfigPath="config.ini")
         
         Opts.OnlyActiveIfPOEIsFront := IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
         Opts.PutResultsOnClipboard := IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
+
+        ; Display
         
-        ; Display - All Gear
-        
-        Opts.ShowItemLevel := IniRead(ConfigPath, "DisplayAllGear", "ShowItemLevel", Opts.ShowItemLevel)
-        Opts.ShowMaxSockets := IniRead(ConfigPath, "DisplayAllGear", "ShowMaxSockets", Opts.ShowMaxSockets)
-        
-        ; Display - Weapons
-        
-        Opts.ShowDamageCalculations := IniRead(ConfigPath, "DisplayWeapons", "ShowDamageCalculations", Opts.ShowDamageCalculations)
-        
-        ; Display - Other
-        
-        Opts.ShowCurrencyValueInChaos := IniRead(ConfigPath, "DisplayOther", "ShowCurrencyValueInChaos", Opts.ShowCurrencyValueInChaos)
-        
-        ; Valuable Evaluations
-        
-        Opts.ShowUniqueEvaluation := IniRead(ConfigPath, "ValuableEvaluations", "ShowUniqueEvaluation", Opts.ShowUniqueEvaluation)
-        Opts.ShowGemEvaluation := IniRead(ConfigPath, "ValuableEvaluations", "ShowGemEvaluation", Opts.ShowGemEvaluation)
-        Opts.GemQualityValueThreshold := IniRead(ConfigPath, "ValuableEvaluations", "GemQualityValueThreshold", Opts.GemQualityValueThreshold)
-        Opts.MarkHighLinksAsValuable := IniRead(ConfigPath, "ValuableEvaluations", "MarkHighLinksAsValuable", Opts.MarkHighLinksAsValuable)
+        Opts.ShowItemLevel := IniRead(ConfigPath, "Display", "ShowItemLevel", Opts.ShowItemLevel)
+        Opts.ShowMaxSockets := IniRead(ConfigPath, "Display", "ShowMaxSockets", Opts.ShowMaxSockets)
+        Opts.ShowDamageCalculations := IniRead(ConfigPath, "Display", "ShowDamageCalculations", Opts.ShowDamageCalculations)
+        Opts.ShowCurrencyValueInChaos := IniRead(ConfigPath, "Display", "ShowCurrencyValueInChaos", Opts.ShowCurrencyValueInChaos)
         
         ; Display - Affixes
         
@@ -7662,25 +7593,12 @@ WriteConfig(ConfigPath="config.ini")
     IniWrite(Opts.OnlyActiveIfPOEIsFront, ConfigPath, "General", "OnlyActiveIfPOEIsFront")
     IniWrite(Opts.PutResultsOnClipboard, ConfigPath, "General", "PutResultsOnClipboard")
     
-    ; Display - All Gear
+    ; Display
     
-    IniWrite(Opts.ShowItemLevel, ConfigPath, "DisplayAllGear", "ShowItemLevel")
-    IniWrite(Opts.ShowMaxSockets, ConfigPath, "DisplayAllGear", "ShowMaxSockets")
-    
-    ; Display - Weapons
-    
-    IniWrite(Opts.ShowDamageCalculations, ConfigPath, "DisplayWeapons", "ShowDamageCalculations")
-    
-    ; Display - Other
-    
-    IniWrite(Opts.ShowCurrencyValueInChaos, ConfigPath, "DisplayOther", "ShowCurrencyValueInChaos")
-    
-    ; Valuable Evaluations
-    
-    IniWrite(Opts.ShowUniqueEvaluation, ConfigPath, "ValuableEvaluations", "ShowUniqueEvaluation")
-    IniWrite(Opts.ShowGemEvaluation, ConfigPath, "ValuableEvaluations", "ShowGemEvaluation")
-    IniWrite(Opts.GemQualityValueThreshold, ConfigPath, "ValuableEvaluations", "GemQualityValueThreshold")
-    IniWrite(Opts.MarkHighLinksAsValuable, ConfigPath, "ValuableEvaluations", "MarkHighLinksAsValuable")
+    IniWrite(Opts.ShowItemLevel, ConfigPath, "Display", "ShowItemLevel")
+    IniWrite(Opts.ShowMaxSockets, ConfigPath, "Display", "ShowMaxSockets")
+    IniWrite(Opts.ShowDamageCalculations, ConfigPath, "Display", "ShowDamageCalculations")
+    IniWrite(Opts.ShowCurrencyValueInChaos, ConfigPath, "Display", "ShowCurrencyValueInChaos")
     
     ; Display - Affixes
     
@@ -7959,15 +7877,15 @@ AboutDlg_Fishing:
     return
     
 AboutDlg_AhkHome:
-	Run, http://ahkscript.org
+	Run, https://autohotkey.com/
     return
 
 AboutDlg_GitHub:
-    Run, http://github.com/Bahnzo/POE-ItemInfo
+    Run, https://github.com/aRTy42/POE-ItemInfo
     return 
     
 VisitForumsThread:
-    Run, http://www.pathofexile.com/forum/view-thread/1463814
+    Run, https://www.pathofexile.com/forum/view-thread/1678678
     return
 
 2ButtonClose:
@@ -7977,20 +7895,12 @@ VisitForumsThread:
 	WinActivate, ahk_id %MainWndID%
     return
 
-EditValuableUniques:
-    OpenCreateDataTextFile("ValuableUniques.txt")
+EditAdditionalMacros:
+    OpenMainDirFile("AdditionalMacros.txt")
     return
-
-EditValuableGems:
-    OpenCreateDataTextFile("ValuableGems.txt")
-    return
-    
+	
 EditCurrencyRates:
     OpenCreateDataTextFile("CurrencyRates.txt")
-    return
-    
-EditDropOnlyGems:
-    OpenCreateDataTextFile("DropOnlyGems.txt")
     return
 
 3GuiClose:
@@ -8023,14 +7933,8 @@ TogglePOEItemScript()
 }
 
 ; ############ ADD YOUR OWN MACROS HERE #############
-#IfWinActive Path of Exile ahk_class Direct3DWindowClass ahk_exe PathOfExile.exe
-{
-    Pause::TogglePOEItemScript()
-   ;^RButton::Send ^c   ;cntl-right mouse button send's cntl-c
-   ;^WheelUp::Send {Left}  ;cntl-mouse wheel up toggles stash tabs left
-   ;^WheelDown::Send {Right}  ;cntl-mouse wheel down toggles stash tabs right.
-   ;F1::^c  ;changes the control-c to F1 key
-    ;F5::Send {Enter}/remaining{Enter}  	;mobs remaining
-	;F9::Send {Enter}/hideout{Enter}		;goto hideout
-	;F10::Send {Enter}/global 666{Enter}	;join a channel
-} ;*/
+#IfWinActive Path of Exile ahk_class Direct3DWindowClass ahk_group PoEexe
+
+Pause::TogglePOEItemScript()
+
+#Include AdditionalMacros.txt

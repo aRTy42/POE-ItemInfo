@@ -1,0 +1,8 @@
+
+;   F5::SendInput {Enter}/hideout{Enter}		;go to hideout with F5
+;   ^WheelUp::SendInput {Left}			;ctrl-mouse wheel up toggles stash tabs left
+;   ^WheelDown::SendInput {Right}		;ctrl-mouse wheel down toggles stash tabs right	
+;   ^RButton::SendInput ^c			;ctrl-right mouse button sends ctrl-c
+;   F2::^c					;binds ctrl-c to F2 key (in addition, not instead)
+;   F9::SendInput {Enter}/remaining{Enter}	;mobs remaining with F9
+;   F10::SendInput {Enter}/global 820{Enter}	;join a channel with F10
