@@ -1,7 +1,7 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
-2.3.05
+2.3.06
 ================================
 from aRTy42
 The new label "Map Drop" introduced in PoE v2.3.2 is now accounted for and thus no longer breaks parsing items.
