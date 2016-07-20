@@ -2364,7 +2364,8 @@ ParseAffixes(ItemDataAffixes, Item)
     ARAffixTypePartial =
 
     ; Partial for the former "Block and Stun Recovery"
-    ; Note: with PoE v1.3+ now called just "increased Stun Recovery"
+    ; With PoE v1.3+ called just "increased Stun Recovery"
+	; With PoE v2.3.2+ called "increased Stun and Block Recovery"
     BSRecPartial =
 
     ; --- PRE-PASS ---
@@ -2439,7 +2440,7 @@ ParseAffixes(ItemDataAffixes, Item)
             HasIncrEnergyShield := A_Index
             Continue
         }
-        IfInString, A_LoopField, increased Stun Recovery
+        IfInString, A_LoopField, increased Stun and Block Recovery
         {
             HasStunRecovery := A_Index
             Continue
@@ -3503,7 +3504,7 @@ ParseAffixes(ItemDataAffixes, Item)
                 }
                 AffixType := "Comp. Prefix"
                 BSRecBracketLevel := 0
-                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun Recovery")
+                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun and Block Recovery")
                 BSRecPartial := LookupAffixBracket("data\StunRecovery_Hybrid.txt", AEBracketLevel2, "", BSRecBracketLevel)
                 If (Not IsValidBracket(BSRecPartial) or Not IsValidBracket(AEBracket))
                 {
@@ -3514,7 +3515,7 @@ ParseAffixes(ItemDataAffixes, Item)
                     ;
                     ; For example: 
                     ;   87% increased Armour and Evasion
-                    ;   7% increased Stun Recovery
+                    ;   7% increased Stun and Block Recovery
                     ;
                     ;   1) 7% B&S indicates bracket level 2 (6-7)
                     ;   2) Lookup bracket level 2 from the hybrid stat + block and stun recovery table
@@ -3541,7 +3542,7 @@ ParseAffixes(ItemDataAffixes, Item)
                         ;   Item Level: 58
                         ;   107% increased Armour and Evasion (AE)
                         ;   ...
-                        ;   30% increased Stun Recovery (SR)
+                        ;   30% increased Stun and Block Recovery (SR)
                         ;
                         ; Based on item level, 33-41 is the max contribution for AE of HybridDefences_StunRecovery (Comp. Prefix),
                         ; 12-13 is the max contribution for Stun Rec of StunRecovery_Hybrid (Comp. Prefix), 23-25 is the max contribution
@@ -3619,7 +3620,7 @@ ParseAffixes(ItemDataAffixes, Item)
                 }
                 AffixType := "Comp. Prefix"
                 BSRecBracketLevel := 0
-                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun Recovery")
+                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun and Block Recovery")
                 BSRecPartial := LookupAffixBracket("data\StunRecovery_Hybrid.txt", AESBracketLevel2, "", BSRecBracketLevel)
                 If (Not IsValidBracket(BSRecPartial) or Not IsValidBracket(AESBracket))
                 {
@@ -3679,7 +3680,7 @@ ParseAffixes(ItemDataAffixes, Item)
 
                 AffixType := "Comp. Prefix"
                 BSRecBracketLevel := 0
-                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun Recovery")
+                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun and Block Recovery")
                 BSRecPartial := LookupAffixBracket("data\StunRecovery_Hybrid.txt", EESBracketLevel2, "", BSRecBracketLevel)
                 If (Not IsValidBracket(BSRecPartial) or Not IsValidBracket(EESBracket))
                 {
@@ -3761,7 +3762,7 @@ ParseAffixes(ItemDataAffixes, Item)
 
                 AffixType := "Comp. Prefix"
                 BSRecBracketLevel := 0
-                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun Recovery")
+                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun and Block Recovery")
                 BSRecPartial := LookupAffixBracket("data\StunRecovery_Armour.txt", IABracketLevel2, "", BSRecBracketLevel)
                 If (Not IsValidBracket(BSRecPartial) or Not IsValidBracket(ASRBracket))
                 {
@@ -3861,7 +3862,7 @@ ParseAffixes(ItemDataAffixes, Item)
 
                 ; Determine composite bracket level and store in IEBracketLevel2, for example:
                 ;   8% increased Evasion
-                ;   26% increased Stun Recovery 
+                ;   26% increased Stun and Block Recovery 
                 ;   => 8% is bracket level 2 (6-14), so 'B&S Recovery from Evasion' level 2 makes 
                 ;      BSRec partial 6-7
                 ERSRBracket := LookupAffixBracket("data\Evasion_StunRecovery.txt", ItemLevel, CurrValue, IEBracketLevel2)
@@ -3872,7 +3873,7 @@ ParseAffixes(ItemDataAffixes, Item)
 
                 AffixType := "Comp. Prefix"
                 BSRecBracketLevel := 0
-                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun Recovery")
+                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun and Block Recovery")
                 BSRecPartial := LookupAffixBracket("data\StunRecovery_Evasion.txt", IEBracketLevel2, "", BSRecBracketLevel)
                 If (Not IsValidBracket(BSRecPartial) or Not IsValidBracket(ERSRBracket))
                 {
@@ -3976,7 +3977,7 @@ ParseAffixes(ItemDataAffixes, Item)
                 AffixType := "Comp. Prefix"
                 BSRecBracketLevel := 0
                 BSRecPartial := LookupAffixBracket("data\StunRecovery_EnergyShield.txt", IESBracketLevel2, "", BSRecBracketLevel)
-                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun Recovery")
+                BSRecValue := ExtractValueFromAffixLine(ItemDataChunk, "increased Stun and Block Recovery")
                 If (Not IsValidBracket(BSRecPartial) or Not IsValidBracket(ESSRBracket))
                 {
                     BSRecPartial := LookupAffixBracket("data\StunRecovery_EnergyShield.txt", IESBracketLevel, "", BSRecBracketLevel)
@@ -5059,7 +5060,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         
-        IfInString, A_LoopField, increased Stun Recovery
+        IfInString, A_LoopField, increased Stun and Block Recovery
         {
             If (Item.IsJewel) {
                 ; On jewels Stun Recovery is always a simple suffixes
@@ -5129,7 +5130,7 @@ ParseAffixes(ItemDataAffixes, Item)
                                                 ; take an ilvl 62 item with these 2 lines:
                                                 ;
                                                 ;   118% increased Armour and Evasion
-                                                ;   24% increased Stun Recovery
+                                                ;   24% increased Stun and Block Recovery
                                                 ;
                                                 ; Since it's ilvl 62, we assume the hybrid + stun recovery bracket to be the
                                                 ; highest possible (lvl 60 bracket), which is 42-50. So that's max 50 of the 
