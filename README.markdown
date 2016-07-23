@@ -14,8 +14,7 @@ itemlevel and weapon DPS reveal:
 - show max sockets info
 - has the ability to convert currency items to chaos orbs (you can adjust the rates by editing
     `data\CurrencyRates.txt`)
-- can show which gems are valuable and/or drop-only
-- can show which uniques are valuable
+- optional macros for fast hideout travel (via chat command), faster stash tab selection and more.
 - adds a system tray icon and proper system tray description tooltip
 
 All of these features are user-adjustable by using a "database" of text files which come
@@ -39,8 +38,11 @@ AutoHotkey v1.1.05 or newer. You can get AutoHotkey from https://autohotkey.com
 Known Issues
 ------------
 
+The script is not always right. Take it as a helper, not as dead certainty.
+
 Even though there have been lots of tests made on composite affix combinations, I expect there
-to be odd edge cases still that may return an invalid or not found affix bracket.
+to be odd edge cases still that may return an invalid or not found affix bracket. In general,
+be alert when it comes to composite affixes.
 
 You can see these entries in the affix detail lines if they have the text `n/a` (not available)
 somewhere in them or if you see an empty range ` - *`.
@@ -63,8 +65,8 @@ Attribution
 
 Created by Nipper4369 and original authors.  
 Created by hazydoc / IGN: Sadou
-
-Updated/Curated by Slinkston and Bahnzo
+Updated/Curated by Slinkston and Bahnzo from Oct 2015 - Apr 2016
+currently Updated/Curated by aRTy42
 
 Supersedes the POE_iLVL_DPS-Revealer script.
 
