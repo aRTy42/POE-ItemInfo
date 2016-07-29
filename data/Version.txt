@@ -1,2 +1,2 @@
-ReleaseVersion := "2.3.06"
+ReleaseVersion := "2.3.07"
 AHKVersionRequired := "1.1.05"
