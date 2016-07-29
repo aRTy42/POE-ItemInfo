@@ -98,7 +98,7 @@
 ;	  I imagine that this would not be hard to do, but would require a lot of small detail work.  Because all uniques are nerfed/buffed in 
 ;	  specific ways, there is no 'quick' and easy way to do this.  There would have to be a specific check for each specific unique item looking 
 ;	  at the particular change(s) and compare it to the existing known unique setup vs the legacy setup.  I would be willing to do all the small
-;	  detail work required for each unique if someone would write the code required for this to work and how this would work with the current unique.txt
+;	  detail work required for each unique if someone would write the code required for this to work and how this would work with the current uniques.txt
 ;	  list.  This is obviously less valuable of an addition to the PoE-Item-Info script than general upgrades/div cards/jewel support.
 ;
 ; Notes:
@@ -561,6 +561,8 @@ IfNotExist, %A_ScriptDir%\data
 
 #Include %A_ScriptDir%\data\MapList.txt
 #Include %A_ScriptDir%\data\DivinationCardList.txt
+#Include %A_ScriptDir%\data\GemQualityList.txt
+
 
 Fonts.Init(Opts.FontSize, 9)
 
@@ -858,6 +860,12 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         {
             BaseType = Jewel
             SubType = Viridian Jewel
+            return
+        }
+        IfInString, A_LoopField, Prismatic%A_Space%Jewel
+        {
+            BaseType = Jewel
+            SubType = Prismatic Jewel
             return
         }
 		
@@ -2486,131 +2494,626 @@ ParseAffixes(ItemDataAffixes, Item)
         CurrTier := 0
         BracketLevel := 0
 
-        ; Suffixes (due to new affixes on Jewels the split between suffixes and prefixes isn't 100% anymore)
+		; --- SIMPLE JEWEL AFFIXES ---
 
-        IfInString, A_LoopField, increased Area Damage
+        If (Item.IsJewel)
         {
-            ; Only valid for Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\AreaDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
+            IfInString, A_LoopField, increased Area Damage
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\AreaDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Attack and Cast Speed
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\AttackAndCastSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*increased Attack Speed with (One|Two) Handed Melee Weapons")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\AttackSpeedWith1H2HMelee.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Attack Speed while holding a Shield
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\AttackSpeedWhileHoldingShield.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Attack Speed while Dual Wielding
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\AttackSpeedWhileDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*increased Attack Speed with (Axes|Bows|Claws|Daggers|Maces|Staves|Swords|Wands)")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\AttackSpeedWithWeapontype.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+
+            ; pure Attack Speed must be checked last
+            IfInString, A_LoopField, increased Attack Speed
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\AttackSpeed_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+
+            IfInString, A_LoopField, increased Accuracy Rating
+            {
+                If(Item.SubType = "Cobalt Jewel" or Item.SubType = "Crimson Jewel")
+                {
+                    ; Cobalt and Crimson jewels can't get the combined increased accuracy/crit chance affix
+                    NumSuffixes += 1
+                    ValueRange := LookupAffixData("data\jewels\IncrAccuracyRating_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                    AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                    Continue
+                }
+                Else
+                {
+                    ; increased Accuracy Rating on Viridian and Prismatic jewels is a complex affix and handled later
+                    CAIncAccuracy := CurrValue
+                    CAIncAccuracyAffixLine := A_LoopField
+                    CAIncAccuracyAffixLineNo := A_Index
+                    Continue
+                }
+            }
+
+            IfInString, A_LoopField, to all Attributes 
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\ToAllAttributes_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+
+            If RegExMatch(A_LoopField, ".*to (Strength|Dexterity|Intelligence) and (Strength|Dexterity|Intelligence)")
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\To2Attributes_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*to (Strength|Dexterity|Intelligence)")
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\To1Attribute_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*increased Cast Speed (with|while) .*")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\CastSpeedWithWhile.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+
+            ; pure Cast Speed must be checked last
+            IfInString, A_LoopField, increased Cast Speed
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\CastSpeed_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Critical Strike Chance for Spells
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritChanceSpells_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Melee Critical Strike Chance
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\MeleeCritChance.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Critical Strike Chance with Elemental Skills
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritChanceElementalSkills.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*increased Critical Strike Chance with (Fire|Cold|Lightning) Skills")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritChanceFireColdLightningSkills.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*increased Critical Strike Chance with (One|Two) Handed Melee Weapons")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritChanceWith1H2HMelee.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Weapon Critical Strike Chance while Dual Wielding
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\WeaponCritChanceDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            
+            ; Pure Critical Strike Chance must be checked last
+            IfInString, A_LoopField, Critical Strike Chance
+            {
+                If (Item.SubType = "Cobalt Jewel" or Item.SubType = "Crimson Jewel" )
+                {
+                    ; Cobalt and Crimson jewels can't get the combined increased accuracy/crit chance affix
+                    NumSuffixes += 1
+                    ValueRange := LookupAffixData("data\jewels\CritChanceGlobal_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                    AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                    Continue
+                }
+                Else
+                {
+                    ; Crit chance on Viridian and Prismatic Jewels is a complex affix that is handled later
+                    CAGlobalCritChance := CurrValue
+                    CAGlobalCritChanceAffixLine := A_LoopField
+                    CAGlobalCritChanceAffixLineNo := A_Index
+                    Continue
+                }
+            }
+            
+            IfInString, A_LoopField, to Melee Critical Strike Multiplier
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritMeleeMultiplier.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, to Critical Strike Multiplier for Spells
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritMultiplierSpells.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, to Critical Strike Multiplier with Elemental Skills
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritMultiplierElementalSkills.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*to Critical Strike Multiplier with (Fire|Cold|Lightning) Skills")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritMultiplierFireColdLightningSkills.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*to Critical Strike Multiplier with (One|Two) Handed Melee Weapons")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritMultiplierWith1H2HMelee.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, to Critical Strike Multiplier while Dual Wielding
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritMultiplierWhileDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, Critical Strike Multiplier
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\CritMultiplierGlobal_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, chance to Ignite
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\ChanceToIgnite.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Ignite Duration on Enemies
+            {
+                ; Don't increase number of suffixes, combined with "chance to Ignite" this is just 1 suffix
+                ValueRange := LookupAffixData("data\jewels\IgniteDurationOnEnemies.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, chance to Freeze
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\ChanceToFreeze.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Freeze Duration on Enemies
+            {
+                ; Don't increase number of suffixes, combined with "chance to Freeze" this is just 1 suffix
+                ValueRange := LookupAffixData("data\jewels\FreezeDurationOnEnemies.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, chance to Shock
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\ChanceToShock.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Shock Duration on Enemies
+            {
+                ; Don't increase number of suffixes, combined with "chance to Shock" this is just 1 suffix
+                ValueRange := LookupAffixData("data\jewels\ShockDurationOnEnemies.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*increased (Fire|Cold|Lightning) Damage")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrFireColdLightningDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, "Minions have .* Chance to Block")
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\MinionBlockChance.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*(Chance to Block|Block Chance).*")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\BlockChance_ChanceToBlock_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            ; This needs to come before plain "increased Damage"
+            IfInString, A_LoopField, increased Damage over Time
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\DamageOverTime.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, "Minions deal .* increased Damage")
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\MinionsDealIncrDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Damage
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, chance to Knock Enemies Back on hit
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\KnockBackOnHit.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, Life gained for each Enemy hit by your Attacks
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\LifeOnHit_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, Energy Shield gained for each Enemy hit by your Attacks
+            {
+                ValueRange := LookupAffixData("data\jewels\ESOnHit.txt", ItemLevel, CurrValue, "", CurrTier)
+                NumSuffixes += 1
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, Mana gained for each Enemy hit by your Attacks
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\ManaOnHit.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, reduced Mana Cost of Skills
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\ReducedManaCost.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+
+            IfInString, A_LoopField, increased Mana Regeneration Rate
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\ManaRegen_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Melee Damage
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\MeleeDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Projectile Damage
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\ProjectileDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Projectile Speed
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\ProjectileSpeed_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+
+            IfInString, A_LoopField, to all Elemental Resistances
+            {
+                NumSuffixes += 1
+                ; "to all Elemental Resistances" matches multiple affixes
+                If InStr(A_LoopField, "Minions have")
+                {
+                    ValueRange := LookupAffixData("data\jewels\ToAllResist_Jewels_Minions.txt", ItemLevel, CurrValue, "", CurrTier)
+                }
+                Else If InStr(A_LoopField, "Totems gain")
+                {
+                    ValueRange := LookupAffixData("data\jewels\ToAllResist_Jewels_Totems.txt", ItemLevel, CurrValue, "", CurrTier)
+                }
+                Else
+                {
+                    ValueRange := LookupAffixData("data\jewels\ToAllResist_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                }
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*to (Fire|Cold|Lightning) and (Fire|Cold|Lightning) Resistances")
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\To2Resist_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*to (Fire|Cold|Lightning) Resistance")
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\To1Resist_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, to Chaos Resistance
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\ToChaosResist_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Stun Duration on Enemies
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\StunDuration_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*increased Physical Damage with (Axes|Bows|Claws|Daggers|Maces|Staves|Swords|Wands)")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrPhysDamageWithWeapontype.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Melee Physical Damage while holding a Shield
+            {
+                ; Only valid for Jewels at this time
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrMeleePhysDamageWhileHoldingShield.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Physical Weapon Damage while Dual Wielding
+            {
+                ; Only valid for Jewels at this time
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrPhysWeaponDamageDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If RegExMatch(A_LoopField, ".*increased Physical Damage with (One|Two) Handed Melee Weapons")
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrPhysDamageWith1H2HMelee.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Physical Damage
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrPhysDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Totem Damage
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrTotemDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Totem Life
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrTotemLife.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Trap Throwing Speed
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrTrapThrowingSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Trap Damage
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrTrapDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Mine Laying Speed
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrMineLayingSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Mine Damage
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrMineDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Chaos Damage
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrChaosDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            If ( InStr(A_LoopField,"increased maximum Life"))
+            {
+                If InStr(A_LoopField,"Minions have") {
+                    ValueRange := LookupAffixData("data\jewels\MinionIncrMaximumLife.txt", ItemLevel, CurrValue, "", CurrTier)
+                } Else {
+                    ValueRange := LookupAffixData("data\jewels\IncrMaximumLife.txt", ItemLevel, CurrValue, "", CurrTier)
+                }
+                NumPrefixes += 1
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Armour
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrArmour_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            
+            IfInString, A_LoopField, increased Evasion Rating
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrEvasion_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Energy Shield Recharge Rate
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\EnergyShieldRechargeRate.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, faster start of Energy Shield Recharge
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\FasterStartOfEnergyShieldRecharge.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased maximum Energy Shield
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrMaxEnergyShield_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, Physical Attack Damage Leeched as
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\PhysicalAttackDamageLeeched_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Spell Damage while Dual Wielding
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\SpellDamageDualWielding_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Spell Damage while holding a Shield
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\SpellDamageHoldingShield_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Spell Damage while wielding a Staff
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\SpellDamageWieldingStaff_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Spell Damage
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\SpellDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased maximum Mana
+            {
+                NumPrefixes += 1
+                ValueRange := LookupAffixData("data\jewels\IncrMaximumMana_Jewel.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Stun and Block Recovery
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\StunRecovery_Suffix_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
+            IfInString, A_LoopField, increased Rarity
+            {
+                NumSuffixes += 1
+                ValueRange := LookupAffixData("data\jewels\IIR_Suffix_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
+                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+                Continue
+            }
         }
-        IfInString, A_LoopField, increased Attack and Cast Speed
-        {
-            ; Only valid for Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\AttackAndCastSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed with One Handed Melee Weapons
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeed_Melee1H.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed with Two Handed Melee Weapons
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeedWithMelee2H.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed while holding a Shield
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeedHoldingShield.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed while Dual Wielding
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeedDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed with Bows
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeedWithBows.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed with Claws
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeedWithClaws.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Attack Speed with Daggers
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeedWithDaggers.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed with Maces
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeed_Maces.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed with Staves
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeed_Staves.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed with Swords
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeedWithSwords.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed with Wands
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeedWithWands.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased attack speed
-        IfInString, A_LoopField, increased Attack Speed with Axes
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\AttackSpeed_Axes.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
+
+
+
+
+		; Suffixes
+
         IfInString, A_LoopField, increased Attack Speed
         {
             ; Slinkston edit. Cleaned up the code. I think this is a better approach.
@@ -2621,9 +3124,6 @@ ParseAffixes(ItemDataAffixes, Item)
             } Else If (ItemBaseType == "Weapon")
             {
                 ValueRange := LookupAffixData("data\AttackSpeed_Weapons.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else If (Item.IsJewel)
-            {
-                ValueRange := LookupAffixData("data\AttackSpeed_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else
             {
                 ValueRange := LookupAffixData("data\AttackSpeed_ArmourAndItems.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -2631,161 +3131,37 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
+
         IfInString, A_LoopField, increased Accuracy Rating
         {
-            If (Item.SubType = "Cobalt Jewel" or Item.SubType = "Crimson Jewel" )
-            {
-                ; Cobalt and Crimson jewels can't get the combined increased accuracy/crit chance affix
-                AffixType := "Suffix"
-                ValueRange := LookupAffixData("data\IncrAccuracyRating_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else If (Item.SubType = "Viridian Jewel") {
-                ; increased Accuracy Rating on viridian jewels is a complex affix and handled later
-                CAIncAccuracy := CurrValue
-                CAIncAccuracyAffixLine := A_LoopField
-                CAIncAccuracyAffixLineNo := A_Index
-                Continue
-            } Else {
-                AffixType := "Comp. Suffix"
-                ValueRange := LookupAffixData("data\IncrAccuracyRating_LightRadius.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
             NumSuffixes += 1
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
+            ValueRange := LookupAffixData("data\IncrAccuracyRating_LightRadius.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        IfInString, A_LoopField, to all Attributes 
+		
+		IfInString, A_LoopField, to all Attributes 
         {
             NumSuffixes += 1
-            If (Item.IsJewel) 
-            {
-                ValueRange := LookupAffixData("data\ToAllAttributes_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else 
-            {
-                ValueRange := LookupAffixData("data\ToAllAttributes.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
+            ValueRange := LookupAffixData("data\ToAllAttributes.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        ; Needs to be handled before pure "to Strength"
-        IfInString, A_LoopField, to Strength and Dexterity
+        
+		If RegExMatch(A_LoopField, ".*to (Strength|Dexterity|Intelligence)")
         {
-            ; Only valid for Jewels at this time
             NumSuffixes += 1
-            ValueRange := LookupAffixData("data\ToStrengthAndDexterity.txt", ItemLevel, CurrValue, "", CurrTier)
+            ValueRange := LookupAffixData("data\To1Attribute.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        ; Needs to be handled before pure "to Strength"
-        IfInString, A_LoopField, to Strength and Intelligence
-        {
-            ; Only valid for Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\ToStrengthAndIntelligence.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, to Strength
-        {
-            NumSuffixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\ToStrength_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\ToStrength.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, to Intelligence
-        {
-            NumSuffixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\ToIntelligence_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\ToIntelligence.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, to Dexterity and Intelligence
-        {
-            ; Only valid on Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\ToDexterityAndIntelligence.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, to Dexterity
-        {
-            NumSuffixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\ToDexterity_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\ToDexterity.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure cast speed
-        IfInString, A_LoopField, increased Cast Speed with Cold Skills
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CastSpeedColdSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure cast speed
-        IfInString, A_LoopField, increased Cast Speed with Fire Skills
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CastSpeedFireSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure cast speed
-        IfInString, A_LoopField, increased Cast Speed with Lightning Skills
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CastSpeedLightningSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure cast speed
-        IfInString, A_LoopField, increased Cast Speed while Dual Wielding
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CastSpeedWhileDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure cast speed
-        IfInString, A_LoopField, increased Cast Speed while holding a Shield
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CastSpeedWhileHoldingShield.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure cast speed
-        IfInString, A_LoopField, increased Cast Speed while wielding a Staff
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CastSpeedWhileWieldingStaff.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
+		
         IfInString, A_LoopField, increased Cast Speed
         {
             ; Slinkston edit
             If (ItemBaseType == "Weapon")
             {
                 ValueRange := LookupAffixData("data\CastSpeedWeapon.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\CastSpeed_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else If (Item.IsAmulet) {
                 ValueRange := LookupAffixData("data\CastSpeedAmulets.txt", ItemLevel, CurrValue, "", CurrTier)
             } Else If (Item.IsRing) {
@@ -2793,207 +3169,45 @@ ParseAffixes(ItemDataAffixes, Item)
             } Else {
                 ; After weapons, jewels, amulets and rings only shields are left. Which can receive a cast speed master mod.
                 ; Leaving this as non shield specific if the master mod ever applicable on something else
-                ValueRange := LookupAffixData("data\CastSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
+                ValueRange := LookupAffixData("data\CastSpeedCraft.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             NumSuffixes += 1
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        ; This needs to come before "Critical Strike Chance" !
+		
         IfInString, A_LoopField, increased Critical Strike Chance for Spells
         {
             NumSuffixes += 1
-            If (Item.IsJewel)
-            {
-                ValueRange := LookupAffixData("data\SpellCritChance_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else
-            {
-                ValueRange := LookupAffixData("data\SpellCritChance.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
+            ValueRange := LookupAffixData("data\CritChanceSpells.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        ; This needs to come before "Critical Strike Chance" !
-        IfInString, A_LoopField, increased Melee Critical Strike Chance
-        {
-            ; Only valid for jewels at the moment
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\MeleeCritChance.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; This needs to come before "Critical Strike Chance" !
-        IfInString, A_LoopField, increased Critical Strike Chance with Elemental Skills
-        {
-            ; Only valid for jewels at the moment
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\CritChanceElementalSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Critical Strike Chance with Cold Skills
-        {
-            ; Only valid for jewels at the moment
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritChanceColdSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Critical Strike Chance with Fire Skills
-        {
-            ; Only valid for jewels at the moment
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritChanceFireSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Critical Strike Chance with Lightning Skills
-        {
-            ; Only valid for jewels at the moment
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritChanceLightningSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before Critical Strike Chance
-        IfInString, A_LoopField, increased Critical Strike Chance with One Handed Melee Weapons
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritChanceWithMelee1H.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Critical Strike Chance with Two Handed Melee Weapons
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritChanceWithMelee2H.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before Critical Strike Chance
-        IfInString, A_LoopField, increased Weapon Critical Strike Chance while Dual Wielding
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\WeaponCritChanceDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
+		
+		; Pure Critical Strike Chance must be checked last
         IfInString, A_LoopField, Critical Strike Chance
         {
-            ; Slinkston edit
             If (ItemBaseType == "Weapon")
             {
                 ValueRange := LookupAffixData("data\CritChanceLocal.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else If (Item.SubType = "Cobalt Jewel" or Item.SubType = "Crimson Jewel" )
-            {
-                ; Cobalt and Crimson jewels can't get the combined increased accuracy/crit chance affix
-                ValueRange := LookupAffixData("data\CritChanceGlobal_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else If (Item.SubType = "Viridian Jewel") {
-                ; Crit chance on Viridian Jewels is a complex affix that is handled later
-                CAGlobalCritChance := CurrValue
-                CAGlobalCritChanceAffixLine := A_LoopField
-                CAGlobalCritChanceAffixLineNo := A_Index
-                Continue
-            } Else {
+            }
+			Else
+			{
                 ValueRange := LookupAffixData("data\CritChanceGlobal.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             NumSuffixes += 1
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, to Melee Critical Strike Multiplier
-        {
-            ; Only valid for jewels at the moment
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\CritMeleeMultiplier.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, to Critical Strike Multiplier for Spells
-        {
-            ; Only valid for jewels at the moment
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\CritMultiplierSpells.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, to Critical Strike Multiplier with Elemental Skills
-        {
-            ; Only valid for jewels at the moment
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\CritMultiplierElementalSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, to Critical Strike Multiplier with Cold Skills
-        {
-            ; Only valid for jewels at the moment
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritMultiplierColdSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, to Critical Strike Multiplier with Fire Skills
-        {
-            ; Only valid for jewels at the moment
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritMultiplierFireSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, to Critical Strike Multiplier with Lightning Skills
-        {
-            ; Only valid for jewels at the moment
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritMultiplierLightningSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, to Critical Strike Multiplier with One Handed Melee Weapons
-        {
-            ; Only valid for jewels at the moment
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritMultiplierWith1HMelee.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, to Critical Strike Multiplier with Two Handed Melee Weapons
-        {
-            ; Only valid for jewels at the moment
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritMultiplierWith2HMelee.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; This needs to come before "Critical Strike Multiplier" !
-        IfInString, A_LoopField, to Critical Strike Multiplier while Dual Wielding
-        {
-            ; Only valid for jewels at the moment
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\CritMultiplierWhileDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, Critical Strike Multiplier
+		
+		IfInString, A_LoopField, Critical Strike Multiplier
         {
             ; Slinkston edit
             If (ItemBaseType == "Weapon")
             {
                 ValueRange := LookupAffixData("data\CritMultiplierLocal.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\CritMultiplierGlobal_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else
+            }
+			Else
             {
                 ValueRange := LookupAffixData("data\CritMultiplierGlobal.txt", ItemLevel, CurrValue, "", CurrTier)
             }
@@ -3001,63 +3215,26 @@ ParseAffixes(ItemDataAffixes, Item)
             NumSuffixes += 1
             Continue
         }
-        IfInString, A_LoopField, increased Ignite Duration on Enemies
+
+		IfInString, A_LoopField, increased Fire Damage
         {
-            ; Only valid for Jewels at this time
             NumSuffixes += 1
-            ValueRange := LookupAffixData("data\IgniteDurationEnemies.txt", ItemLevel, CurrValue, "", CurrTier)
+            ValueRange := LookupAffixData("data\IncrFireDamage.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, chance to Ignite
-        {
-            ; Only valid for Jewels at this time
-            ; Don't increase number of suffixes, combined with "Ignite Duration on Enemies" this is just 1 suffix
-            ;NumSuffixes += 1
-            ValueRange := LookupAffixData("data\IgniteChance.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Fire Damage
-        {
-            If (Item.IsJewel) {
-                AffixType := "Prefix"
-                NumPrefixes += 1
-                ValueRange := LookupAffixData("data\IncrFireDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                AffixType := "Suffix"
-                NumSuffixes += 1
-                ValueRange := LookupAffixData("data\IncrFireDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
             Continue
         }
         IfInString, A_LoopField, increased Cold Damage
         {
-            If (Item.IsJewel) {
-                AffixType := "Prefix"
-                NumPrefixes += 1
-                ValueRange := LookupAffixData("data\IncrColdDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                AffixType := "Suffix"
-                NumSuffixes += 1
-                ValueRange := LookupAffixData("data\IncrColdDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
+            NumSuffixes += 1
+            ValueRange := LookupAffixData("data\IncrColdDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
         IfInString, A_LoopField, increased Lightning Damage
         {
-            If (Item.IsJewel) {
-                AffixType := "Prefix"
-                NumPrefixes += 1
-                ValueRange := LookupAffixData("data\IncrLightningDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                AffixType := "Suffix"
-                NumSuffixes += 1
-                ValueRange := LookupAffixData("data\IncrLightningDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
+            NumSuffixes += 1
+            ValueRange := LookupAffixData("data\IncrLightningDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
         IfInString, A_LoopField, increased Light Radius
@@ -3066,133 +3243,19 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        IfInString, A_LoopField, additional Block Chance while Dual Wielding
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\BlockChanceWhileDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure chance to block
-        IfInString, A_LoopField, additional Chance to Block with Staves
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\ChanceToBlockWithStaves.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-         ; Needs to come before pure chance to block
-        IfInString, A_LoopField, additional Chance to Block Spells with Staves
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\ChanceToBlockSpellsWithStaves.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure chance to block
-        IfInString, A_LoopField, additional Chance to Block Spells while Dual Wielding
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\ChanceToBlockDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure chance to block
-        IfInString, A_LoopField, additional Chance to Block Spells with Shields
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\ChanceToBlockSpellsWithShields.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, Chance to Block
+		IfInString, A_LoopField, Chance to Block
         {
             NumSuffixes += 1
-            If (Item.IsJewl and InStr(A_LoopField, "Minions have")) {
-                ValueRange := LookupAffixData("data\MinionBlockChance.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\BlockChance.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; This needs to come before plain "increased Damage"
-        IfInString, A_LoopField, increased Damage over Time
-        {
-            ; Only valid on Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\DamageOverTime.txt", ItemLevel, CurrValue, "", CurrTier)
+            ValueRange := LookupAffixData("data\BlockChance.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
         IfInString, A_LoopField, increased Damage
         {
             ; Can be either Leo prefix or jewel suffix.
-            ; (I don't believe Leo prefixes can spawn on jewels so there should be no conflict)
-            If (Item.IsJewl) {
-                IfInString, A_LoopField, Minions deal 
-                {
-                    AffixType := "Prefix"
-                    NumPrefixes += 1
-                    ValueRange := LookupAffixData("data\IncDamageMinions.txt", ItemLevel, CurrValue, "", CurrTier)
-                } Else {
-                    AffixType := "Suffix"
-                    NumSuffixes += 1
-                    ValueRange := LookupAffixData("data\IncDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-                }
-            } Else {
-                AffixType := "Prefix"
-                NumPrefixes += 1
-                ValueRange := LookupAffixData("data\IncDamageLeo.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Freeze Duration on Enemies
-        {
-            ; Only valid on Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\FreezeDurationOnEnemies.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, chance to Freeze
-        {
-            ; Only valid on Jewels at this time
-            ; "chance to Freeze" on Jewels is a combined affix with Freeze Duration, so don't increase suffix count
-            ; NumSuffixes += 0
-            ValueRange := LookupAffixData("data\ChanceToFreeze.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Shock Duration on Enemies
-        {
-            ; Only valid on Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\ShockDurationOnEnemies.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, chance to Shock
-        {
-            ; Only valid on Jewels at this time
-            ; "chance to Freeze" on Jewels is a combined affix with Freeze Duration, so don't increase suffix count
-            ; NumSuffixes += 0
-            ValueRange := LookupAffixData("data\ChanceToShock.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, chance to Knock Enemies Back on hit
-        {
-            ; Only valid on Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\KnockBackOnHit.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+            NumPrefixes += 1
+            ValueRange := LookupAffixData("data\IncrDamageLeo.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
         ; Flask affixes (on belts)
@@ -3237,43 +3300,18 @@ ParseAffixes(ItemDataAffixes, Item)
             ; Slinkston edit. This isn't necessary at this point in time, but if either were to gain an additional ilvl affix down the road this would already be in place
             If (ItemBaseType == "Weapon") {
                 ValueRange := LookupAffixData("data\LifeOnHitLocal.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\LifeOnHit_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
+            }
+			Else {
                 ValueRange := LookupAffixData("data\LifeOnHit.txt", ItemLevel, CurrValue, "", CurrTier)
             }
             NumSuffixes += 1
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        IfInString, A_LoopField, Energy Shield gained for each Enemy hit by your Attacks
-        {
-            ; Only available on Jewels at this time
-            ValueRange := LookupAffixData("data\ESOnHit.txt", ItemLevel, CurrValue, "", CurrTier)
-            NumSuffixes += 1
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, Life Regenerated per second
+		IfInString, A_LoopField, Life Regenerated per second
         {
             NumSuffixes += 1
             ValueRange := LookupAffixData("data\LifeRegen.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, Mana gained for each Enemy hit by your Attacks
-        {
-            ; Only found on jewels for now
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\ManaOnHit.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, reduced Mana Cost of Skills
-        {
-            ; Only found on jewels for now
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\ReducedManaCost.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
@@ -3286,42 +3324,15 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, increased Mana Regeneration Rate
         {
-            If (Item.IsJewel) {
-                AffixType := "Prefix"
-                NumPrefixes += 1
-                ValueRange := LookupAffixData("data\ManaRegen_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                AffixType := "Suffix"
-                NumSuffixes += 1
-                ValueRange := LookupAffixData("data\ManaRegen.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Melee Damage
-        {
-            ; Only valid on Jewels at this time
             NumSuffixes += 1
-            ValueRange := LookupAffixData("data\MeleeDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Projectile Damage
-        {
-            ; Only on jewels for now
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\ProjectileDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+            ValueRange := LookupAffixData("data\ManaRegen.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
         IfInString, A_LoopField, increased Projectile Speed
         {
             NumSuffixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\ProjectileSpeed_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\ProjectileSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
+            ValueRange := LookupAffixData("data\ProjectileSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
@@ -3335,122 +3346,42 @@ ParseAffixes(ItemDataAffixes, Item)
         IfInString, A_LoopField, to all Elemental Resistances
         {
             NumSuffixes += 1
-            If (Item.IsJewel) {
-                ; "to all Elemental Resistances" matches multiple affixes
-                If InStr(A_LoopField, "Minions have") {
-                    ValueRange := LookupAffixData("data\AllResist_Jewels_Minions.txt", ItemLevel, CurrValue, "", CurrTier)
-                } Else If InStr(A_LoopField, "Totems gain") {
-                    ValueRange := LookupAffixData("data\AllResist_Jewels_Totems.txt", ItemLevel, CurrValue, "", CurrTier)
-                } Else {
-                    ValueRange := LookupAffixData("data\AllResist_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-                }
-            } Else {
-                ValueRange := LookupAffixData("data\AllResist.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, to Fire and Lightning Resistances
-        {
-            ; Only valid on Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\FireAndLightningResist.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, to Fire and Cold Resistances
-        {
-            ; Only valid on Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\FireAndColdResist.txt", ItemLevel, CurrValue, "", CurrTier)
+            ValueRange := LookupAffixData("data\ToAllResist.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
         IfInString, A_LoopField, to Fire Resistance
         {
             NumSuffixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\FireResist_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\FireResist.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, to Lightning Resistance
-        {
-            NumSuffixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\LightningResist_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\LightningResist.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, to Cold and Lightning Resistances
-        {
-            ; Only valid on Jewels at this time
-            NumSuffixes += 1
-            ValueRange := LookupAffixData("data\ColdAndLightningResist.txt", ItemLevel, CurrValue, "", CurrTier)
+            ValueRange := LookupAffixData("data\ToFireResist.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
         IfInString, A_LoopField, to Cold Resistance
         {
             NumSuffixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\ColdResist_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\ColdResist.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
+            ValueRange := LookupAffixData("data\ToColdResist.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        IfInString, A_LoopField, to Lightning Resistance
+        {
+            NumSuffixes += 1
+            ValueRange := LookupAffixData("data\ToLightningResist.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
         IfInString, A_LoopField, to Chaos Resistance
         {
             NumSuffixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\ChaosResist_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\ChaosResist.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
+            ValueRange := LookupAffixData("data\ToChaosResist.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
-        }
-        If RegExMatch(A_LoopField, ".*to (Cold|Fire|Lightning) and (Cold|Fire|Lightning) Resistances")
-        {
-            ; Catches two-stone rings and the like which have "+#% to Cold and Lightning Resistances"
-            IfInString, A_LoopField, Fire
-            {
-                NumSuffixes += 1
-                ValueRange := LookupAffixData("data\FireResist.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-                Continue
-            }
-            IfInString, A_LoopField, Lightning
-            {
-                NumSuffixes += 1
-                ValueRange := LookupAffixData("data\LightningResist.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-                Continue
-            }
-            IfInString, A_LoopField, Cold
-            {
-                NumSuffixes += 1
-                ValueRange := LookupAffixData("data\ColdResist.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-                Continue
-            }
         }
         IfInString, A_LoopField, increased Stun Duration on Enemies
         {
             NumSuffixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\StunDuration_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\StunDuration.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
+            ValueRange := LookupAffixData("data\StunDuration.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
@@ -3461,8 +3392,8 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        
-        ; Prefixes (due to new affixes on Jewels the split between suffixes and prefixes isn't 100% anymore)
+		
+        ; Prefixes
         
         IfInString, A_LoopField, to Armour
         {
@@ -3734,10 +3665,6 @@ ParseAffixes(ItemDataAffixes, Item)
                 ; Global
                 PrefixPath := "data\IncrArmour_Items.txt"
                 PrefixPathOther := "data\IncrArmour_WeaponsAndArmour.txt"
-            } Else If (Item.IsJewel) 
-            {
-                PrefixPath := "data\IncrArmour_Jewels.txt"
-                PrefixPathOther := "data\IncrArmour_Jewels.txt"
             }
             Else
             {
@@ -3750,7 +3677,7 @@ ParseAffixes(ItemDataAffixes, Item)
             {
                 ValueRange := LookupAffixData(PrefixPathOther, ItemLevel, CurrValue, IABracketLevel, CurrTier)
             }
-            If (HasStunRecovery and not Item.IsJewel) 
+            If (HasStunRecovery)
             {
                 IABracketLevel2 := IABracketLevel
 
@@ -3815,10 +3742,10 @@ ParseAffixes(ItemDataAffixes, Item)
             {
                 ValueRange := LookupAffixData("data\ToEvasionRing.txt", ItemLevel, CurrValue, "", CurrTier)
             }
-		Else If (ItemSubType == "Helmet")
-		{
-		    ValueRange := LookupAffixData("data\ToEvasionHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
-		}
+            Else If (ItemSubType == "Helmet")
+		    {
+		        ValueRange := LookupAffixData("data\ToEvasionHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
+		    }
 		    Else If (ItemSubType == "Gloves" or ItemSubType == "Boots")
 			{
 			    ValueRange := LookupAffixData("data\ToEvasionGlovesandBoots.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -3840,10 +3767,6 @@ ParseAffixes(ItemDataAffixes, Item)
                 ; Global
                 PrefixPath := "data\IncrEvasion_Items.txt"
                 PrefixPathOther := "data\IncrEvasion_Armour.txt"
-            } Else If (Item.IsJewel) 
-            {
-                PrefixPath := "data\IncrEvasion_Jewels.txt"
-                PrefixPathOther := "data\IncrEvasion_Jewels.txt"
             }
             Else
             {
@@ -3856,7 +3779,7 @@ ParseAffixes(ItemDataAffixes, Item)
             {
                 ValueRange := LookupAffixData(PrefixPathOther, ItemLevel, CurrValue, IEBracketLevel, CurrTier)
             }
-            If (HasStunRecovery and not Item.IsJewel) 
+            If (HasStunRecovery) 
             {
                 IEBracketLevel2 := IEBracketLevel
 
@@ -3948,15 +3871,6 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         
-        ; Needs to come before increased Energy Shield
-        IfInString, A_LoopField, increased Energy Shield Recharge Rate
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\EnergyShieldRechargeRate.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
         IfInString, A_LoopField, increased Energy Shield
         {
             AffixType := "Prefix"
@@ -4019,11 +3933,7 @@ ParseAffixes(ItemDataAffixes, Item)
         IfInString, A_LoopField, increased maximum Energy Shield
         {
             NumPrefixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\IncrMaxEnergyShield_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\IncrMaxEnergyShield_Amulets.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
+            ValueRange := LookupAffixData("data\IncrMaxEnergyShield_Amulets.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
@@ -4266,59 +4176,7 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        IfInString, A_LoopField, increased Mine Laying Speed
-        {
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\MineLayingSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Totem Damage
-        {
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrTotemDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Totem Life
-        {
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrTotemLife.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Trap Throwing Speed
-        {
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrTrapThrowingSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Trap Damage
-        {
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrTrapDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Chaos Damage
-        {
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrChaosDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        If ( InStr(A_LoopField,"increased maximum Life"))
-        {
-            If InStr(A_LoopField,"Minions have") {
-                ValueRange := LookupAffixData("data\MinionIncrMaximumLife.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\IncrMaximumLife.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
-            NumPrefixes += 1
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
+
         IfInString, A_LoopField, to Level of Socketed
         {
             If (InStr(A_LoopField, "Minion"))
@@ -4386,13 +4244,8 @@ ParseAffixes(ItemDataAffixes, Item)
         }
         IfInString, A_LoopField, Physical Attack Damage Leeched as
         {
-            ; despite the file name this handles both life and mana leech
             NumPrefixes += 1
-            If (Item.IsJewel) {
-                ValueRange := LookupAffixData("data\LifeLeech_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-            } Else {
-                ValueRange := LookupAffixData("data\LifeLeech.txt", ItemLevel, CurrValue, "", CurrTier)
-            }
+            ValueRange := LookupAffixData("data\PhysicalAttackDamageLeeched.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
@@ -4468,6 +4321,35 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
+		; Tora dual suffixes
+        IfInString, A_LoopField, increased Trap Throwing Speed
+        {
+            NumSuffixes += 1
+            ValueRange := LookupAffixData("data\IncrTrapThrowingMineLayingSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        IfInString, A_LoopField, increased Mine Laying Speed
+        {
+            ; No suffix increase because composite with above
+            ValueRange := LookupAffixData("data\IncrTrapThrowingMineLayingSpeed.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        IfInString, A_LoopField, increased Trap Damage
+        {
+            NumSuffixes += 1
+            ValueRange := LookupAffixData("data\IncrTrapMineDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
+        IfInString, A_LoopField, increased Mine Damage
+        {
+            ; No suffix increase because composite with above
+            ValueRange := LookupAffixData("data\IncrTrapMineDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+            Continue
+        }
     }
 
     ; --- COMPLEX AFFIXES ---
@@ -4485,33 +4367,16 @@ ParseAffixes(ItemDataAffixes, Item)
 
         CurrValue := GetActualValue(A_LoopField)
 
+        If (Item.IsJewel) {
+            Continue
+        }
+
         ; "Spell Damage +%" (simple prefix)
         ; "Spell Damage +% (1H)" / "Base Maximum Mana" - Limited to sceptres, wands, and daggers. 
         ; "Spell Damage +% (Staff)" / "Base Maximum Mana"
         IfInString, A_LoopField, increased Spell Damage
         {
-            ; Spell damage on Jewels is different and simple, we handle this first
-            If (Item.IsJewel and InStr(A_LoopField, "increased Spell Damage while Dual Wielding")){
-                NumPrefixes += 1
-                ValueRange := LookupAffixData("data\SpellDamageDualWielding_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-                Continue
-            } Else If (Item.IsJewel and InStr(A_LoopField, "increased Spell Damage while holding a Shield")){
-                NumPrefixes += 1
-                ValueRange := LookupAffixData("data\SpellDamageHoldingShield_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-                Continue
-            } Else If (Item.IsJewel and InStr(A_LoopField, "increased Spell Damage while wielding a Staff")){
-                NumPrefixes += 1
-                ValueRange := LookupAffixData("data\SpellDamageWieldingStaff_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-                Continue
-            } Else If (Item.IsJewel) {
-                NumSuffixes += 1
-                ValueRange := LookupAffixData("data\SpellDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-                Continue
-            } Else If (Item.IsAmulet) {
+            If (Item.IsAmulet) {
                 NumPrefixes += 1
                 ValueRange := LookupAffixData("data\SpellDamage_Amulets.txt", ItemLevel, CurrValue, "", CurrTier)
                 AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
@@ -4683,17 +4548,7 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
             Continue
         }
-        
-        ; Needs to come before maximum Mana
-        IfInString, A_LoopField, increased maximum Mana
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrMaximumMana.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        
+
         ; "Base Maximum Mana" (simple Prefix)
         ; "1H Spell Damage" / "Base Maximum Mana" (complex Prefix)
         ; "Staff Spell Damage" / "Base Maximum Mana" (complex Prefix)
@@ -4781,127 +4636,13 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
             Continue
         }
-        IfInString, A_LoopField, increased Melee Physical Damage while holding a Shield
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrMeleePhysDamageHoldingShield.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        IfInString, A_LoopField, increased Physical Weapon Damage while Dual Wielding
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysWeaponDamageDualWielding.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased Physical Damage
-        IfInString, A_LoopField, increased Physical Damage with Axes
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysicalDamageWithAxes.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased Physical Damage
-        IfInString, A_LoopField, increased Physical Damage with Bows
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysicalDamageWithBows.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased Physical Damage
-        IfInString, A_LoopField, increased Physical Damage with Claws
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysicalDamageWithClaws.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased Physical Damage
-        IfInString, A_LoopField, increased Physical Damage with Daggers
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysicalDamageWithDaggers.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased Physical Damage
-        IfInString, A_LoopField, increased Physical Damage with Maces
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysicalDamage_Maces.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased Physical Damage
-        IfInString, A_LoopField, increased Physical Damage with Staves
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysicalDamageWithStaves.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased Physical Damage
-        IfInString, A_LoopField, increased Physical Damage with Swords
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysicalDamageWithSwords.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased Physical Damage
-        IfInString, A_LoopField, increased Physical Damage with Two Handed Melee Weapons
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysicalDamage_Melee2H.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased Physical Damage
-        IfInString, A_LoopField, increased Physical Damage with One Handed Melee Weapons
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysicalDamage1HMelee.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
-        ; Needs to come before pure increased Physical Damage
-        IfInString, A_LoopField, increased Physical Damage with Wands
-        {
-            ; Only valid for Jewels at this time
-            NumPrefixes += 1
-            ValueRange := LookupAffixData("data\IncrPhysicalDamageWands.txt", ItemLevel, CurrValue, "", CurrTier)
-            AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-            Continue
-        }
+		
         ; "Local Physical Damage +%" (simple Prefix) 
         ; "Local Physical Damage +%" / "Local Accuracy Rating" (complex Prefix)
         ; - on Weapons (local)and Jewels (global)
         ; - needs to come before Accuracy Rating stuff (!)
         IfInString, A_LoopField, increased Physical Damage
         {
-            If (Item.IsJewel) {
-                ; On jewels Increased Physical Damage is always a simple suffixes
-                ; To prevent prefixes on jewels triggering the code below we handle jewels here and than continue to the next affix
-                NumPrefixes += 1
-                ValueRange := LookupAffixData("data\IncrPhysDamage_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-                Continue
-            }
-            
             AffixType := "Prefix"
             IPDPath := "data\IncrPhysDamage.txt"
             If (HasToAccuracyRating)
@@ -5041,7 +4782,7 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
             Continue
 
-       SimpleIPDPrefix:
+        SimpleIPDPrefix:
             NumPrefixes += 1
             ValueRange := LookupAffixData("data\IncrPhysDamage.txt", ItemLevel, CurrValue, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
@@ -5062,15 +4803,6 @@ ParseAffixes(ItemDataAffixes, Item)
         
         IfInString, A_LoopField, increased Stun and Block Recovery
         {
-            If (Item.IsJewel) {
-                ; On jewels Stun Recovery is always a simple suffixes
-                ; To prevent prefixes on jewels triggering the code below we handle jewels here and than continue to the next affix
-                NumSuffixes += 1
-                ValueRange := LookupAffixData("data\StunRecovery_Suffix_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-                AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-                Continue
-            }
-            
             AffixType := "Prefix"
             If (HasHybridDefences)
             {
@@ -5531,10 +5263,6 @@ ParseAffixes(ItemDataAffixes, Item)
 
         IfInString, A_LoopField, increased Rarity
         {
-            ; Jewels have rarity only as a Suffix
-            If (Item.IsJewel) {
-                Goto, FinalizeIIRAsSuffix
-            }
             ActualValue := CurrValue
             If (NumSuffixes <= 3)
             {
@@ -5605,11 +5333,7 @@ ParseAffixes(ItemDataAffixes, Item)
 
             FinalizeIIRAsSuffix:
                 NumSuffixes += 1
-                If (Item.IsJewel) {
-                    ValueRange := LookupAffixData("data\IIR_Suffix_Jewels.txt", ItemLevel, CurrValue, "", CurrTier)
-                } Else {
-                    ValueRange := LookupAffixData("data\IIR_Suffix.txt", ItemLevel, ActualValue, "", CurrTier)
-                }
+                ValueRange := LookupAffixData("data\IIR_Suffix.txt", ItemLevel, ActualValue, "", CurrTier)
                 AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
                 Continue
 
@@ -5642,7 +5366,8 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(A_Loopfield, A_Index)
         }
     }
-    
+
+	
     ; --- COMPLEX AFFIXES JEWELS ---
     ; The plan was to use a recursive function to test all possible combinations in a way that could be easily adapted for any complex affix. 
     ; Unfortunately AutoHotkey doesn't like combining recursive functions and ByRef.  
@@ -5653,10 +5378,10 @@ ParseAffixes(ItemDataAffixes, Item)
             If (Item.Rarity == 2 or NumSuffixes == 1) {
                 ; On jewels with another suffix already or jewels that can only have 1 suffix (magic items) that single suffix must be the combined one
                 NumSuffixes += 1
-                ValueRange := LookupAffixData("data\CritChanceGlobal_Jewels_Acc.txt", ItemLevel, CAGlobalCritChance, "", CurrTier)
+                ValueRange := LookupAffixData("data\jewels\CritChanceGlobal_Jewels_Acc.txt", ItemLevel, CAGlobalCritChance, "", CurrTier)
                 AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Comp. Suffix", ValueRange, CurrTier), CAGlobalCritChanceAffixLineNo)
                 NextAffixPos += 1
-                ValueRange := LookupAffixData("data\IncrAccuracyRating_Jewels_Crit.txt", ItemLevel, CAIncAccuracy, "", CurrTier)
+                ValueRange := LookupAffixData("data\jewels\IncrAccuracyRating_Jewels_Crit.txt", ItemLevel, CAIncAccuracy, "", CurrTier)
                 AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Comp. Suffix", ValueRange, CurrTier), CAIncAccuracyAffixLineNo)
             } Else {
                 ; Item has both increased accuracy and global crit chance and can have 2 suffixes: complex affix possible
@@ -5745,18 +5470,18 @@ ParseAffixes(ItemDataAffixes, Item)
         } Else If (CAGlobalCritChance) {
             ; The item only has a global crit chance affix so it isn't complex
             NumSuffixes += 1
-            ValueRange := LookupAffixData("data\CritChanceGlobal_Jewels.txt", ItemLevel, CAGlobalCritChance, "", CurrTier)
+            ValueRange := LookupAffixData("data\jewels\CritChanceGlobal_Jewels.txt", ItemLevel, CAGlobalCritChance, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(CAGlobalCritChanceAffixLine, "Suffix", ValueRange, CurrTier), CAGlobalCritChanceAffixLineNo)
             NextAffixPos += 1
         } Else {
             ; The item only has an increased accuracy affix so it isn't complex
             NumSuffixes += 1
-            ValueRange := LookupAffixData("data\IncrAccuracyRating_Jewels.txt", ItemLevel, CAIncAccuracy, "", CurrTier)
+            ValueRange := LookupAffixData("data\jewels\IncrAccuracyRating_Jewels.txt", ItemLevel, CAIncAccuracy, "", CurrTier)
             AppendAffixInfo(MakeAffixDetailLine(CAIncAccuracyAffixLine, "Suffix", ValueRange, CurrTier), CAIncAccuracyAffixLineNo)
             NextAffixPos += 1
         }
-    }
-    
+    }	
+	
     AffixTotals.NumPrefixes := NumPrefixes
     AffixTotals.NumSuffixes := NumSuffixes
 }
@@ -6420,7 +6145,7 @@ ItemIsMirrored(ItemDataText)
 ;
 ParseItemData(ItemDataText, ByRef RarityLevel="")
 {    
-    Global Item, ItemData, AffixTotals, uniqueMapList, mapList, matchList, divinationCardList
+    Global Item, ItemData, AffixTotals, uniqueMapList, mapList, matchList, divinationCardList, gemQualityList
 
     ItemDataPartsIndexLast = 
     ItemDataPartsIndexAffixes = 
@@ -6764,6 +6489,20 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
         TT = %TT%`n%MapDescription%
     }
+	
+    If (Item.IsGem)
+    {
+        If (gemQualityList[Item.Name] != "")
+        {
+            GemQualityDescription := gemQualityList[Item.Name]
+        }
+        Else
+        {
+            GemQualityDescription := gemQualityList["Unknown Gem"]
+        }
+
+        TT := TT . "`nQuality 20%:`n" . GemQualityDescription
+    }
     
     If (RarityLevel > 1 and RarityLevel < 4) 
     {
@@ -6870,27 +6609,27 @@ GetNegativeAffixOffset(Item)
         ; so decrement item index to get to the item before last one
         NegativeAffixOffset := NegativeAffixOffset + 1
     }
-    If (Item.IsMap) 
+    If (Item.IsMap)
     {
         ; Maps have a descriptive text as the last item
         NegativeAffixOffset := NegativeAffixOffset + 1
     }
-    If (Item.IsJewel) 
+    If (Item.IsJewel)
     {
         ; Jewels, like maps and flask, have a descriptive text as the last item
         NegativeAffixOffset := NegativeAffixOffset + 1
     }
-    If (Item.HasEffect) 
+    If (Item.HasEffect)
     {
         ; Same with weapon skins or other effects
         NegativeAffixOffset := NegativeAffixOffset + 1
     }
-    If (Item.IsCorrupted) 
+    If (Item.IsCorrupted)
     {
         ; And corrupted items
         NegativeAffixOffset := NegativeAffixOffset + 1
     }
-    If (Item.IsMirrored) 
+    If (Item.IsMirrored)
     {
         ; And mirrored items
         NegativeAffixOffset := NegativeAffixOffset + 1
