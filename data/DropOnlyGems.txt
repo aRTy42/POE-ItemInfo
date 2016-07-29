@@ -1,8 +1,0 @@
-; One exact item name per line.
-; Line comments with semicolon. Blank lines will be ignored.
-Empower
-Enhance
-Enlighten
-Portal
-Added Chaos Damage
-Detonate Mines
