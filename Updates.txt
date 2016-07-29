@@ -1,6 +1,17 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.3.07
+================================
+from aRTy42
+New feature: Gem quality info. Full 20% quality effect and effect per quality point get displayed.
+Completely restructured jewels: Separated both the affix parsing code and the data files.
+	This change should have no visible impact ingame. Please report bugs if you notice any.
+Corrected a few value ranges and detection errors for jewels. Legacy Crit Multiplier for jewels in standard did not get a special
+	detection though, you will get something like "n/a (0) <new value range> T0" there.
+Added Tora crafts "increased Trap and Mine damage" and "increased Trap Throwing and Mine Laying Speed"
+Updated Divination Cards with wiki infos
+
 2.3.06
 ================================
 from aRTy42
