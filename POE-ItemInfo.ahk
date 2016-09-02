@@ -624,12 +624,12 @@ OpenMainDirFile(Filename)
 
 ParseAddedDamage(String, DmgType, ByRef DmgLo, ByRef DmgHi)
 {
-    If(RegExMatch(String, "Adds \d+\-\d+ " DmgType " Damage"))
+    If(RegExMatch(String, "Adds (\d+) to (\d+) " DmgType " Damage", Match))
     {
-        StringSplit, Arr, String, %A_Space%
-        StringSplit, Arr, Arr2, -
-        DmgLo := Arr1
-        DmgHi := Arr2
+        ;StringSplit, Arr, Match, %A_Space%
+        ;StringSplit, Arr, Arr2, -
+        DmgLo := Match1
+        DmgHi := Match2
     }
 }
 
@@ -1986,7 +1986,8 @@ GetAffixTypeFromProcessedLine(PartialAffixString)
 ; that can be used in calculations.
 GetActualValue(ActualValueLine)
 {
-    Result := RegExReplace(ActualValueLine, ".*?\+?(\d+(?:-\d+|\.\d+)?).*", "$1")
+    Result := RegExReplace(ActualValueLine, ".*?\+?(\d+(?: to \d+|\.\d+)?).*", "$1")
+	StringReplace, Result, Result, %A_SPACE%to%A_SPACE%, -
     return Result
 }
 
@@ -3937,7 +3938,7 @@ ParseAffixes(ItemDataAffixes, Item)
             AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
             Continue
         }
-        If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Physical Damage")
+        If RegExMatch(A_LoopField, "Adds \d+? to \d+? Physical Damage")
         {
             If (ItemBaseType == "Weapon")
             {
@@ -3997,10 +3998,10 @@ ParseAffixes(ItemDataAffixes, Item)
             NumPrefixes += 1
             Continue
         }
-        If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Cold Damage") 
+        If RegExMatch(A_LoopField, "Adds \d+? to \d+? Cold Damage") 
         {
 	    ; Slinkston edit: Thanks to Moth1 on the forums for the suggestion of nesting the ele dmg and ele dmg to spells!
-            If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Cold Damage to Spells")
+            If RegExMatch(A_LoopField, "Adds \d+? to \d+? Cold Damage to Spells")
 	    {
 		If (ItemGripType == "1H")
 		{
@@ -4047,10 +4048,10 @@ ParseAffixes(ItemDataAffixes, Item)
             NumPrefixes += 1
             Continue
         }
-        If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Fire Damage") 
+        If RegExMatch(A_LoopField, "Adds \d+? to \d+? Fire Damage") 
         {
 	    ; Slinkston edit: Thanks to Moth1 on the forums for the suggestion of nesting the ele dmg and ele dmg to spells!
-            If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Fire Damage to Spells")
+            If RegExMatch(A_LoopField, "Adds \d+? to \d+? Fire Damage to Spells")
 	    {
 		If (ItemGripType == "1H")
 		{
@@ -4098,10 +4099,10 @@ ParseAffixes(ItemDataAffixes, Item)
             NumPrefixes += 1
             Continue
         }
-        If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Lightning Damage")
+        If RegExMatch(A_LoopField, "Adds \d+? to \d+? Lightning Damage")
         {
 	    ; Slinkston edit: Thanks to Moth1 on the forums for the suggestion of nesting the ele dmg and ele dmg to spells!
-            If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Lightning Damage to Spells")
+            If RegExMatch(A_LoopField, "Adds \d+? to \d+? Lightning Damage to Spells")
 	    {
 		If (ItemGripType == "1H")
 		{
@@ -4149,7 +4150,7 @@ ParseAffixes(ItemDataAffixes, Item)
             Continue
         }
         
-        If RegExMatch(A_LoopField, "Adds \d+?\-\d+? Chaos Damage") 
+        If RegExMatch(A_LoopField, "Adds \d+? to \d+? Chaos Damage") 
         {
             If (ItemGripType == "1H")
             {
@@ -6467,7 +6468,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
             CardDescription := divinationCardList["Unknown Card"]
         }
 
-        TT := TT . "`n--------`n" . CardDescription
+        TT := TT . "`n--------`nOLD PRE-ATLAS INFORMATION`n" . CardDescription
     }
 
     If (Item.IsMap)
@@ -6487,7 +6488,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
             MapDescription := mapList[Item.SubType]
         }
 
-        TT = %TT%`n%MapDescription%
+        TT = %TT%`nOLD PRE-ATLAS INFORMATION`n%MapDescription%
     }
 	
     If (Item.IsGem)
@@ -7678,4 +7679,4 @@ TogglePOEItemScript()
 
 Pause::TogglePOEItemScript()
 
-#Include AdditionalMacros.txt
+#Include %A_ScriptDir%/AdditionalMacros.txt
