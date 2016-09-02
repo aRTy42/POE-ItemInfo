@@ -1,6 +1,13 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.4.00
+================================
+from aRTy42
+Basic support for the new value range format ("#-#" was changed to "# to #"). The script will continue to display its results as before.
+Map and Divination card information was not updated yet. This will follow in a few days once there is enough on the wiki.
+Fixed how the "AdditionalMacros" file was included to support shortcuts to the script from the start menu and task bar.
+
 2.3.07
 ================================
 from aRTy42
