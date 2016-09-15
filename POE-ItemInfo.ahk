@@ -6468,16 +6468,18 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
             CardDescription := divinationCardList["Unknown Card"]
         }
 
-        TT := TT . "`n--------`nOLD PRE-ATLAS INFORMATION`n" . CardDescription
+        TT := TT . "`n--------`n" . CardDescription
     }
 
     If (Item.IsMap)
     {
+		/*
 		Item.MapLevel := ParseMapLevel(ItemDataText)
 			
 		;;hixxie fixed
 		MapLevelText := Item.MapLevel
 		TT = %TT%`nMap Level: %MapLevelText%
+		*/
 		
         If (Item.IsUnique)
         {
@@ -6488,7 +6490,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
             MapDescription := mapList[Item.SubType]
         }
 
-        TT = %TT%`nOLD PRE-ATLAS INFORMATION`n%MapDescription%
+        TT = %TT%`n%MapDescription%
     }
 	
     If (Item.IsGem)
