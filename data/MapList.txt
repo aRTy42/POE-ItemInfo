@@ -35,7 +35,7 @@ mapList["Channel Map"] := "Tier: 3, Level: 70, Atlas position: top left`nTileset
 
 mapList["Grotto Map"] := "Tier: 3, Level: 70, Atlas position: right`nTileset: Caverns`n`nUpgrades to: Villa Map`nConnected to: Oasis Map`n`nDivination cards:`n- The Gambler`n- Her Mask`n- Hope`n- Hunter's Reward`n- Rain Tempter`n- Treasure Hunter"
 
-mapList["Marshes Map"] := "Tier: 3, Level: 70, Atlas position: left`nTileset: `n`nUpgrades to: Vaal Pyramid Map`nConnected to: Beach Map`n`nDivination cards:`n- Death"
+mapList["Marshes Map"] := "Tier: 3, Level: 70, Atlas position: left`nTileset: `n`nUpgrades to: Vaal Pyramid Map (same tier)`nConnected to: Beach Map`n`nDivination cards:`n- Death"
 
 mapList["Sewer Map"] := "Tier: 3, Level: 70, Atlas position: bottom right`nTileset: Sewers`n`nProduced by: Ghetto Map`nUpgrades to: Graveyard Map`n`nDivination cards:`n- The Feast`n- The Gambler`n- Her Mask`n- The Throne"
 
@@ -116,18 +116,18 @@ mapList["Arachnid Nest Map"] := "Tier: 8, Level: 75, Atlas position: top left`nT
 
 mapList["Arena Map"] := "Tier: 8, Level: 75, Atlas position: bottom right`nTileset: The Grand Arena (Indoors / Outdoors)`n`nUpgrades to: Orchard Map`nConnected to: Armory Map`n`nDivination cards:`n- The Arena Champion`n- The Gambler`n- The Gladiator`n- Her Mask`n- The Visionary"
 
-mapList["Atoll Map"] := "Tier: 8, Level: 75, Atlas position: right`nTileset: The Ledge (Outdoors)`n`nProduced by: Armory Map, Pier Map`nUpgrades to: Temple Map`n`nUnique version of map: Maelström of Chaos`n`nDivination cards:`n- The Gambler`n- Her Mask"
+mapList["Atoll Map"] := "Tier: 8, Level: 75, Atlas position: right`nTileset: The Ledge (Outdoors)`n`nProduced by: Armory Map, Pier Map (not connected)`nUpgrades to: Temple Map`n`nUnique version of map: Maelström of Chaos`n`nDivination cards:`n- The Gambler`n- Her Mask"
 
 ;Maelström of Chaos
 uniqueMapList["Atoll Map"] := "Tier: 8, Level: 75, Atlas position: right`nTileset: The Ledge (Outdoors)`n`nDivination cards:`n- The Gambler`n- The Lover`n- The Siren"
 
 mapList["Barrows Map"] := "Tier: 8, Level: 75, Atlas position: top`nTileset:  (Outdoors/indoors)`n`nUpgrades to: Promenade Map`nConnected to: Cells Map, Bog Map"
 
-mapList["Bog Map"] := "Tier: 8, Level: 75, Atlas position: top right`nTileset: Fetid Pool (Outdoor)`n`nUpgrades to: Crypt Map`nConnected to: Barrows Map, Cemetery Map, Castle Ruins Map`n`nDivination cards:`n- Death`n- The Gambler`n- Her Mask"
+mapList["Bog Map"] := "Tier: 8, Level: 75, Atlas position: top right`nTileset: Fetid Pool (Outdoor)`n`nUpgrades to: Crypt Map (not connected)`nConnected to: Barrows Map, Cemetery Map, Castle Ruins Map`n`nDivination cards:`n- Death`n- The Gambler`n- Her Mask"
 
 mapList["Cemetery Map"] := "Tier: 8, Level: 75, Atlas position: top right`nTileset: Fellshrine Ruins (Outdoors)`n`nProduced by: Castle Ruins Map`nUpgrades to: Crypt Map`nConnected to: Bog Map`n`nDivination cards:`n- The Gambler`n- Her Mask`n- The Soul"
 
-mapList["Pier Map"] := "Tier: 8, Level: 75, Atlas position: right`nTileset: The Docks (Outdoors)`n`nProduced by: Mud Geyser Map`nUpgrades to: Atoll Map`nConnected to: Armory Map`n`nDivination cards:`n- The Gambler`n- Her Mask`n- Lucky Connections"
+mapList["Pier Map"] := "Tier: 8, Level: 75, Atlas position: right`nTileset: The Docks (Outdoors)`n`nProduced by: Mud Geyser Map`nUpgrades to: Atoll Map (same tier; not connected)`nConnected to: Armory Map`n`nDivination cards:`n- The Gambler`n- Her Mask`n- Lucky Connections"
 
 mapList["Shore Map"] := "Tier: 8, Level: 75, Atlas position: bottom left`nTileset: The Coast (Outdoors)`n`nProduced by: Catacombs Map`nUpgrades to: Coves Map`nConnected to: Arachnid Tomb Map`n`nDivination cards:`n- The Gambler`n- Her Mask`n- The Inoculated`n- Prosperity`n- The Road to Power"
 
@@ -135,7 +135,7 @@ mapList["Tropical Island Map"] := "Tier: 8, Level: 75, Atlas position: bottom le
 
 mapList["Coves Map"] := "Tier: 9, Level: 76, Atlas position: bottom left`nTileset: The Coves (Outdoors)`n`nProduced by: Shore Map, Tropical Island Map`nUpgrades to: Quay Map`n`nDivination cards:`n- The Gambler`n- Her Mask`n- The Mercenary`n- Scholar of the Seas`n- The Vast"
 
-mapList["Crypt Map"] := "Tier: 9, Level: 76, Atlas position: top`nTileset: Crypt`n`nProduced by: Cemetery Map, Bog Map`nUpgrades to: Arsenal Map`nConnected to: Museum Map`n`nUnique version of map: The Coward's Trial`n`nDivination cards:`n- The Celestial Justicar`n- The Gambler`n- Her Mask`n- Hope"
+mapList["Crypt Map"] := "Tier: 9, Level: 76, Atlas position: top`nTileset: Crypt`n`nProduced by: Cemetery Map, Bog Map (not connected)`nUpgrades to: Arsenal Map`nConnected to: Museum Map`n`nUnique version of map: The Coward's Trial`n`nDivination cards:`n- The Celestial Justicar`n- The Gambler`n- Her Mask`n- Hope"
 
 ;The Coward's Trial
 uniqueMapList["Crypt Map"] := "Tier: 9, Level: 76, Atlas position: top`nTileset: Crypt (Indoors)`n`nDivination cards:`n- The Gambler`n- Hope`n- The Summoner"
@@ -145,7 +145,7 @@ mapList["Museum Map"] := "Tier: 9, Level: 76, Atlas position: top`nTileset: Libr
 ;The Putrid Cloister
 uniqueMapList["Museum Map"] := "Tier: 9, Level: 76, Atlas position: top`nTileset: "
 
-mapList["Orchard Map"] := "Tier: 9, Level: 76, Atlas position: bottom right`nTileset: The Imperial Gardens`n`nProduced by: Arena Map`nUpgrades to: Temple Map`n`nDivination cards:`n- Emperor's Luck`n- The Gambler`n- The Road to Power`n- The Trial"
+mapList["Orchard Map"] := "Tier: 9, Level: 76, Atlas position: bottom right`nTileset: The Imperial Gardens`n`nProduced by: Arena Map`nUpgrades to: Temple Map (same tier)`n`nDivination cards:`n- Emperor's Luck`n- The Gambler`n- The Road to Power`n- The Trial"
 
 mapList["Overgrown Shrine Map"] := "Tier: 9, Level: 76, Atlas position: top left`nTileset: Chamber of Sins (Indoors)`n`nProduced by: Arachnid Nest Map`nUpgrades to: Terrace Map`nConnected to: Arachnid Nest Map, Terrace Map`n`nUnique version of map: Acton's Nightmare`n`nDivination cards:`n- The Artist`n- The Gambler`n- Her Mask`n- The Sigil`n- Emperor of Purity"
 
@@ -220,7 +220,7 @@ uniqueMapList["Necropolis Map"] := "Tier: 12, Level: 79, Atlas position: bottom 
 
 mapList["Plateau Map"] := "Tier: 12, Level: 79, Atlas position: bottom left`nTileset: The Ledge (Outdoors)`n`nProduced by: Residence Map`nUpgrades to: Scriptorium Map`nConnected to: Precinct Map`n`nDivination cards:`n- The Gambler`n- The Rabid Rhoa`n- The Trial"
 
-mapList["Residence Map"] := "Tier: 12, Level: 79, Atlas position: bottom left`nTileset: The Sceptre of God (Indoors)`n`nProduced by: Torture Chamber Map`nUpgrades to: Plateau Map`n`nDivination cards:`n- The Conduit`n- The Dapper Prodigy`n- The Gambler`n- Light and Truth`n- The Tower`n- The Trial`n- The Twins"
+mapList["Residence Map"] := "Tier: 12, Level: 79, Atlas position: bottom left`nTileset: The Sceptre of God (Indoors)`n`nProduced by: Torture Chamber Map`nUpgrades to: Plateau Map (same tier)`n`nDivination cards:`n- The Conduit`n- The Dapper Prodigy`n- The Gambler`n- Light and Truth`n- The Tower`n- The Trial`n- The Twins"
 
 mapList["Shipyard Map"] := "Tier: 12, Level: 79, Atlas position: left`nTileset: The Docks (Outdoors)`n`nProduced by: Bazaar Map`nUpgrades to: Waterways Map`nConnected to: High Gardens Map`n`nDivination cards:`n- The Gambler`n- Lucky Connections`n- The Pact"
 
@@ -260,13 +260,13 @@ mapList["Colosseum Map"] := "Tier: 15, Level: 82, Atlas position: bottom left`nT
 
 mapList["Core Map"] := "Tier: 15, Level: 82, Atlas position: top right`nTileset: The Harvest (Indoors)`n`nProduced by: Volcano Map`nUpgrades to: Forge of the Phoenix Map`n`nDivination cards:`n- The Aesthete`n- The Offering`n- Doedre's Madness`n- The Gambler`n- The Surveyor"
 
-mapList["Dark Forest Map"] := "Tier: 15, Level: 82, Atlas position: left`nTileset: Western Forest (Outdoors)`n`nProduced by: Palace Map`nUpgrades to: Lair of the Hydra Map`nConnected to: Overgrown Ruin Map`n`nDivination cards:`n- The Dragon`n- The Gambler`n- The Pack Leader`n- The Road to Power"
+mapList["Dark Forest Map"] := "Tier: 15, Level: 82, Atlas position: left`nTileset: Western Forest (Outdoors)`n`nProduced by: Palace Map`nUpgrades to: Lair of the Hydra Map (not connected)`nConnected to: Overgrown Ruin Map`n`nDivination cards:`n- The Dragon`n- The Gambler`n- The Pack Leader`n- The Road to Power"
 
 mapList["Overgrown Ruin Map"] := "Tier: 15, Level: 82, Atlas position: top left`nTileset: Chamber of Sins (Indoors)`n`nProduced by: Springs Map`nUpgrades to: Lair of the Hydra Map`nConnected to: Dark Forest Map`n`nDivination cards:`n- The Artist`n- The Dark Mage`n- Emperor of Purity`n- The Gambler"
 
 mapList["Forge of the Phoenix Map"] := "Tier: 16, Level: 83, Atlas position: top right`nTileset: `n`nProduced by: Core Map"
 
-mapList["Lair of the Hydra Map"] := "Tier: 16, Level: 83, Atlas position: top left`nTileset: `n`nProduced by: Overgrown Ruin Map, Dark Forest Map"
+mapList["Lair of the Hydra Map"] := "Tier: 16, Level: 83, Atlas position: top left`nTileset: `n`nProduced by: Overgrown Ruin Map, Dark Forest Map (not connected)"
 
 mapList["Maze of the Minotaur Map"] := "Tier: 16, Level: 83, Atlas position: bottom right`nTileset: `n`nProduced by: Abyss Map"
 
