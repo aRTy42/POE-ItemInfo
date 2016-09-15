@@ -1,6 +1,14 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.4.01
+================================
+from aRTy42
+Compiled new map info from various sources, see the forum thread for details.
+Updated Divinations cards with wiki information.
+Uniques not updated yet, because there are lots of things to fix and holding back
+	the map update until everything is done seemed stupid.
+
 2.4.00
 ================================
 from aRTy42
