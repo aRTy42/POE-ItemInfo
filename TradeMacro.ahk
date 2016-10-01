@@ -197,15 +197,18 @@ FunctionParseHtml(html, payload)
     ; TODO: grab more data like corruption found inside <tbody>
     
 	; TODO refactor this
+	Title := Item.Name
 	if (Item.IsGem) {
-		Text := Item.Name " " Item.Quality "%`n ---------- `n"
+		Title := Item.Name " " Item.Quality "%"
 		if (Item.Level >= 16) {
-			Text := Item.Name " " Item.Level "/" Item.Quality "`n ---------- `n"
+			Title := Item.Name " " Item.Level "`/" Item.Quality
 		}
 	}
     if (ItemData.Sockets >= 5) {
-		Text := Item.Name " " Item.Sockets "s" Item.Links "l`n ---------- `n"
+		Title := Item.Name " " Item.Sockets "s" Item.Links "l"
 	}
+	
+	Title .= "`n ---------- `n"
 
     ; Text .= StrX( html,  "<tbody id=""item-container-0",          N,0, "<tr class=""first-line"">",1,28, N )
 
@@ -217,9 +220,9 @@ FunctionParseHtml(html, payload)
         , IGN         := StrX( Item,  "data-ign=""",                              T,10, """"  ,                      1,1     )
         ;, Text .= StrPad(IGN, 30) StrPad(AccountName, 30) StrPad(Buyout,30) "`n"
         ;, Text .= StrPad(IGN,20) StrPad(Buyout,20,"left") "`n"
-        , Text .= StrPad(IGN,20) StrPad(Buyout,20,"left")"`n"
+        , Title .= StrPad(IGN,20) StrPad(Buyout,20,"left")"`n"
     
-    Return, Text
+    Return, Title
 }
 
 ; ------------------------------------------------------------------------------------------------------------------ ;
