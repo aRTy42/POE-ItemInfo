@@ -6,6 +6,7 @@
 ; Several entries were then adjusted manually
 
 
+;Amulet
 The Ascetic|@12-20:Increased Rarity Of Items Found|80-100:Increased Rarity Of Items Found With A Normal Item Equipped|10-15:Increased Quantity Of Items Found With A Magic Item Equipped
 The Anvil|@20-30:To Strength|10:Reduced Attack Speed|10:Reduced Cast Speed|400-500:To Armour|34-48:Life Gained When You Block|10-24:Mana Gained When You Block|10:Reduced Movement Speed|3:To Maximum Block Chance|8:Chance To Block|240-300:Reflects Physical Damage To Attackers On Block
 Araku Tiki|@2-4:Life Regenerated Per Second|100:You Gain Evasion Rating When On Low Life|30-50:To Maximum Life|20-30:To Fire Resistance|1:Of Life Regenerated Per Second While On Low Life
@@ -20,6 +21,7 @@ Daresso's Salute|@16-24:To Strength And Dexterity|50:Reduced Maximum Energy Shie
 Demigod's Presence|@12-20:Increased Rarity Of Items Found|20:To All Elemental Resistances|20:Increased Character Size
 Extractor Mentis|@16-24:To Strength And Intelligence|30-50:To Strength|5:Chance To Grant Unholy Might To Nearby Enemies On Kill|5:Chance To Grant Onslaught To Nearby Enemies On Kill|5:Chance To Gain Unholy Might For Seconds On Kill|5:Chance To Gain Onslaught For Seconds On Kill|1:Recover Of Maximum Life On Kill
 Eye of Chayula|@10-16:To All Attributes|20:Reduced Maximum Life|30:Increased Rarity Of Items Found|Cannot Be Stunned
+Eye of Innocence|@16-24:To Strength and Dexterity|10:Chance to Ignite|50-70:Increased Damage while Ignited|100:Take Fire Damage when you Ignite an Enemy|2:Of Fire Damage Leeched as Life while Ignited
 Eyes of the Greatwolf|@<Style Variant>|Implicit Modifier Magnitudes Are Doubled
 Hinekora's Sight|@10-16:To All Attributes|1000:To Accuracy Rating|6-10:Chance To Dodge Attacks|6-10:Chance To Dodge Spell Damage|Cannot Be Blinded
 The Ignomon|@12-20:Increased Rarity Of Items Found|10:To Dexterity|12-24:Adds Fire Damage To Attacks|100-150:To Accuracy Rating|100-150:To Evasion Rating|20:To Fire Resistance
@@ -42,6 +44,9 @@ Victario's Acuity|@16-24:To Dexterity And Intelligence|30-40:To Lightning Resist
 Voll's Devotion|@16-24:To Strength And Intelligence|30-40:To Maximum Life|20-30:To Maximum Energy Shield|15-20:To All Elemental Resistances|30:Reduced Endurance Charge Duration|30:Reduced Power Charge Duration|Gain An Endurance Charge When A Power Charge Expires Or Is Consumed
 Warped Timepiece|@16-24:To Dexterity And Intelligence|8-12:Increased Attack Speed|8-12:Increased Cast Speed|12:Increased Movement Speed|8-12:Reduced Skill Effect Duration|30:Increased Life Leech Rate|30:Increased Mana Leech Rate
 Winterheart|@12-20:Increased Rarity Of Items Found|20-30:To Dexterity|50-70:To Maximum Life|75:To Cold Resistance|Cannot Be Chilled|20:Of Life Regenerated Per Second While Frozen
+
+
+;Belt
 Ascent From Flesh|@9-20:To Maximum Energy Shield|300:To Evasion Rating|35-45:To Energy Shield|10-15:To Elemental Resistances|You Have Phasing If Energy Shield Recharge Has Started Recently|6:Chance To Dodge Attacks While Phasing|10:Increased Movement Speed While Phasing
 Auxium|@9-20:To Maximum Energy Shield|10-20:Increased Elemental Damage With Weapons|45-55:To Maximum Mana|60-70:To Maximum Energy Shield|0.2:Of Physical Attack Damage Leeched As Mana Per Power Charge|65:Chill And Freeze Duration On You Is Based On Of Energy Shield
 Bated Breath|@9-20:To Maximum Energy Shield|10:Increased Damage|15-25:To Intelligence|20-30:To Maximum Energy Shield|50:Increased Energy Shield Recharge Rate
@@ -64,6 +69,9 @@ Soulthirst|@15-25:Increased Stun Recovery|60-80:To Maximum Life|15:To All Elemen
 Sunblast|@15-25:Increased Stun Recovery|30-40:Increased Trap Damage|20:Increased Mana Regeneration Rate|20-30:To Fire Resistance|80:Reduced Trap Duration|25:Increased Light Radius|Traps Trigger At The End Of Their Duration
 Umbilicus Immortalis|@25-40:To Maximum Life|8-12:Increased Maximum Life|2:Of Life Regenerated Per Second|Flasks Do Not Apply To You|Flasks Apply To Your Zombies And Spectres
 Wurm's Molt|@25-40:To Maximum Life|20-30:To Strength|20-30:To Intelligence|10-20:To Cold Resistance|0.4:Of Physical Attack Damage Leeched As Life|0.4:Of Physical Attack Damage Leeched As Mana
+
+
+;Ring
 Andvarius|@6-15:Increased Rarity Of Items Found|10:To Dexterity|50-70:Increased Rarity Of Items Found|-20:To All Elemental Resistances
 Berek's Grip|@12-16:To Cold And Lightning Resistances|10-15:Increased Cold Damage|1-1,1-50:Adds Lightning Damage To Attacks|30-40:To Maximum Life|1:Of Damage Against Frozen Enemies Leeched As Life|1:Of Damage Against Shocked Enemies Leeched As Mana
 Berek's Pass|@12-16:To Fire And Cold Resistances|10-15:Increased Fire Damage|1-10,1-30:Adds Cold Damage To Attacks|30-40:To Maximum Energy Shield|30:Increased Damage While Ignited|5000:To Armour While Frozen
@@ -92,19 +100,27 @@ Mutewind Seal|@1:Has Socket|2:To Level Of Socketed Golem Gems|13:Socketed Gems A
 Ngamahu's Sign|@20-30:To Fire Resistance|15-25:To Strength|8-12,10-14:Adds Fire Damage To Attacks|4-5:Life Gained For Each Ignited Enemy Hit By Your Attacks|15:Increased Ignite Duration On Enemies|5:Chance To Ignite
 The Pariah|@1:Has Socket|2:To Level Of Socketed Gems|5-10:Increased Attack And Cast Speed|100:To Maximum Life Per Red Socket|100:To Maximum Energy Shield Per Blue Socket|100:To Maximum Mana Per Green Socket|15:Increased Item Quantity Per White Socket
 Perandus Signet|@20-25:To Maximum Mana|25-30:To Maximum Mana|45-65:Increased Mana Regeneration Rate|2:Increased Experience Gain|2:Increased Intelligence For Each Unique Item You Have Equipped|3:Additional Chance For Slain Monsters To Drop Scrolls Of Wisdom
+Praxis|@20-25:To maximum Mana|30-60:To maximum Mana|3-6:Mana Regenerated per second|-8–-4:To Mana Cost of Skills|8:Of Damage taken gained as Mana when Hit
 Pyre|@20-30:To Cold Resistance|25-35:To Fire Resistance|25-35:Increased Burning Damage|100:Of Cold Damage Converted To Fire Damage|10:Increased Light Radius|Ignited Enemies You Hit Are Destroyed On Kill
 Redblade Band|@1:Has Socket|2:To Level Of Socketed Golem Gems|30-40:To Strength|8-20,12-30:Adds Fire Damage To Attacks|20-30:Increased Fire Damage|12:Socketed Gems Are Supported By Level Lesser Multiple Projectiles|17:Socketed Gems Are Supported By Level Increased Minion Damage
 Rigwald's Crest|@12-16:To Fire And Cold Resistances|20-30:Increased Fire Damage|20-30:Increased Cold Damage|20-30:Increased Mana Regeneration Rate|5:Chance To Summon A Spectral Wolf On Kill
 Romira's Banquet|@20-30:Increased Global Critical Strike Chance|333:To Accuracy Rating|15-25:To Global Critical Strike Multiplier|40-60:To Maximum Mana|0.4:Of Physical Attack Damage Leeched As Mana|Gain A Power Charge On Non-Critical Strike|Lose All Power Charges On Critical Strike
 Shavronne's Revelation|@15-25:To Maximum Energy Shield|60-75:To Intelligence|Right Ring Slot: You Cannot Regenerate Mana|3:Right Ring Slot: Of Energy Shield Regenerated Per Second|100:Left Ring Slot: Increased Mana Regeneration Rate|Left Ring Slot: You Cannot Recharge Or Regenerate Energy Shield
 Sibyl's Lament|@20-30:To Maximum Life|20-30:Increased Elemental Damage With Weapons|8-20,15-28:Adds Fire Damage To Attacks|10-20:Reduced Rarity Of Items Found|30:Left Ring Slot: Reduced Reflected Elemental Damage Taken|30:Right Ring Slot: Reduced Reflected Physical Damage Taken
+Snakepit|@20-30:To Cold Resistance|20-40:Increased Cold Damage|5-10:Increased Cast Speed|Spells have an additional Projectile
 The Taming|@8-10:To All Elemental Resistances|10:Increased Damage Per Freeze, Shock And Ignite On Enemy|15:Increased Elemental Damage With Weapons|10-15:To All Elemental Resistances|15:Increased Elemental Damage|5:Chance To Freeze, Shock And Ignite
 Tasalio's Sign|@20-30:To Cold Resistance|10-15:Adds Physical Damage To Attacks Against Frozen Enemies|5-7,6-9:Adds Cold Damage To Attacks|200-300:To Evasion Rating|20:Reduced Chill Duration On You|5:Chance To Freeze
 Thief's Torment|@8-10:To All Elemental Resistances|10-16:Increased Quantity Of Items Found|Can't Use Other Rings|8-12:To All Elemental Resistances|50:Reduced Effect Of Curses On You|20-30:Life Gained For Each Enemy Hit By Your Attacks|15:Mana Gained For Each Enemy Hit By Your Attacks
 Timeclasp|@15-25:To Maximum Energy Shield|10-15:Increased Attack Speed|5-8:Increased Cast Speed|15:Reduced Mana Regeneration Rate|10-25:To Maximum Energy Shield|30:Temporal Chains Has Reduced Effect On You
 Valako's Sign|@20-30:To Lightning Resistance|15:Increased Damage Against Shocked Enemies|20:Increased Lightning Damage|20-40:To Maximum Mana|0.2:Of Damage Leeched As Life Against Shocked Enemies|5:Chance To Shock
+Valyrium|@15-25:To maximum Energy Shield|10-20:To maximum Energy Shield|20-30:To Fire Resistance|-40:To Cold Resistance|Stun Threshold is based on Energy Shield instead of Life
 Ventor's Gamble|@6-15:Increased Rarity Of Items Found|0-60:To Maximum Life|-10–+10:Increased Quantity Of Items Found|-40–+40:Increased Rarity Of Items Found|-25–+50:To Fire Resistance|-25–+50:To Cold Resistance|-25–+50:To Lightning Resistance
 Voideye|@1:Has Socket|5:To Level Of Socketed Gems
+Voidheart|@1-4:Adds Physical Damage To Attacks|5:Increased Physical Damage|1-3:Adds Chaos Damage To Attacks|20-30:To Maximum Life|2-4:Life Regenerated Per Second|10:Chance To Cause Monsters To Flee|30-50:Melee Attacks have chance to cause Bleeding|20-40:Melee Attacks have chance to Poison on Hit
+The Warden's Brand|@1-4:Adds Physical Damage to Attacks|5-15,25-50:Adds Physical Damage to Attacks|30:Reduced Attack Speed|15:Chance to gain a Frenzy Charge when you Stun an Enemy
+
+
+;Quiver
 Asphyxia's Wrath|@20-30:Increased Accuracy Rating|8-12:Increased Attack Speed|30-40:To Cold Resistance|30-40:Increased Chill Duration On Enemies|20:Of Physical Damage Converted To Cold Damage|7-10:Chance To Freeze|40:Reduced Radius Of Curses|Curses On Slain Enemies Are Transferred To A Nearby Enemy
 Blackgleam|@4-8:Adds Fire Damage To Attacks With Bows|10:Increased Attack Speed|80-100:To Evasion Rating|10-30:To Maximum Mana|50:Of Physical Damage Converted To Fire Damage|5-10:Adds Fire Damage To Attacks With Bows
 Cragfall|@1-4:Adds Physical Damage To Attacks With Bows|20-25:Reduced Enemy Stun Threshold|25:Reduced Projectile Speed|60-80:Increased Stun Duration On Enemies|6-10:Adds Physical Damage To Attacks With Bows|50:Chance To Double Stun Duration
@@ -120,6 +136,10 @@ Skirmish|@20-30:Increased Accuracy Rating|15-25:To Intelligence|30-50:To Maximum
 Slivers of Providence|@1-4:Adds Physical Damage With Bows|10:To All Elemental Resistance|50:Increased Duration Of Elemental Status Ailments On Enemies|10:Chance To Freeze, Shock, Or Ignite|25:Gain Of Bow Physical Damage As Extra Damage Of An Element
 Soul Strike|@20-30:Increased Global Critical Strike Chance|30:To Dexterity|13-26,18-32:Adds Chaos Damage To Attacks|8-12:Increased Attack Speed|100-120:To Maximum Energy Shield|40:Reduced Energy Shield Recharge Rate|150:Faster Start Of Energy Shield Recharge
 Broadstroke|@1-4:Adds Physical Damage To Attacks|30:Increased Physical Damage|10-15:Reduced Enemy Stun Threshold|20-30:Increased Stun Duration On Enemies
+
+
+;Body Armour
+The Brass Dome|30:Reduced Chance to Block Attacks and Spells|600-650:Increased Armour|10:Reduced Movement Speed|50:Increased Shock Duration on You|Take no Extra Damage from Critical Strikes
 Bramblejack|2-4:Adds Physical Damage To Attacks|12-20:To Maximum Life|-2:Physical Damage Taken From Attacks|40:Of Melee Physical Damage Taken Reflected To Attacker
 Death's Oath|@8-12:To All Elemental Resistances|40-50:To All Attributes|10-15:Increased Attack Speed|180-220:Increased Armour|1:Of Physical Attack Damage Leeched As Life|450:Deals Chaos Damage Per Second To Nearby Enemies|450:You Take Chaos Damage Per Second For Seconds On Kill|Gore Footprints
 Greed's Embrace|10-15:Increased Quantity Of Items Found|30-50:Increased Rarity Of Items Found|-10:To Fire Resistance|20-30:To Cold Resistance|-20:To Lightning Resistance|20:Reduced Movement Speed|30:Reduced Strength Requirement
@@ -165,6 +185,9 @@ Thousand Ribbons|5:Socketed Gems Are Supported By Level Elemental Proliferation|
 Victario's Influence|1:To Level Of Socketed Aura Gems|20:Socketed Gems Have Reduced Mana Reservation|1:Socketed Gems Are Supported By Level Generosity|120-150:Increased Evasion And Energy Shield|10-20:Increased Radius Of Auras|10-15:Increased Effect Of Non-Curse Auras You Cast
 Atziri's Splendour|20-24:To All Elemental Resistances|100:Life Gained On Kill|100:Mana Gained On Kill||<Style Variants>| -1 of 7 Def Variants- |380-420:Increased Armour|380-420:Increased Evasion Rating|270-300:Increased Energy Shield|200-220:Incr. Armour And Energy Shield|200-220:Incr. Evasion Rating And Armour|200-220:Incr. Evasion And Energy Shield|270-340:Incr. Armour, Evasion And Energy Shield|| -Life or ES- |(Not if triple Prot Variant)|90-100:To Maximum Life|90-100:To Maximum Energy Shield
 Demigod's Dominance|@15-25:To All Elemental Resistances|1:To Level Of Socketed Gems|30-50:To All Attributes
+
+
+;Boots
 Kaom's Roots|Has No Sockets|Cannot Be Knocked Back|120-150:To Maximum Life|Unwavering Stance
 Redblade Tramplers|2-7,5-10:Adds Physical Damage To Attacks|5-10:Reduced Enemy Stun Threshold|150-200:Increased Armour|20-30:To Fire Resistance|20:Increased Movement Speed|Unaffected By Burning Ground
 Windscream|50-80:Increased Armour|10-15:To All Elemental Resistances|10:Increased Movement Speed|10:Increased Elemental Damage|1:Enemies Can Have Additional Curse
@@ -181,6 +204,7 @@ Shavronne's Gambit|10:To Dexterity|20-30:To Intelligence|100-140:Increased Energ
 Shavronne's Pace|10:To Dexterity|20-30:To Intelligence|100-140:Increased Energy Shield|35:Increased Movement Speed When On Full Life|10-15:Increased Stun Recovery
 Skyforth|60-120:To Maximum Mana|30:Increased Movement Speed|25:Chance To Gain A Power Charge On Critical Strike|6:Reduced Mana Reserved|You Have No Life Regeneration|500:Stun Threshold Is Based On Of Your Mana Instead Of Life
 Steppan Eard|110-140:Increased Energy Shield|20-30:To Maximum Energy Shield|30:Increased Movement Speed|20:Increased Movement Speed On Shocked Ground|50:Increased Damage On Burning Ground|2:Of Life Regenerated Per Second On Chilled Ground|Unaffected By Desecrated Ground
+Voidwalker|30-50:To Dexterity|140-180:Increased Evasion and Energy Shield|30:Increased Movement Speed|20:Chance to Avoid Projectiles while Phasing|You have Phasing if you've Killed Recently|Projectiles Pierce while Phasing
 Wanderlust|5:To Dexterity|20-40:Increased Mana Regeneration Rate|10-20:To Maximum Energy Shield|20:Increased Movement Speed|Cannot Be Frozen
 Wondertrap|5-10:To Strength|5-10:To Dexterity|5-10:To Intelligence|10-16:To Maximum Energy Shield|100:Increased Rarity Of Items Found When On Low Life|10:Increased Movement Speed
 Darkray Vectors|20-40:To Lightning Resistance|5:Increased Movement Speed Per Frenzy Charge|1:Maximum Frenzy Charge|50:Reduced Frenzy Charge Duration|25:Reduced Light Radius|2:Chance To Dodge Attacks Per Frenzy Charge
@@ -196,6 +220,9 @@ Nomic's Storm|20-30:To Dexterity|30-50:To Evasion Rating|15-30:To Maximum Energy
 Sin Trek|20-30:To Dexterity|20-30:To Intelligence|80-100:Increased Evasion Rating|70-100:To Maximum Energy Shield|30:Increased Movement Speed|Enemies Cannot Leech Life From You
 Sundance|10:Increased Attack Speed|80-120:Increased Evasion Rating|20-30:Increased Rarity Of Items Found|30-40:To Fire Resistance|10:Increased Movement Speed
 Demigod's Stride|@8-16:To All Elemental Resistances|20-30:Increased Rarity Of Items Found|20:Increased Movement Speed|Has Golden Path
+
+
+;Gloves
 Atziri's Acuity|60-80:To Intelligence|60-75:To Maximum Life|200-220:Increased Armour|25-35:Increased Global Critical Strike Chance|Leech Applies Instantly On Critical Strike
 Doryani's Fist|30:To Maximum Energy Shield|10:Chance To Shock|225-785,335-900:Adds Lightning Damage To Attacks While Unarmed|60-210,90-240:Adds Lightning Damage To Spells While Unarmed|30:Energy Shield Gained On Killing A Shocked Enemy
 Empire's Grasp|400-600:To Armour|Knockback Direction Is Reversed|10:Socketed Gems Are Supported By Level Knockback
@@ -220,6 +247,7 @@ Wyrmsign|5:Socketed Gems Are Supported By Level Concentrated Effect|120-160:Incr
 Null and Void|20-30:To Strength|150-180:Increased Armour And Energy Shield|50-70:To Maximum Life|20-40:Increased Mana Regeneration Rate|Dispels Elemental Status Ailments On Rampage|1.5:Gain Immunity To Physical Damage For Seconds On Rampage|Rampage
 Repentance|0-30:Reduced Spell Damage|120-180:Increased Armour And Energy Shield|8-16:To Maximum Energy Shield|500:Increased Attribute Requirements|Iron Will
 Shackles of the Wretched|40-60:Increased Stun Recovery|Curses In This Item Are Reflected Back To You|3:You Cannot Be Chilled For Seconds After Being Chilled|3:You Cannot Be Frozen For Seconds After Being Frozen|3:You Cannot Be Ignited For Seconds After Being Ignited|3:You Cannot Be Shocked For Seconds After Being Shocked|4-6:You Grant Frenzy Charges To Allies On Death
+Shaper's Touch|80-120:Increased Armour and Energy Shield|2 Accuracy Rating per 2 Intelligence|1 Life per 4 Dexterity|1 Mana per 4 Strength|1% increased Energy Shield per 10 Strength|1% increased Evasion Rating per 10 Intelligence|1% increased Melee Physical Damage per 10 Dexterity
 Southbound|30-44,36-50:Adds Cold Damage To Attacks|12-16:Increased Maximum Life|40-50:To Cold Resistance|25:Increased Freeze Duration On Enemies|Your Hits Can Only Kill Frozen Enemies
 Facebreaker|90:To Global Critical Strike Multiplier|10:Reduced Enemy Stun Threshold|600-800:More Unarmed Physical Damage|Extra Gore
 Ondar's Clasp|30:Increased Attack Speed When On Full Life|1-13:Adds Lightning Damage To Attacks|50-80:To Accuracy Rating|20:Increased Movement Speed When On Low Life
@@ -227,6 +255,9 @@ Shadows and Dust|20-30:Increased Global Critical Strike Chance|25-45:To Global C
 Snakebite|150-180:Increased Evasion Rating|60-70:To Maximum Life|2:Increased Attack Speed Per Frenzy Charge|6:Increased Accuracy Rating Per Frenzy Charge|10:Reduced Frenzy Charge Duration Per Frenzy Charge|When At Maximum Frenzy Charges, Attacks Poison Enemies
 Thunderfist|18:Socketed Gems Are Supported By Level Added Lightning Damage|1-40:Adds Lightning Damage To Attacks|10:Increased Attack Speed|25-30:To Maximum Energy Shield|100:Increased Shock Duration On Enemies|10:Increased Stun Duration On Enemies
 Demigod's Touch|@20-30:To Maximum Life|10-16:Increased Attack Speed|6-10:Increased Cast Speed
+
+
+;Helmet
 Abyssus|40-60:Adds Physical Damage To Attacks|20-25:To All Attributes|150-225:To Melee Critical Strike Multiplier|100-120:Increased Armour|40-50:Increased Physical Damage Taken
 Ezomyte Hold|20:Increased Physical Damage|15-25:To Armour|25-50:To Maximum Life|Cannot Evade Enemy Attacks|Cannot Be Stunned
 Ezomyte Peak|20:Increased Physical Damage|15-25:To Armour|25-50:To Maximum Life|Cannot Evade Enemy Attacks
@@ -236,6 +267,7 @@ Alpha's Howl|2:To Level Of Socketed Aura Gems|80-100:Increased Evasion Rating|20
 Fairgraves' Tricorne|6-12:Adds Cold Damage To Attacks|70:Increased Evasion Rating|15-30:To Maximum Mana|20-30:To Lightning Resistance|Cannot Be Shocked|15:Increased Stun Recovery
 Goldrim|30-50:To Evasion Rating|10:Increased Rarity Of Items Found|30-40:To All Elemental Resistances|4:Reflects Physical Damage To Melee Attackers
 Heatshiver|1:To Level Of Socketed Fire Gems|1:To Level Of Socketed Cold Gems|80-100:Increased Evasion Rating|60:Increased Mana Regeneration Rate|20-10:-To Fire Resistance|20-10:-To Cold Resistance
+Kitava's Thirst|15:Reduced Cast Speed|70-80:Increased Armour and Energy Shield|30-50:To maximum Mana|30:Chance to Cast Socketed Spells when you Spend at least 100 Mana to Use a Skill
 Rat's Nest|15:Increased Attack Speed|60-75:Increased Global Critical Strike Chance|150:Increased Evasion Rating|20-25:Increased Rarity Of Items Found|10:Increased Movement Speed|10:Reduced Character Size
 Starkonja's Head|50:Reduced Damage When On Low Life|30-50:To Dexterity|10:Increased Attack Speed|25:Increased Global Critical Strike Chance|80-100:To Maximum Life|50:Increased Global Evasion Rating When On Low Life
 Asenath's Mark|10-15:Increased Attack Speed|10-15:Increased Cast Speed|30:Increased Mana Regeneration Rate|50:Increased Energy Shield|5:Increased Movement Speed|10-15:Increased Stun Recovery
@@ -253,6 +285,7 @@ Deidbell|20-30:To Strength|20-30:To Dexterity|200-300:To Armour|20:Increased Mel
 Deidbellow|20-30:To Strength|20-30:To Dexterity|200-300:To Armour|20:Increased Melee Damage|Cannot Leech When On Low Life|20:You And Nearby Allies Have Increased Attack, Cast And Movement|Speed If You've Used A Warcry Recently
 Devoto's Devotion|10:Reduced Physical Damage|50-65:To Dexterity|16:Increased Attack Speed|150-200:Increased Armour And Evasion|15-25:To Chaos Resistance|20:Increased Movement Speed|Mercury Footprints
 The Peregrine|100:To Accuracy Rating|40-60:Increased Armour And Evasion|20-30:Increased Rarity Of Items Found|30:To Lightning Resistance|0.2:Of Physical Attack Damage Leeched As Mana|10:Increased Movement Speed
+Obscurantis|300-500:To Accuracy Rating|100-120:Increased Evasion Rating|50-80:To maximum Life|1% increased Projectile Attack Damage per 200 Accuracy Rating
 Skullhead|60-80:Increased Armour And Evasion|50-70:To Maximum Life|50-70:To Maximum Mana|10:Minions Have Chance To Block|300-350:Minions Have To Armour|2:Minions Regenerate Life Per Second
 The Broken Crown|20:Socketed Gems Are Supported By Level Cast On Death|20:Increased Damage When On Low Life|10-15:To All Attributes|60-100:Increased Armour And Energy Shield|20:Reduced Mana Regeneration Rate|20-30:To Maximum Energy Shield|43-61:To Chaos Resistance
 Geofri's Crest|1:To Level Of Socketed Gems|60-80:Increased Armour And Energy Shield|15-20:To Fire Resistance|15-20:To Cold Resistance|15-20:To Lightning Resistance|20-30:To Chaos Resistance
@@ -267,6 +300,9 @@ Malachai's Simula|15-30:Increased Spell Damage|20:To Strength|20-30:Increased Li
 Mind of the Council|230-260:Increased Evasion And Energy Shield|20-30:Increased Maximum Mana|10:Chance To Shock|20:Chance To Be Shocked|30:Of Lightning Damage Is Taken From Mana Before Life When Hit|3:Recover Of Maximum Mana When You Shock An Enemy
 The Three Dragons|26-30:To All Elemental Resistances|Your Fire Damage Can Shock But Not Ignite|Your Cold Damage Can Ignite But Not Freeze Or Chill|Your Lightning Damage Can Freeze But Not Shock
 The Vertex|1:To Level Of Socketed Gems|245-280:Increased Evasion And Energy Shield|30-40:To Maximum Energy Shield|24-30:To Chaos Resistance|Enemies Cannot Leech Mana From You|50:Socketed Gems Have Reduced Mana Cost
+
+
+;Shield
 Demigod's Triumph|@16-24:To All Attributes|2.0:Life Regenerated Per Second|20-30:Increased Rarity Of Items Found|Has Golden Radiance
 Chernobog's Pillar|7-15,10-25:Adds Fire Damage To Attacks|120-150:Increased Armour|35-50:To Fire Resistance|25:Of Physical Damage Converted To Fire Damage|10:Chance To Curse Enemies With Enfeeble On Hit
 Lioneye's Remorse|200-250:Increased Armour|80-100:To Maximum Life|5:Reduced Movement Speed|20:Increased Stun Recovery|-25:Physical Damage Taken From Projectile Attacks|5:Chance To Block
@@ -304,6 +340,9 @@ Glitterdisc|@10-23:Reflects Physical Damage To Melee Attackers|120-140:Increased
 Jaws of Agony|@221-260:Reflects Physical Damage To Melee Attackers|18-28:Increased Trap Damage|15-25:Increased Physical Damage|60-80:To Maximum Life|14-18:- Physical Damage Taken From Attacks|25:Chance To Gain A Power Charge On Throwing A Trap|20:Grants Level Bear Trap Skill
 Maligaro's Lens|@51-70:Reflects Physical Damage To Melee Attackers|10-15:Increased Attack Speed|10-20:Increased Maximum Life|-50:To All Elemental Resistances|10:Increased Radius Of Area Skills|2:Nearby Allies Recover Of Your Maximum Life When You Die
 Demigod's Beacon|@11-19:To Chaos Resistance|10-20:Adds Fire Damage To Attacks|15-20:Increased Rarity Of Items Found|20:Increased Light Radius
+
+
+;Axe
 Dreadarc|5-20,15-25:Adds Physical Damage|5-20,15-25:Adds Fire Damage|5:Increased Movement Speed|7-10:Increased Attack Speed|15-25:To Fire Resistance|Curse Enemies With Flammability On Hit
 Dyadus|170-200,190-220:Adds Fire Damage In Main Hand|170-200,190-220:Adds Cold Damage In Off Hand|10-15:Increased Attack Speed|40:Enemies Chilled By You Take Increased Burning Damage|25:Chance To Ignite When In Main Hand|100:Increased Chill Duration On Enemies When In Off Hand
 The Gryphon|2:Socketed Gems Are Supported By Level Chance To Flee|170-190:Increased Physical Damage|10-25,15-30:Adds Physical Damage|10-15:To Maximum Life|5-7:Life Gained On Kill|10:Increased Movement Speed|15:Increased Movement Speed If You've Killed Recently
@@ -325,6 +364,9 @@ Limbsplit|1:To Level Of Socketed Strength Gems|80-100:Increased Physical Damage|
 Reaper's Pursuit|100-125:Increased Physical Damage|10:Life Gained On Kill|30-40:Increased Rarity Of Items Found|15:Increased Movement Speed When On Full Life|Culling Strike|Hits Can't Be Evaded
 Wideswing|20:Socketed Gems Are Supported By Level Increased Area Of Effect|120-160:Increased Physical Damage|10:To Strength|50-80:To Accuracy Rating|10:Mana Gained On Kill|2:To Weapon Range
 Wings of Entropy|25:Of Block Chance Applied To Spells|8:Additional Chance To Block While Dual Wielding|100-120:Increased Physical Damage|55-100,65-120:Adds Fire Damage In Main Hand|55-100,65-120:Adds Chaos Damage In Off Hand|Counts As Dual Wielding
+
+
+;Bow
 Chin Sol|150-180:Increased Physical Damage|10-20:To Dexterity|25-50:Adds Fire Damage|10-14:Increased Attack Speed|100:More Bow Damage At Close Range|Bow Knockback At Close Range
 Darkscorn|100-125:Increased Physical Damage|10-15,15-20:Adds Physical Damage|10:Increased Attack Speed|25:Of Physical Damage Converted To Chaos Damage|15-30:Increased Accuracy Rating|25:Of Physical Damage Taken As Chaos Damage
 Death's Harp|@30-50:Increased Critical Strike Chance|100-125:Increased Physical Damage|10:Increased Attack Speed|150:To Global Critical Strike Multiplier|Adds An Additional Arrow
@@ -337,7 +379,7 @@ Lioneye's Glare|@6-12:Increased Elemental Damage With Weapons|150-175:Increased 
 Null's Inclination|50-130,80-180:Adds Chaos Damage|7-12:Increased Attack Speed|7-11:To Chaos Resistance|1:Minions Deal Increased Damage Per Dexterity|212:Intelligence Requirement|Cast Socketed Minion Spells On Kill With This Weapon
 Nuro's Harp|@30-50:Increased Critical Strike Chance|No Physical Damage|120-180,140-210:Adds Cold Damage|10-15:Increased Attack Speed|10-30:Increased Light Radius|15:Chance To Create Chilled Ground When You Freeze An Enemy|Create Consecrated Ground When You Shatter An Enemy
 Quill Rain|10-20:To Dexterity|100:Increased Attack Speed|25-50:To Accuracy Rating|50-100:Increased Projectile Speed|50:Less Weapon Damage
-Reach of the Council|50-70:Increased Physical Damage|25-100,40-115:Adds Physical Damage|8-12:Increased Attack Speed|4:Additional Arrows|20:Reduced Projectile Speed
+Reach of the Council|40-50:Increased Physical Damage|15-70,30-95:Adds Physical Damage|8-12:Increased Attack Speed|4:Additional Arrows|20:Reduced Projectile Speed
 Relic of the Cycle|100:Increased Physical Damage|10:Increased Attack Speed|30:To Accuracy Rating|Projectiles Return To You
 Roth's Reach|60-80:Increased Physical Damage|20-40:Increased Elemental Damage With Weapons|4-8:Increased Attack Speed|1:Skills Chain Times|30:Increased Projectile Speed
 Silverbough|1:To Level Of Socketed Gems|1:To Level Of Socketed Bow Gems|80-100:Increased Physical Damage|15-50,25-60:Adds Physical Damage|10:Increased Attack Speed|30:To Accuracy Rating|10:Mana Gained On Kill
@@ -346,6 +388,9 @@ Storm Cloud|No Physical Damage|1-85:Adds Lightning Damage|36-50:Increased Attack
 The Tempest|No Physical Damage|100:Increased Lightning Damage|1-85:Adds Lightning Damage|36-50:Increased Attack Speed
 Voltaxic Rift|1-275,1-325:Adds Lightning Damage|10-15:Increased Attack Speed|60:Of Lightning Damage Converted To Chaos Damage|10:Chance To Shock|Your Chaos Damage Can Shock
 Windripper|@6-12:Increased Elemental Damage With Weapons|32-48,40-60:Adds Cold Damage|1-80,1-100:Adds Lightning Damage|10-15:Increased Attack Speed|60-80:Increased Critical Strike Chance|15:Increased Quantity Of Items Dropped By Slain Frozen Enemies|30:Increased Rarity Of Items Dropped By Slain Shocked Enemies
+
+
+;Claw
 Advancing Fortress|@21:Life Gained For Each Enemy Hit By Attacks|12:Socketed Gems Are Supported By Level Fortify|100-120:Increased Physical Damage|110:To Evasion Rating|30-50:To Maximum Life|35:To Maximum Energy Shield|71-90:Reflects Physical Damage To Melee Attackers|15:Chance To Block
 Al Dhih|@2:Of Physical Attack Damage Leeched As Life|100-120:Increased Physical Damage|3:Of Physical Attack Damage Leeched As Life|10:Reduced Enemy Stun Threshold With This Weapon|10:Socketed Gems Have Chance To Cause Enemies To Flee On Hit
 Allure|@2:Of Physical Attack Damage Leeched As Life|80-100:Increased Physical Damage|15-30,20-40:Adds Physical Damage|8-12:Increased Attack Speed|15:Increased Movement Speed While Phasing|3:You Gain Phasing For Seconds On Using A Vaal Skill
@@ -358,8 +403,12 @@ Mortem Morsu|@2:Of Physical Attack Damage Leeched As Life|75-100:Increased Physi
 Ornament of the East|@21:Life Gained For Each Enemy Hit By Attacks|100-120:Increased Physical Damage|10-15:Increased Attack Speed|25:Increased Stun Recovery|1:To Level Of Socketed Dexterity Gems|Hits Can't Be Evaded
 Rive|@2:Of Physical Attack Damage Leeched As Life|60-80:Increased Physical Damage|25-50,35-65:Adds Physical Damage|Causes Bleeding On Hit|2:Increased Physical Damage Over Time Per Dexterity|1:Increased Bleed Duration Per Intelligence|30:Chance To Cause Bleeding Enemies To Flee On Hit
 Scar of Fate|@3:Life Gained For Each Enemy Hit By Your Attacks|20:Grants Level Hatred Skill|2-6:Adds Physical Damage|3:Life Gained For Each Enemy Hit By Your Spells|50:Gems In This Item Have Reduced Mana Cost
+The Scourge|@2:Of Physical Attack Damage Leeched as Life|35-100,50-125:Adds Physical Damage|10-15:Increased Attack Speed|10-15:Minions have increased Attack Speed|10:Chance to summon a Spectral Wolf on Kill|Increases and reductions to Minion Damage also affects you|70:Increased Minion Damage if you have Hit Recently
 Touch of Anguish|@25:Life Gained For Each Enemy Hit By Attacks|40-130,50-150:Adds Physical Damage|30:Increased Cold Damage|30-40:Increased Critical Strike Chance|20:Chance To Gain A Frenzy Charge On Killing A Frozen Enemy|Skills Chain An Additional Time While At Maximum Frenzy Charges|10:Chance To Freeze|Critical Strikes Do Not Always Freeze
 Wildslash|@5:Life Gained For Each Enemy Hit By Attacks|10-15:To Strength|10-15:To Dexterity|15:Reduced Accuracy Rating|2-16,6-22:Adds Physical Damage|10-15:Increased Attack Speed|20:Increased Damage With Movement Skills|15:Increased Attack Speed With Movement Skills
+
+
+;Dagger
 Bino's Kitchen Knife|@40:Increased Global Critical Strike Chance|30:Increased Damage Over Time|50-120,60-140:Adds Physical Damage|40-50:Increased Critical Strike Chance|15-25:To Global Critical Strike Multiplier|8-12:To Chaos Resistance|On Killing A Poisoned Enemy, Nearby Enemies Are Poisoned|200:And Nearby Allies Regenerate Life Per Second
 Bloodplay|@40:Increased Global Critical Strike Chance|20:To Dexterity|20-40:Increased Physical Damage|3-9,6-13:Adds Physical Damage|10:Increased Attack Speed|Extra Gore|10:Chance To Cause Bleeding On Hit
 The Consuming Dark|@60:Increased Global Critical Strike Chance|1:To Level Of Socketed Fire Gems|40-60:Increased Spell Damage|20-40:To Intelligence|30:Of Fire Damage Converted To Chaos Damage|Your Chaos Damage Poisons Enemies
@@ -371,8 +420,14 @@ Mark of the Doubting Knight|@80:Increased Global Critical Strike Chance|5:Additi
 Mightflay|@40:Increased Global Critical Strike Chance|80-100:Increased Physical Damage|12-24:Adds Physical Damage|25:To Strength|10:Life Gained For Each Enemy Hit By Your Attacks
 Ungil's Gauche|@40:Increased Global Critical Strike Chance|12:Additional Chance To Block While Dual Wielding|80-100:Increased Physical Damage|10-20:To Dexterity|3-30:Adds Lightning Damage|10:Increased Attack Speed|50:Increased Global Critical Strike Chance
 Widowmaker|@40:Increased Global Critical Strike Chance|15-35,25-45:Adds Physical Damage|22-30:Increased Critical Strike Chance|30-40:To Global Critical Strike Multiplier|100:Increased Critical Strike Chance Against Enemies On Full Life|1:Of Attack Damage Leeched As Life On Critical Strike
+
+
+;Fishing Rod
 Reefbane|30-40:Increase Cast Speed|Thaumaturgical Lure|30-40:Increased Quantity Of Fish Caught|Glows When In An Area With A Unique Fish
 Song of the Sirens|Siren Worm Bait|40-50:Reduced Quantity Of Fish Caught|50-60:Increased Rarity Of Fish Caught|You Can Catch Exotic Fish
+
+
+;Mace
 Ashes of the Sun|@20:Increased Stun Duration On Enemies|3-6:Adds Fire Damage|20:Increased Attack Speed|500:Increased Ignite Duration On Enemies|25:Increased Burning Damage|30:Chance To Ignite
 Brightbeak|@20:Increased Stun Duration On Enemies|50-75:Increased Physical Damage|50:Increased Attack Speed|25:Increased Critical Strike Chance|20-30:To Fire Resistance|20-30:To Lightning Resistance
 Callinellus Malleus|@40:Increased Stun Duration On Enemies|5-15,10-23:Adds Physical Damage|150-200:Increased Physical Damage|15-25:Reduced Enemy Stun Threshold With This Weapon|Cannot Knock Enemies Back|All Attack Damage Chills When You Stun
@@ -382,7 +437,7 @@ Flesh-Eater|@20:Increased Stun Duration On Enemies|60-80:Increased Physical Dama
 Frostbreath|@40:Increased Stun Duration On Enemies|16-26,22-32:Adds Physical Damage|16-26,22-32:Adds Cold Damage|8-14:Increased Attack Speed|40-50:To Fire Resistance|35-50:Increased Chill Duration On Enemies|Attacks With This Weapon Deal Double Damage To Chilled Enemies
 Gorebreaker|@20:Increased Stun Duration On Enemies|300-360:Increased Physical Damage|20:Reduced Attack Speed|10-20:Reduced Enemy Stun Threshold|30-50:Increased Stun Duration On Enemies|30:Increased Melee Damage Against Bleeding Enemies
 Lavianga's Wisdom|@20:Increased Stun Duration On Enemies|10-20:To Maximum Life|10-20:To Maximum Mana|130-160:Increased Physical Damage|5:Reduced Movement Speed|10:Increased Radius Of Area Skills|10-15:Increased Area Damage
-Mjölner|@40:Increased Stun Duration On Enemies|80-120:Increased Physical Damage|1:Skills Chain Times|30-40:Increased Lightning Damage With Weapons|200:Strength Requirement|300:Intelligence Requirement|30:Chance To Cast Socketed Lightning Spells On Hit
+Mjölner|@40:Increased Stun Duration On Enemies|80-120:Increased Physical Damage|1:Skills Chain Times|30-40:Increased Lightning Damage With Weapons|200:Strength Requirement|300:Intelligence Requirement|Cast a Socketed Lightning Spell On Hit
 Axiom Perpetuum|@12:Increased Elemental Damage|4-6:Increased Cast Speed|100-140:Increased Critical Strike Chance For Spells|2-5,3-6:Adds Fire Damage To Spells|2-5,3-6:Adds Cold Damage To Spells|1-10,1-12:Adds Lightning Damage To Spells
 Bitterdream|@22:Increased Elemental Damage|1:Socketed Gems Are Supported By Level Hypothermia|1:Socketed Gems Are Supported By Level Ice Bite|1:Socketed Gems Are Supported By Level Cold Penetration|1:Socketed Gems Are Supported By Level Mana Leech|10:Socketed Gems Are Supported By Level Added Cold Damage|1:Socketed Gems Are Supported By Level Reduced Mana
 Breath of the Council|@32:Increased Elemental Damage|260-310:Increased Physical Damage|60-80:Increased Chaos Damage|10:Increased Radius Of Area Skills|40:Increased Chaos Skill Effect Duration
@@ -396,6 +451,7 @@ Nycta's Lantern|@30:Increased Elemental Damage|10:Socketed Gems Are Supported By
 Singularity|@30:Increased Elemental Damage|30-60,40-70:Adds Lightning Damage To Spells|14-18:Increased Cast Speed|6-8:Reduced Mana Cost Of Skills|25:Nearby Enemies Are Hindered, With Reduced Movement Speed|60-80:Increased Damage Against Hindered Enemies
 Spine of the First Claimant|@14:Increased Elemental Damage|100-140:Increased Physical Damage|40:Increased Damage Against Frozen Enemies|30-50:Increased Cold Damage|5-10:Increased Attack Speed|4-8:Increased Cast Speed|5:Chance To Freeze
 The Supreme Truth|@30:Increased Elemental Damage|1:To Level Of Socketed Gems|80-100:Increased Physical Damage|10-20:Increased Attack Speed|3:Increased Experience Gain|20:Increased Elemental Damage|60:Increased Intelligence Requirement
+Brain Rattler|@20:Increased Stun Duration on Enemies|80-320,100-370:Adds Physical Damage|50:Of Physical Damage Converted to Lightning Damage|15:Chance to Shock|10:Chance to Cause Monsters to Flee|Enemies you Shock have 30% reduced Cast Speed|Enemies you Shock have 20% reduced Movement Speed
 Chober Chaber|@20:Increased Stun Duration On Enemies|1:To Level Of Socketed Melee Gems|1:To Level Of Socketed Minion Gems|100-120:Increased Physical Damage|25:Increased Maximum Mana|20-40:Minions Have Increased Maximum Life|15:Increased Skill Effect Duration|20:Reduced Strength Requirement
 Geofri's Baptism|@20:Increased Stun Duration On Enemies|200:Increased Physical Damage|11-23:Adds Cold Damage|10-20:Increased Stun Duration On Enemies|Never Deal Critical Strikes
 Hrimnor's Dirge|@40:Increased Stun Duration On Enemies|140-200:Increased Physical Damage|10-30,20-40:Adds Physical Damage|10:To Strength|15:Reduced Enemy Stun Threshold|1:Of Physical Attack Damage Leeched As Life|40-50:Increased Stun Duration On Enemies|50:Gain Of Physical Damage As Extra Cold Damage
@@ -406,6 +462,9 @@ Marohi Erqi|@20:Increased Stun Duration On Enemies|15:Socketed Gems Are Supporte
 Quecholli|@20:Increased Stun Duration On Enemies|80-100:Increased Physical Damage|5-25:Adds Physical Damage|25-50:To All Attributes|10:Life Gained On Kill|10:Enemies Killed Explode Dealing Of Their Life As Fire Damage
 Trypanon|@20:Increased Stun Duration On Enemies|50:Reduced Attack Speed|All Attacks With This Weapon Are Critical Strikes
 Voidhome|@20:Increased Stun Duration On Enemies|150:Increased Physical Damage|50:Increased Attack Speed|30-50:Reduced Rarity Of Items Found|30-50:Reduced Experience Gain|0.4:Of Physical Attack Damage Leeched As Mana
+
+
+;Staff
 Agnerod East|@12:Chance To Block|1:To Level Of Socketed Lightning Gems|80-120:To Intelligence|30-50:Increased Lightning Damage|100:Increased Shock Duration On Enemies|40:Increased Strength Requirement|20:Damage Penetrates Lightning Resistance
 Agnerod North|@12:Chance To Block|1:To Level Of Socketed Lightning Gems|80-120:To Intelligence|30-50:Increased Lightning Damage|15:Chance To Shock|40:Increased Strength Requirement|20:Damage Penetrates Lightning Resistance
 Agnerod South|@12:Chance To Block|1:To Level Of Socketed Lightning Gems|80-120:To Intelligence|30-50:Increased Lightning Damage|5:To Maximum Lightning Resistance|40:Increased Strength Requirement|20:Damage Penetrates Lightning Resistance
@@ -427,6 +486,9 @@ Tremor Rod|@12:Chance To Block|10:Socketed Gems Are Supported By Level Remote Mi
 Vestige of Divinity|@12:Chance To Block|2-4:Adds Physical Damage|15:Increased Radius Of Area Skills|8:Chance To Block|8-14:Reflects Physical Damage To Attackers On Block|2:To Weapon Range
 The Whispering Ice|@12:Chance To Block|1:To Level Of Socketed Support Gems|1:Grants Level Icestorm Skill|8-12:Increased Cast Speed|1:Increased Spell Damage Per Intelligence|14-18:Increased Intelligence
 Xirgil's Crank|@18:Chance To Block|1:To Level Of Socketed Gems|15:Chance To Block|60-80:Increased Spell Damage|70-100:To Maximum Energy Shield|1-150:Reflects Lightning Damage To Melee Attackers|20:Chance For Energy Shield Recharge To Start When You Block
+
+
+;Sword
 Blood of Summer|@18:Increased Accuracy Rating|2-6:Adds Physical Damage|2:Increased Movement Speed Per Frenzy Charge|1:Maximum Frenzy Charge|20:Increased Radius Of Area Skills|33:Chance To Gain A Frenzy Charge On Kill
 Dreamfeather|@18:Increased Accuracy Rating|20-55,40-70:Adds Physical Damage|20-25:Increased Attack Speed|180-200:To Accuracy Rating|180-200:To Evasion Rating|3:Increased Movement Speed|1:Increased Attack Damage Per Evasion Rating
 Ephemeral Edge|@18:Increased Accuracy Rating|150:Increased Physical Damage|10:To Intelligence|50:Increased Global Critical Strike Chance|0.6-1:Of Physical Attack Damage Leeched As Mana|10:Reduced Maximum Life|40-50:Increased Maximum Energy Shield
@@ -438,6 +500,7 @@ Innsbury Edge|@18:Increased Accuracy Rating|100-140:Increased Physical Damage|17
 Lakishu's Blade|@18:Increased Accuracy Rating|60-80:Increased Physical Damage|5-10,8-14:Adds Physical Damage|10-15:Increased Attack Speed|30-40:Reduced Stun Recovery|20:Chance To Avoid Being Stunned|1:Socketed Gems Are Supported By Level Multistrike
 The Princess|@18:Increased Accuracy Rating|20-50:Increased Physical Damage|3-5,4-8:Adds Physical Damage|15:Increased Attack Speed|10:Gain Of Physical Damage As Extra Cold Damage|10:Increased Damage Taken From Skeletons|10:Increased Damage Taken From Ghosts
 Prismatic Eclipse|@18:Increased Accuracy Rating|8:Additional Chance To Block While Dual Wielding|20-31,30-40:Adds Physical Damage|25:Increased Physical Damage With Weapons Per Red Socket|12:Increased Global Attack Speed Per Green Socket|0.4:Of Physical Attack Damage Leeched As Mana Per Blue Socket|2:To Melee Weapon Range Per White Socket
+Razor of the Seventh Sun|@18:Increased Accuracy Rating|65-110,75-130:Adds Physical Damage|100:Increased Burning Damage if you've Ignited an Enemy Recently|Recover 1% of Maximum Life when you Ignite an Enemy|100:Increased Melee Physical Damage against Ignited Enemies
 Rebuke of the Vaal|@18:Increased Accuracy Rating|19-31,28-40:Adds Physical Damage|19-31,28-40:Adds Fire Damage|19-31,28-40:Adds Cold Damage|1-50,1-70:Adds Lightning Damage|19-31,28-40:Adds Chaos Damage|10-20:Increased Attack Speed
 Redbeak|@18:Increased Accuracy Rating|100:Increased Damage When On Low Life|50:Increased Physical Damage|2-6:Adds Physical Damage|10:Increased Attack Speed|20-30:To Maximum Life|2:Life Gained For Each Enemy Hit By Attacks
 Rigwald's Command|@18:Increased Accuracy Rating|10:Additional Block Chance While Dual Wielding|60-150,80-180:Adds Physical Damage|80:Increased Physical Damage With Axes|350-400:To Accuracy Rating|15:Chance To Gain A Frenzy Charge On Kill
@@ -446,6 +509,7 @@ The Tempestuous Steel|@18:Increased Accuracy Rating|5-15,8-20:Adds Physical Dama
 Varunastra|@18:Increased Accuracy Rating|40-60:Increased Physical Damage|30-80,45-100:Adds Physical Damage|2-3:Mana Gained For Each Enemy Hit By Attacks|Counts As All One Handed Melee Weapon Types
 Aurumvorax|@30:To Global Critical Strike Multiplier|120-150:Increased Physical Damage|20:Reduced Rarity Of Items Found|40-60:To All Elemental Resistances|3:Life Gained For Each Enemy Hit By Your Attacks
 Chitus' Needle|@30:To Global Critical Strike Multiplier|140-160:Increased Physical Damage|30:To Strength|30:To Maximum Mana|5:Increased Movement Speed|30:Increased Elemental Damage|2:To Weapon Range
+Cospri's Malice|@30:To Global Critical Strike Multiplier|No Physical Damage|80-160,100-200:Adds Cold Damage|40-90,60-110:Adds Cold Damage to Spells|8-14:Increased Attack Speed|+257 Intelligence Requirement|60:Increased Critical Strike Chance against Chilled Enemies|Cast a Socketed Cold Spell on Melee Critical Strike
 Daresso's Passion|@30:To Global Critical Strike Multiplier|30-40,38-50:Adds Physical Damage|30-40,38-50:Adds Cold Damage|20:Reduced Frenzy Charge Duration|25:Chance To Gain A Frenzy Charge On Kill|60-80:Increased Damage While You Have No Frenzy Charges
 Fidelitas' Spike|@30:To Global Critical Strike Multiplier|No Physical Damage|1-40,1-50:Adds Lightning Damage|25-30:Increased Attack Speed|2:Life Gained For Each Enemy Hit By Attacks|5:Chance To Shock
 The Goddess Bound|@30:To Global Critical Strike Multiplier|1:To Level Of Socketed Melee Gems|Uses Both Hand Slots|250-300:Increased Physical Damage|3-7:Adds Fire Damage|20:Increased Attack Speed|30:Increased Global Critical Strike Chance|20-40:To Evasion Rating|20:Reduced Rarity Of Items Found|30:Increased Movement Speed When On Low Life
@@ -453,13 +517,18 @@ The Dancing Dervish|@18:Increased Accuracy Rating|160-190:Increased Physical Dam
 Doomsower|@18:Increased Accuracy Rating|15:Socketed Melee Gems Have Increased Area Of Effect Radius|10:Socketed Red Gems Get Physical Damage As Extra Fire Damage|50-70:Increased Physical Damage|50-85,75-110:Adds Physical Damage|6-12:Increased Attack Speed
 Edge of Madness|@18:Increased Accuracy Rating|1:To Level Of Active Socketed Skill Gems|60-80:Increased Physical Damage|60-90,65-105:Adds Chaos Damage|1:Life Gained On Kill Per Level|1:Increased Elemental Damage Per Level|1:Increased Chaos Damage Per Level
 Hiltless|@18:Increased Accuracy Rating|1:Socketed Gems Are Supported By Level Blood Magic|90-230,115-260:Adds Physical Damage|40-50:Increased Critical Strike Chance|100:Enemies You Attack Reflect Physical Damage To You|2:To Weapon Range
+Kondo's Pride|@18:Increased Accuracy Rating|270-320:Increased Physical Damage|0.6:Of Physical Attack Damage Leeched as Life|50:Increased Melee Damage against Bleeding Enemies|Cannot Leech Life from Critical Strikes|30:Chance to Blind Enemies on Critical Strike|Causes Bleeding on Melee Critical Strike
 Oro's Sacrifice|@30:Increased Accuracy Rating|No Physical Damage|425-550,475-600:Adds Fire Damage|10-15:Increased Attack Speed|20:Chance To Ignite|10:Increased Physical Damage Taken|10:Increased Fire Damage Taken|Culling Strike Against Burning Enemies|Gain A Frenzy Charge If An Attack Ignites An Enemy
 Queen's Decree|@18:Increased Accuracy Rating|10-15:Minions Have Increased Maximum Life|150-200:Increased Skeleton Duration|10-15:Minions Deal Increased Damage|1:To Maximum Number Of Zombies|1:To Maximum Number Of Spectres|2:To Maximum Number Of Skeletons|25:Increased Strength Requirement
 Queen's Escape|@18:Increased Accuracy Rating|10-15:Minions Have Increased Maximum Life|80-100:Minions Have Increased Movement Speed|150-200:Increased Skeleton Duration|10-15:Minions Deal Increased Damage|1:To Maximum Number Of Zombies|1:To Maximum Number Of Spectres|2:To Maximum Number Of Skeletons|25:Increased Strength Requirement
 Rigwald's Charge|@18:Increased Accuracy Rating|120-150:Increased Physical Damage|20:Increased Attack Speed|150-200:To Accuracy Rating|10:Increased Movement Speed
 Shiversting|@18:Increased Accuracy Rating|80-100:Increased Physical Damage|35-70:Adds Cold Damage|0.6:Of Physical Attack Damage Leeched As Mana|Cannot Be Frozen
+Starforge|@30:Increased Accuracy Rating|400-500:Increased Physical Damage|5-8:Increased Attack Speed|90-100) to maximum Life|20:Increased Area of Effect for Attacks|Deal no Elemental Damage|Your Physical Damage can Shock
 Terminus Est|@18:Increased Accuracy Rating|120-180:Increased Physical Damage|20:Increased Attack Speed|10:Mana Gained On Kill|10:Increased Movement Speed|Gain A Frenzy Charge On Critical Strike
 Thunder of the Dawn|@18:Increased Accuracy Rating|1-9:Adds Lightning Damage|25:To Lightning Resistance|9:Chance To Shock|2:Shock Nearby Enemies For Seconds On Killing A Shocked Enemy
+
+
+;Wand
 Abberath's Horn|@10-14:Increased Spell Damage|20-30:Increased Fire Damage|4-8,6-12:Adds Fire Damage To Spells|40-60:Increased Global Critical Strike Chance|10:Life Gained On Killing Ignited Enemies|25:Reduced Ignite Duration On Enemies
 Amplification Rod|@15-19:Increased Spell Damage|1:To Level Of Socketed Gems|1:Socketed Gems Are Supported By Level Spell Echo|1:Socketed Gems Are Supported By Level Increased Area Of Effect|1:Socketed Gems Are Supported By Level Controlled Destruction|10-30:To Intelligence
 Apep's Rage|@38-42:Increased Spell Damage|50-90,65-105:Adds Chaos Damage To Spells|25-30:Increased Cast Speed|5-10:To Chaos Resistance|40:Increased Mana Cost Of Skills
@@ -475,6 +544,9 @@ Splinter of the Moon|@8-12:Increased Spell Damage|20:Increased Spell Damage|12:I
 Storm Prison|@11-15:Increased Spell Damage|40-60:Increased Physical Damage|1-35,1-45:Adds Lightning Damage|15-25:Increased Mana Regeneration Rate|1:Maximum Power Charge|25-35:Chance To Gain A Power Charge On Kill
 Twyzel|@17-21:Increased Spell Damage|80-120:Increased Physical Damage|5-13,8-17:Adds Physical Damage|5-10:Increased Attack Speed|10-20:Increased Critical Strike Chance|Socketed Gems Fire An Additional Projectile
 Void Battery|@36-40:Increased Spell Damage|80:Reduced Spell Damage|10-20:Increased Cast Speed|50-65:Increased Global Critical Strike Chance|40-50:To Maximum Mana|1:To Maximum Power Charges|25:Increased Spell Damage Per Power Charge
+
+
+;Flask
 Blood of the Karui|5-20:Increased Recovery Speed|No Life Recovery Applies During Flask Effect|Recover Full Life At The End Of The Flask Effect
 Doedre's Elixir|20:Removes Of Your Maximum Energy Shield On Use|10:You Take Of Your Maximum Life As Chaos Damage On Use|You Gain A Power Charge On Use|You Gain A Frenzy Charge On Use|You Gain An Endurance Charge On Use|120-150:Increased Charges Used
 Lavianga's Spirit|30-50:Increased Amount Recovered|100:Increased Recovery Speed|Your Skills Have No Mana Cost During Flask Effect
@@ -483,6 +555,7 @@ Divination Distillate|40-60:Increased Rarity Of Items Found During Flask Effect|
 The Writhing Jar|65-75:Reduced Amount Recovered|Instant Recovery|2:Enemy Writhing Worms Escape The Flask When Used|10-20:Reduced Charges Used
 Atziri's Promise|2:Of Chaos Damage Leeched As Life During Flask Effect|22-25:Gain Of Physical Damage As Extra Chaos Damage During Effect|13-15:Gain Of Elemental Damage As Extra Chaos Damage During Effect
 Coruscating Elixir|Chaos Damage Does Not Bypass Energy Shield During Effect|Removes All But One Life On Use|2:Removed Life Is Regenerated As Energy Shield Over Seconds
+Dying Sun|-10–+10:Increased Charges used|30:Increased Area of Effect during Flask Effect|2 additional Projectiles during Flask Effect
 Forbidden Taste|50:Increased Charges Used|75:Recover Of Your Maximum Life On Use|8:Of Maximum Life Taken As Chaos Damage Per Second
 Kiara's Determination|Immune To Freeze, Chill, Curses And Stuns During Flask Effect|50:Reduced Duration
 Lion's Roar|Knocks Back Enemies In An Area On Flask Use|75:Chance To Cause Enemies To Flee On Use|30-35:More Melee Physical Damage During Effect|Adds Knockback During Flask Effect
@@ -492,6 +565,10 @@ The Overflowing Chalice|@:Creates Consecrated Ground On Use|100:Increased Charge
 The Sorrow of the Divine|@:Creates Consecrated Ground On Use|25-50:Increased Duration|Zealot's Oath During Flask Effect
 Taste of Hate|20:Of Physical Damage Taken As Cold Damage During Flask Effect|20-30:Gain Of Physical Damage As Extra Cold Damage During Effect|30:Chance To Avoid Being Chilled During Flask Effect|30:Chance To Avoid Being Frozen During Flask Effect
 Vessel of Vinktar|80-100:Increased Charges Used|Shocks Nearby Enemies During Flask Effect|You Are Shocked During Flask Effect|20:Of Lightning Damage Leeched As Life During Flask Effect|20:Of Lightning Damage Leeched As Mana During Flask Effect||<1 of 4 Style Variants>||15-70,25-90:Adds Lightning Damage to Spells during Flask effect|25-105,35-130:Adds Lightning Damage to Attack during Flask effect|10%:Damage Penetrates Lightning Resistance during Flask effect|20%:of Physical Damage Converted to Lightning during Flask effect
+Witchfire Brew|@Creates a Smoke Cloud on Use|50:Increased Charges used|50-70:Increased Damage Over Time during Flask Effect|Grants level 21 Vulnerability Curse Aura during Flask Effect
+
+
+;Jewel
 Anatomical Knowledge|6-8:Increased Maximum Life|1:Adds To Maximum Life Per Intelligence In Radius
 Apparitions|5-10:Minions Have Increased Movement Speed|2-5:Minions Have Additional Chance To Dodge Attacks
 Army of Bones|8-12:Minions Deal Increased Damage|2:To Maximum Number Of Skeletons|10-20:Reduced Skeleton Duration
@@ -589,6 +666,9 @@ Surplus|15-25:Increased Spell Damage While Not On Low Mana|10:Reduced Mana Cost 
 Vampire's Might|10-20:Reduced Life Leech Rate|25-30:Increased Damage While Leeching
 Wisdom of the Path Not Taken|4:Intelligence For Each Unallocated Passive In Radius
 Zerphi's Youth|5:With Corrupted Items Equipped: Gain Soul Eater For Seconds On Vaal Skill Use
+
+
+;Map
 Acton's Nightmare|Area Has Patches Of Burning Ground|Area Is Inhabited By Skeletons|220-250:Increased Rarity Of Items Found In This Area|Restless Dead|Area Is A Large Maze|Area Contains A Large Chest
 Caer Blaidd, Wolfpack's Den|4:Unique Boss Drops Additional Maps|20-50:More Magic Monsters|20-50:More Rare Monsters|25:More Monster Life|30:Increased Monster Damage
 The Coward's Trial|22-25:Area Has Waves Of Monsters|30-50:Area Has Seconds Between Monster Waves
