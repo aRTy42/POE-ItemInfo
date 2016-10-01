@@ -5,7 +5,7 @@ Current Script Caretaker: aRTy42
 ================================
 from aRTy42
 Updated Uniques.
-Maps have updated Boss descriptions, general notes and difficulty/layout ratings.
+Maps have updated Boss descriptions, general notes and ratings for difficulty (1-5) and layout (A-C).
 
 2.4.01
 ================================
