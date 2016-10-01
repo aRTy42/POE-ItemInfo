@@ -12,7 +12,7 @@ TradeMacroMainFunction()
 	; Standard
 	; Hardcore
 	
-    Global Opts, Globals
+    Global Opts, Globals, Item, ItemData
 
     CBContents := GetClipboardContents()
     CBContents := PreProcessContents(CBContents)
@@ -25,10 +25,21 @@ TradeMacroMainFunction()
 	
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
-	RequestParams.name := Item.Name
+	RequestParams.name   := Item.Name
 	
 	if (Item.IsGem) {
-		
+		RequestParams.q_min := Item.Quality
+		if (Item.Level >= 16) {
+			RequestParams.level_min := Item.Level
+		}
+	}
+	
+	if (ItemData.Links >= 5) {
+		RequestParams.link_min := ItemData.Links
+	}
+	
+	if (ItemData.Sockets >= 5) {
+		RequestParams.sockets_min := ItemData.Sockets
 	}
 	
 	out("Running request with Payload:")
@@ -138,7 +149,7 @@ class RequestParams_ {
 
 
 FunctionDoPostRequest(payload)
-{
+{	
 	;FileDelete, tempFiles\payload.txt
     ;FileAppend, %payload%, tempFiles\payload.txt
     
@@ -179,20 +190,22 @@ FunctionDoPostRequest(payload)
 
 FunctionParseHtml(html, payload)
 {
+	Global Item, ItemData
+	
     ; Target HTML Looks like the ff:
     ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
     ; TODO: grab more data like corruption found inside <tbody>
     
-    ItemName := StrX( payload,  "&name=",  1,6, "&",1,1 )
-    StringReplace, ItemName, ItemName, +, %A_SPACE%, All
-    Quality  := StrX( payload,  "&q_min=", 1,7, "&",1,1 )
-    
-    ; TODO Refactor this
-    IfInString, Quality, q_max
-    {
-        Quality = 
-    }
-    Text := ItemName " " Quality "`n ---------- `n"
+	; TODO refactor this
+	if (Item.IsGem) {
+		Text := Item.Name " " Item.Quality "%`n ---------- `n"
+		if (Item.Level >= 16) {
+			Text := Item.Name " " Item.Level "/" Item.Quality "`n ---------- `n"
+		}
+	}
+    if (ItemData.Sockets >= 5) {
+		Text := Item.Name " " Item.Sockets "s" Item.Links "l`n ---------- `n"
+	}
 
     ; Text .= StrX( html,  "<tbody id=""item-container-0",          N,0, "<tr class=""first-line"">",1,28, N )
 
