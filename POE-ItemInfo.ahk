@@ -530,7 +530,7 @@ IfNotExist, %A_ScriptDir%\config.ini
 ; Windows system tray icon
 ; possible values: poe.ico, poe-bw.ico, poe-web.ico, info.ico
 ; set before creating the settings UI so it gets used for the settigns dialog as well
-Menu, Tray, Icon, %A_ScriptDir%\data\poe-bw.ico
+Menu, Tray, Icon, %A_ScriptDir%\icon.ico
 
 ReadConfig()
 Sleep, 100
@@ -542,7 +542,7 @@ Menu, TextFiles, Add, Currency Rates, EditCurrencyRates
 
 ; Menu tooltip
 RelVer := Globals.Get("ReleaseVersion")
-Menu, Tray, Tip, Path of Exile Item Info %RelVer%
+Menu, Tray, Tip, Path of Exile TradeMacro 0.1
 
 Menu, Tray, NoStandard
 Menu, Tray, Add, About..., MenuTray_About
@@ -7456,26 +7456,26 @@ ToolTipTimer:
     }
     return
 
-OnClipBoardChange:
-    Global Opts
-    if SuspendPOEItemScript = 0
-    {
-        If (Opts.OnlyActiveIfPOEIsFront)
-        {
-            ; do nothing if Path of Exile isn't the foremost window
-            IfWinActive, Path of Exile ahk_class Direct3DWindowClass
-            {
-                ParseClipBoardChanges()
-            }
-        }
-        Else
-        {
-            ; if running tests parse clipboard regardless if PoE is foremost
-            ; so we can check individual cases from test case text files
-            ParseClipBoardChanges()
-        }
-    }
-    return
+;OnClipBoardChange:
+;    Global Opts
+;    if SuspendPOEItemScript = 0
+;    {
+;        If (Opts.OnlyActiveIfPOEIsFront)
+;        {
+;            ; do nothing if Path of Exile isn't the foremost window
+;            IfWinActive, Path of Exile ahk_class Direct3DWindowClass
+;            {
+;                ParseClipBoardChanges()
+;            }
+;        }
+;        Else
+;        {
+;            ; if running tests parse clipboard regardless if PoE is foremost
+;            ; so we can check individual cases from test case text files
+;            ParseClipBoardChanges()
+;        }
+;    }
+;    return
 
 ShowSettingsUI:
     ReadConfig()
