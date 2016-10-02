@@ -1,9 +1,14 @@
-	
+; TradeMacro Add-on to POE-ItemInfo v0.1
+; IGN: ManicCompression
+; Notes:
+; 1. To enable debug output, find the out() function and uncomment
+
 ^z::
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event ourselves
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^c
 	Sleep 250
 	TradeMacroMainFunction()
+	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	return
 	
 TradeMacroMainFunction()
@@ -63,8 +68,8 @@ TradeMacroMainFunction()
 
 out(str)
 {
-	stdout := FileOpen("*", "w")
-	stdout.WriteLine(str)
+	;stdout := FileOpen("*", "w")
+	;stdout.WriteLine(str)
 }
 
 FunctionDoPostRequest(payload)

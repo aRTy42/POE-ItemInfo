@@ -7456,26 +7456,26 @@ ToolTipTimer:
     }
     return
 
-;OnClipBoardChange:
-;    Global Opts
-;    if SuspendPOEItemScript = 0
-;    {
-;        If (Opts.OnlyActiveIfPOEIsFront)
-;        {
-;            ; do nothing if Path of Exile isn't the foremost window
-;            IfWinActive, Path of Exile ahk_class Direct3DWindowClass
-;            {
-;                ParseClipBoardChanges()
-;            }
-;        }
-;        Else
-;        {
-;            ; if running tests parse clipboard regardless if PoE is foremost
-;            ; so we can check individual cases from test case text files
-;            ParseClipBoardChanges()
-;        }
-;    }
-;    return
+OnClipBoardChange:
+    Global Opts
+    if SuspendPOEItemScript = 0
+    {
+        If (Opts.OnlyActiveIfPOEIsFront)
+        {
+            ; do nothing if Path of Exile isn't the foremost window
+            IfWinActive, Path of Exile ahk_class Direct3DWindowClass
+            {
+                ParseClipBoardChanges()
+            }
+        }
+        Else
+        {
+            ; if running tests parse clipboard regardless if PoE is foremost
+            ; so we can check individual cases from test case text files
+            ParseClipBoardChanges()
+        }
+    }
+    return
 
 ShowSettingsUI:
     ReadConfig()
