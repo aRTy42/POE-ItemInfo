@@ -4,6 +4,7 @@
 	Send ^c
 	Sleep 250
 	TradeMacroMainFunction()
+	return
 	
 TradeMacroMainFunction()
 {
@@ -12,7 +13,7 @@ TradeMacroMainFunction()
 	; Standard
 	; Hardcore
 	
-    Global Opts, Globals, Item, ItemData
+    out("+ Start of TradeMacroMainFunction")
 
     CBContents := GetClipboardContents()
     CBContents := PreProcessContents(CBContents)
@@ -42,12 +43,12 @@ TradeMacroMainFunction()
 		RequestParams.sockets_min := ItemData.Sockets
 	}
 	
-	out("Running request with Payload:")
 	Payload := RequestParams.ToPayload()
 	
-	out("------------------------------------")
-	out(Payload)
-	out("------------------------------------")
+	;out("Running request with Payload:")
+	;out("------------------------------------")
+	;out(Payload)
+	;out("------------------------------------")
 	
 	ShowToolTip("Running search...")
     Html := FunctionDoPostRequest(Payload)
@@ -65,6 +66,118 @@ out(str)
 	stdout := FileOpen("*", "w")
 	stdout.WriteLine(str)
 }
+
+FunctionDoPostRequest(payload)
+{	
+	;FileDelete, tempFiles\payload.txt
+    ;FileAppend, %payload%, tempFiles\payload.txt
+    
+    ; TODO: split this function, HTTP POST and Html parsing should be separate
+    ; Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
+    HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+    ;HttpObj := ComObjCreate("MSXML2.ServerXMLHTTP") 
+    ; We use this instead of WinHTTP to support gzip and deflate - http://microsoft.public.winhttp.narkive.com/NDkh5vEw/get-request-for-xml-gzip-file-winhttp-wont-uncompress-automagically
+    HttpObj.Open("POST","http://poe.trade/search")
+    HttpObj.SetRequestHeader("Host","poe.trade")
+    HttpObj.SetRequestHeader("Connection","keep-alive")
+    HttpObj.SetRequestHeader("Content-Length",StrLen(payload))
+    HttpObj.SetRequestHeader("Cache-Control","max-age=0")
+    HttpObj.SetRequestHeader("Origin","http://poe.trade")
+    HttpObj.SetRequestHeader("Upgrade-Insecure-Requests","1")
+    HttpObj.SetRequestHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36")
+    HttpObj.SetRequestHeader("Content-type","application/x-www-form-urlencoded")
+    HttpObj.SetRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+    HttpObj.SetRequestHeader("Referer","http://poe.trade/")
+    HttpObj.SetRequestHeader("Accept-Encoding","gzip;q=0,deflate;q=0") ; disables compression
+    ;HttpObj.SetRequestHeader("Accept-Encoding","gzip, deflate")
+    HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")
+
+    HttpObj.Send(payload)
+    HttpObj.WaitForResponse()
+
+    ;MsgBox % HttpObj.StatusText . HttpObj.GetAllResponseHeaders()
+    ;MsgBox % HttpObj.ResponseText
+    ; Dear GGG, it would be nice if you can provide an API like http://pathofexile.com/trade/search?name=Veil+of+the+night&links=4
+    ; Pete's indexer is open sourced here - https://github.com/trackpete/exiletools-indexer you can use this to provide this api
+    html := HttpObj.ResponseText
+    ;FileRead, html, %tempFilesDirectory%Test1.txt
+    ;FileDelete, %tempFilesDirectory%html.htm
+    ;FileAppend, %html%, %tempFilesDirectory%html.htm
+    
+    Return, html
+}
+
+FunctionParseHtml(html, payload)
+{
+	; Target HTML Looks like the ff:
+    ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
+    ; TODO: grab more data like corruption found inside <tbody>
+    
+	; TODO refactor this
+	Title := Item.Name
+	if (Item.IsGem) {
+		Title := Item.Name " " Item.Quality "%"
+		if (Item.Level >= 16) {
+			Title := Item.Name " " Item.Level "`/" Item.Quality
+		}
+	}
+    if (ItemData.Sockets >= 5) {
+		Title := Item.Name " " Item.Sockets "s" Item.Links "l"
+	}
+	
+	Title .= "`n ---------- `n"
+
+    ; Text .= StrX( html,  "<tbody id=""item-container-0",          N,0, "<tr class=""first-line"">",1,28, N )
+
+    NoOfItemsToShow = 15
+    While A_Index < NoOfItemsToShow
+          TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "<tr class=""first-line"">", 1,23, N )
+        , AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"  ,                      1,1,  T )
+        , Buyout      := StrX( TBody,  "data-buyout=""",                           T,13, """"  ,                      1,1,  T )
+        , IGN         := StrX( TBody,  "data-ign=""",                              T,10, """"  ,                      1,1     )
+        ;, Text .= StrPad(IGN, 30) StrPad(AccountName, 30) StrPad(Buyout,30) "`n"
+        ;, Text .= StrPad(IGN,20) StrPad(Buyout,20,"left") "`n"
+        , Title .= StrPad(IGN,20) StrPad(Buyout,20,"left")"`n"
+    
+    Return, Title
+}
+
+; ------------------------------------------------------------------------------------------------------------------ ;
+; StrX function for parsing html, see simple example usage at https://gist.github.com/thirdy/9cac93ec7fd947971721c7bdde079f94
+; ------------------------------------------------------------------------------------------------------------------ ;
+
+; Cleanup StrX function and Google Example from https://autohotkey.com/board/topic/47368-strx-auto-parser-for-xml-html
+; By SKAN
+
+;1 ) H = HayStack. The "Source Text"
+;2 ) BS = BeginStr. Pass a String that will result at the left extreme of Resultant String
+;3 ) BO = BeginOffset. 
+; Number of Characters to omit from the left extreme of "Source Text" while searching for BeginStr
+; Pass a 0 to search in reverse ( from right-to-left ) in "Source Text"
+; If you intend to call StrX() from a Loop, pass the same variable used as 8th Parameter, which will simplify the parsing process.
+;4 ) BT = BeginTrim. 
+; Number of characters to trim on the left extreme of Resultant String
+; Pass the String length of BeginStr if you want to omit it from Resultant String
+; Pass a Negative value if you want to expand the left extreme of Resultant String
+;5 ) ES = EndStr. Pass a String that will result at the right extreme of Resultant String
+;6 ) EO = EndOffset. 
+; Can be only True or False. 
+; If False, EndStr will be searched from the end of Source Text. 
+; If True, search will be conducted from the search result offset of BeginStr or from offset 1 whichever is applicable.
+;7 ) ET = EndTrim. 
+; Number of characters to trim on the right extreme of Resultant String
+; Pass the String length of EndStr if you want to omit it from Resultant String
+; Pass a Negative value if you want to expand the right extreme of Resultant String
+;8 ) NextOffset : A name of ByRef Variable that will be updated by StrX() with the current offset, You may pass the same variable as Parameter 3, to simplify data parsing in a loop
+
+StrX(H,  BS="",BO=0,BT=1,   ES="",EO=0,ET=1,  ByRef N="" ) 
+{ 
+        Return SubStr(H,P:=(((Z:=StrLen(ES))+(X:=StrLen(H))+StrLen(BS)-Z-X)?((T:=InStr(H,BS,0,((BO
+            <0)?(1):(BO))))?(T+BT):(X+1)):(1)),(N:=P+((Z)?((T:=InStr(H,ES,0,((EO)?(P+1):(0))))?(T-P+Z
+            +(0-ET)):(X+P)):(X)))-P)
+}
+; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
+; | by Skan | 19-Nov-2009
 
 class RequestParams_ {
 	league := ""
@@ -146,118 +259,3 @@ class RequestParams_ {
 		return p
 	}
 }
-
-
-FunctionDoPostRequest(payload)
-{	
-	;FileDelete, tempFiles\payload.txt
-    ;FileAppend, %payload%, tempFiles\payload.txt
-    
-    ; TODO: split this function, HTTP POST and Html parsing should be separate
-    ; Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
-    HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-    ;HttpObj := ComObjCreate("MSXML2.ServerXMLHTTP") 
-    ; We use this instead of WinHTTP to support gzip and deflate - http://microsoft.public.winhttp.narkive.com/NDkh5vEw/get-request-for-xml-gzip-file-winhttp-wont-uncompress-automagically
-    HttpObj.Open("POST","http://poe.trade/search")
-    HttpObj.SetRequestHeader("Host","poe.trade")
-    HttpObj.SetRequestHeader("Connection","keep-alive")
-    HttpObj.SetRequestHeader("Content-Length",StrLen(payload))
-    HttpObj.SetRequestHeader("Cache-Control","max-age=0")
-    HttpObj.SetRequestHeader("Origin","http://poe.trade")
-    HttpObj.SetRequestHeader("Upgrade-Insecure-Requests","1")
-    HttpObj.SetRequestHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36")
-    HttpObj.SetRequestHeader("Content-type","application/x-www-form-urlencoded")
-    HttpObj.SetRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-    HttpObj.SetRequestHeader("Referer","http://poe.trade/")
-    HttpObj.SetRequestHeader("Accept-Encoding","gzip;q=0,deflate;q=0") ; disables compression
-    ;HttpObj.SetRequestHeader("Accept-Encoding","gzip, deflate")
-    HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")
-
-    HttpObj.Send(payload)
-    HttpObj.WaitForResponse()
-
-    ;MsgBox % HttpObj.StatusText . HttpObj.GetAllResponseHeaders()
-    ;MsgBox % HttpObj.ResponseText
-    ; Dear GGG, it would be nice if you can provide an API like http://pathofexile.com/trade/search?name=Veil+of+the+night&links=4
-    ; Pete's indexer is open sourced here - https://github.com/trackpete/exiletools-indexer you can use this to provide this api
-    html := HttpObj.ResponseText
-    ;FileRead, html, %tempFilesDirectory%Test1.txt
-    ;FileDelete, %tempFilesDirectory%html.htm
-    ;FileAppend, %html%, %tempFilesDirectory%html.htm
-    
-    Return, html
-}
-
-FunctionParseHtml(html, payload)
-{
-	Global Item, ItemData
-	
-    ; Target HTML Looks like the ff:
-    ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
-    ; TODO: grab more data like corruption found inside <tbody>
-    
-	; TODO refactor this
-	Title := Item.Name
-	if (Item.IsGem) {
-		Title := Item.Name " " Item.Quality "%"
-		if (Item.Level >= 16) {
-			Title := Item.Name " " Item.Level "`/" Item.Quality
-		}
-	}
-    if (ItemData.Sockets >= 5) {
-		Title := Item.Name " " Item.Sockets "s" Item.Links "l"
-	}
-	
-	Title .= "`n ---------- `n"
-
-    ; Text .= StrX( html,  "<tbody id=""item-container-0",          N,0, "<tr class=""first-line"">",1,28, N )
-
-    NoOfItemsToShow = 15
-    While A_Index < NoOfItemsToShow
-          Item        := StrX( html,  "<tbody id=""item-container-" . %A_Index%,  N,0,  "<tr class=""first-line"">", 1,23, N )
-        , AccountName := StrX( Item,  "data-seller=""",                           1,13, """"  ,                      1,1,  T )
-        , Buyout      := StrX( Item,  "data-buyout=""",                           T,13, """"  ,                      1,1,  T )
-        , IGN         := StrX( Item,  "data-ign=""",                              T,10, """"  ,                      1,1     )
-        ;, Text .= StrPad(IGN, 30) StrPad(AccountName, 30) StrPad(Buyout,30) "`n"
-        ;, Text .= StrPad(IGN,20) StrPad(Buyout,20,"left") "`n"
-        , Title .= StrPad(IGN,20) StrPad(Buyout,20,"left")"`n"
-    
-    Return, Title
-}
-
-; ------------------------------------------------------------------------------------------------------------------ ;
-; StrX function for parsing html, see simple example usage at https://gist.github.com/thirdy/9cac93ec7fd947971721c7bdde079f94
-; ------------------------------------------------------------------------------------------------------------------ ;
-
-; Cleanup StrX function and Google Example from https://autohotkey.com/board/topic/47368-strx-auto-parser-for-xml-html
-; By SKAN
-
-;1 ) H = HayStack. The "Source Text"
-;2 ) BS = BeginStr. Pass a String that will result at the left extreme of Resultant String
-;3 ) BO = BeginOffset. 
-; Number of Characters to omit from the left extreme of "Source Text" while searching for BeginStr
-; Pass a 0 to search in reverse ( from right-to-left ) in "Source Text"
-; If you intend to call StrX() from a Loop, pass the same variable used as 8th Parameter, which will simplify the parsing process.
-;4 ) BT = BeginTrim. 
-; Number of characters to trim on the left extreme of Resultant String
-; Pass the String length of BeginStr if you want to omit it from Resultant String
-; Pass a Negative value if you want to expand the left extreme of Resultant String
-;5 ) ES = EndStr. Pass a String that will result at the right extreme of Resultant String
-;6 ) EO = EndOffset. 
-; Can be only True or False. 
-; If False, EndStr will be searched from the end of Source Text. 
-; If True, search will be conducted from the search result offset of BeginStr or from offset 1 whichever is applicable.
-;7 ) ET = EndTrim. 
-; Number of characters to trim on the right extreme of Resultant String
-; Pass the String length of EndStr if you want to omit it from Resultant String
-; Pass a Negative value if you want to expand the right extreme of Resultant String
-;8 ) NextOffset : A name of ByRef Variable that will be updated by StrX() with the current offset, You may pass the same variable as Parameter 3, to simplify data parsing in a loop
-
-StrX(H,  BS="",BO=0,BT=1,   ES="",EO=0,ET=1,  ByRef N="" ) 
-{ 
-        Return SubStr(H,P:=(((Z:=StrLen(ES))+(X:=StrLen(H))+StrLen(BS)-Z-X)?((T:=InStr(H,BS,0,((BO
-            <0)?(1):(BO))))?(T+BT):(X+1)):(1)),(N:=P+((Z)?((T:=InStr(H,ES,0,((EO)?(P+1):(0))))?(T-P+Z
-            +(0-ET)):(X+P)):(X)))-P)
-}
-; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
-; | by Skan | 19-Nov-2009
