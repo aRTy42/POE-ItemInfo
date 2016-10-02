@@ -405,6 +405,7 @@ class Fonts {
 class ItemData_ {
 
     Links := ""
+    Sockets := ""
     Stats := ""
     NamePlate := ""
     Affixes := ""
@@ -5912,6 +5913,23 @@ ParseLinks(ItemDataText)
     return HighestLink
 }
 
+ParseSockets(ItemDataText)
+{
+    SocketsCount := 0
+    Loop, Parse, ItemDataText, `n, `r
+    {
+        IfInString, A_LoopField, Sockets
+        {
+            LinksString := GetColonValue(A_LoopField)
+            before := StrLen(LinksString)
+            LinksString := RegExReplace(LinksString, "[RGBW]", "")
+            after := StrLen(LinksString)
+            SocketsCount := before - after
+        }
+    }
+    return SocketsCount
+}
+
 ; TODO: find a way to poll this date from the web!
 
 ; Converts a currency stack to Chaos by looking up the 
@@ -6248,6 +6266,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     ItemData.Rarity := ParseRarity(ItemData.NamePlate)
 
     ItemData.Links := ParseLinks(ItemDataText)
+    ItemData.Sockets := ParseSockets(ItemDataText)
 
     Item.IsUnique := False
     If (InStr(ItemData.Rarity, "Unique"))
