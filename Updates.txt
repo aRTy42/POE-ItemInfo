@@ -1,6 +1,12 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.4.02
+================================
+from aRTy42
+Updated Uniques.
+Maps have updated Boss descriptions, general notes and ratings for difficulty (1-5) and layout (A-C).
+
 2.4.01
 ================================
 from aRTy42
