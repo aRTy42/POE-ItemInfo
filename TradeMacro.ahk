@@ -1,5 +1,5 @@
 ; TradeMacro Add-on to POE-ItemInfo v0.1
-; IGN: ManicCompression
+; IGN: ManicCompression 
 ; Notes:
 ; 1. To enable debug output, find the out() function and uncomment
 ;
