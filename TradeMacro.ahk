@@ -2,12 +2,26 @@
 ; IGN: ManicCompression
 ; Notes:
 ; 1. To enable debug output, find the out() function and uncomment
+;
+; Todo:
+; Support for modifiers
+; Allow user to customize which mod and value to use
 
-^z::
+^x::
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^c
 	Sleep 250
 	TradeMacroMainFunction()
+	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	return
+	
+^w::
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+	Send ^c
+	Sleep 250
+	DoParseClipboardFunction()
+	WikiUrl := "http://pathofexile.gamepedia.com/" Item.Name
+	Run % WikiUrl
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	return
 	
@@ -18,16 +32,11 @@ TradeMacroMainFunction()
 	; Standard
 	; Hardcore
 	
+	Global Item, ItemData
+	
     out("+ Start of TradeMacroMainFunction")
 
-    CBContents := GetClipboardContents()
-    CBContents := PreProcessContents(CBContents)
-	
-    Globals.Set("ItemText", CBContents)
-    Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)
-
-    ParsedData := ParseItemData(CBContents)
-	out("ItemInfo Parsing Success")
+	DoParseClipboardFunction()
 	
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
@@ -39,7 +48,7 @@ TradeMacroMainFunction()
 			RequestParams.level_min := Item.Level
 		}
 	}
-	
+	out(ItemData.Links)
 	if (ItemData.Links >= 5) {
 		RequestParams.link_min := ItemData.Links
 	}
@@ -48,12 +57,16 @@ TradeMacroMainFunction()
 		RequestParams.sockets_min := ItemData.Sockets
 	}
 	
+	if (Item.IsCorrupted) {
+		RequestParams.corrupted := "x"
+	}
+	
 	Payload := RequestParams.ToPayload()
 	
-	;out("Running request with Payload:")
-	;out("------------------------------------")
-	;out(Payload)
-	;out("------------------------------------")
+	out("Running request with Payload:")
+	out("------------------------------------")
+	out(Payload)
+	out("------------------------------------")
 	
 	ShowToolTip("Running search...")
     Html := FunctionDoPostRequest(Payload)
@@ -63,6 +76,18 @@ TradeMacroMainFunction()
 	
     SetClipboardContents(ParsedData)
     ShowToolTip(ParsedData)
+}
+
+DoParseClipboardFunction()
+{
+	CBContents := GetClipboardContents()
+    CBContents := PreProcessContents(CBContents)
+	
+    Globals.Set("ItemText", CBContents)
+    Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)
+
+    ParsedData := ParseItemData(CBContents)
+	out("ItemInfo Parsing Success")
 }
 
 
@@ -114,12 +139,21 @@ FunctionDoPostRequest(payload)
 
 FunctionParseHtml(html, payload)
 {
+	
+	Global Item, ItemData
+	
 	; Target HTML Looks like the ff:
     ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
     ; TODO: grab more data like corruption found inside <tbody>
     
 	; TODO refactor this
+	
 	Title := Item.Name
+	
+	if (Item.IsCorrupted) {
+		Title .= " [Corrupted] "
+	}
+	
 	if (Item.IsGem) {
 		Title := Item.Name " " Item.Quality "%"
 		if (Item.Level >= 16) {
@@ -127,7 +161,7 @@ FunctionParseHtml(html, payload)
 		}
 	}
     if (ItemData.Sockets >= 5) {
-		Title := Item.Name " " Item.Sockets "s" Item.Links "l"
+		Title := Item.Name " " ItemData.Sockets "s" ItemData.Links "l"
 	}
 	
 	Title .= "`n ---------- `n"
