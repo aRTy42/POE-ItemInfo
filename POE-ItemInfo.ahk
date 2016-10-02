@@ -530,7 +530,7 @@ IfNotExist, %A_ScriptDir%\config.ini
 ; Windows system tray icon
 ; possible values: poe.ico, poe-bw.ico, poe-web.ico, info.ico
 ; set before creating the settings UI so it gets used for the settigns dialog as well
-Menu, Tray, Icon, %A_ScriptDir%\icon.ico
+Menu, Tray, Icon, %A_ScriptDir%\data\poe-bw.ico
 
 ReadConfig()
 Sleep, 100
@@ -542,7 +542,7 @@ Menu, TextFiles, Add, Currency Rates, EditCurrencyRates
 
 ; Menu tooltip
 RelVer := Globals.Get("ReleaseVersion")
-Menu, Tray, Tip, Path of Exile TradeMacro 0.1
+Menu, Tray, Tip, Path of Exile Item Info %RelVer%
 
 Menu, Tray, NoStandard
 Menu, Tray, Add, About..., MenuTray_About
