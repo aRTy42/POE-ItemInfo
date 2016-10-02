@@ -19,3 +19,5 @@ More features to be included in the future.
 * Note that this a fork from the previous TradeMacro found [here](https://github.com/thirdy/trademacro). Motivation for this fork is to leverage ItemInfo's Clipboard Parsing code and to attempt at including Modifiers in price checking. It is also nice that user would only need to run 1 ahk script.
 
 * Another note, in case you don't know, you can edit the file AdditionalMacros.txt to add your simple macro like logout for hardcore players.
+
+![screenshot](https://cloud.githubusercontent.com/assets/75921/19019883/3ad6cb66-88c9-11e6-9592-46a8e4fc5e6b.PNG)
