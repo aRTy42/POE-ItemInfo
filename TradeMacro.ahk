@@ -8,14 +8,18 @@
 ; Allow user to customize which mod and value to use
 
 ^x::
+IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+{
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^c
 	Sleep 250
 	TradeMacroMainFunction()
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	return
-	
+}
 ^w::
+IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+{
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^c
 	Sleep 250
@@ -24,7 +28,7 @@
 	Run % WikiUrl
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	return
-	
+}	
 TradeMacroMainFunction()
 {
 	LeagueName := "Essence" 
