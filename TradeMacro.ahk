@@ -284,7 +284,7 @@ class RequestParams_ {
 	seller := ""
 	xthread := ""
 	identified := ""
-	corrupted := ""
+	corrupted := "0"
 	online := "x"
 	buyout := "x"
 	altart := ""
