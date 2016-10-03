@@ -7,6 +7,11 @@
 ; Support for modifiers
 ; Allow user to customize which mod and value to use
 
+;--------
+; NOTE, there's two places where LeagueName is set, one for price check, and one for custom input search
+; I can't find a way to get global variable work on included ahk file...
+;--------
+
 ^x::
 IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 {
@@ -15,8 +20,8 @@ IfWinActive, Path of Exile ahk_class Direct3DWindowClass
 	Sleep 250
 	TradeMacroMainFunction()
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-	return
 }
+return
 ^w::
 IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 {
@@ -27,8 +32,29 @@ IfWinActive, Path of Exile ahk_class Direct3DWindowClass
 	WikiUrl := "http://pathofexile.gamepedia.com/" Item.Name
 	Run % WikiUrl
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-	return
-}	
+}
+return
+^i::
+IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+{
+  Global X
+  Global Y
+  MouseGetPos, X, Y	
+  InputBox,ItemName,Price Check,Item Name,,250,100,X-160,Y - 250,,30,
+  if ItemName {
+	RequestParams := new RequestParams_()
+	LeagueName := "Essence" 
+	RequestParams.name   := ItemName
+	RequestParams.league := LeagueName
+	Item.Name := ItemName
+	Payload := RequestParams.ToPayload()
+	Html := FunctionDoPostRequest(Payload)
+	ParsedData := FunctionParseHtml(Html, Payload)
+	SetClipboardContents(ParsedData)
+    ShowToolTip(ParsedData)
+  }
+}
+return
 TradeMacroMainFunction()
 {
 	LeagueName := "Essence" 
