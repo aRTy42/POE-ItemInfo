@@ -7,7 +7,9 @@ With TradeMacro, price checking is added via **ctrl+x**. You can also open wiki 
 * 5-6 Link and 6 Sockets are also checked.
 * Corruption is always checked.
 
-*Usage*
+**Usage**
+
+**Latest Release**
 
 1. Install AHK (http://ahkscript.org)
 2. Download this zipped [file](https://github.com/thirdy/POE-TradeMacro/archive/master.zip) and extract. 
@@ -19,6 +21,14 @@ With TradeMacro, price checking is added via **ctrl+x**. You can also open wiki 
 change it to
 
 `LeagueName := "Hardcore Essence"`
+
+**Dev Version**
+
+1. Install AHK (http://ahkscript.org)
+2. Download the latest [release](https://github.com/thirdy/POE-TradeMacro/releases/latest) and extract the zip-file. 
+3. Run _run.ahk_.
+4. Default league is set to `tmpstandard` (Softcore Temp-League).
+5. A lot of options, inlcuding the league can be changed by editing `trade_config.ini`. 
 
 More features to be included in the future.
 

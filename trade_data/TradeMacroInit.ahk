@@ -33,7 +33,8 @@ class TradeUserOptions {
 	
     PriceCheckHotKey := ^x        	; 
     OpenWiki := ^w             		; 
-
+    CustomInputSearch := ^i         ;     
+    
     SearchLeague := "tmpstandard"   ; Defaults to "standard" or "tmpstandard" if there is an active Temp-League at the time of script execution.
 									; Possible values: 
 									; 	"tmpstandard" (current SC Temp-League) 
@@ -84,9 +85,11 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
         ; Hotkeys        
         TradeOpts.PriceCheckHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "PriceCheckHotKey", TradeOpts.PriceCheckHotKey)
         TradeOpts.OpenWiki := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenWiki", TradeOpts.OpenWiki)
-        
+        TradeOpts.CustomInputSearch := ReadIniValue(TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey", TradeOpts.CustomInputSearch)
+
 		AssignHotkey(TradeOpts.PriceCheckHotKey, "PriceCheck")
 		AssignHotkey(TradeOpts.OpenWiki, "OpenWiki")
+		AssignHotkey(TradeOpts.CustomInputSearch, "CustomInputSearch")
 		
         ; Search     	
 		TradeOpts.SearchLeague := ReadIniValue(TradeConfigPath, "Search", "SearchLeague", TradeOpts.Get("DefaultLeague"))		

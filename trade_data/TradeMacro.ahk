@@ -7,68 +7,64 @@
 ; Support for modifiers
 ; Allow user to customize which mod and value to use
 
-;--------
-; NOTE, there's two places where LeagueName is set, one for price check, and one for custom input search
-; I can't find a way to get global variable work on included ahk file...
-;--------
-
 PriceCheck:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global TradeOpts
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^c
-	Sleep 250
-	TradeMacroMainFunction()
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-	return
-}
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global TradeOpts
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeMacroMainFunction()
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
+return
 
 OpenWiki:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^c
-	Sleep 250
-	DoParseClipboardFunction()
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		DoParseClipboardFunction()
 
-	if (Item.IsUnique) {
-		UrlAffix := Item.Name
-	} else if (Item.IsFlask) {
-		UrlAffix := Item.SubType
-	} else {
-		UrlAffix := Item.TypeName
+		if (Item.IsUnique) {
+			UrlAffix := Item.Name
+		} else if (Item.IsFlask) {
+			UrlAffix := Item.SubType
+		} else {
+			UrlAffix := Item.TypeName
+		}
+
+		UrlAffix := StrReplace(UrlAffix," ","_")
+		WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix
+
+		Run % WikiUrl
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
-
-	UrlAffix := StrReplace(UrlAffix," ","_")
-	WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix
-
-	Run % WikiUrl
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-	return
-}
-
-^i::
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-  Global X
-  Global Y
-  MouseGetPos, X, Y	
-  InputBox,ItemName,Price Check,Item Name,,250,100,X-160,Y - 250,,30,
-  if ItemName {
-	RequestParams := new RequestParams_()
-	LeagueName := "Essence" 
-	RequestParams.name   := ItemName
-	RequestParams.league := LeagueName
-	Item.Name := ItemName
-	Payload := RequestParams.ToPayload()
-	Html := FunctionDoPostRequest(Payload)
-	ParsedData := FunctionParseHtml(Html, Payload)
-	SetClipboardContents(ParsedData)
-    ShowToolTip(ParsedData)
-  }
-}
 return
+
+CustomInputSearch:
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+	  Global X
+	  Global Y
+	  MouseGetPos, X, Y	
+	  InputBox,ItemName,Price Check,Item Name,,250,100,X-160,Y - 250,,30,
+	  if ItemName {
+		RequestParams := new RequestParams_()
+		LeagueName := TradeGlobals.Get("LeagueName")
+		RequestParams.name   := ItemName
+		RequestParams.league := LeagueName
+		Item.Name := ItemName
+		Payload := RequestParams.ToPayload()
+		Html := FunctionDoPostRequest(Payload)
+		ParsedData := FunctionParseHtml(Html, Payload)
+		SetClipboardContents(ParsedData)
+		ShowToolTip(ParsedData)
+	  }
+	}
+return
+
 TradeMacroMainFunction()
 {
 	LeagueName := TradeGlobals.Get("LeagueName")
