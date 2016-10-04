@@ -6,4 +6,4 @@
 ;   F2::^c					;binds ctrl-c to F2 key (in addition, not instead)
 ;   F9::SendInput {Enter}/remaining{Enter}	;mobs remaining with F9
 ;   F10::SendInput {Enter}/global 820{Enter}	;join a channel with F10
-#Include %A_ScriptDir%/TradeMacro.ahk
+;#Include %A_ScriptDir%/TradeMacro.ahk

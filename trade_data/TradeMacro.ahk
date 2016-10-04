@@ -7,9 +7,11 @@
 ; Support for modifiers
 ; Allow user to customize which mod and value to use
 
-^x::
+
+PriceCheck:
 IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 {
+	Global TradeOpts
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^c
 	Sleep 250
@@ -17,7 +19,7 @@ IfWinActive, Path of Exile ahk_class Direct3DWindowClass
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	return
 }
-^w::
+OpenWiki:
 IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 {
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
@@ -31,12 +33,9 @@ IfWinActive, Path of Exile ahk_class Direct3DWindowClass
 }	
 TradeMacroMainFunction()
 {
-	LeagueName := "Essence" 
-	; Hardcore Essence
-	; Standard
-	; Hardcore
+	LeagueName := TradeGlobals.Get("LeagueName")
 	
-	Global Item, ItemData
+	Global Item, ItemData, TradeOpts
 	
     out("+ Start of TradeMacroMainFunction")
 
@@ -302,3 +301,5 @@ class RequestParams_ {
 		return p
 	}
 }
+
+
