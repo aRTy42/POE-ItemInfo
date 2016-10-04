@@ -52,3 +52,5 @@ POE-ItemInfo.ahk.bak
 
 *.bak
 main.ahk
+temp/*
+temp
