@@ -68,7 +68,6 @@ return
 TradeMacroMainFunction()
 {
 	LeagueName := TradeGlobals.Get("LeagueName")
-	
 	Global Item, ItemData, TradeOpts
 	
     out("+ Start of TradeMacroMainFunction")
@@ -78,6 +77,9 @@ TradeMacroMainFunction()
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
 	RequestParams.name   := Item.Name
+	
+	; returns mods with their value ranges of the searched item if it is unique and has variable mods
+	variableItem := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
 	
 	if (Item.IsGem) {
 		RequestParams.q_min := Item.Quality
@@ -336,4 +338,12 @@ class RequestParams_ {
 	}
 }
 
-
+FunctionFindUniqueItemIfItHasVariableRolls(name)
+{
+	data := TradeGlobals.Get("VariableUniqueData")
+	For index, item in data {
+		If (item.name == name ) {
+			return item
+		}
+	} 
+}

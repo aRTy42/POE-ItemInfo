@@ -7,6 +7,9 @@
 ; Support for modifiers
 ; Allow user to customize which mod and value to use
 
+#Include, %A_ScriptDir%/lib/JSON.ahk
+#Include, %A_ScriptDir%/trade_data/uniqueData.ahk
+
 class TradeGlobals {    
     Set(name, value) {
         TradeGlobals[name] := value
@@ -55,7 +58,6 @@ IfNotExist, %A_ScriptDir%\trade_config.ini
     CopyDefaultTradeConfig()
 }
 
-
 ; Check if Temp-Leagues are active and set defaultLeague accordingly
 TradeGlobals.Set("TempLeagueIsRunning", FunctionCheckIfTempLeagueIsRunning())
 TradeGlobals.Set("DefaultLeague", (tempLeagueIsRunning > 0) ? "tmpstandard" : "standard")
@@ -69,6 +71,7 @@ Sleep, 100
 
 TradeGlobals.Set("Leagues", FunctionGETLeagues())
 TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
+TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
 
 ReadTradeConfig(TradeConfigPath="trade_config.ini")
 {
@@ -247,7 +250,7 @@ FunctionGetLeaguesJSON(){
     HttpObj.WaitForResponse()
     
     ; Trying to format the string as JSON
-    json := "{""results"":" . HttpObj.ResponseText . "}"
+    json := "{""results"":" . HttpObj.ResponseText . "}"    
     json := RegExReplace(HttpObj.ResponseText, ",", ",`r`n`" A_Tab) 
     json := RegExReplace(json, "{", "{`r`n`" A_Tab)
     json := RegExReplace(json, "}", "`r`n`}")    

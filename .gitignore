@@ -54,3 +54,4 @@ POE-ItemInfo.ahk.bak
 main.ahk
 temp/*
 temp
+trade_data/leagues.json
