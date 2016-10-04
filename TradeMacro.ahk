@@ -29,7 +29,18 @@ IfWinActive, Path of Exile ahk_class Direct3DWindowClass
 	Send ^c
 	Sleep 250
 	DoParseClipboardFunction()
-	WikiUrl := "http://pathofexile.gamepedia.com/" Item.Name
+
+	if (Item.IsUnique) {
+		UrlAffix := Item.Name
+	} else if (Item.IsFlask) {
+		UrlAffix := Item.SubType
+	} else {
+		UrlAffix := Item.TypeName
+	}
+
+	UrlAffix := StrReplace(UrlAffix," ","_")
+	WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix
+
 	Run % WikiUrl
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 }
