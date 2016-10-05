@@ -116,7 +116,10 @@ TradeMacroMainFunction()
 		}
 	}
 	else {
-		if (TradeOpts.Corrupted = 2) {
+		if (Item.IsGem) {
+			RequestParams.corrupted := "0"
+		}
+		else if (TradeOpts.Corrupted = 2) {
 			RequestParams.corrupted := "x"
 		}
 		else if (TradeOpts.Corrupted = 1) {		
