@@ -254,7 +254,7 @@ FunctionParseHtml(html, payload)
 	
     ; Text .= StrX( html,  "<tbody id=""item-container-0",          N,0, "<tr class=""first-line"">",1,28, N )
 
-    NoOfItemsToShow = 15
+    NoOfItemsToShow := TradeOpts.ShowItemResults
     While A_Index < NoOfItemsToShow
           TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "<tr class=""first-line"">", 1,23, N )
         , AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"  ,                      1,1,  T )
