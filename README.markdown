@@ -22,7 +22,7 @@ change it to
 
 `LeagueName := "Hardcore Essence"`
 
-**Dev Version**
+**[Dev Version](#dev)**
 
 1. Install AHK (http://ahkscript.org)
 2. Download the latest [release](https://github.com/thirdy/POE-TradeMacro/archive/master.zip) and extract the zip-file. 
