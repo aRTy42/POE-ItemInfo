@@ -111,6 +111,20 @@ TradeMacroMainFunction()
 	
 	if (Item.IsCorrupted) {
 		RequestParams.corrupted := "x"
+		if (Item.IsGem) {
+			RequestParams.corrupted := "1"
+		}
+	}
+	else {
+		if (TradeOpts.Corrupted = 2) {
+			RequestParams.corrupted := "x"
+		}
+		else if (TradeOpts.Corrupted = 1) {		
+			RequestParams.corrupted := "1"
+		}
+		else if (TradeOpts.Corrupted = 0) {		
+			RequestParams.corrupted := "0"
+		}
 	}
 	
 	if (Item.IsMap) {
