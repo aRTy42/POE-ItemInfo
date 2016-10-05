@@ -25,7 +25,7 @@ change it to
 **[Dev Version](#dev)**
 
 1. Install AHK (http://ahkscript.org)
-2. Download the latest [release](https://github.com/thirdy/POE-TradeMacro/archive/master.zip) and extract the zip-file. 
+2. Download the latest [code](https://github.com/thirdy/POE-TradeMacro/archive/master.zip) and extract the zip-file. 
 3. Run _run.ahk_.
 4. Default league is set to `tmpstandard` (Softcore Temp-League).
 5. A lot of options, including the league can be changed by editing `trade_config.ini`. 
