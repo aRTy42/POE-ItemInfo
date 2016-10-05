@@ -14,7 +14,7 @@ With TradeMacro, price checking is added via **ctrl+x** or **ctrl+i**. You can a
 1. Install AHK (http://ahkscript.org)
 2. Download the latest [code](https://github.com/thirdy/POE-TradeMacro/archive/master.zip) and extract the zip-file. 
 3. Make sure to run PoE in (borderless) windowed mode.
-4. Run _run.ahk_ (as admin if hotkeys aren't working).
+4. Run _run.ahk_ (as admin if hotkeys aren't working, or switch keyboard layout to english if your's is russian for example).
 5. Default league is set to `tmpstandard` (Softcore Temp-League).
 6. A lot of options, including the league can be changed by editing `trade_config.ini`. 
 
