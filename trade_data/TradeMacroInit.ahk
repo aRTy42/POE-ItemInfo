@@ -10,6 +10,15 @@
 #Include, %A_ScriptDir%/lib/JSON.ahk
 #Include, %A_ScriptDir%/lib/AssociatedProgram.ahk
 #Include, %A_ScriptDir%/trade_data/uniqueData.ahk
+#Include, %A_ScriptDir%/trade_data/Version.txt
+
+TradeMsgWrongAHKVersion := "AutoHotkey v" . TradeAHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
+If (A_AhkVersion <= TradeAHKVersionRequired)
+{
+    MsgBox, 16, Wrong AutoHotkey Version, % TradeMsgWrongAHKVersion
+    ExitApp
+}
+
 
 class TradeGlobals {    
     Set(name, value) {
@@ -71,7 +80,7 @@ TradeGlobals.Set("TempLeagueIsRunning", FunctionCheckIfTempLeagueIsRunning())
 TradeGlobals.Set("DefaultLeague", (tempLeagueIsRunning > 0) ? "tmpstandard" : "standard")
 TradeGlobals.Set("GithubUser", "thirdy")
 TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
-TradeGlobals.Set("ReleaseVersion", "1.0.0")
+TradeGlobals.Set("ReleaseVersion", TradeReleaseVersion)
 
 ;FunctionGetLatestRelease()
 ReadTradeConfig()
