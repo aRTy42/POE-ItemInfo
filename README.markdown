@@ -28,7 +28,7 @@ change it to
 2. Download the latest [release](https://github.com/thirdy/POE-TradeMacro/releases/latest) and extract the zip-file. 
 3. Run _run.ahk_.
 4. Default league is set to `tmpstandard` (Softcore Temp-League).
-5. A lot of options, inlcuding the league can be changed by editing `trade_config.ini`. 
+5. A lot of options, including the league can be changed by editing `trade_config.ini`. 
 
 More features to be included in the future.
 

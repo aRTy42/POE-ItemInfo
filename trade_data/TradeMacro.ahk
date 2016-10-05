@@ -68,7 +68,7 @@ return
 TradeMacroMainFunction()
 {
 	LeagueName := TradeGlobals.Get("LeagueName")
-	Global Item, ItemData, TradeOpts
+	Global Item, ItemData, TradeOpts, mapList, uniqueMapList
 	
     out("+ Start of TradeMacroMainFunction")
 
@@ -76,9 +76,9 @@ TradeMacroMainFunction()
 	
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
-	RequestParams.name   := Item.Name
+	RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))
 	
-	; returns mods with their value ranges of the searched item if it is unique and has variable mods
+	; returns mods with their ranges of the searched item if it is unique and has variable mods
 	variableItem := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
 	
 	if (Item.IsGem) {
@@ -187,7 +187,7 @@ FunctionParseHtml(html, payload)
     
 	; TODO refactor this
 	
-	Title := Item.Name
+	Title := Trim(StrReplace(Item.Name, "Superior", ""))
 	
 	if (Item.IsCorrupted) {
 		Title .= " [Corrupted] "
