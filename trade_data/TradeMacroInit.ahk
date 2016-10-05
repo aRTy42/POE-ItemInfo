@@ -176,11 +176,13 @@ ReadIniValue(iniFilePath, Section = "Misc", IniKey="", DefaultValue = "")
             FileReadLine, line, %iniFilePath%, %A_Index%
             If ErrorLevel
             break
-            If InStr(line, IniKey, false) {
+            
+            l := StrLen(IniKey)
+            NewStr := SubStr(Trim(line), 1 , l)
+            If (NewStr = IniKey) {
                 RegExMatch(line, "= *(.*)", value)
                 If (StrLen(value1) = 0) {
-                    OutputVar := DefaultValue
-                    
+                    OutputVar := DefaultValue                    
                 }
                 Else {
                     OutputVar := value1
