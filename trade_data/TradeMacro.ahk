@@ -148,6 +148,10 @@ TradeMacroMainFunction()
 		}
 	}
 	
+	if (Item.IsDivinationCard) {
+		RequestParams.xtype := Item.BaseType
+	}
+	
 	Payload := RequestParams.ToPayload()
 	
 	out("Running request with Payload:")
@@ -277,7 +281,8 @@ FunctionParseHtml(html, payload)
 		; Quick map fix (wrong Item.name on magic/rare maps)
 		Title := 
 		newName := Trim(StrReplace(Item.Name, "Superior", ""))
-		newName := Trim(StrReplace(match, "Shaped", ""))
+		newName := Trim(StrReplace(newName, "Shaped", ""))
+		; prevent duplicate name on white maps
 		if (newName != Item.SubType) {
 			Title .= "(" Trim(StrReplace(Item.Name, "Superior", "")) ") "
 		}		

@@ -11,6 +11,7 @@ FileCopy, %A_ScriptDir%\trade_data\TradeMacroInit.ahk, %A_ScriptDir%\main.ahk
 FileAppend, %info%, %A_ScriptDir%\main.ahk
 FileAppend, %trade%, %A_ScriptDir%\main.ahk
 
+RunAsAdmin()
 Run %A_ScriptDir%\main.ahk
 ExitApp 
 
@@ -30,5 +31,16 @@ CloseScript(Name)
 	else
 		return Name . " not found"
 }
-	
-	
+
+RunAsAdmin() 
+{
+    ShellExecute := A_IsUnicode ? "shell32\ShellExecute":"shell32\ShellExecuteA" 
+    if not A_IsAdmin 
+    { 
+        If A_IsCompiled 
+           DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_ScriptFullPath, str, A_WorkingDir, int, 1) 
+        Else 
+           DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_AhkPath, str, """" . A_ScriptFullPath . """", str, A_WorkingDir, int, 1) 
+        ExitApp 
+    }
+}	
