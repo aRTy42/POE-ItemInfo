@@ -176,6 +176,42 @@ FunctionDoPostRequest(payload)
     Return, html
 }
 
+FunctionGetMeanMedianPrice(html, payload){
+	itemCount := 1
+    prices := []
+    average := 0
+	Title := ""
+    While A_Index < 99 {
+        ChaosValue := StrX( html,  "data-name=""price_in_chaos""",N,0,  "currency", 1,0, N)
+        If (StrLen(ChaosValue) <= 0) {
+            Continue
+        }  Else { 
+            itemCount++
+        }
+        
+        RegExMatch(ChaosValue, "i)data-value=""-?(\d+.?\d+?)""", priceChaos)
+        If (StrLen(priceChaos1) > 0) {
+            SetFormat, float, 6.2            
+            StringReplace, FloatNumber, priceChaos1, ., `,, 1
+            average += priceChaos1
+            prices[itemCount-1] := priceChaos1
+        }
+    }
+    
+    If (prices.MaxIndex() > 0) {
+        average := average / itemCount
+        If (prices.MaxIndex()&1) {
+            median := prices[prices.MaxIndex()/2]
+        }
+        Else {
+            median := (prices[Floor(prices.MaxIndex()/2)] + prices[Ceil(prices.MaxIndex()/2)]) / 2
+        }
+        Title .= "Average price in chaos: " average " (" itemCount " results) `n"
+        Title .= "Median price in chaos: " median " (" itemCount " results) `n`n"
+    }  
+	return Title
+}
+
 FunctionParseHtml(html, payload)
 {
 	
@@ -203,8 +239,9 @@ FunctionParseHtml(html, payload)
 		Title := Item.Name " " ItemData.Sockets "s" ItemData.Links "l"
 	}
 	
-	Title .= "`n ---------- `n"
-
+	Title .= "`n ---------- `n"	  
+	Title .= FunctionGetMeanMedianPrice(html, payload)
+	
     ; Text .= StrX( html,  "<tbody id=""item-container-0",          N,0, "<tr class=""first-line"">",1,28, N )
 
     NoOfItemsToShow = 15
