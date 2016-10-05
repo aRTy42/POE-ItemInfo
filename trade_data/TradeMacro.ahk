@@ -237,13 +237,13 @@ FunctionGetMeanMedianPrice(html, payload){
     
     If (prices.MaxIndex() > 0) {
         average := average / itemCount
+		Title .= "Average price in chaos: " average " (" itemCount " results) `n"
         If (prices.MaxIndex()&1) {
             median := prices[prices.MaxIndex()/2]
         }
         Else {
             median := (prices[Floor(prices.MaxIndex()/2)] + prices[Ceil(prices.MaxIndex()/2)]) / 2
-        }
-        Title .= "Average price in chaos: " average " (" itemCount " results) `n"
+        }        
         Title .= "Median price in chaos: " median " (" itemCount " results) `n`n"
     }  
 	return Title
@@ -282,6 +282,8 @@ FunctionParseHtml(html, payload)
     ; Text .= StrX( html,  "<tbody id=""item-container-0",          N,0, "<tr class=""first-line"">",1,28, N )
 
     NoOfItemsToShow := TradeOpts.ShowItemResults
+	Title .= FunctionShowAcc(StrPad("Account",10), "|") StrPad("IGN",20) StrPad("Price",20,"left")"`n"
+	Title .= FunctionShowAcc(StrPad("----------",10), "-") StrPad("--------------------",20) StrPad("--------------------",20,"left")"`n"
     While A_Index < NoOfItemsToShow
           TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "<tr class=""first-line"">", 1,23, N )
         , AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"  ,                      1,1,  T )
@@ -289,9 +291,27 @@ FunctionParseHtml(html, payload)
         , IGN         := StrX( TBody,  "data-ign=""",                              T,10, """"  ,                      1,1     )
         ;, Text .= StrPad(IGN, 30) StrPad(AccountName, 30) StrPad(Buyout,30) "`n"
         ;, Text .= StrPad(IGN,20) StrPad(Buyout,20,"left") "`n"
-        , Title .= StrPad(IGN,20) StrPad(Buyout,20,"left")"`n"
+		, subAcc := FunctionTrimNames(AccountName, 10, true)
+		, subIGN := FunctionTrimNames(IGN, 20, true) 
+        , Title .= FunctionShowAcc(StrPad(subAcc,10), "|") StrPad(subIGN,20) StrPad(Buyout,20,"left")"`n"
     
     Return, Title
+}
+
+FunctionTrimNames(name, length, addDots) {
+	s := SubStr(name, 1 , length)
+	if (StrLen(name) > length + 3 && addDots) {
+		StringTrimRight, s, s, 3
+		s .= "..."
+	}
+	return s
+}
+
+FunctionShowAcc(s, addString) {
+	if (TradeOpts.ShowAccountName = 1) {
+		s .= addString
+		return s	
+	}	
 }
 
 ; ------------------------------------------------------------------------------------------------------------------ ;

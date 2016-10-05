@@ -34,6 +34,7 @@ class TradeUserOptions {
     ShowItemResults := 15		    ; Number of Items shown as search result; defaults to 15 if not set.
 	ShowUpdateNotifications := 1	; 1 = show, 0 = don't show
     OpenWithDefaultWin10Fix := 0    ; If your PC asks you what programm to use to open the wiki-link, set this to 1 
+    ShowAccountName := 1            ; Show also sellers account name in the results window
     
     Debug := 0      				; 
 	
@@ -89,6 +90,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
         TradeOpts.ShowItemResults := ReadIniValue(TradeConfigPath, "General", "ShowItemResults", TradeOpts.ShowItemResults)
 		TradeOpts.ShowUpdateNotifications := ReadIniValue(TradeConfigPath, "General", "ShowUpdateNotifications", TradeOpts.ShowUpdateNotifications)
 		TradeOpts.OpenWithDefaultWin10Fix := ReadIniValue(TradeConfigPath, "General", "OpenWithDefaultWin10Fix", TradeOpts.OpenWithDefaultWin10Fix)
+		TradeOpts.ShowAccountName := ReadIniValue(TradeConfigPath, "General", "ShowAccountName", TradeOpts.ShowAccountName)
 
         ; Debug        
         TradeOpts.Debug := ReadIniValue(TradeConfigPath, "Debug", "Debug", 0)
