@@ -1,7 +1,7 @@
 **PoE TradeMacro** is an Autohotkey (AHK) script that provides several convinient QoL features for Path of Exile Trading.
 
 This builds on top of [PoE-ItemInfo](https://github.com/aRTy42/POE-ItemInfo) which provides very useful item information on **ctrl+c**.
-With TradeMacro, price checking is added via **ctrl+x**. You can also open wiki via **ctrl+w**.
+With TradeMacro, price checking is added via **ctrl+x** or **ctrl+i**. You can also open wiki via **ctrl+w**.
 
 * For Gems, Quality and Gem Level >= 16 is checked.
 * 5-6 Link and 6 Sockets are also checked.
