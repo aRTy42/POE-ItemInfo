@@ -100,6 +100,10 @@ TradeMacroMainFunction()
 		RequestParams.corrupted := "x"
 	}
 	
+	if (Item.IsMap) {
+		RequestParams.xbase  := Item.SubType
+	}
+	
 	Payload := RequestParams.ToPayload()
 	
 	out("Running request with Payload:")

@@ -95,7 +95,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		AssignHotkey(TradeOpts.CustomInputSearch, "CustomInputSearch")
 		
         ; Search     	
-		TradeOpts.SearchLeague := ReadIniValue(TradeConfigPath, "Search", "SearchLeague", TradeOpts.Get("DefaultLeague"))		
+		TradeOpts.SearchLeague := ReadIniValue(TradeConfigPath, "Search", "SearchLeague", TradeOpts.Get("DefaultLeague"))	
         SetLeagueIfSelectedIsInactive()
 		
         ; Cache        
@@ -142,7 +142,7 @@ CreateDefaultTradeConfig()
 SetLeagueIfSelectedIsInactive() 
 {	
 	; Check if league from Ini is set to an inactive league and change it to the corresponding active one, for example tmpstandard to standard	
-	If (InStr(TradeOpts.SearchLeague, "tmp") && TradeGlobals.Get("TempLeagueIsRunning") = 1) {
+	If (InStr(TradeOpts.SearchLeague, "tmp") && TradeGlobals.Get("TempLeagueIsRunning") = 0) {
 		If (InStr(TradeOpts.SearchLeague, "standard")) {
 			TradeOpts.SearchLeague := "standard"
 		}
