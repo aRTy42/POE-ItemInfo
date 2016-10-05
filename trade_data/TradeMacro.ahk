@@ -38,7 +38,14 @@ OpenWiki:
 		UrlAffix := StrReplace(UrlAffix," ","_")
 		WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix
 
-		Run % WikiUrl
+		if (TradeOpts.OpenWithDefaultWin10Fix) {
+			openWith := AssociatedProgram("html") 
+			Run, %openWith% -new-tab "%WikiUrl%"
+		}
+		else {		
+			Run % WikiUrl
+		}		
+		
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
 return
@@ -82,8 +89,14 @@ TradeMacroMainFunction()
 	variableItem := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
 	
 	if (Item.IsGem) {
-		RequestParams.q_min := Item.Quality
-		if (Item.Level >= 16) {
+		if (TradeOpts.GemQualityRange > 0) {
+			RequestParams.q_min := Item.Quality - TradeOpts.GemQualityRange
+			RequestParams.q_max := Item.Quality + TradeOpts.GemQualityRange
+		}
+		else {
+			RequestParams.q_min := Item.Quality
+		}
+		if (Item.Level >= TradeOpts.GemLevel) {
 			RequestParams.level_min := Item.Level
 		}
 	}
@@ -367,7 +380,7 @@ class RequestParams_ {
 	xthread := ""
 	identified := ""
 	corrupted := "0"
-	online := "x"
+	online := (TradeOpts.OnlineOnly == 0) ? "" : "x"
 	buyout := "x"
 	altart := ""
 	capquality := "x"

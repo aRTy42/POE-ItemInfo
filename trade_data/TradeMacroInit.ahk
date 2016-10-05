@@ -8,6 +8,7 @@
 ; Allow user to customize which mod and value to use
 
 #Include, %A_ScriptDir%/lib/JSON.ahk
+#Include, %A_ScriptDir%/lib/AssociatedProgram.ahk
 #Include, %A_ScriptDir%/trade_data/uniqueData.ahk
 
 class TradeGlobals {    
@@ -32,6 +33,8 @@ FileCreateDir, %TradeTempDir%
 class TradeUserOptions {
     ShowItemResults := 15		    ; Number of Items shown as search result; defaults to 15 if not set.
 	ShowUpdateNotifications := 1	; 1 = show, 0 = don't show
+    OpenWithDefaultWin10Fix := 0    ; If your PC asks you what programm to use to open the wiki-link, set this to 1 
+    
     Debug := 0      				; 
 	
     PriceCheckHotKey := ^x        	; 
@@ -44,7 +47,10 @@ class TradeUserOptions {
 									;	"tmphardcore" (current HC Temp-League) 
 									;	"standard", 
 									;   "hardcore"
-	
+    GemLevel := 16                  ; Gem level is ignored in the search unless it's equal or higher than this value
+    GemQualityRange := 0            ; Use this to set a range to quality gems searches
+	OnlineOnly := 1                 ; 1 = search online only; 0 = search offline, too.
+    
 	Expire := 3						; cache expire min
 }
 TradeOpts := new TradeUserOptions()
@@ -81,6 +87,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
         ; General 		
         TradeOpts.ShowItemResults := ReadIniValue(TradeConfigPath, "General", "ShowItemResults", TradeOpts.ShowItemResults)
 		TradeOpts.ShowUpdateNotifications := ReadIniValue(TradeConfigPath, "General", "ShowUpdateNotifications", TradeOpts.ShowUpdateNotifications)
+		TradeOpts.OpenWithDefaultWin10Fix := ReadIniValue(TradeConfigPath, "General", "OpenWithDefaultWin10Fix", TradeOpts.OpenWithDefaultWin10Fix)
 
         ; Debug        
         TradeOpts.Debug := ReadIniValue(TradeConfigPath, "Debug", "Debug", 0)
@@ -95,8 +102,11 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		AssignHotkey(TradeOpts.CustomInputSearch, "CustomInputSearch")
 		
         ; Search     	
-		TradeOpts.SearchLeague := ReadIniValue(TradeConfigPath, "Search", "SearchLeague", TradeOpts.Get("DefaultLeague"))	
-        SetLeagueIfSelectedIsInactive()
+		TradeOpts.SearchLeague := ReadIniValue(TradeConfigPath, "Search", "SearchLeague", TradeGlobals.Get("DefaultLeague"))	
+        SetLeagueIfSelectedIsInactive()	
+		TradeOpts.GemLevel := ReadIniValue(TradeConfigPath, "Search", "GemLevel", TradeOpts.GemLevel)	
+		TradeOpts.GemQualityRange := ReadIniValue(TradeConfigPath, "Search", "GemQualityRange", TradeOpts.GemQualityRange)	
+		TradeOpts.OnlineOnly := ReadIniValue(TradeConfigPath, "Search", "OnlineOnly", TradeOpts.OnlineOnly)	
 		
         ; Cache        
         TradeOpts.Expire := ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
