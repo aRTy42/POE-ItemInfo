@@ -102,6 +102,12 @@ TradeMacroMainFunction()
 	
 	if (Item.IsMap) {
 		RequestParams.xbase  := Item.SubType
+		;MsgBox % Item.SubType
+		; Ivory Temple fix, not sure why it's not recognized and if there are more cases like it
+		if (InStr(Item.name, "Ivory Temple")){
+			RequestParams.xbase  := "Ivory Temple Map"
+			;MsgBox % RequestParams.xbase
+		}
 	}
 	
 	Payload := RequestParams.ToPayload()
