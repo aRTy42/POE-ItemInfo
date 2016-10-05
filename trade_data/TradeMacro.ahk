@@ -87,7 +87,7 @@ TradeMacroMainFunction()
 	
 	; returns mods with their ranges of the searched item if it is unique and has variable mods
 	variableItem := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
-	
+
 	if (Item.IsGem) {
 		if (TradeOpts.GemQualityRange > 0) {
 			RequestParams.q_min := Item.Quality - TradeOpts.GemQualityRange
@@ -130,13 +130,21 @@ TradeMacroMainFunction()
 		}
 	}
 	
-	if (Item.IsMap) {
-		RequestParams.xbase  := Item.SubType
-		;MsgBox % Item.SubType
+	if (Item.IsMap) {		
+		if (InStr(ItemData.Nameplate, "Shaped")) {
+			RequestParams.xbase := "Shaped " Trim(StrReplace(Item.SubType, "Superior", ""))
+		}
+		else {
+			RequestParams.xbase := Item.SubType
+		}
+		
+		; Quick map fix (wrong Item.name on magic/rare maps)
+		if (!Item.isUnique) {	
+			RequestParams.name   := Trim(StrReplace(Item.SubType, "Superior", ""))		
+		}
 		; Ivory Temple fix, not sure why it's not recognized and if there are more cases like it
 		if (InStr(Item.name, "Ivory Temple")){
 			RequestParams.xbase  := "Ivory Temple Map"
-			;MsgBox % RequestParams.xbase
 		}
 	}
 	
@@ -264,6 +272,20 @@ FunctionParseHtml(html, payload)
 	; TODO refactor this
 	
 	Title := Trim(StrReplace(Item.Name, "Superior", ""))
+	
+	if (Item.IsMap && !Item.isUnique) {
+		; Quick map fix (wrong Item.name on magic/rare maps)
+		Title := 
+		newName := Trim(StrReplace(Item.Name, "Superior", ""))
+		newName := Trim(StrReplace(match, "Shaped", ""))
+		if (newName != Item.SubType) {
+			Title .= "(" Trim(StrReplace(Item.Name, "Superior", "")) ") "
+		}		
+		if (InStr(ItemData.Nameplate, "Shaped")) {
+			Title .= "Shaped "
+		}
+		Title .= Trim(StrReplace(Item.SubType, "Superior", ""))
+	}
 	
 	if (Item.IsCorrupted) {
 		Title .= " [Corrupted] "
