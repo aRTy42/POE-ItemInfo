@@ -22,7 +22,7 @@ With TradeMacro, price checking is added via **ctrl+x** or **ctrl+i**. You can a
 
 1. Install AHK (http://ahkscript.org)
 2. Download this zipped [file](https://github.com/thirdy/POE-TradeMacro/releases/latest) and extract. 
-3. Run _POE-ItemInfo.ahk_.
+3. Run _POE-ItemInfo.ahk_ (as admin if hotkeys aren't working).
 4. Default league is set to Essence. For hardcore league, edit *TradeMacro.ahk* and find this line:
 
 `LeagueName := "Essence"`
