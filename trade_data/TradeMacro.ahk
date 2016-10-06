@@ -83,11 +83,14 @@ TradeMacroMainFunction()
 	
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
+	
+	; remove "Superior" from item name to exclude it from name search
 	RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))
 	
 	; returns mods with their ranges of the searched item if it is unique and has variable mods
 	variableItem := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
 
+	; handle gems
 	if (Item.IsGem) {
 		if (TradeOpts.GemQualityRange > 0) {
 			RequestParams.q_min := Item.Quality - TradeOpts.GemQualityRange
@@ -100,37 +103,48 @@ TradeMacroMainFunction()
 			RequestParams.level_min := Item.Level
 		}
 	}
-	out(ItemData.Links)
+	
+	; handle item links
 	if (ItemData.Links >= 5) {
 		RequestParams.link_min := ItemData.Links
 	}
 	
+	; handle item sockets
 	if (ItemData.Sockets >= 5) {
 		RequestParams.sockets_min := ItemData.Sockets
 	}
 	
+	; handle corruption
 	if (Item.IsCorrupted) {
+		; search for both corrupted and un-corrupted
 		RequestParams.corrupted := "x"
+		; for gems only search corrupted ones
 		if (Item.IsGem) {
 			RequestParams.corrupted := "1"
 		}
 	}
 	else {
+		; always exclude corrupted gems from results if the source is not corrupted
 		if (Item.IsGem) {
 			RequestParams.corrupted := "0"
 		}
+		; either
 		else if (TradeOpts.Corrupted = 2) {
 			RequestParams.corrupted := "x"
 		}
+		; corrupted
 		else if (TradeOpts.Corrupted = 1) {		
 			RequestParams.corrupted := "1"
 		}
+		; non-corrupted
 		else if (TradeOpts.Corrupted = 0) {		
 			RequestParams.corrupted := "0"
 		}
 	}
 	
-	if (Item.IsMap) {		
+	if (Item.IsMap) {	
+		; add Item.subtype to make sure to only find maps
+		; handle shaped maps, Item.subtype or Item.name won't work here
 		if (InStr(ItemData.Nameplate, "Shaped")) {
 			RequestParams.xbase := "Shaped " Trim(StrReplace(Item.SubType, "Superior", ""))
 		}
@@ -138,7 +152,7 @@ TradeMacroMainFunction()
 			RequestParams.xbase := Item.SubType
 		}
 		
-		; Quick map fix (wrong Item.name on magic/rare maps)
+		; Quick map fix (wrong Item.name on magic/rare maps), map name prefixes/suffixes can be ignored
 		if (!Item.isUnique) {	
 			RequestParams.name   := Trim(StrReplace(Item.SubType, "Superior", ""))		
 		}
@@ -148,6 +162,7 @@ TradeMacroMainFunction()
 		}
 	}
 	
+	; handle divination cards
 	if (Item.IsDivinationCard) {
 		RequestParams.xtype := Item.BaseType
 	}
@@ -190,10 +205,6 @@ out(str)
 
 FunctionDoPostRequest(payload)
 {	
-	;FileDelete, tempFiles\payload.txt
-    ;FileAppend, %payload%, tempFiles\payload.txt
-    
-    ; TODO: split this function, HTTP POST and Html parsing should be separate
     ; Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
     HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
     ;HttpObj := ComObjCreate("MSXML2.ServerXMLHTTP") 
@@ -221,9 +232,6 @@ FunctionDoPostRequest(payload)
     ; Dear GGG, it would be nice if you can provide an API like http://pathofexile.com/trade/search?name=Veil+of+the+night&links=4
     ; Pete's indexer is open sourced here - https://github.com/trackpete/exiletools-indexer you can use this to provide this api
     html := HttpObj.ResponseText
-    ;FileRead, html, %tempFilesDirectory%Test1.txt
-    ;FileDelete, %tempFilesDirectory%html.htm
-    ;FileAppend, %html%, %tempFilesDirectory%html.htm
     
     Return, html
 }
@@ -233,7 +241,9 @@ FunctionGetMeanMedianPrice(html, payload){
     prices := []
     average := 0
 	Title := ""
-    While A_Index < 99 {
+	
+	; loop over the first 99 results if possible, otherwise over as many as are available
+    While A_Index <= 99 {
         ChaosValue := StrX( html,  "data-name=""price_in_chaos""",N,0,  "currency", 1,0, N)
         If (StrLen(ChaosValue) <= 0) {
             Continue
@@ -241,6 +251,7 @@ FunctionGetMeanMedianPrice(html, payload){
             itemCount++
         }
         
+		; add chaos-equivalents (chaos prices) together and count results
         RegExMatch(ChaosValue, "i)data-value=""-?(\d+.?\d+?)""", priceChaos)
         If (StrLen(priceChaos1) > 0) {
             SetFormat, float, 6.2            
@@ -250,16 +261,31 @@ FunctionGetMeanMedianPrice(html, payload){
         }
     }
     
+	; calculate average and median prices
     If (prices.MaxIndex() > 0) {
-        average := average / itemCount
-		Title .= "Average price in chaos: " average " (" itemCount " results) `n"
+		; average
+        average := average / itemCount - 1
+		Title .= "Average price in chaos: " average " (" prices.MaxIndex() " results) `n"
+		
+		; median
         If (prices.MaxIndex()&1) {
-            median := prices[prices.MaxIndex()/2]
+			; results count is odd
+			index1 := Floor(prices.MaxIndex()/2)
+			index2 := Ceil(prices.MaxIndex()/2)
+			median := (prices[index1] + prices[index2]) / 2
+			if (median > 2) {
+				median := Round(median, 2)
+			}
         }
         Else {
-            median := (prices[Floor(prices.MaxIndex()/2)] + prices[Ceil(prices.MaxIndex()/2)]) / 2
-        }        
-        Title .= "Median price in chaos: " median " (" itemCount " results) `n`n"
+			; results count is even
+			index := Floor(prices.MaxIndex()/2)
+            median := prices[index]		
+			if (median > 2) {
+				median := Round(median, 2)
+			}
+        } 
+		Title .= "Median  price in chaos: " median " (" prices.MaxIndex() " results) `n`n"
     }  
 	return Title
 }
