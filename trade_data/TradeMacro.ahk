@@ -36,16 +36,9 @@ OpenWiki:
 		}
 
 		UrlAffix := StrReplace(UrlAffix," ","_")
-		WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix
+		WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
+		FunctionOpenUrlInBrowser(WikiUrl)
 
-		if (TradeOpts.OpenWithDefaultWin10Fix) {
-			openWith := AssociatedProgram("html") 
-			Run, %openWith% -new-tab "%WikiUrl%"
-		}
-		else {		
-			Run % WikiUrl
-		}		
-		
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
 return
@@ -72,8 +65,17 @@ CustomInputSearch:
 	}
 return
 
+OpenSearchOnPeoTrade:
+	Global TradeOpts
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+	Send ^c
+	Sleep 250
+	TradeMacroMainFunction(true)
+	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+return
+
 ; Prepare Reqeust Parametes and send Post Request
-TradeMacroMainFunction()
+TradeMacroMainFunction(openSearchInBrowser = false)
 {
 	LeagueName := TradeGlobals.Get("LeagueName")
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList
@@ -176,13 +178,21 @@ TradeMacroMainFunction()
 	out("------------------------------------")
 	
 	ShowToolTip("Running search...")
-    Html := FunctionDoPostRequest(Payload)
+    Html := FunctionDoPostRequest(Payload, openSearchInBrowser)
 	out("POST Request success")
-    ParsedData := FunctionParseHtml(Html, Payload)
-	out("Parsing HTML done")
 	
-    SetClipboardContents(ParsedData)
-    ShowToolTip(ParsedData)
+	if(openSearchInBrowser) {
+		; redirect was prevented to get the url and open the search on peotrade instead
+		RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
+		FunctionOpenUrlInBrowser(ParsedUrl1)
+	}
+	else {
+		ParsedData := FunctionParseHtml(Html, Payload)
+		out("Parsing HTML done")
+		
+		SetClipboardContents(ParsedData)
+		ShowToolTip(ParsedData)
+	}    
 }
 
 DoParseClipboardFunction()
@@ -204,10 +214,13 @@ out(str)
 	;stdout.WriteLine(str)
 }
 
-FunctionDoPostRequest(payload)
+FunctionDoPostRequest(payload, openSearchInBrowser = false)
 {	
     ; Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
     HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	if (openSearchInBrowser) {
+		HttpObj.Option(6) := False ;
+	}    
     ;HttpObj := ComObjCreate("MSXML2.ServerXMLHTTP") 
     ; We use this instead of WinHTTP to support gzip and deflate - http://microsoft.public.winhttp.narkive.com/NDkh5vEw/get-request-for-xml-gzip-file-winhttp-wont-uncompress-automagically
     HttpObj.Open("POST","http://poe.trade/search")
@@ -223,8 +236,7 @@ FunctionDoPostRequest(payload)
     HttpObj.SetRequestHeader("Referer","http://poe.trade/")
     HttpObj.SetRequestHeader("Accept-Encoding","gzip;q=0,deflate;q=0") ; disables compression
     ;HttpObj.SetRequestHeader("Accept-Encoding","gzip, deflate")
-    HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")
-
+    HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")	
     HttpObj.Send(payload)
     HttpObj.WaitForResponse()
 
@@ -235,6 +247,18 @@ FunctionDoPostRequest(payload)
     html := HttpObj.ResponseText
     
     Return, html
+}
+
+FunctionOpenUrlInBrowser(Url){
+	Global TradeOpts
+	
+	if (TradeOpts.OpenWithDefaultWin10Fix) {
+		openWith := AssociatedProgram("html") 
+		Run, %openWith% -new-tab "%Url%"
+	}
+	else {		
+		Run %Url%
+	}		
 }
 
 FunctionGetMeanMedianPrice(html, payload){
@@ -370,6 +394,7 @@ FunctionParseHtml(html, payload)
         Buyout      := StrX( TBody,  "data-buyout=""",                           T,13, """"  ,                      1,1,  T )
         IGN         := StrX( TBody,  "data-ign=""",                              T,10, """"  ,                      1,1     )
 		
+		; get item age
 		Pos := RegExMatch(TBody, "i)class=""found-time-ago"">(.*?)<", Age)
 		
 		if (Item.IsGem) {
@@ -391,7 +416,7 @@ FunctionParseHtml(html, payload)
 			Title .= StrPad(" " . Q1 . "% |",6,"left")
 			Title .= StrPad(" " . LVL1 . " |" ,6,"left")
 		}
-		
+		; add item age
 		Title .= StrPad(FunctionFormatItemAge(Age1),10)
 		Title .= "`n"
     }
@@ -417,6 +442,7 @@ FunctionShowAcc(s, addString) {
 	}	
 }
 
+; format item age to be shorter
 FunctionFormatItemAge(age) {
 	age := RegExReplace(age, "^a", "1")
 	RegExMatch(age, "\d+", value)
@@ -561,6 +587,16 @@ class RequestParams_ {
 	}
 }
 
+FunctionTestItemMods(){
+	test := FunctionFindUniqueItemIfItHasVariableRolls("Chernobog's Pillar")
+	if (test) {
+		s := FunctionGetItemsPoeTradeMods(test)
+		MsgBox % s.mods[1].param
+		MsgBox % s.mods[2].param
+		MsgBox % s.mods[3].param
+	}
+}
+
 ; Return unique item with its variable mods and mod ranges if it has any
 FunctionFindUniqueItemIfItHasVariableRolls(name)
 {
@@ -572,3 +608,75 @@ FunctionFindUniqueItemIfItHasVariableRolls(name)
 	} 
 }
 
+; Add poetrades mod names to the items mods to use as POST parameter
+FunctionGetItemsPoeTradeMods(item) {
+	mods := TradeGlobals.Get("ModsData")
+	
+	/*
+	; loop over poetrade mod groups
+	returnItem := item	
+
+	matchCount := 0
+	For i, modgroup in mods {		
+		; loop over modgroup mods
+		For j, mod in modgroup {
+			; loop over items variable mods
+			For k, imod in item.mods {	
+				s := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
+				ss := Trim(imod.name)				
+				If (s = ss) {
+					;MsgBox % s
+					; add poetrades mod name to item (POST param)
+					returnItem.mods[k]["param"] := mod
+					
+					If (matchCount >= item.mods.maxIndex()) {						
+						return returnItem
+					}
+					matchCount++
+				}
+			}
+		}	
+	} 
+	*/
+	
+	; use this to control search order (which group is more important)
+	For k, imod in item.mods {	
+		item.mods[k]["param"] := FunctionFindInModGroup(mods["[total] mods"], item.mods[k])
+		if (StrLen(item.mods[k]["param"]) < 1) {
+			item.mods[k]["param"] := FunctionFindInModGroup(mods["[pseudo] mods"], item.mods[k])
+		}
+		if (StrLen(item.mods[k]["param"]) < 1) {
+			item.mods[k]["param"] := FunctionFindInModGroup(mods["explicit"], item.mods[k])
+		}
+		if (StrLen(item.mods[k]["param"]) < 1) {
+			item.mods[k]["param"] := FunctionFindInModGroup(mods["implicit"], item.mods[k])
+		}
+		if (StrLen(item.mods[k]["param"]) < 1) {
+			item.mods[k]["param"] := FunctionFindInModGroup(mods["unique explicit"], item.mods[k])
+		}
+		if (StrLen(item.mods[k]["param"]) < 1) {
+			item.mods[k]["param"] := FunctionFindInModGroup(mods["crafted"], item.mods[k])
+		}
+		if (StrLen(item.mods[k]["param"]) < 1) {
+			item.mods[k]["param"] := FunctionFindInModGroup(mods["enchantments"], item.mods[k])
+		}
+		if (StrLen(item.mods[k]["param"]) < 1) {
+			item.mods[k]["param"] := FunctionFindInModGroup(mods["prophecies"], item.mods[k])
+		}
+	}
+
+	return item
+}
+
+; find mod in modgroup and return its name
+FunctionFindInModGroup(modgroup, needle) {
+	For j, mod in modgroup {
+		s := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
+		ss := Trim(needle.name)	
+			 
+		If (s = ss) {
+			return mod
+		}
+	}
+	return ""
+}

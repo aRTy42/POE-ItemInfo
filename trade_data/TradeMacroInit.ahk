@@ -52,6 +52,7 @@ class TradeUserOptions {
     PriceCheckHotKey := ^x        	; 
     OpenWiki := ^w             		; 
     CustomInputSearch := ^i         ;     
+    OpenSearchOnPeoTrade := ^q      ;     
     
     SearchLeague := "tmpstandard"   ; Defaults to "standard" or "tmpstandard" if there is an active Temp-League at the time of script execution.
 									; Possible values: 
@@ -91,6 +92,7 @@ Sleep, 100
 TradeGlobals.Set("Leagues", FunctionGETLeagues())
 TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
 TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
+TradeGlobals.Set("ModsData", TradeModsData)
 
 ReadTradeConfig(TradeConfigPath="trade_config.ini")
 {
@@ -110,10 +112,12 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
         TradeOpts.PriceCheckHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "PriceCheckHotKey", TradeOpts.PriceCheckHotKey)
         TradeOpts.OpenWiki := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenWiki", TradeOpts.OpenWiki)
         TradeOpts.CustomInputSearch := ReadIniValue(TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey", TradeOpts.CustomInputSearch)
+        TradeOpts.OpenSearchOnPeoTrade := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenSearchOnPeoTradeHotKey", TradeOpts.OpenSearchOnPeoTrade)
 
 		AssignHotkey(TradeOpts.PriceCheckHotKey, "PriceCheck")
 		AssignHotkey(TradeOpts.OpenWiki, "OpenWiki")
 		AssignHotkey(TradeOpts.CustomInputSearch, "CustomInputSearch")
+		AssignHotkey(TradeOpts.OpenSearchOnPeoTrade, "OpenSearchOnPeoTrade")
 		
         ; Search     	
 		TradeOpts.SearchLeague := ReadIniValue(TradeConfigPath, "Search", "SearchLeague", TradeGlobals.Get("DefaultLeague"))	
@@ -408,3 +412,4 @@ FunctionGetLatestRelease() {
         }
     }
 }
+
