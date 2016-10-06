@@ -72,6 +72,7 @@ CustomInputSearch:
 	}
 return
 
+; Prepare Reqeust Parametes and send Post Request
 TradeMacroMainFunction()
 {
 	LeagueName := TradeGlobals.Get("LeagueName")
@@ -291,15 +292,12 @@ FunctionGetMeanMedianPrice(html, payload){
 }
 
 FunctionParseHtml(html, payload)
-{
-	
+{	
 	Global Item, ItemData
 	
 	; Target HTML Looks like the ff:
     ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
-    ; TODO: grab more data like corruption found inside <tbody>
-    
-	; TODO refactor this
+
 	
 	Title := Trim(StrReplace(Item.Name, "Superior", ""))
 	
@@ -311,49 +309,97 @@ FunctionParseHtml(html, payload)
 		; prevent duplicate name on white maps
 		if (newName != Item.SubType) {
 			Title .= "(" Trim(StrReplace(Item.Name, "Superior", "")) ") "
-		}		
+		}
+		; add "SHaped" to item title since it's missing from Item.name	 		
 		if (InStr(ItemData.Nameplate, "Shaped")) {
 			Title .= "Shaped "
 		}
 		Title .= Trim(StrReplace(Item.SubType, "Superior", ""))
 	}
 	
+	; add corrupted tag
 	if (Item.IsCorrupted) {
 		Title .= " [Corrupted] "
 	}
 	
+	; add gem quality and level
 	if (Item.IsGem) {
 		Title := Item.Name " " Item.Quality "%"
 		if (Item.Level >= 16) {
 			Title := Item.Name " " Item.Level "`/" Item.Quality
 		}
 	}
+	; add item sockets and links
     if (ItemData.Sockets >= 5) {
 		Title := Item.Name " " ItemData.Sockets "s" ItemData.Links "l"
 	}
 	
-	Title .= "`n ---------- `n"	  
+	Title .= "`n ---------- `n"	
+	; add average and median prices to title	
 	Title .= FunctionGetMeanMedianPrice(html, payload)
 	
-    ; Text .= StrX( html,  "<tbody id=""item-container-0",          N,0, "<tr class=""first-line"">",1,28, N )
-
     NoOfItemsToShow := TradeOpts.ShowItemResults
-	Title .= FunctionShowAcc(StrPad("Account",10), "|") StrPad("IGN",20) StrPad("Price",20,"left")"`n"
-	Title .= FunctionShowAcc(StrPad("----------",10), "-") StrPad("--------------------",20) StrPad("--------------------",20,"left")"`n"
-    While A_Index < NoOfItemsToShow
-          TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "<tr class=""first-line"">", 1,23, N )
-        , AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"  ,                      1,1,  T )
-        , Buyout      := StrX( TBody,  "data-buyout=""",                           T,13, """"  ,                      1,1,  T )
-        , IGN         := StrX( TBody,  "data-ign=""",                              T,10, """"  ,                      1,1     )
-        ;, Text .= StrPad(IGN, 30) StrPad(AccountName, 30) StrPad(Buyout,30) "`n"
-        ;, Text .= StrPad(IGN,20) StrPad(Buyout,20,"left") "`n"
-		, subAcc := FunctionTrimNames(AccountName, 10, true)
-		, subIGN := FunctionTrimNames(IGN, 20, true) 
-        , Title .= FunctionShowAcc(StrPad(subAcc,10), "|") StrPad(subIGN,20) StrPad(Buyout,20,"left")"`n"
-    
+	; add table headers to tooltip
+	Title .= FunctionShowAcc(StrPad("Account",10), "|") 
+	Title .= StrPad("IGN",20) 	
+	Title .= StrPad("Price |",20,"left")	
+		
+	if (Item.IsGem) {
+		; add gem headers
+		Title .= StrPad("Q. |",6,"left")
+		Title .= StrPad("Lvl |",6,"left")
+	}
+	Title .= StrPad(" Age",8)	
+	Title .= "`n"
+	
+	; add table header underline
+	Title .= FunctionShowAcc(StrPad("----------",10), "-") 
+	Title .= StrPad("--------------------",20) 
+	Title .= StrPad("--------------------",20,"left")
+	if (Item.IsGem) {
+		Title .= StrPad("------",6,"left")
+		Title .= StrPad("------",6,"left")
+	}	
+	Title .= StrPad("----------",8,"left")	
+	Title .= "`n"
+	
+	; add search results to tooltip in table format
+    While A_Index < NoOfItemsToShow {
+        TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "</tbody>", 1,23, N )
+        AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"  ,                      1,1,  T )
+        Buyout      := StrX( TBody,  "data-buyout=""",                           T,13, """"  ,                      1,1,  T )
+        IGN         := StrX( TBody,  "data-ign=""",                              T,10, """"  ,                      1,1     )
+		
+		Pos := RegExMatch(TBody, "i)class=""found-time-ago"">(.*?)<", Age)
+		
+		if (Item.IsGem) {
+			; get gem quality and level
+			Pos := RegExMatch(TBody, "i)data-name=""q"".*?data-value=""(.*?)""", Q, Pos)
+			Pos := RegExMatch(TBody, "i)data-name=""level"".*?data-value=""(.*?)""", LVL, Pos)
+		}		
+		
+		; trim account and ign
+		subAcc := FunctionTrimNames(AccountName, 10, true)
+		subIGN := FunctionTrimNames(IGN, 20, true) 
+		
+        Title .= FunctionShowAcc(StrPad(subAcc,10), "|") 
+		Title .= StrPad(subIGN,20) 
+		Title .= StrPad(Buyout . "|",20,"left") 
+		
+		if (Item.IsGem) {
+			; add gem info
+			Title .= StrPad(" " . Q1 . "% |",6,"left")
+			Title .= StrPad(" " . LVL1 . " |" ,6,"left")
+		}
+		
+		Title .= StrPad(FunctionFormatItemAge(Age1),10)
+		Title .= "`n"
+    }
+
     Return, Title
 }
 
+; Trim names/string and add dots at the end if they are longer than specified length
 FunctionTrimNames(name, length, addDots) {
 	s := SubStr(name, 1 , length)
 	if (StrLen(name) > length + 3 && addDots) {
@@ -363,11 +409,38 @@ FunctionTrimNames(name, length, addDots) {
 	return s
 }
 
+; Add sellers accountname to string if that option is selected
 FunctionShowAcc(s, addString) {
 	if (TradeOpts.ShowAccountName = 1) {
 		s .= addString
 		return s	
 	}	
+}
+
+FunctionFormatItemAge(age) {
+	age := RegExReplace(age, "^a", "1")
+	RegExMatch(age, "\d+", value)
+	RegExMatch(age, "i)month|week|yesterday|hour|minute|second|day", unit)
+	
+	if (unit = "month") {
+		unit := " mo"
+	} else if (unit = "week") {
+		unit := " week"
+	} else if (unit = "day") {
+		unit := " day"
+	} else if (unit = "yesterday") {
+		unit := "1 day"
+	} else if (unit = "hour") {
+		unit := " h"
+	} else if (unit = "minute") {
+		unit := " min"
+	} else if (unit = "second") {
+		unit := " sec"
+	} 		
+	
+	s := " " value unit
+	
+	return s
 }
 
 ; ------------------------------------------------------------------------------------------------------------------ ;
@@ -488,6 +561,7 @@ class RequestParams_ {
 	}
 }
 
+; Return unique item with its variable mods and mod ranges if it has any
 FunctionFindUniqueItemIfItHasVariableRolls(name)
 {
 	data := TradeGlobals.Get("VariableUniqueData")
@@ -497,3 +571,4 @@ FunctionFindUniqueItemIfItHasVariableRolls(name)
 		}
 	} 
 }
+

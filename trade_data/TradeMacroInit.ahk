@@ -19,6 +19,8 @@ If (A_AhkVersion <= TradeAHKVersionRequired)
     ExitApp
 }
 
+; empty clipboard on start to fix first search searching random stuff
+Clipboard := ""
 
 class TradeGlobals {    
     Set(name, value) {
