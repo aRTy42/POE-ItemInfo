@@ -85,7 +85,7 @@ TradeGlobals.Set("GithubUser", "thirdy")
 TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
 TradeGlobals.Set("ReleaseVersion", TradeReleaseVersion)
 
-;FunctionGetLatestRelease()
+FunctionGetLatestRelease()
 ReadTradeConfig()
 Sleep, 100
 
@@ -389,27 +389,31 @@ FunctionGetLatestRelease() {
 	repo := TradeGlobals.Get("GithubRepo")
 	user := TradeGlobals.Get("GithubUser")
     HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-    url := "https://github.com/" . user . "/" . repo . "/releases"
-    tagsUrl = url . "/tags"
+    url := "https://api.github.com/repos/" . user . "/" . repo . "/releases/latest"
+    ;https://api.github.com/repos/thirdy/POE-TradeMacro/releases/latest    
     HttpObj.Open("GET",url)
     HttpObj.SetRequestHeader("Content-type","application/html")
     HttpObj.Send("")
-    HttpObj.WaitForResponse()
-    
+    HttpObj.WaitForResponse()   
     html := HttpObj.ResponseText
-    tag := StrX( html,  "<span class=""tag-name",N,0,  "</span>", 1,0, N )
-	MsgBox % tag
-    RegExMatch(tag, "i)>(.*)<", match)
-    tag := match1
+
+    RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)
+    RegExMatch(html, "i)""name"":""(.*?)""", vName)
+    RegExMatch(html, "i)""html_url"":""(.*?)""", url)
+
+    tag := tag1
+    vName := vName1
+    url := url1    
     
+    RegExReplace(tag, "^v", tag)
+    ; works only in x.x.x format
     RegExMatch(tag, "(\d+).(\d+).(\d+)(.*)", latestVersion)
-    RegExMatch(TradeGlobals.Get("ReleaseVersion"), "(\d+).(\d+).(\d+)(.*)", currentVersion)
-    
-    Loop, 3 {
-        If (latestVersion%A_Index% > currentVersion%A_Index%) {            
-			Run %url%
-            break
-        }
+    RegExMatch(TradeGlobals.Get("ReleaseVersion"), "(\d+).(\d+).(\d+)(.*)", currentVersion)    
+        
+    If (latestVersion > currentVersion) {
+        ; TODO show gui window with link instead of simply opening the url
+        FunctionOpenUrlInBrowser(url)
     }
+    return
 }
 
