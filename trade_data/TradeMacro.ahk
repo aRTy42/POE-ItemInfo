@@ -91,7 +91,19 @@ TradeMacroMainFunction(openSearchInBrowser = false)
 	RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))
 	
 	; returns mods with their ranges of the searched item if it is unique and has variable mods
-	variableItem := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
+	uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
+	if (uniqueWithVariableMods) {
+		s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)
+		Loop % s.mods.Length() {
+			modValue := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, s.mods[A_Index].param)
+			if (modValue) {
+				modParam := new _ParamMod()
+				modParam.mod_name := s.mods[A_Index].param
+				modParam.mod_min := modValue
+				RequestParams.modGroup.AddMod(modParam)
+			}	
+		}
+	}
 
 	; handle gems
 	if (Item.IsGem) {
@@ -551,13 +563,8 @@ class RequestParams_ {
 	rdex_max := ""
 	rint_min := ""
 	rint_max := ""
-	mod_name := ""
-	mod_min := ""
-	mod_max := ""
-	group_type := "And"
-	group_min := ""
-	group_max := ""
-	group_count := "1"
+	; For future development, change this to array to provide multi mod groups
+	modGroup := new _ParamModGroup()
 	q_min := ""
 	q_max := ""
 	level_min := ""
@@ -579,10 +586,47 @@ class RequestParams_ {
 	crafted := ""
 	enchanted := ""
 	
+	ToPayload() 
+	{
+		modGroupStr := this.modGroup.ToPayload()
+		
+		p := "league=" this.league "&type=" this.xtype "&base=" this.xbase "&name=" this.name "&dmg_min=" this.dmg_min "&dmg_max=" this.dmg_max "&aps_min=" this.aps_min "&aps_max=" this.aps_max "&crit_min=" this.crit_min "&crit_max=" this.crit_max "&dps_min=" this.dps_min "&dps_max=" this.dps_max "&edps_min=" this.edps_min "&edps_max=" this.edps_max "&pdps_min=" this.pdps_min "&pdps_max=" this.pdps_max "&armour_min=" this.armour_min "&armour_max=" this.armour_max "&evasion_min=" this.evasion_min "&evasion_max=" this.evasion_max "&shield_min=" this.shield_min "&shield_max=" this.shield_max "&block_min=" this.block_min "&block_max=" this.block_max "&sockets_min=" this.sockets_min "&sockets_max=" this.sockets_max "&link_min=" this.link_min "&link_max=" this.link_max "&sockets_r=" this.sockets_r "&sockets_g=" this.sockets_g "&sockets_b=" this.sockets_b "&sockets_w=" this.sockets_w "&linked_r=" this.linked_r "&linked_g=" this.linked_g "&linked_b=" this.linked_b "&linked_w=" this.linked_w "&rlevel_min=" this.rlevel_min "&rlevel_max=" this.rlevel_max "&rstr_min=" this.rstr_min "&rstr_max=" this.rstr_max "&rdex_min=" this.rdex_min "&rdex_max=" this.rdex_max "&rint_min=" this.rint_min "&rint_max=" this.rint_max modGroupStr "&q_min=" this.q_min "&q_max=" this.q_max "&level_min=" this.level_min "&level_max=" this.level_max "&ilvl_min=" this.ilvl_min "&ilvl_max=" this.ilvl_max "&rarity=" this.rarity "&seller=" this.seller "&thread=" this.xthread "&identified=" this.identified "&corrupted=" this.corrupted "&online=" this.online "&buyout=" this.buyout "&altart=" this.altart "&capquality=" this.capquality "&buyout_min=" this.buyout_min "&buyout_max=" this.buyout_max "&buyout_currency=" this.buyout_currency "&crafted=" this.crafted "&enchanted=" this.enchanted
+		return p
+	}
+}
+
+class _ParamModGroup {
+	ModArray := []
+	group_type := "And"
+	group_min := ""
+	group_max := ""
+	group_count := 1
 	
 	ToPayload() 
 	{
-		p := "league=" this.league "&type=" this.xtype "&base=" this.xbase "&name=" this.name "&dmg_min=" this.dmg_min "&dmg_max=" this.dmg_max "&aps_min=" this.aps_min "&aps_max=" this.aps_max "&crit_min=" this.crit_min "&crit_max=" this.crit_max "&dps_min=" this.dps_min "&dps_max=" this.dps_max "&edps_min=" this.edps_min "&edps_max=" this.edps_max "&pdps_min=" this.pdps_min "&pdps_max=" this.pdps_max "&armour_min=" this.armour_min "&armour_max=" this.armour_max "&evasion_min=" this.evasion_min "&evasion_max=" this.evasion_max "&shield_min=" this.shield_min "&shield_max=" this.shield_max "&block_min=" this.block_min "&block_max=" this.block_max "&sockets_min=" this.sockets_min "&sockets_max=" this.sockets_max "&link_min=" this.link_min "&link_max=" this.link_max "&sockets_r=" this.sockets_r "&sockets_g=" this.sockets_g "&sockets_b=" this.sockets_b "&sockets_w=" this.sockets_w "&linked_r=" this.linked_r "&linked_g=" this.linked_g "&linked_b=" this.linked_b "&linked_w=" this.linked_w "&rlevel_min=" this.rlevel_min "&rlevel_max=" this.rlevel_max "&rstr_min=" this.rstr_min "&rstr_max=" this.rstr_max "&rdex_min=" this.rdex_min "&rdex_max=" this.rdex_max "&rint_min=" this.rint_min "&rint_max=" this.rint_max "&mod_name=" this.mod_name "&mod_min=" this.mod_min "&mod_max=" this.mod_max "&group_type=" this.group_type "&group_min=" this.group_min "&group_max=" this.group_max "&group_count=" this.group_count "&q_min=" this.q_min "&q_max=" this.q_max "&level_min=" this.level_min "&level_max=" this.level_max "&ilvl_min=" this.ilvl_min "&ilvl_max=" this.ilvl_max "&rarity=" this.rarity "&seller=" this.seller "&thread=" this.xthread "&identified=" this.identified "&corrupted=" this.corrupted "&online=" this.online "&buyout=" this.buyout "&altart=" this.altart "&capquality=" this.capquality "&buyout_min=" this.buyout_min "&buyout_max=" this.buyout_max "&buyout_currency=" this.buyout_currency "&crafted=" this.crafted "&enchanted=" this.enchanted
+		p := ""
+		
+		if (this.ModArray.Length() = 0) {
+			this.AddMod(new _ParamMod())
+		}
+		this.group_count := this.ModArray.Length()
+		Loop % this.ModArray.Length()
+			p .= this.ModArray[A_Index].ToPayload()
+		p .= "&group_type=" this.group_type "&group_min=" this.group_min "&group_max=" this.group_max "&group_count=" this.group_count
+		return p
+	}
+	AddMod(paraModObj) {
+		this.ModArray.Push(paraModObj)
+	}
+}
+
+class _ParamMod {
+	mod_name := ""
+	mod_min := ""
+	mod_max := ""
+	ToPayload() 
+	{
+		p := "&mod_name=" this.mod_name "&mod_min=" this.mod_min "&mod_max=" this.mod_max
 		return p
 	}
 }
@@ -668,6 +712,18 @@ FunctionGetItemsPoeTradeMods(item) {
 	return item
 }
 
+; Add poetrades mod names to the items mods to use as POST parameter
+FunctionGetItemsPoeTradeUniqueMods(item) {
+	mods := TradeGlobals.Get("ModsData")
+	For k, imod in item.mods {	
+		item.mods[k]["param"] := FunctionFindInModGroup(mods["unique explicit"], item.mods[k])
+		if (StrLen(item.mods[k]["param"]) < 1) {
+			item.mods[k]["param"] := FunctionFindInModGroup(mods["explicit"], item.mods[k])
+		}
+	}
+	return item
+}
+
 ; find mod in modgroup and return its name
 FunctionFindInModGroup(modgroup, needle) {
 	For j, mod in modgroup {
@@ -679,4 +735,68 @@ FunctionFindInModGroup(modgroup, needle) {
 		}
 	}
 	return ""
+}
+
+FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
+	Loop, Parse, itemModifiers, `n, `r
+	{
+		If StrLen(A_LoopField) = 0
+		{
+			Continue ; Not interested in blank lines
+		}
+		CurrValue := GetActualValue(A_LoopField)
+		ModStr := StrReplace(A_LoopField, CurrValue)
+		IfInString, poeTradeMod, % ModStr
+		{
+			return CurrValue
+		}
+	}
+}
+
+^j::
+	;FunctionTestItemMods()
+	MsgBox % new RequestParams_().ToPayload()
+	return
+	
+^b::
+{
+	out("testing")
+	;Testing
+	TestCase =
+	( LTrim
+		Rarity: Unique
+		Marohi Erqi
+		Karui Maul
+		--------
+		Two Handed Mace
+		Physical Damage: 293-454 (augmented)
+		Critical Strike Chance: 5.00`%
+		Attacks per Second: 0.99 (augmented)
+		--------
+		Requirements:
+		Level: 57
+		Str: 182 (unmet)
+		--------
+		Sockets: R 
+		--------
+		Item Level: 69
+		--------
+		20`% increased Stun Duration on Enemies
+		--------
+		Socketed Gems are Supported by level 15 Increased Area of Effect
+		229`% increased Physical Damage
+		Adds 10 to 20 Physical Damage
+		10`% reduced Attack Speed
+		-100 to Accuracy Rating
+		10`% reduced Movement Speed
+		45`% increased Stun Duration on Enemies
+		--------
+		Lumbering as a sea lion, clumsy as a berry-drunk pigeon. That was Erqi. 
+		It mattered little. When Erqi's maul fell true, so did its target.
+	)
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+	SetClipboardContents(TestCase)
+	TradeMacroMainFunction()
+	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	return
 }
