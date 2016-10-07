@@ -804,3 +804,39 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	return
 }
+
+testGui(){	
+	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
+	global
+    Gui, SelectModsGui:Add, Text, x10 y12, "Value to create min-max range: +/- `%"
+	Gui, SelectModsGui:Add, Edit, x200 y10 w40  vRangeValue r1, 20
+	
+	test := "long mod name"
+	Loop, 3 {
+		; get longest mod name
+		modLengthMax := StrLen(test)
+		modCount := A_Index
+		modGroupBox := modLengthMax * 6
+	}	
+	
+	boxRows := modCount * 2
+	Gui, SelectModsGui:Add, Groupbox, x10 y+10 w%modGroupBox% r%boxRows%, mods
+	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w50 r%boxRows%, min
+	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w50 r%boxRows%, max
+	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w45 r%boxRows%, select
+	;add mods
+	Loop, 3 {
+		xPosMin := modGroupBox + 25
+		Gui, SelectModsGui:Add, Text, x15 yp+30, Mod name %A_Index%
+		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w40  vModMin%A_Index% r1, 0		
+		Gui, SelectModsGui:Add, Edit, x+20 yp+0 w40  vModMax%A_Index% r1, 0
+		Gui, SelectModsGui:Add, CheckBox, x+30 yp+3 vSelected%A_Index%
+	}
+	
+	Gui, SelectModsGui:Add, Button, x10 y+40 gStartSearch, Search
+	; create subroutine (label) somewhere that closes this window and starts the search
+	
+	windowWidth := modGroupBox + 50 + 10 + 10 + 50 + 60 + 20
+	windowWidth := (windowWidth > 250) ? windowWidth : 250
+    Gui, SelectModsGui:Show, w%windowWidth% , Mod Selection	
+}
