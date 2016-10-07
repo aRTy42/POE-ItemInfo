@@ -38,6 +38,7 @@ class TradeGlobals {
 
 global TradeTempDir := A_ScriptDir . "\temp"
 global TradeDataDir := A_ScriptDir . "\trade_data"
+global SettingsWindowWidth := 845 
 FileRemoveDir, %TradeTempDir%, 1
 FileCreateDir, %TradeTempDir%
 
@@ -49,7 +50,7 @@ class TradeUserOptions {
     
     Debug := 0      				; 
 	
-    PriceCheckHotKey := ^x        	; 
+    PriceCheckHotKey := ^d        	; 
     OpenWiki := ^w             		; 
     CustomInputSearch := ^i         ;     
     OpenSearchOnPeoTrade := ^q      ;     
