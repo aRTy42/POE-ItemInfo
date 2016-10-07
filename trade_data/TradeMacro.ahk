@@ -90,18 +90,21 @@ TradeMacroMainFunction(openSearchInBrowser = false)
 	; remove "Superior" from item name to exclude it from name search
 	RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))
 	
-	; returns mods with their ranges of the searched item if it is unique and has variable mods
-	uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
-	if (uniqueWithVariableMods) {
-		s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)
-		Loop % s.mods.Length() {
-			modValue := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, s.mods[A_Index].param)
-			if (modValue) {
-				modParam := new _ParamMod()
-				modParam.mod_name := s.mods[A_Index].param
-				modParam.mod_min := modValue
-				RequestParams.modGroup.AddMod(modParam)
-			}	
+	if (Item.IsUnique) {
+		; returns mods with their ranges of the searched item if it is unique and has variable mods
+		uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
+		if (uniqueWithVariableMods) {
+			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)
+			Loop % s.mods.Length() {
+				modValue := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, s.mods[A_Index].param)
+				;MsgBox % s.mods[A_Index].param modValue
+				if (modValue) {
+					modParam := new _ParamMod()
+					modParam.mod_name := s.mods[A_Index].param
+					modParam.mod_min := modValue
+					RequestParams.modGroup.AddMod(modParam)
+				}	
+			}
 		}
 	}
 
@@ -755,7 +758,7 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 
 ^j::
 	;FunctionTestItemMods()
-	MsgBox % new RequestParams_().ToPayload()
+	;MsgBox % new RequestParams_().ToPayload()
 	return
 	
 ^b::
@@ -765,34 +768,29 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 	TestCase =
 	( LTrim
 		Rarity: Unique
-		Marohi Erqi
-		Karui Maul
+		<<set:MS>><<set:M>><<set:S>>Belly of the Beast
+		Full Wyrmscale
 		--------
-		Two Handed Mace
-		Physical Damage: 293-454 (augmented)
-		Critical Strike Chance: 5.00`%
-		Attacks per Second: 0.99 (augmented)
+		Armour: 532 (augmented)
+		Evasion Rating: 181
 		--------
 		Requirements:
-		Level: 57
-		Str: 182 (unmet)
+		Level: 46
+		Str: 68
+		Dex: 68 (unmet)
 		--------
-		Sockets: R 
+		Sockets: R B G 
 		--------
-		Item Level: 69
+		Item Level: 72
 		--------
-		20`% increased Stun Duration on Enemies
+		194`% increased Armour
+		33`% increased maximum Life
+		+14`% to all Elemental Resistances
+		50`% increased Flask Life Recovery rate
+		Extra gore
 		--------
-		Socketed Gems are Supported by level 15 Increased Area of Effect
-		229`% increased Physical Damage
-		Adds 10 to 20 Physical Damage
-		10`% reduced Attack Speed
-		-100 to Accuracy Rating
-		10`% reduced Movement Speed
-		45`% increased Stun Duration on Enemies
-		--------
-		Lumbering as a sea lion, clumsy as a berry-drunk pigeon. That was Erqi. 
-		It mattered little. When Erqi's maul fell true, so did its target.
+		There is no safer place
+		Than the Belly of the Beast
 	)
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	SetClipboardContents(TestCase)
