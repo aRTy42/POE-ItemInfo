@@ -97,8 +97,8 @@ TradeMacroMainFunction(openSearchInBrowser = false)
 			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)
 			Loop % s.mods.Length() {
 				modValue := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, s.mods[A_Index].param)
-				;MsgBox % s.mods[A_Index].param modValue
 				if (modValue) {
+					;MsgBox % modValue "=" s.mods[A_Index].param
 					modParam := new _ParamMod()
 					modParam.mod_name := s.mods[A_Index].param
 					modParam.mod_min := modValue
@@ -629,6 +629,8 @@ class _ParamMod {
 	mod_max := ""
 	ToPayload() 
 	{
+		; for some reason '+' is not encoded properly, this affects mods like '+#% to all Elemental Resistances'
+		this.mod_name := StrReplace(this.mod_name, "+", "%2B")
 		p := "&mod_name=" this.mod_name "&mod_min=" this.mod_min "&mod_max=" this.mod_max
 		return p
 	}
@@ -747,11 +749,15 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 		{
 			Continue ; Not interested in blank lines
 		}
+		CurrValue := ""
 		CurrValue := GetActualValue(A_LoopField)
-		ModStr := StrReplace(A_LoopField, CurrValue)
-		IfInString, poeTradeMod, % ModStr
-		{
-			return CurrValue
+		if (CurrValue ~= "\d+") {
+			ModStr := StrReplace(A_LoopField, CurrValue)
+			ModStr := StrReplace(ModStr, "+")
+			IfInString, poeTradeMod, % ModStr
+			{
+				return CurrValue
+			}
 		}
 	}
 }
@@ -794,7 +800,7 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 	)
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	SetClipboardContents(TestCase)
-	TradeMacroMainFunction()
+	TradeMacroMainFunction(true)
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	return
 }
