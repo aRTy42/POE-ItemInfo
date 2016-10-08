@@ -18,6 +18,7 @@ If (A_AhkVersion <= TradeAHKVersionRequired)
     MsgBox, 16, Wrong AutoHotkey Version, % TradeMsgWrongAHKVersion
     ExitApp
 }
+StartSplashScreen()
 
 ; empty clipboard on start to fix first search searching random stuff
 Clipboard := ""
@@ -425,3 +426,11 @@ FunctionGetLatestRelease() {
     }
     return
 }
+
+StartSplashScreen() {
+    SplashTextOn, , , Initializing PoE-TradeMacro...
+}
+StopSplashScreen() {
+    SplashTextOff 
+}
+StopSplashScreen()

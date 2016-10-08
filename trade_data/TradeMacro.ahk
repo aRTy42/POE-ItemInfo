@@ -399,9 +399,9 @@ FunctionParseHtml(html, payload)
 	
 	; add gem quality and level
 	if (Item.IsGem) {
-		Title := Item.Name " " Item.Quality "%"
+		Title := Item.Name ", Q" Item.Quality "%"
 		if (Item.Level >= 16) {
-			Title := Item.Name " " Item.Level "`/" Item.Quality
+			Title := Item.Name ", " Item.Level "`/" Item.Quality "%"
 		}
 	}
 	; add item sockets and links
@@ -431,10 +431,10 @@ FunctionParseHtml(html, payload)
 		; add ilvl
 		Title .= StrPad("iLvl |",7,"left")
 	}
-	Title .= StrPad(" Age",8)	
+	Title .= StrPad("   Age",8)	
 	Title .= "`n"
 	
-	; add table header underline
+	; add table head underline
 	Title .= FunctionShowAcc(StrPad("----------",10), "-") 
 	Title .= StrPad("--------------------",20) 
 	Title .= StrPad("--------------------",20,"left")
@@ -478,7 +478,11 @@ FunctionParseHtml(html, payload)
 		
 		if (Item.IsGem) {
 			; add gem info
-			Title .= StrPad(" " . Q1 . "% |",6,"left")
+			if (Q1 > 0) {
+				Title .= StrPad(" " . Q1 . "% |",6,"left")
+			} else {
+				Title .= StrPad(" -  |",6,"left")
+			}
 			Title .= StrPad(" " . LVL1 . " |" ,6,"left")
 		}
 		if (showItemLevel) {
@@ -524,7 +528,8 @@ FunctionFormatItemAge(age) {
 	} else if (unit = "day") {
 		unit := " day"
 	} else if (unit = "yesterday") {
-		unit := "1 day"
+		unit := " day"
+		value := "1"
 	} else if (unit = "hour") {
 		unit := " h"
 	} else if (unit = "minute") {
@@ -533,7 +538,7 @@ FunctionFormatItemAge(age) {
 		unit := " sec"
 	} 		
 	
-	s := " " value unit
+	s := " " StrPad(value, 3, left) unit
 	
 	return s
 }
