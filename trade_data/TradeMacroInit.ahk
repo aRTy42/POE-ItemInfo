@@ -51,6 +51,7 @@ class TradeUserOptions {
     Debug := 0      				; 
 	
     PriceCheckHotKey := ^d        	; 
+    AdvancedPriceCheckHotKey := ^!s  ; 
     OpenWiki := ^w             		; 
     CustomInputSearch := ^i         ;     
     OpenSearchOnPeoTrade := ^q      ;     
@@ -111,11 +112,13 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
         
         ; Hotkeys        
         TradeOpts.PriceCheckHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "PriceCheckHotKey", TradeOpts.PriceCheckHotKey)
+        TradeOpts.AdvancedPriceCheckHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "AdvancedPriceCheckHotKey", TradeOpts.AdvancedPriceCheckHotKey)
         TradeOpts.OpenWiki := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenWiki", TradeOpts.OpenWiki)
         TradeOpts.CustomInputSearch := ReadIniValue(TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey", TradeOpts.CustomInputSearch)
         TradeOpts.OpenSearchOnPeoTrade := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenSearchOnPeoTradeHotKey", TradeOpts.OpenSearchOnPeoTrade)
 
 		AssignHotkey(TradeOpts.PriceCheckHotKey, "PriceCheck")
+		AssignHotkey(TradeOpts.AdvancedPriceCheckHotKey, "AdvancedPriceCheck")
 		AssignHotkey(TradeOpts.OpenWiki, "OpenWiki")
 		AssignHotkey(TradeOpts.CustomInputSearch, "CustomInputSearch")
 		AssignHotkey(TradeOpts.OpenSearchOnPeoTrade, "OpenSearchOnPeoTrade")

@@ -19,6 +19,18 @@ PriceCheck:
 	}
 return
 
+AdvancedPriceCheck:
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global TradeOpts
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeMacroMainFunction(false, true)
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
+return
+
 OpenWiki:
 	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 	{
@@ -75,7 +87,10 @@ OpenSearchOnPeoTrade:
 return
 
 ; Prepare Reqeust Parametes and send Post Request
-TradeMacroMainFunction(openSearchInBrowser = false)
+; openSearchInBrowser : set to true to open the search on poe.trade instead of showing the tooltip
+; isAdvancedPriceCheck : set to true if the GUI to select mods should be openend
+; isAdvancedPriceCheckRedirect : set to true if the search is triggered from the GUI
+TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdvancedPriceCheckRedirect = false)
 {
 	LeagueName := TradeGlobals.Get("LeagueName")
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList
@@ -95,17 +110,26 @@ TradeMacroMainFunction(openSearchInBrowser = false)
 		uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
 		if (uniqueWithVariableMods) {
 			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)
-			testGui(s)
-			Loop % s.mods.Length() {
-				modValue := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, s.mods[A_Index].param)
-				if (modValue) {
-					;MsgBox % modValue " = " s.mods[A_Index].param
-					modParam := new _ParamMod()
-					modParam.mod_name := s.mods[A_Index].param
-					modParam.mod_min := modValue
-					RequestParams.modGroup.AddMod(modParam)
-				}	
-			}
+			
+			; open AdvancedPriceCheckGui to select mods and their min/max values
+			if (isAdvancedPriceCheck) {
+				AdvancedPriceCheckGui(s)
+				return
+			}		
+			; ignore mod rolls unless the AdvancedPriceCheckGui is used to search
+			if (isAdvancedPriceCheckRedirect) {
+				; submitting the AdvancedPriceCheck Gui sets TradeOpts.Set("AdvancedPriceCheckItem") with the edited item (selected mods and their min/max values)
+				s := TradeGlobals.Get("AdvancedPriceCheckItem")
+				Loop % s.mods.Length() {
+					if (s.mods[A_Index].selected > 0) {
+						modParam := new _ParamMod()
+						modParam.mod_name := s.mods[A_Index].param
+						modParam.mod_min := s.mods[A_Index].min
+						modParam.mod_max := s.mods[A_Index].max
+						RequestParams.modGroup.AddMod(modParam)
+					}	
+				}
+			}			
 		}
 	}
 
@@ -768,7 +792,6 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 	;MsgBox % new RequestParams_().ToPayload()
 	;item := FunctionFindUniqueItemIfItHasVariableRolls("Belly of the Beast")
 	;item := FunctionGetItemsPoeTradeUniqueMods(item)
-	;testGui(item)
 	
 	return
 	
@@ -810,15 +833,18 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 	return
 }
 
-testGui(item){	
+; Open Gui window to show the items variable mods, select the ones that should be used in the search and se their min/max values
+AdvancedPriceCheckGui(item){	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	global
 	
+	TradeGlobals.Set("AdvancedPriceCheckItem", item)
 	ValueRange := 20
 	Gui, SelectModsGui:Destroy
     ;Gui, SelectModsGui:Add, Text, x10 y12, "Value to create min-max range: +/- `%"
-    Gui, SelectModsGui:Add, Text, x10 y12, Value to calculate min-max range: +/-
-	Gui, SelectModsGui:Add, Text, x+5 yp+0, % ValueRange "`%"
+    Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
+	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRange "`%" 
+    Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the items values difference to their theoretical min/max as 100 `%
 	;Gui, SelectModsGui:Add, Edit, x200 y10 w40 vValueRange r1, 20
 	
 	ValueRange := ValueRange / 100 
@@ -842,9 +868,28 @@ testGui(item){
 	Loop % item.mods.Length() {
 		xPosMin := modGroupBox + 25			
 		
+		if (item.mods[A_Index].ranges.Length() > 1) {
+			theoreticalMinValue := item.mods[A_Index].ranges[1][1]
+			theoreticalMaxValue := item.mods[A_Index].ranges[2][2]
+		}
+		else {
+			theoreticalMinValue := item.mods[A_Index].ranges[1][1]
+			theoreticalMaxValue := item.mods[A_Index].ranges[1][2]
+		}
+		
 		modValue := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, item.mods[A_Index].param)
-		modValueMin := modValue - modValue * valueRange
-		modValueMax := modValue + modValue * valueRange
+		; calculate values to prefill min/max fields
+		; get values difference to their theoretical min/max values and use a percentage of that difference
+		modValueMin := modValue - ((modValue - theoreticalMinValue) * valueRange)
+		modValueMax := modValue + ((theoreticalMaxValue - modValue) * valueRange)
+		; floor values only if greater than 2, in case of leech/regen mods
+		modValueMin := (modValueMin > 2) ? Floor(modValueMin) : modValueMin
+		modValueMax := (modValueMax > 2) ? Floor(modValueMax) : modValueMax
+		
+		; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
+		modValueMin := (modValueMin < theoreticalMinValue) ? theoreticalMinValue : modValueMin
+		modValueMax := (modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax	
+		
 		rangeLength := item.mods[A_Index].range.Length()
 		; create Labels to show unique items theoretical rolls
 		minLabelFirst := "(" item.mods[A_Index].ranges[1][1]
@@ -855,17 +900,75 @@ testGui(item){
 		yPosFirst := ( A_Index = 1 ) ? 30 : 45
 	
 		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%, % item.mods[A_Index].name
-		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70  vModMin%A_Index% r1, %modValueMin%
+		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedModMin%A_Index% r1, %modValueMin%
 		Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen, % minLabelFirst minLabelSecond
-		Gui, SelectModsGui:Add, Edit, x+20 yp-25 w70 vModMax%A_Index% r1, %modValueMax%
+		Gui, SelectModsGui:Add, Edit, x+20 yp-25 w70 vTradeAdvancedModMax%A_Index% r1, %modValueMax%
 		Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen, % maxLabelFirst maxLabelSecond
-		Gui, SelectModsGui:Add, CheckBox, x+30 yp-21 vSelected%A_Index%
+		Gui, SelectModsGui:Add, CheckBox, x+30 yp-21 vTradeAdvancedSelected%A_Index%
+		
+		TradeAdvancedParam%A_Index% := item.mods[A_Index].param
 	}
 	
-	;Gui, SelectModsGui:Add, Button, x10 y+40 gStartSearch, Search
-	; create subroutine (label) somewhere that closes this window and starts the search
+	; closes this window and starts the search
+	Gui, SelectModsGui:Add, Button, x10 y+50 gAdvancedPriceCheckSearch, Search
+	
+	; open search on poe.trade instead
+	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPeoTrade, Open on poe.trade
 	
 	windowWidth := modGroupBox + 80 + 10 + 10 + 80 + 60 + 20
 	windowWidth := (windowWidth > 250) ? windowWidth : 250
-    Gui, SelectModsGui:Show, w%windowWidth% , Mod Selection	
+    Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search
 }
+
+AdvancedPriceCheckSearch:	
+	Gui, SelectModsGui:Submit
+	newItem := {mods:[]}
+	mods := []	
+	
+	Loop {
+		mod := {param:"",selected:"",min:"",max:""}
+		If (TradeAdvancedModMin%A_Index%) {
+			mod.param := TradeAdvancedParam%A_Index%
+			mod.selected := TradeAdvancedSelected%A_Index%
+			mod.min := TradeAdvancedModMin%A_Index%
+			mod.max := TradeAdvancedModMax%A_Index%
+			
+			mods.Push(mod)
+		}
+		Else {
+			break
+		}
+	}
+	newItem.mods := mods
+
+	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)
+	Gui, SelectModsGui:Destroy
+	TradeMacroMainFunction(false, false, true)
+return
+
+AdvancedOpenSearchOnPeoTrade:	
+	Gui, SelectModsGui:Submit
+	newItem := {mods:[]}
+	mods := []	
+	
+	Loop {
+		mod := {param:"",selected:"",min:"",max:""}
+		If (TradeAdvancedModMin%A_Index%) {
+			mod.param := TradeAdvancedParam%A_Index%
+			mod.selected := TradeAdvancedSelected%A_Index%
+			mod.min := TradeAdvancedModMin%A_Index%
+			mod.max := TradeAdvancedModMax%A_Index%
+			
+			mods.Push(mod)
+		}
+		Else {
+			break
+		}
+	}
+	newItem.mods := mods
+	
+	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)
+	Gui, SelectModsGui:Destroy
+	TradeMacroMainFunction(true, false, true)
+return
+
