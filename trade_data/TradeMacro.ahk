@@ -844,7 +844,7 @@ AdvancedPriceCheckGui(item){
     ;Gui, SelectModsGui:Add, Text, x10 y12, "Value to create min-max range: +/- `%"
     Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
 	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRange "`%" 
-    Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the items values difference to their theoretical min/max as 100 `%
+    Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the items mods difference between their theoretical min and max value as 100`%
 	;Gui, SelectModsGui:Add, Edit, x200 y10 w40 vValueRange r1, 20
 	
 	ValueRange := ValueRange / 100 
@@ -878,10 +878,10 @@ AdvancedPriceCheckGui(item){
 		}
 		
 		modValue := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, item.mods[A_Index].param)
-		; calculate values to prefill min/max fields
-		; get values difference to their theoretical min/max values and use a percentage of that difference
-		modValueMin := modValue - ((modValue - theoreticalMinValue) * valueRange)
-		modValueMax := modValue + ((theoreticalMaxValue - modValue) * valueRange)
+		; calculate values to prefill min/max fields		
+		; assume the difference between the theoretical max and min value as 100%
+		modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRange)
+		modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRange)
 		; floor values only if greater than 2, in case of leech/regen mods
 		modValueMin := (modValueMin > 2) ? Floor(modValueMin) : modValueMin
 		modValueMax := (modValueMax > 2) ? Floor(modValueMax) : modValueMax
@@ -972,3 +972,6 @@ AdvancedOpenSearchOnPeoTrade:
 	TradeMacroMainFunction(true, false, true)
 return
 
+CloseUpdateWindow:
+	Gui, UpdateNotification:Destroy
+return

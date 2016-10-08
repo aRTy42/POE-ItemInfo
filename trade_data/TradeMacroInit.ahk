@@ -417,12 +417,11 @@ FunctionGetLatestRelease() {
     RegExMatch(TradeGlobals.Get("ReleaseVersion"), "(\d+).(\d+).(\d+)(.*)", currentVersion)    
         
     If (latestVersion > currentVersion) {
-        ; TODO show gui window with link instead of simply opening the url
-        FunctionOpenUrlInBrowser(url)
+        Gui, UpdateNotification:Add, Text, cGreen, Update available!
+        Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>, the lastest version is <%latestVersion%>.
+        Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
+        Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
+        Gui, UpdateNotification:Show, w300 , Update 
     }
     return
 }
-
-;testGui()
-
-
