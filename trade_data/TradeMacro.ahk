@@ -95,10 +95,11 @@ TradeMacroMainFunction(openSearchInBrowser = false)
 		uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
 		if (uniqueWithVariableMods) {
 			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)
+			testGui(s)
 			Loop % s.mods.Length() {
 				modValue := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, s.mods[A_Index].param)
 				if (modValue) {
-					;MsgBox % modValue "=" s.mods[A_Index].param
+					;MsgBox % modValue " = " s.mods[A_Index].param
 					modParam := new _ParamMod()
 					modParam.mod_name := s.mods[A_Index].param
 					modParam.mod_min := modValue
@@ -765,6 +766,10 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 ^j::
 	;FunctionTestItemMods()
 	;MsgBox % new RequestParams_().ToPayload()
+	;item := FunctionFindUniqueItemIfItHasVariableRolls("Belly of the Beast")
+	;item := FunctionGetItemsPoeTradeUniqueMods(item)
+	;testGui(item)
+	
 	return
 	
 ^b::
@@ -805,38 +810,62 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 	return
 }
 
-testGui(){	
+testGui(item){	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	global
-    Gui, SelectModsGui:Add, Text, x10 y12, "Value to create min-max range: +/- `%"
-	Gui, SelectModsGui:Add, Edit, x200 y10 w40  vRangeValue r1, 20
 	
-	test := "long mod name"
-	Loop, 3 {
-		; get longest mod name
-		modLengthMax := StrLen(test)
-		modCount := A_Index
-		modGroupBox := modLengthMax * 6
-	}	
+	ValueRange := 20
+	Gui, SelectModsGui:Destroy
+    ;Gui, SelectModsGui:Add, Text, x10 y12, "Value to create min-max range: +/- `%"
+    Gui, SelectModsGui:Add, Text, x10 y12, Value to calculate min-max range: +/-
+	Gui, SelectModsGui:Add, Text, x+5 yp+0, % ValueRange "`%"
+	;Gui, SelectModsGui:Add, Edit, x200 y10 w40 vValueRange r1, 20
 	
-	boxRows := modCount * 2
+	ValueRange := ValueRange / 100 
+	
+	Loop % item.mods.Length() {		
+		tempValue := StrLen(item.mods[A_Index].name)
+		if(modLengthMax < tempValue ) {
+			modLengthMax := tempValue
+			modGroupBox := modLengthMax * 6
+		}				
+	}
+	modCount := item.mods.Length()
+
+	boxRows := modCount * 3 ; 2
 	Gui, SelectModsGui:Add, Groupbox, x10 y+10 w%modGroupBox% r%boxRows%, mods
-	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w50 r%boxRows%, min
-	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w50 r%boxRows%, max
+	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, min
+	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, max
 	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w45 r%boxRows%, select
+
 	;add mods
-	Loop, 3 {
-		xPosMin := modGroupBox + 25
-		Gui, SelectModsGui:Add, Text, x15 yp+30, Mod name %A_Index%
-		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w40  vModMin%A_Index% r1, 0		
-		Gui, SelectModsGui:Add, Edit, x+20 yp+0 w40  vModMax%A_Index% r1, 0
-		Gui, SelectModsGui:Add, CheckBox, x+30 yp+3 vSelected%A_Index%
+	Loop % item.mods.Length() {
+		xPosMin := modGroupBox + 25			
+		
+		modValue := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, item.mods[A_Index].param)
+		modValueMin := modValue - modValue * valueRange
+		modValueMax := modValue + modValue * valueRange
+		rangeLength := item.mods[A_Index].range.Length()
+		; create Labels to show unique items theoretical rolls
+		minLabelFirst := "(" item.mods[A_Index].ranges[1][1]
+		minLabelSecond := item.mods[A_Index].ranges[2][1] ? (" - " item.mods[A_Index].ranges[2][1] ")") : (")") 
+		maxLabelFirst := "(" item.mods[A_Index].ranges[1][2]
+		maxLabelSecond := item.mods[A_Index].ranges[2][2] ? (" - " item.mods[A_Index].ranges[2][2] ")") : (")")
+		
+		yPosFirst := ( A_Index = 1 ) ? 30 : 45
+	
+		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%, % item.mods[A_Index].name
+		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70  vModMin%A_Index% r1, %modValueMin%
+		Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen, % minLabelFirst minLabelSecond
+		Gui, SelectModsGui:Add, Edit, x+20 yp-25 w70 vModMax%A_Index% r1, %modValueMax%
+		Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen, % maxLabelFirst maxLabelSecond
+		Gui, SelectModsGui:Add, CheckBox, x+30 yp-21 vSelected%A_Index%
 	}
 	
-	Gui, SelectModsGui:Add, Button, x10 y+40 gStartSearch, Search
+	;Gui, SelectModsGui:Add, Button, x10 y+40 gStartSearch, Search
 	; create subroutine (label) somewhere that closes this window and starts the search
 	
-	windowWidth := modGroupBox + 50 + 10 + 10 + 50 + 60 + 20
+	windowWidth := modGroupBox + 80 + 10 + 10 + 80 + 60 + 20
 	windowWidth := (windowWidth > 250) ? windowWidth : 250
     Gui, SelectModsGui:Show, w%windowWidth% , Mod Selection	
 }
