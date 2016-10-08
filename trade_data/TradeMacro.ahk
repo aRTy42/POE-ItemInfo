@@ -836,10 +836,10 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 ; Open Gui window to show the items variable mods, select the ones that should be used in the search and se their min/max values
 AdvancedPriceCheckGui(item){	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
-	global
+	Global 
 	
 	TradeGlobals.Set("AdvancedPriceCheckItem", item)
-	ValueRange := 20
+	ValueRange := TradeOpts.AdvancedSearchModValueRange
 	Gui, SelectModsGui:Destroy
     ;Gui, SelectModsGui:Add, Text, x10 y12, "Value to create min-max range: +/- `%"
     Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
