@@ -47,5 +47,5 @@ RunAsAdmin()
 }	
 
 StartSplashScreen() {
-    SplashTextOn, , , Merging Scripts...
+    SplashTextOn, , , Merging and starting Scripts...
 }

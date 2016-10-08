@@ -313,8 +313,25 @@ FunctionGetMeanMedianPrice(html, payload){
 	Title := ""
 	
 	; loop over the first 99 results if possible, otherwise over as many as are available
-    While A_Index <= 99 {
-        ChaosValue := StrX( html,  "data-name=""price_in_chaos""",N,0,  "currency", 1,0, N)
+	accounts := []
+	NoOfItemsToCount := 99
+	NoOfItemsSkipped := 0
+    While A_Index <= NoOfItemsToCount {
+		TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N, 0, "</tbody>" , 1,23, N )
+        AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"       , 1,1,  T )
+        ChaosValue  := StrX( TBody,  "data-name=""price_in_chaos""",             T, 0, "currency" , 1,1     )	
+		
+		; skip multiple results from the same account		
+		If (TradeOpts.RemoveMultipleListingsFromSameAccount) {
+			If (FunctionIsInArray(AccountName, accounts)) {
+				NoOfItemsToShow := NoOfItemsToShow + 1
+				NoOfItemsSkipped := NoOfItemsSkipped + 1
+				continue
+			} Else {
+				accounts.Push(AccountName)
+			}
+		}		
+		
         If (StrLen(ChaosValue) <= 0) {
             Continue
         }  Else { 
@@ -335,7 +352,9 @@ FunctionGetMeanMedianPrice(html, payload){
     If (prices.MaxIndex() > 0) {
 		; average
         average := average / itemCount - 1
-		Title .= "Average price in chaos: " average " (" prices.MaxIndex() " results) `n"
+		Title .= "Average price in chaos: " average " (" prices.MaxIndex() " results"
+		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed" : ""		
+		Title .= ") `n"
 		
 		; median
         If (prices.MaxIndex()&1) {
@@ -355,14 +374,16 @@ FunctionGetMeanMedianPrice(html, payload){
 				median := Round(median, 2)
 			}
         } 
-		Title .= "Median  price in chaos: " median " (" prices.MaxIndex() " results) `n`n"
+		Title .= "Median  price in chaos: " median " (" prices.MaxIndex() " results"
+		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed" : ""		
+		Title .= ") `n`n"
     }  
 	return Title
 }
 
 FunctionParseHtml(html, payload)
 {	
-	Global Item, ItemData
+	Global Item, ItemData, TradeOpts
 	
 	; Target HTML Looks like the ff:
     ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
@@ -449,11 +470,22 @@ FunctionParseHtml(html, payload)
 	Title .= "`n"
 	
 	; add search results to tooltip in table format
+	accounts := []
     While A_Index < NoOfItemsToShow {
         TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "</tbody>", 1,23, N )
         AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"  ,                      1,1,  T )
         Buyout      := StrX( TBody,  "data-buyout=""",                           T,13, """"  ,                      1,1,  T )
         IGN         := StrX( TBody,  "data-ign=""",                              T,10, """"  ,                      1,1     )
+		
+		; skip multiple results from the same account
+		if (TradeOpts.RemoveMultipleListingsFromSameAccount) {
+			if (FunctionIsInArray(AccountName, accounts)) {
+				NoOfItemsToShow := NoOfItemsToShow + 1
+				continue
+			} else {
+				accounts.Push(AccountName)
+			}
+		}		
 		
 		; get item age
 		Pos := RegExMatch(TBody, "i)class=""found-time-ago"">(.*?)<", Age)
@@ -495,6 +527,18 @@ FunctionParseHtml(html, payload)
     }
 
     Return, Title
+}
+
+FunctionIsInArray(el, array) {
+	For i, element in array {
+		If (el = "") {
+			return false
+		}
+		If (element = el) {
+			return true
+		}
+	}
+	return false
 }
 
 ; Trim names/string and add dots at the end if they are longer than specified length

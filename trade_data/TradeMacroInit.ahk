@@ -52,7 +52,7 @@ class TradeUserOptions {
     Debug := 0      				; 
 	
     PriceCheckHotKey := ^d        	; 
-    AdvancedPriceCheckHotKey := ^!s  ; 
+    AdvancedPriceCheckHotKey := ^!s ; 
     OpenWiki := ^w             		; 
     CustomInputSearch := ^i         ;     
     OpenSearchOnPeoTrade := ^q      ;     
@@ -68,6 +68,7 @@ class TradeUserOptions {
 	OnlineOnly := 1                 ; 1 = search online only; 0 = search offline, too.
 	Corrupted := 2                  ; 1 = yes; 0 = no; 2 = eithe, This setting gets ignored when you use the search on corrupted items.
 	AdvancedSearchModValueRange := 20 ; 
+    RemoveMultipleListingsFromSameAccount := 0 ;
     
 	Expire := 3						; cache expire min
 }
@@ -133,6 +134,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.OnlineOnly := ReadIniValue(TradeConfigPath, "Search", "OnlineOnly", TradeOpts.OnlineOnly)	
 		TradeOpts.Corrupted := ReadIniValue(TradeConfigPath, "Search", "Corrupted", TradeOpts.Corrupted)	
 		TradeOpts.AdvancedSearchModValueRange := ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchModValueRange", TradeOpts.AdvancedSearchModValueRange)	
+		TradeOpts.RemoveMultipleListingsFromSameAccount := ReadIniValue(TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount", TradeOpts.RemoveMultipleListingsFromSameAccount)	
 		
         ; Cache        
         TradeOpts.Expire := ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
