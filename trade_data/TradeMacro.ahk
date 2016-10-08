@@ -95,13 +95,14 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	LeagueName := TradeGlobals.Get("LeagueName")
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList
 	
+	iLvl := Item.Level
+	;MsgBox % iLvl
     out("+ Start of TradeMacroMainFunction")
 
 	DoParseClipboardFunction()
 	
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
-	
 	; remove "Superior" from item name to exclude it from name search
 	RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))
 	
@@ -109,8 +110,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
 		uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
 		if (uniqueWithVariableMods) {
-			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)
-			
+			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)			
 			; open AdvancedPriceCheckGui to select mods and their min/max values
 			if (isAdvancedPriceCheck) {
 				AdvancedPriceCheckGui(s)
@@ -130,6 +130,11 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 					}	
 				}
 			}			
+		}
+
+		; find only uniques that can also be 6 socketed
+		if (iLvl >= 50) {
+			RequestParams.ilevel_min := 50
 		}
 	}
 
@@ -362,19 +367,25 @@ FunctionParseHtml(html, payload)
 	; Target HTML Looks like the ff:
     ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
 
+	if (not Item.IsGem and not Item.IsDivinationCard and not Item.IsJewel and not Item.IsCurrency and not Item.IsMap) {
+		showItemLevel := true
+	}
 	
-	Title := Trim(StrReplace(Item.Name, "Superior", ""))
+	Name := (Item.IsRare and not Item.IsMap) ? Item.Name " " Item.TypeName : Item.Name
+	Title := Trim(StrReplace(Name, "Superior", ""))
 	
 	if (Item.IsMap && !Item.isUnique) {
-		; Quick map fix (wrong Item.name on magic/rare maps)
+		; map fix (wrong Item.name on magic/rare maps)
 		Title := 
 		newName := Trim(StrReplace(Item.Name, "Superior", ""))
 		newName := Trim(StrReplace(newName, "Shaped", ""))
-		; prevent duplicate name on white maps
+		; prevent duplicate name on white and magic maps
 		if (newName != Item.SubType) {
-			Title .= "(" Trim(StrReplace(Item.Name, "Superior", "")) ") "
+			s := Trim(RegExReplace(Item.Name, "Superior|Shaped", "")) 
+			s := Trim(StrReplace(s, Item.SubType, "")) 
+			Title .= "(" RegExReplace(s, " +", " ") ") "
 		}
-		; add "SHaped" to item title since it's missing from Item.name	 		
+		; add "Shaped" to item title since it's missing from Item.name	 		
 		if (InStr(ItemData.Nameplate, "Shaped")) {
 			Title .= "Shaped "
 		}
@@ -395,10 +406,13 @@ FunctionParseHtml(html, payload)
 	}
 	; add item sockets and links
     if (ItemData.Sockets >= 5) {
-		Title := Item.Name " " ItemData.Sockets "s" ItemData.Links "l"
+		Title := Name " " ItemData.Sockets "s" ItemData.Links "l"
+	}
+	if (showItemLevel) {
+		Title .= ", iLvl: " Item.Level
 	}
 	
-	Title .= "`n ---------- `n"	
+	Title .= "`n------------------------------ `n"	
 	; add average and median prices to title	
 	Title .= FunctionGetMeanMedianPrice(html, payload)
 	
@@ -413,6 +427,10 @@ FunctionParseHtml(html, payload)
 		Title .= StrPad("Q. |",6,"left")
 		Title .= StrPad("Lvl |",6,"left")
 	}
+	if (showItemLevel) {
+		; add ilvl
+		Title .= StrPad("iLvl |",7,"left")
+	}
 	Title .= StrPad(" Age",8)	
 	Title .= "`n"
 	
@@ -424,6 +442,9 @@ FunctionParseHtml(html, payload)
 		Title .= StrPad("------",6,"left")
 		Title .= StrPad("------",6,"left")
 	}	
+	if (showItemLevel) {
+		Title .= StrPad("-------",7,"left")
+	}
 	Title .= StrPad("----------",8,"left")	
 	Title .= "`n"
 	
@@ -437,6 +458,10 @@ FunctionParseHtml(html, payload)
 		; get item age
 		Pos := RegExMatch(TBody, "i)class=""found-time-ago"">(.*?)<", Age)
 		
+		if (showItemLevel) {
+			; get item level
+			Pos := RegExMatch(TBody, "i)data-name=""ilvl"">.*: ?(\d+?)<", iLvl, Pos)
+		}		
 		if (Item.IsGem) {
 			; get gem quality and level
 			Pos := RegExMatch(TBody, "i)data-name=""q"".*?data-value=""(.*?)""", Q, Pos)
@@ -456,6 +481,10 @@ FunctionParseHtml(html, payload)
 			Title .= StrPad(" " . Q1 . "% |",6,"left")
 			Title .= StrPad(" " . LVL1 . " |" ,6,"left")
 		}
+		if (showItemLevel) {
+			; add item level
+			Title .= StrPad(" " . iLvl1 . "  |" ,7,"left")
+		}	
 		; add item age
 		Title .= StrPad(FunctionFormatItemAge(Age1),10)
 		Title .= "`n"
