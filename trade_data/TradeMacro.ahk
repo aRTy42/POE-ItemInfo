@@ -110,6 +110,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
 		uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
 		if (uniqueWithVariableMods) {
+			Gui, SelectModsGui:Destroy
 			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)			
 			; open AdvancedPriceCheckGui to select mods and their min/max values
 			if (isAdvancedPriceCheck) {
@@ -227,7 +228,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	out("POST Request success")
 	
 	if(openSearchInBrowser) {
-		; redirect was prevented to get the url and open the search on peotrade instead
+		; redirect was prevented to get the url and open the search on poe.trade instead
 		RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
 		FunctionOpenUrlInBrowser(ParsedUrl1)
 	}
@@ -741,16 +742,6 @@ class _ParamMod {
 	}
 }
 
-FunctionTestItemMods(){
-	test := FunctionFindUniqueItemIfItHasVariableRolls("Chernobog's Pillar")
-	if (test) {
-		s := FunctionGetItemsPoeTradeMods(test)
-		MsgBox % s.mods[1].param
-		MsgBox % s.mods[2].param
-		MsgBox % s.mods[3].param
-	}
-}
-
 ; Return unique item with its variable mods and mod ranges if it has any
 FunctionFindUniqueItemIfItHasVariableRolls(name)
 {
@@ -822,13 +813,19 @@ FunctionGetItemsPoeTradeMods(item) {
 	return item
 }
 
-; Add poetrades mod names to the items mods to use as POST parameter
+; Add poe.trades mod names to the items mods to use as POST parameter
 FunctionGetItemsPoeTradeUniqueMods(item) {
 	mods := TradeGlobals.Get("ModsData")
 	For k, imod in item.mods {	
 		item.mods[k]["param"] := FunctionFindInModGroup(mods["unique explicit"], item.mods[k])
 		if (StrLen(item.mods[k]["param"]) < 1) {
 			item.mods[k]["param"] := FunctionFindInModGroup(mods["explicit"], item.mods[k])
+		}
+		if (StrLen(item.mods[k]["param"]) < 1) {
+			item.mods[k]["param"] := FunctionFindInModGroup(mods["[total] mods"], item.mods[k])
+		}
+		if (StrLen(item.mods[k]["param"]) < 1) {
+			item.mods[k]["param"] := FunctionFindInModGroup(mods["[pseudo] mods"], item.mods[k])
 		}
 	}
 	return item
@@ -837,7 +834,8 @@ FunctionGetItemsPoeTradeUniqueMods(item) {
 ; find mod in modgroup and return its name
 FunctionFindInModGroup(modgroup, needle) {
 	For j, mod in modgroup {
-		s := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
+		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
+		s  := RegExReplace(s, "# ?to ? #", "#")
 		ss := Trim(needle.name)	
 			 
 		If (s = ss) {
@@ -855,62 +853,35 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 			Continue ; Not interested in blank lines
 		}
 		CurrValue := ""
+		CurrValues := []
 		CurrValue := GetActualValue(A_LoopField)
 		if (CurrValue ~= "\d+") {
-			ModStr := StrReplace(A_LoopField, CurrValue)
+			
+			; handle value range
+			RegExMatch(CurrValue, "(\d+) ?(-|to) ?(\d+)", values)			
+			if (values3) {
+				CurrValues.Push(values1)
+				CurrValues.Push(values3)
+				CurrValue := values1 " to " values3
+				ModStr := StrReplace(A_LoopField, CurrValue, "# to #")		
+			}
+			; handle single value
+			else {
+				CurrValues.Push(CurrValue)
+				ModStr := StrReplace(A_LoopField, CurrValue, "#")		
+			}			
+					
 			ModStr := StrReplace(ModStr, "+")
+			; replace multi spaces with a single one
+			ModStr := RegExReplace(ModStr, " +", " ")			
+			;MsgBox % "Loop: " A_LoopField "`nCurr: " CurrValue "`nModStr: " ModStr "`ntradeMod: " poeTradeMod
+			
 			IfInString, poeTradeMod, % ModStr
-			{
-				return CurrValue
+			{			
+				return CurrValues
 			}
 		}
 	}
-}
-
-^j::
-	;FunctionTestItemMods()
-	;MsgBox % new RequestParams_().ToPayload()
-	;item := FunctionFindUniqueItemIfItHasVariableRolls("Belly of the Beast")
-	;item := FunctionGetItemsPoeTradeUniqueMods(item)
-	
-	return
-	
-^b::
-{
-	out("testing")
-	;Testing
-	TestCase =
-	( LTrim
-		Rarity: Unique
-		<<set:MS>><<set:M>><<set:S>>Belly of the Beast
-		Full Wyrmscale
-		--------
-		Armour: 532 (augmented)
-		Evasion Rating: 181
-		--------
-		Requirements:
-		Level: 46
-		Str: 68
-		Dex: 68 (unmet)
-		--------
-		Sockets: R B G 
-		--------
-		Item Level: 72
-		--------
-		194`% increased Armour
-		33`% increased maximum Life
-		+14`% to all Elemental Resistances
-		50`% increased Flask Life Recovery rate
-		Extra gore
-		--------
-		There is no safer place
-		Than the Belly of the Beast
-	)
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	SetClipboardContents(TestCase)
-	TradeMacroMainFunction(true)
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-	return
 }
 
 ; Open Gui window to show the items variable mods, select the ones that should be used in the search and se their min/max values
@@ -924,7 +895,7 @@ AdvancedPriceCheckGui(item){
     ;Gui, SelectModsGui:Add, Text, x10 y12, "Value to create min-max range: +/- `%"
     Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
 	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRange "`%" 
-    Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the items mods difference between their theoretical min and max value as 100`%
+    Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the items mods difference between their`ntheoretical min and max value as 100`%
 	;Gui, SelectModsGui:Add, Edit, x200 y10 w40 vValueRange r1, 20
 	
 	ValueRange := ValueRange / 100 
@@ -957,7 +928,15 @@ AdvancedPriceCheckGui(item){
 			theoreticalMaxValue := item.mods[A_Index].ranges[1][2]
 		}
 		
-		modValue := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, item.mods[A_Index].param)
+		modValues := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, item.mods[A_Index].param)
+		if (modValues.Length() > 1) {
+			MsgBox % modValues[1] "-" modValues[2]
+			modValue := (modValues[1] + modValues[2]) / 2
+		}
+		else {
+			modValue := modValues[1]		
+		}		
+		
 		; calculate values to prefill min/max fields		
 		; assume the difference between the theoretical max and min value as 100%
 		modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRange)
@@ -970,7 +949,7 @@ AdvancedPriceCheckGui(item){
 		modValueMin := (modValueMin < theoreticalMinValue) ? theoreticalMinValue : modValueMin
 		modValueMax := (modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax	
 		
-		rangeLength := item.mods[A_Index].range.Length()
+		rangeLength := item.mods[A_Index].ranges.Length()
 		; create Labels to show unique items theoretical rolls
 		minLabelFirst := "(" item.mods[A_Index].ranges[1][1]
 		minLabelSecond := item.mods[A_Index].ranges[2][1] ? (" - " item.mods[A_Index].ranges[2][1] ")") : (")") 
@@ -1071,8 +1050,6 @@ TradeSettingsUI_BtnOK:
     Sleep, 50
     WriteTradeConfig()
     UpdateTradeSettingsUI()
-	;MsgBox % OnlineOnly
-	;MsgBox % TradeOpts.OnlineOnly
 return
 
 TradeSettingsUI_BtnCancel:
