@@ -586,11 +586,14 @@ CreateTradeSettingsUI()
     AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
     
     
-    GuiAddText("Mouse over settings to see what these settings do exactly.", "x827 y585 w250 h60")
+    GuiAddText("Mouse over settings to see what these settings do exactly.", "x827 y585 w250 h30")
 
-    GuiAddButton("&Defaults", "x827 y640 w80 h23", "TradeSettingsUI_BtnDefaults")
-    GuiAddButton("&OK", "Default x+5 y640 w75 h23", "TradeSettingsUI_BtnOK")
-    GuiAddButton("&Cancel", "x+5 y640 w80 h23", "TradeSettingsUI_BtnCancel")
+    GuiAddButton("[Trade] Defaults", "x822 y640 w90 h23", "TradeSettingsUI_BtnDefaults")
+    GuiAddButton("[Trade] OK", "Default x+5 y640 w75 h23", "TradeSettingsUI_BtnOK")
+    GuiAddButton("[Trade] Cancel", "x+5 y640 w80 h23", "TradeSettingsUI_BtnCancel")
+    
+    GuiAddText("Use these Buttons to change TradeMacro Settings only.", "x827 y+10 w250 h50 cRed")
+    GuiAddText("Use these Buttons to change Item Info Settings only.", "x287 yp+0 w250 h50 cRed")
 }
 
 UpdateTradeSettingsUI()
