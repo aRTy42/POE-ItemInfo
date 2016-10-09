@@ -930,7 +930,6 @@ AdvancedPriceCheckGui(item){
 		
 		modValues := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, item.mods[A_Index].param)
 		if (modValues.Length() > 1) {
-			MsgBox % modValues[1] "-" modValues[2]
 			modValue := (modValues[1] + modValues[2]) / 2
 		}
 		else {
