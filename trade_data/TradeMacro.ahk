@@ -77,7 +77,7 @@ CustomInputSearch:
 	}
 return
 
-OpenSearchOnPeoTrade:
+OpenSearchOnPoeTrade:
 	Global TradeOpts
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^c
@@ -177,15 +177,15 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			RequestParams.corrupted := "0"
 		}
 		; either
-		else if (TradeOpts.Corrupted = 2) {
+		else if (TradeOpts.Corrupted = "Either") {
 			RequestParams.corrupted := "x"
 		}
 		; corrupted
-		else if (TradeOpts.Corrupted = 1) {		
+		else if (TradeOpts.Corrupted = "Yes") {		
 			RequestParams.corrupted := "1"
 		}
 		; non-corrupted
-		else if (TradeOpts.Corrupted = 0) {		
+		else if (TradeOpts.Corrupted = "No") {		
 			RequestParams.corrupted := "0"
 		}
 	}
@@ -384,6 +384,7 @@ FunctionGetMeanMedianPrice(html, payload){
 FunctionParseHtml(html, payload)
 {	
 	Global Item, ItemData, TradeOpts
+	LeagueName := TradeGlobals.Get("LeagueName")
 	
 	; Target HTML Looks like the ff:
     ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
@@ -433,6 +434,7 @@ FunctionParseHtml(html, payload)
 		Title .= ", iLvl: " Item.Level
 	}
 	
+	Title .= ", (" LeagueName ")"
 	Title .= "`n------------------------------ `n"	
 	; add average and median prices to title	
 	Title .= FunctionGetMeanMedianPrice(html, payload)
@@ -991,7 +993,7 @@ AdvancedPriceCheckGui(item){
 	Gui, SelectModsGui:Add, Button, x10 y+50 gAdvancedPriceCheckSearch, Search
 	
 	; open search on poe.trade instead
-	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPeoTrade, Open on poe.trade
+	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Open on poe.trade
 	
 	windowWidth := modGroupBox + 80 + 10 + 10 + 80 + 60 + 20
 	windowWidth := (windowWidth > 250) ? windowWidth : 250
@@ -1024,7 +1026,7 @@ AdvancedPriceCheckSearch:
 	TradeMacroMainFunction(false, false, true)
 return
 
-AdvancedOpenSearchOnPeoTrade:	
+AdvancedOpenSearchOnPoeTrade:	
 	Gui, SelectModsGui:Submit
 	newItem := {mods:[]}
 	mods := []	
@@ -1052,4 +1054,39 @@ return
 
 CloseUpdateWindow:
 	Gui, UpdateNotification:Destroy
+return
+
+OverwriteSettingsUIWidthTimer:
+	o := Globals.Get("SettingsUIWidth")
+	If (o) {
+		Globals.Set("SettingsUIWidth", 1085)
+		SetTimer, OverwriteSettingsUIWidthTimer, Off
+	}	
+return
+
+TradeSettingsUI_BtnOK:
+    Global TradeOpts
+    Gui, Submit
+	SavedTradeSettings := true
+    Sleep, 50
+    WriteTradeConfig()
+    UpdateTradeSettingsUI()
+	;MsgBox % OnlineOnly
+	;MsgBox % TradeOpts.OnlineOnly
+return
+
+TradeSettingsUI_BtnCancel:
+    Gui, Cancel
+return
+
+TradeSettingsUI_BtnDefaults:
+    Gui, Cancel
+    RemoveTradeConfig()
+    Sleep, 75
+    CopyDefaultTradeConfig()
+    Sleep, 75
+    ReadTradeConfig()
+    Sleep, 75
+    UpdateTradeSettingsUI()
+    ShowSettingsUI()
 return

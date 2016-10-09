@@ -172,6 +172,7 @@ class Globals {
 Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
+Globals.Set("SettingsUIWidth", 545)
 global SuspendPOEItemScript = 0
 
 class UserOptions {
@@ -7279,7 +7280,8 @@ ShowSettingsUI()
     SetTimer, ToolTipTimer, Off
     ToolTip
     Fonts.SetUIFont(9)
-    Gui, Show, w545 h710, PoE Item Info Settings
+    SettingsUIWidth := Globals.Get("SettingsUIWidth", 545)
+    Gui, Show, w%SettingsUIWidth% h710, PoE Item Info Settings
 }
 
 IniRead(ConfigPath, Section_, Key, Default_) 

@@ -18,6 +18,9 @@ If (A_AhkVersion <= TradeAHKVersionRequired)
     MsgBox, 16, Wrong AutoHotkey Version, % TradeMsgWrongAHKVersion
     ExitApp
 }
+
+Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-bw.ico
+
 StartSplashScreen()
 
 ; empty clipboard on start to fix first search searching random stuff
@@ -40,6 +43,8 @@ class TradeGlobals {
 global TradeTempDir := A_ScriptDir . "\temp"
 global TradeDataDir := A_ScriptDir . "\trade_data"
 global SettingsWindowWidth := 845 
+global SavedTradeSettings := false
+
 FileRemoveDir, %TradeTempDir%, 1
 FileCreateDir, %TradeTempDir%
 
@@ -55,7 +60,7 @@ class TradeUserOptions {
     AdvancedPriceCheckHotKey := ^!s ; 
     OpenWiki := ^w             		; 
     CustomInputSearch := ^i         ;     
-    OpenSearchOnPeoTrade := ^q      ;     
+    OpenSearchOnPoeTrade := ^q      ;     
     
     SearchLeague := "tmpstandard"   ; Defaults to "standard" or "tmpstandard" if there is an active Temp-League at the time of script execution.
 									; Possible values: 
@@ -66,7 +71,7 @@ class TradeUserOptions {
     GemLevel := 16                  ; Gem level is ignored in the search unless it's equal or higher than this value
     GemQualityRange := 0            ; Use this to set a range to quality gems searches
 	OnlineOnly := 1                 ; 1 = search online only; 0 = search offline, too.
-	Corrupted := 2                  ; 1 = yes; 0 = no; 2 = eithe, This setting gets ignored when you use the search on corrupted items.
+	Corrupted := "Either"           ; 1 = yes; 0 = no; 2 = either, This setting gets ignored when you use the search on corrupted items.
 	AdvancedSearchModValueRange := 20 ; 
     RemoveMultipleListingsFromSameAccount := 0 ;
     
@@ -99,6 +104,9 @@ TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeagu
 TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
 TradeGlobals.Set("ModsData", TradeModsData)
 
+CreateTradeSettingsUI()
+StopSplashScreen()
+
 ReadTradeConfig(TradeConfigPath="trade_config.ini")
 {
     Global
@@ -116,23 +124,28 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
         ; Hotkeys        
         TradeOpts.PriceCheckHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "PriceCheckHotKey", TradeOpts.PriceCheckHotKey)
         TradeOpts.AdvancedPriceCheckHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "AdvancedPriceCheckHotKey", TradeOpts.AdvancedPriceCheckHotKey)
-        TradeOpts.OpenWiki := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenWiki", TradeOpts.OpenWiki)
-        TradeOpts.CustomInputSearch := ReadIniValue(TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey", TradeOpts.CustomInputSearch)
-        TradeOpts.OpenSearchOnPeoTrade := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenSearchOnPeoTradeHotKey", TradeOpts.OpenSearchOnPeoTrade)
+        TradeOpts.OpenWikiHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenWiki", TradeOpts.OpenWikiHotKey)
+        TradeOpts.CustomInputSearchHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey", TradeOpts.CustomInputSearchHotKey)
+        TradeOpts.OpenSearchOnPoeTradeHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenSearchOnPoeTradeHotKey", TradeOpts.OpenSearchOnPoeTradeHotKey)
 
-		AssignHotkey(TradeOpts.PriceCheckHotKey, "PriceCheck")
-		AssignHotkey(TradeOpts.AdvancedPriceCheckHotKey, "AdvancedPriceCheck")
-		AssignHotkey(TradeOpts.OpenWiki, "OpenWiki")
-		AssignHotkey(TradeOpts.CustomInputSearch, "CustomInputSearch")
-		AssignHotkey(TradeOpts.OpenSearchOnPeoTrade, "OpenSearchOnPeoTrade")
+		AssignAllHotkeys()
 		
         ; Search     	
 		TradeOpts.SearchLeague := ReadIniValue(TradeConfigPath, "Search", "SearchLeague", TradeGlobals.Get("DefaultLeague"))	
+        temp := TradeOpts.SearchLeague
+        StringLower, temp, temp
         SetLeagueIfSelectedIsInactive()	
+        TradeOpts.SearchLeague := temp
+        
 		TradeOpts.GemLevel := ReadIniValue(TradeConfigPath, "Search", "GemLevel", TradeOpts.GemLevel)	
 		TradeOpts.GemQualityRange := ReadIniValue(TradeConfigPath, "Search", "GemQualityRange", TradeOpts.GemQualityRange)	
-		TradeOpts.OnlineOnly := ReadIniValue(TradeConfigPath, "Search", "OnlineOnly", TradeOpts.OnlineOnly)	
+		TradeOpts.OnlineOnly := ReadIniValue(TradeConfigPath, "Search", "OnlineOnly", TradeOpts.OnlineOnly)
+        
 		TradeOpts.Corrupted := ReadIniValue(TradeConfigPath, "Search", "Corrupted", TradeOpts.Corrupted)	
+        temp := TradeOpts.Corrupted
+        StringUpper, temp, temp, T
+        TradeOpts.Corrupted := temp
+        
 		TradeOpts.AdvancedSearchModValueRange := ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchModValueRange", TradeOpts.AdvancedSearchModValueRange)	
 		TradeOpts.RemoveMultipleListingsFromSameAccount := ReadIniValue(TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount", TradeOpts.RemoveMultipleListingsFromSameAccount)	
 		
@@ -141,21 +154,70 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
     }
 }
 
+AssignAllHotkeys() {
+    AssignHotkey(TradeOpts.PriceCheckHotKey, "PriceCheck")
+    AssignHotkey(TradeOpts.AdvancedPriceCheckHotKey, "AdvancedPriceCheck")
+    AssignHotkey(TradeOpts.OpenWikiHotKey, "OpenWiki")
+    AssignHotkey(TradeOpts.CustomInputSearchHotKey, "CustomInputSearch")
+    AssignHotkey(TradeOpts.OpenSearchOnPoeTradeHotKey, "OpenSearchOnPoeTrade")
+}
+
 WriteTradeConfig(TradeConfigPath="trade_config.ini")
 {  
 	Global
+        
+    ; workaround for settings options not being assigned to TradeOpts    
+    If (SavedTradeSettings) {
+        TradeOpts.ShowItemResults := ShowItemResults
+        TradeOpts.ShowUpdateNotifications := ShowUpdateNotifications
+        TradeOpts.OpenWithDefaultWin10Fix := OpenWithDefaultWin10Fix
+        TradeOpts.ShowAccountName := ShowAccountName
+        
+        TradeOpts.PriceCheckHotKey := PriceCheckHotKey
+        TradeOpts.AdvancedPriceCheckHotKey := AdvancedPriceCheckHotKey
+        TradeOpts.OpenWikiHotKey := OpenWikiHotKey
+        TradeOpts.CustomInputSearchHotKey := CustomInputSearchHotKey
+        TradeOpts.OpenSearchOnPoeTradeHotKey := OpenSearchOnPoeTradeHotKey
+        
+        AssignAllHotkeys()
+        
+        TradeOpts.SearchLeague := SearchLeague
+        SetLeagueIfSelectedIsInactive()        
+        TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
+        
+        TradeOpts.GemLevel := GemLevel
+        TradeOpts.GemQualityRange := GemQualityRange
+        TradeOpts.OnlineOnly := OnlineOnly
+        TradeOpts.Corrupted := Corrupted
+        TradeOpts.AdvancedSearchModValueRange := AdvancedSearchModValueRange
+        TradeOpts.RemoveMultipleListingsFromSameAccount := RemoveMultipleListingsFromSameAccount
+    }        
+    SavedTradeSettings := false
+    
     ; General        
 	WriteIniValue(TradeOpts.ShowItemResults, TradeConfigPath, "General", "ShowItemResults")
+	WriteIniValue(TradeOpts.ShowUpdateNotifications, TradeConfigPath, "General", "ShowUpdateNotifications")
+	WriteIniValue(TradeOpts.OpenWithDefaultWin10Fix, TradeConfigPath, "General", "OpenWithDefaultWin10Fix")
+	WriteIniValue(TradeOpts.ShowAccountName, TradeConfigPath, "General", "ShowAccountName")
 
 	; Debug	
 	WriteIniValue(TradeOpts.Debug, TradeConfigPath, "Debug", "Debug")
 	
 	; Hotkeys	
 	WriteIniValue(TradeOpts.PriceCheckHotKey, TradeConfigPath, "Hotkeys", "PriceCheckHotKey")
-	WriteIniValue(TradeOpts.OpenWiki, TradeConfigPath, "Hotkeys", "OpenWiki")
+	WriteIniValue(TradeOpts.AdvancedPriceCheckHotKey, TradeConfigPath, "Hotkeys", "AdvancedPriceCheckHotKey")
+	WriteIniValue(TradeOpts.OpenWikiHotKey, TradeConfigPath, "Hotkeys", "OpenWikiHotKey")
+	WriteIniValue(TradeOpts.CustomInputSearchHotKey, TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey")
+	WriteIniValue(TradeOpts.OpenSearchOnPoeTradeHotKey, TradeConfigPath, "Hotkeys", "OpenSearchOnPoeTradeHotKey")
 	
 	; Search	
 	WriteIniValue(TradeOpts.SearchLeague, TradeConfigPath, "Search", "SearchLeague")
+	WriteIniValue(TradeOpts.GemLevel, TradeConfigPath, "Search", "GemLevel")
+	WriteIniValue(TradeOpts.GemQualityRange, TradeConfigPath, "Search", "GemQualityRange")
+	WriteIniValue(TradeOpts.OnlineOnly, TradeConfigPath, "Search", "OnlineOnly")
+	WriteIniValue(TradeOpts.Corrupted, TradeConfigPath, "Search", "Corrupted")
+	WriteIniValue(TradeOpts.AdvancedSearchModValueRange, TradeConfigPath, "Search", "AdvancedSearchModValueRange")
+	WriteIniValue(TradeOpts.RemoveMultipleListingsFromSameAccount, TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount")
 	
 	; Cache	
 	WriteIniValue(TradeOpts.Expire, TradeConfigPath, "Cache", "Expire")
@@ -429,10 +491,140 @@ FunctionGetLatestRelease() {
     return
 }
 
+;----------------------- Trade Settings UI (added onto ItemInfos Settings UI) ---------------------------------------
+
+GuiAddDropDownList(Contents, PositionInfo, Selected="", AssocVar="", AssocHwnd="", AssocLabel="", Options="") 
+{
+    Contents := StrReplace(Contents, Selected, Selected "|")
+    Contents := RegExReplace(Contents, "i),", "|")
+    GuiAdd("DropDownList", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
+}
+
+CreateTradeSettingsUI() 
+{
+    Global
+    
+    GuiAddGroupBox("", "x541 y-50 w2 h1000")
+    
+    ; General 
+
+    GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h150")
+    
+    ; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
+    
+    GuiAddText("Show Items:", "x557 y43 w160 h20 0x0100", "LblShowItemResults", "LblShowItemResultsH")
+    AddToolTip(LblShowItemResultsH, "Number of items displayed in search results.")
+    GuiAddEdit(TradeOpts.ShowItemResults, "x+10 yp-2 w50 h20", "ShowItemResults", "ShowItemResultsH")
+    
+    GuiAddCheckbox("Show Account Name", "x557 y65 w210 h30", TradeOpts.ShowAccountName, "ShowAccountName", "ShowAccountNameH")
+    AddToolTip(ShowAccountNameH, "Show sellers account name in search results tooltip.")
+    
+    GuiAddCheckbox("Show Update Notifications", "x557 y95 w210 h30", TradeOpts.ShowUpdateNotifications, "ShowUpdateNotifications", "ShowUpdateNotificationsH")
+    AddToolTip(ShowUpdateNotificationsH, "Notifies you when there's a new stable`n release available.")
+    
+    GuiAddCheckbox("Open browser Win10 fix", "x557 y125 w210 h30", TradeOpts.OpenWithDefaultWin10Fix, "OpenWithDefaultWin10Fix", "OpenWithDefaultWin10FixH")
+    AddToolTip(OpenWithDefaultWin10FixH, " If your PC always asks you what program to use to open`n the wiki-link, enable this to let ahk find your default`nprogram from the registry.")
+    
+    ; Hotkeys
+    
+    GuiAddGroupBox("[TradeMacro] Hotkeys", "x547 y175 w260 h210")
+    
+    GuiAddText("Price Check Hotkey:", "x557 y203 w160 h20 0x0100", "LblPriceCheckHotKey", "LblPriceCheckHotKeyH")
+    AddToolTip(LblPriceCheckHotKeyH, "Check item prices.")
+    GuiAddEdit(TradeOpts.PriceCheckHotKey, "x+10 yp-2 w50 h20", "PriceCheckHotKey", "PriceCheckHotKeyH")
+    AddToolTip(PriceCheckHotKeyH, "Default: ctrl + d")
+    
+    GuiAddText("Advanced Price Check Hotkey:", "x557 y233 w160 h20 0x0100", "LblAdvancedPriceCheckHotKey", "LblAdvancedPriceCheckHotKeyH")
+    AddToolTip(LblAdvancedPriceCheckHotKeyH, "Select mods to include in your search`nbefore checking prices.")
+    GuiAddEdit(TradeOpts.AdvancedPriceCheckHotKey, "x+10 yp-2 w50 h20", "AdvancedPriceCheckHotKey", "AdvancedPriceCheckHotKeyH")
+    AddToolTip(AdvancedPriceCheckHotKeyH, "Default: ctrl + alt + d")
+    
+    GuiAddText("Custom Input Search:", "x557 y263 w160 h20 0x0100", "LblCustomInputSearchHotkey", "LblCustomInputSearchHotkeyH")
+    AddToolTip(LblCustomInputSearchHotkeyH, "Custom text input search.")
+    GuiAddEdit(TradeOpts.CustomInputSearchHotkey, "x+10 yp-2 w50 h20", "CustomInputSearchHotkey", "CustomInputSearchHotkeyH")
+    AddToolTip(CustomInputSearchHotkeyH, "Default: ctrl + i")
+    
+    GuiAddText("Open Search on poe.trade:", "x557 y293 w160 h20 0x0100", "LblOpenSearchOnPoeTradeHotKey", "LblOpenSearchOnPoeTradeHotKeyH")
+    AddToolTip(LblOpenSearchOnPoeTradeHotKeyH, "Open your search on poe.trade instead of showing`na tooltip with results.")
+    GuiAddEdit(TradeOpts.OpenSearchOnPoeTradeHotKey, "x+10 yp-2 w50 h20", "OpenSearchOnPoeTradeHotKey", "OpenSearchOnPoeTradeHotKeyH")
+    AddToolTip(OpenSearchOnPoeTradeHotKeyH, "Default: ctrl + q")
+    
+    GuiAddText("Open Iten on Wiki:", "x557 y323 w160 h20 0x0100", "LblOpenWikiHotkey", "LblOpenWikiHotkeyH")
+    AddToolTip(LblOpenWikiHotkeyH, "Open your items page on the PoE-Wiki.")
+    GuiAddEdit(TradeOpts.OpenWikiHotkey, "x+10 yp-2 w50 h20", "OpenWikiHotkey", "OpenWikiHotkeyH")
+    AddToolTip(OpenWikiHotkeyH, "Default: ctrl + w")
+    
+    Gui, Add, Link, x557 y353 w160 h20 cBlue, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
+    
+    ; Search
+    
+    GuiAddGroupBox("[TradeMacro] Search", "x817 y15 w260 h555")
+    
+    GuiAddText("League:", "x827 y43 w100 h20 0x0100", "LblSearchLeague", "LblSearchLeagueH")
+    AddToolTip(LblSearchLeagueH, "Defaults to ""standard"" or ""tmpstandard"" if there is a`nTemp-League active at the time of script execution.`n`n""tmpstandard"" and ""tmphardcore"" are automatically replaced`nwith their permanent counterparts if no Temp-League is active.")
+    GuiAddDropDownList("tmpstandard,tmphardcore,standard,hardcore,", "x+10 yp-2", TradeOpts.SearchLeague, "SearchLeague", "SearchLeagueH")
+    
+    GuiAddText("Gem Level:", "x827 y73 w170 h20 0x0100", "LblGemLevel", "LblGemLevelH")
+    AddToolTip(LblGemLevelH, "Gem level is ignored in the search unless it's equal`nor higher than this value.`n`nSet to something like 30 to completely ignore the level.")
+    GuiAddEdit(TradeOpts.GemLevel, "x+10 yp-2 w50 h20", "GemLevel", "GemLevelH")
+    
+    GuiAddText("Gem Quality Range:", "x827 y103 w170 h20 0x0100", "LblGemQualityRange", "LblGemQualityRangeH")
+    AddToolTip(LblGemQualityRangeH, "Use this to set a range to quality Gem searches. For example a range of 1`n searches 14% - 16% when you have a 15% Quality Gem.`nSetting it to 0 (default) uses your Gems quality as min_quality`nwithout max_quality in your search.")
+    GuiAddEdit(TradeOpts.GemQualityRange, "x+10 yp-2 w50 h20", "GemQualityRange", "GemQualityRangeH")
+    
+    GuiAddText("Mod Range Modifier (%):", "x827 y133 w170 h20 0x0100", "LblAdvancedSearchModValueRange", "LblAdvancedSearchModValueRangeH")
+    AddToolTip(LblAdvancedSearchModValueRangeH, "Advanced search lets you select the items mods to include in your`nsearch and lets you set their min/max values.`n`nThese min/max values are pre-filled, to calculate them we look at`nthe difference between the mods theoretical max and min value and`ntreat it as 100%.`n`nWe then use this modifier as a percentage of this differences to`ncreate a range (min/max value) to search in. ")
+    GuiAddEdit(TradeOpts.AdvancedSearchModValueRange, "x+10 yp-2 w50 h20", "AdvancedSearchModValueRange", "AdvancedSearchModValueRangeH")
+    
+    GuiAddText("Corrupted:", "x827 y163 w100 h20 0x0100", "LblCorrupted", "LblCorruptedH")
+    AddToolTip(LblCorruptedH, "This setting gets ignored when you use`nthe search on corrupted items.")
+    GuiAddDropDownList("Either,Yes,No,", "x+10 yp-2", TradeOpts.Corrupted, "Corrupted", "CorruptedH")
+    
+    GuiAddCheckbox("Online only", "x827 y193 w210 h40 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
+    
+    GuiAddCheckbox("Remove multiple Listings from same Account", "x827 y223 w230 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
+    AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
+    
+    
+    GuiAddText("Mouse over settings to see what these settings do exactly.", "x827 y585 w250 h60")
+
+    GuiAddButton("&Defaults", "x827 y640 w80 h23", "TradeSettingsUI_BtnDefaults")
+    GuiAddButton("&OK", "Default x+5 y640 w75 h23", "TradeSettingsUI_BtnOK")
+    GuiAddButton("&Cancel", "x+5 y640 w80 h23", "TradeSettingsUI_BtnCancel")
+}
+
+UpdateTradeSettingsUI()
+{    
+    Global
+
+    GuiControl,, ShowItemResults, % TradeOpts.ShowItemResults
+    GuiControl,, ShowAccountName, % TradeOpts.ShowAccountName
+	GuiControl,, ShowUpdateNotifications, % TradeOpts.ShowUpdateNotifications
+    GuiControl,, OpenWithDefaultWin10Fix, % TradeOpts.OpenWithDefaultWin10Fix
+    
+    GuiControl,, PriceCheckHotKey, % TradeOpts.PriceCheckHotKey
+    GuiControl,, AdvancedPriceCheckHotKey, % TradeOpts.AdvancedPriceCheckHotKey
+    GuiControl,, CustomInputSearchHotkey, % TradeOpts.CustomInputSearchHotkey
+    GuiControl,, OpenSearchOnPoeTradeHotKey, % TradeOpts.OpenSearchOnPoeTradeHotKey
+    GuiControl,, OpenWikiHotkey, % TradeOpts.OpenWikiHotkey
+    
+    GuiControl,, SearchLeague, % TradeOpts.SearchLeague
+    GuiControl,, GemLevel, % TradeOpts.GemLevel
+    GuiControl,, GemQualityRange, % TradeOpts.GemQualityRange
+    GuiControl,, AdvancedSearchModValueRange, % TradeOpts.AdvancedSearchModValueRange
+    GuiControl,, Corrupted, % TradeOpts.Corrupted
+    GuiControl,, OnlineOnly, % TradeOpts.OnlineOnly
+    GuiControl,, RemoveMultipleListingsFromSameAccount, % TradeOpts.RemoveMultipleListingsFromSameAccount
+}
+
+;----------------------- SplashScreens ---------------------------------------
 StartSplashScreen() {
     SplashTextOn, , , Initializing PoE-TradeMacro...
 }
 StopSplashScreen() {
     SplashTextOff 
+    ; Let timer run until SettingsUIWidth is set and overwrite it.
+    SetTimer, OverwriteSettingsUIWidthTimer, 500
 }
-StopSplashScreen()
+
+
