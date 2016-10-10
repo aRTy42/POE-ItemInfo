@@ -493,10 +493,18 @@ FunctionGetLatestRelease() {
 
 ;----------------------- Trade Settings UI (added onto ItemInfos Settings UI) ---------------------------------------
 
-GuiAddDropDownList(Contents, PositionInfo, Selected="", AssocVar="", AssocHwnd="", AssocLabel="", Options="") 
+GuiAddDropDownList(Contents, PositionInfo, Selected="", AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
 {
-    Contents := StrReplace(Contents, Selected, Selected "|")
-    Contents := RegExReplace(Contents, "i),", "|")
+    ; usage : add list items as a | delimited string, for example = "item1|item2|item3"
+    ListItems := StrSplit(Contents, "|")
+    Contents := ""
+    for index, item in ListItems {
+        Contents .= Trim(item) . "|"
+        ; add second | to mark pre-select list item
+        if (Trim(item) == Selected) {
+            Contents .= "|"
+        }
+    }
     GuiAdd("DropDownList", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
 }
 
@@ -562,7 +570,7 @@ CreateTradeSettingsUI()
     
     GuiAddText("League:", "x827 y43 w100 h20 0x0100", "LblSearchLeague", "LblSearchLeagueH")
     AddToolTip(LblSearchLeagueH, "Defaults to ""standard"" or ""tmpstandard"" if there is a`nTemp-League active at the time of script execution.`n`n""tmpstandard"" and ""tmphardcore"" are automatically replaced`nwith their permanent counterparts if no Temp-League is active.")
-    GuiAddDropDownList("tmpstandard,tmphardcore,standard,hardcore,", "x+10 yp-2", TradeOpts.SearchLeague, "SearchLeague", "SearchLeagueH")
+    GuiAddDropDownList("tmpstandard|tmphardcore|standard|hardcore", "x+10 yp-2", TradeOpts.SearchLeague, "SearchLeague", "SearchLeagueH")
     
     GuiAddText("Gem Level:", "x827 y73 w170 h20 0x0100", "LblGemLevel", "LblGemLevelH")
     AddToolTip(LblGemLevelH, "Gem level is ignored in the search unless it's equal`nor higher than this value.`n`nSet to something like 30 to completely ignore the level.")
@@ -578,7 +586,7 @@ CreateTradeSettingsUI()
     
     GuiAddText("Corrupted:", "x827 y163 w100 h20 0x0100", "LblCorrupted", "LblCorruptedH")
     AddToolTip(LblCorruptedH, "This setting gets ignored when you use`nthe search on corrupted items.")
-    GuiAddDropDownList("Either,Yes,No,", "x+10 yp-2", TradeOpts.Corrupted, "Corrupted", "CorruptedH")
+    GuiAddDropDownList("Either|Yes|No", "x+10 yp-2", TradeOpts.Corrupted, "Corrupted", "CorruptedH")
     
     GuiAddCheckbox("Online only", "x827 y193 w210 h40 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
     
