@@ -6953,10 +6953,10 @@ GuiAddDropDownList(Contents, PositionInfo, Selected="", AssocVar="", AssocHwnd="
     ; usage : add list items as a | delimited string, for example = "item1|item2|item3"
     ListItems := StrSplit(Contents, "|")
     Contents := ""
-    for index, item in ListItems {
-        Contents .= Trim(item) . "|"
+    Loop % ListItems.MaxIndex() { 
+        Contents .= Trim(ListItems[A_Index]) . "|"
         ; add second | to mark pre-select list item
-        if (Trim(item) == Selected) {
+        if (Trim(ListItems[A_Index]) == Selected) {
             Contents .= "|"
         }
     }
