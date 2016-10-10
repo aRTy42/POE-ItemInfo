@@ -557,7 +557,7 @@ CreateTradeSettingsUI()
     GuiAddEdit(TradeOpts.OpenSearchOnPoeTradeHotKey, "x+10 yp-2 w50 h20", "OpenSearchOnPoeTradeHotKey", "OpenSearchOnPoeTradeHotKeyH")
     AddToolTip(OpenSearchOnPoeTradeHotKeyH, "Default: ctrl + q")
     
-    GuiAddText("Open Iten on Wiki:", "x557 y323 w160 h20 0x0100", "LblOpenWikiHotkey", "LblOpenWikiHotkeyH")
+    GuiAddText("Open Item on Wiki:", "x557 y323 w160 h20 0x0100", "LblOpenWikiHotkey", "LblOpenWikiHotkeyH")
     AddToolTip(LblOpenWikiHotkeyH, "Open your items page on the PoE-Wiki.")
     GuiAddEdit(TradeOpts.OpenWikiHotkey, "x+10 yp-2 w50 h20", "OpenWikiHotkey", "OpenWikiHotkeyH")
     AddToolTip(OpenWikiHotkeyH, "Default: ctrl + w")
