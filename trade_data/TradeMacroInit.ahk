@@ -103,9 +103,12 @@ TradeGlobals.Set("Leagues", FunctionGETLeagues())
 TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
 TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
 TradeGlobals.Set("ModsData", TradeModsData)
+TradeGlobals.Set("CurrencyIDs", object := {})
 
 CreateTradeSettingsUI()
 StopSplashScreen()
+; get currency ids from currency.poe.trade
+FunctionDoCurrencyRequest("", false, true)
 
 ReadTradeConfig(TradeConfigPath="trade_config.ini")
 {

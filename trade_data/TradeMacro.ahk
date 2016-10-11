@@ -224,13 +224,31 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	out("------------------------------------")
 	
 	ShowToolTip("Running search...")
-    Html := FunctionDoPostRequest(Payload, openSearchInBrowser)
+	if (Item.isCurrency) {		
+		Html := FunctionDoCurrencyRequest(Item.Name, openSearchInBrowser)
+	}
+	else {
+		Html := FunctionDoPostRequest(Payload, openSearchInBrowser)	
+	}
 	out("POST Request success")
 	
 	if(openSearchInBrowser) {
 		; redirect was prevented to get the url and open the search on poe.trade instead
-		RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
+		if (Item.isCurrency) {
+			IDs := TradeGlobals.Get("CurrencyIDs")
+			ParsedUrl1 := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[Item.Name] . "&have=" . IDs["Chaos Orb"]
+		}
+		else {
+			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
+		}		
 		FunctionOpenUrlInBrowser(ParsedUrl1)
+	}
+	else if (Item.isCurrency) {
+		ParsedData := FunctionParseCurrencyHtml(Html, Payload)
+		out("Parsing HTML done")
+		
+		SetClipboardContents(ParsedData)
+		ShowToolTip(ParsedData)
 	}
 	else {
 		ParsedData := FunctionParseHtml(Html, Payload)
@@ -295,6 +313,37 @@ FunctionDoPostRequest(payload, openSearchInBrowser = false)
     Return, html
 }
 
+; Get currency.poe.trade html
+; Either at script start to parse the currency IDs or when searching to get currency listings
+FunctionDoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init = false){
+	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	if (openSearchInBrowser) {
+		HttpObj.Option(6) := False ;
+	} 
+
+	if (init) {
+		Url := "http://currency.poe.trade/"
+	}
+	else {
+		LeagueName := TradeGlobals.Get("LeagueName")
+		IDs := TradeGlobals.Get("CurrencyIDs")
+		Url := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[currencyName] . "&have=" . IDs["Chaos Orb"]
+	}
+	
+    HttpObj.Open("GET",Url)
+	HttpObj.Send()
+    HttpObj.WaitForResponse()
+    html := HttpObj.ResponseText
+
+	if (init) {
+		FunctionParseCurrencyIDs(html)
+		Return
+	}
+	
+    Return, html
+}
+
+; Open given Url with default Browser
 FunctionOpenUrlInBrowser(Url){
 	Global TradeOpts
 	
@@ -307,6 +356,99 @@ FunctionOpenUrlInBrowser(Url){
 	}		
 }
 
+; Parse currency.poe.trade to get all available currencies and their IDs
+FunctionParseCurrencyIDs(html){
+	RegExMatch(html, "is)id=""currency-want"">(.*?)input", match)	
+	Currencies := {}
+	
+	Loop {
+		Div          := StrX( match1, "<div data-tooltip",  N, 0, "<img" , 1,4, N )
+        CurrencyName := StrX( Div,  "title=""",           1, 7, """"   , 1,1, T )
+        CurrencyID   := StrX( Div,  "data-id=""",         1, 9, """"   , 1,1    )			
+		CurrencyName := StrReplace(CurrencyName, "&#39;", "'")
+		
+		If (!CurrencyName) {			
+			TradeGlobals.Set("CurrencyIDs", Currencies)
+			break
+		}
+		
+		Currencies[CurrencyName] := CurrencyID  
+		TradeGlobals.Set("CurrencyIDs", Currencies)
+	}
+}
+
+; Parse currency.poe.trade to display tooltip with first X listings
+FunctionParseCurrencyHtml(html, payload){
+	Global Item, ItemData, TradeOpts
+	LeagueName := TradeGlobals.Get("LeagueName")
+	
+	Title := Item.Name
+	Title .= " (" LeagueName ")"
+	Title .= "`n------------------------------ `n"	
+	NoOfItemsToShow := TradeOpts.ShowItemResults
+	
+	Title .= StrPad("IGN" ,10) 	
+	Title .= StrPad("| Ratio",20)	
+	Title .= "| " . StrPad("Buy  ",20, "Left")	
+	Title .= StrPad("Pay",20)	
+	Title .= "`n"
+	
+	Title .= StrPad("----------" ,10) 	
+	Title .= StrPad("--------------------",20)	
+	Title .= StrPad("--------------------",20)	
+	Title .= StrPad("--------------------",20)		
+	Title .= "`n"
+	
+	While A_Index < NoOfItemsToShow {
+        Offer       := StrX( html,   "data-username=""",     N, 0, "<a href"   , 1,1, N )
+        SellCurrency:= StrX( Offer,  "data-sellcurrency=""", 1,19, """"        , 1,1, T )
+        SellValue   := StrX( Offer,  "data-sellvalue=""",    1,16, """"        , 1,1, T )
+        BuyCurrency := StrX( Offer,  "data-buycurrency=""",  1,18, """"        , 1,1, T )
+        BuyValue    := StrX( Offer,  "data-buyvalue=""",     1,15, """"        , 1,1, T )
+        AccountName := StrX( Offer,  "data-ign=""",          1,10, """"        , 1,1    )
+	
+		RatioBuying := BuyValue / SellValue
+		RatioSelling  := SellValue / BuyValue
+		
+		Pos := RegExMatch(Offer, "si)displayoffer-primary(.*)<.*displayoffer-centered", Display)
+		P := ""
+		DisplayNames := []
+		Loop {
+			Column      := StrX( Display1,   "column", P, 0, "</div"   , 1,1, P )
+			RegExMatch(Column, ">(.*)<", Column)
+			Column := RegExReplace(Column1, "\t|\r|\n", "")
+			If (StrLen(Column) < 1) {
+				Break
+			}
+			DisplayNames.Push(Column)
+		}
+
+		StringTrimLeft, html, html, N		
+		
+		subAcc := FunctionTrimNames(AccountName, 10, true)
+		Title .= StrPad(subAcc,10) 
+		Title .= StrPad("| " . "1 <-- " . zerotrimmer(RatioBuying)            ,20)
+		Title .= StrPad("| " . StrPad(DisplayNames[1] . " " . StrPad(zerotrimmer(SellValue), 4, "left"), 17, "left") ,20)
+		Title .= StrPad("<= " . StrPad(zerotrimmer(BuyValue), 4) . " " . DisplayNames[3] ,20)		
+		Title .= "`n"		
+	}
+	
+	Return, Title
+}
+
+; Trim trailing zeros from numbers
+zerotrimmer(number) { 
+	RegExMatch(number, "(\d+)\.?(.+)?", match)
+	If (StrLen(match2) < 1) {
+		return number
+	} else {
+		trail := RegExReplace(match2, "0+$", "")
+		number := (StrLen(trail) > 0) ? match1 "." trail : match1
+		return number
+	}
+}
+
+; Calculate average and median price of X listings
 FunctionGetMeanMedianPrice(html, payload){
 	itemCount := 1
     prices := []
@@ -382,6 +524,7 @@ FunctionGetMeanMedianPrice(html, payload){
 	return Title
 }
 
+; Parse poe.trade html to display the search result tooltip with X listings
 FunctionParseHtml(html, payload)
 {	
 	Global Item, ItemData, TradeOpts
