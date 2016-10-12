@@ -10,7 +10,8 @@
 PriceCheck:
 	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 	{
-		Global TradeOpts
+		Global TradeOpts, Item
+		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		Send ^c
 		Sleep 250
@@ -22,7 +23,8 @@ return
 AdvancedPriceCheck:
 	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 	{
-		Global TradeOpts
+		Global TradeOpts, Item
+		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		Send ^c
 		Sleep 250
@@ -34,6 +36,8 @@ return
 OpenWiki:
 	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 	{
+		Global Item
+		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		Send ^c
 		Sleep 250
@@ -80,7 +84,8 @@ CustomInputSearch:
 return
 
 OpenSearchOnPoeTrade:
-	Global TradeOpts
+	Global TradeOpts, Item
+	Item := {}
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^c
 	Sleep 250
@@ -365,8 +370,8 @@ FunctionParseCurrencyIDs(html){
 	
 	Loop {
 		Div          := StrX( match1, "<div data-tooltip",  N, 0, "<img" , 1,4, N )
-        CurrencyName := StrX( Div,  "title=""",           1, 7, """"   , 1,1, T )
-        CurrencyID   := StrX( Div,  "data-id=""",         1, 9, """"   , 1,1    )			
+        CurrencyName := StrX( Div,  "title=""",             1, 7, """"   , 1,1, T )
+        CurrencyID   := StrX( Div,  "data-id=""",           1, 9, """"   , 1,1    )			
 		CurrencyName := StrReplace(CurrencyName, "&#39;", "'")
 		
 		If (!CurrencyName) {			
@@ -416,7 +421,7 @@ FunctionParseCurrencyHtml(html, payload){
 		P := ""
 		DisplayNames := []
 		Loop {
-			Column      := StrX( Display1,   "column", P, 0, "</div"   , 1,1, P )
+			Column := StrX( Display1, "column", P, 0, "</div", 1,1, P )
 			RegExMatch(Column, ">(.*)<", Column)
 			Column := RegExReplace(Column1, "\t|\r|\n", "")
 			If (StrLen(Column) < 1) {
