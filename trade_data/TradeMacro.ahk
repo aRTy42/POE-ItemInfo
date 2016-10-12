@@ -100,8 +100,13 @@ return
 TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdvancedPriceCheckRedirect = false)
 {
 	LeagueName := TradeGlobals.Get("LeagueName")
-	Global Item, ItemData, TradeOpts, mapList, uniqueMapList
-	
+	Global Item, ItemData, TradeOpts, mapList, uniqueMapList, Opts
+
+	if (Opts.ShowMaxSockets != 1) {
+		FunctionSetItemSockets()
+	}
+
+	;MsgBox % Item.MaxSockets
 	iLvl := Item.Level
 	;MsgBox % iLvl
     out("+ Start of TradeMacroMainFunction")
@@ -110,8 +115,33 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
+	; ignore item name in certain cases
+	if (!Item.Jewel and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask) 
+	{
+		IgnoreName := true
+	}
+	
 	; remove "Superior" from item name to exclude it from name search
-	RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))
+	;if (!IgnoreName) {
+		RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))
+	/*} else {
+		; xtype = Item.SubType (Helmet)
+		; xbase = Item.TypeName (Eternal Burgonet)
+		
+		isCraftingBase 			:= false
+		hasHighestCraftingILvl 	:= false
+		;if desired crafting base
+		if (isCraftingBase) {			
+			RequestParams.xbase := Item.TypeName
+			; if highest itemlevel needed for crafting
+			if (hasHighestCraftingILvl) {
+				RequestParams.ilvl_min := Item.Level
+			}			
+		} else {
+			RequestParams.xtype := Item.SubType
+		}		
+	}	
+	*/
 	
 	if (Item.IsUnique) {
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
@@ -140,10 +170,21 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			}			
 		}
 
-		; find only uniques that can also be 6 socketed
-		if (iLvl >= 50) {
+		; only find items that can have the same amount of sockets
+		if (Item.MaxSockets = 6) {
 			RequestParams.ilevel_min := 50
+		} 
+		else if (Item.MaxSockets = 5) {
+			RequestParams.ilevel_min := 35
+			RequestParams.ilevel_max := 49
+		} 
+		else if (Item.MaxSockets = 5) {
+			RequestParams.ilevel_min := 35
 		}
+		; is (no 1-hand or shield or unset ring or helmet or glove or boots) but is weapon or armor
+		else if ((not Item.IsFourSocket and not Item.IsThreeSocket and not Item.IsSingleSocket) and (Item.IsWeapon or Item.IsArmour) and Item.Level < 35) {		
+			RequestParams.ilevel_max := 34
+		}		
 	}
 
 	; handle gems
@@ -264,6 +305,48 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		SetClipboardContents(ParsedData)
 		ShowToolTip(ParsedData)
 	}    
+}
+
+; copied from PoE-ItemInfo because there it'll only be called if the optioen "ShowMaxSockets" is enabled
+FunctionSetItemSockets() {
+	Global Item
+	
+	If (Item.IsWeapon or Item.IsArmour)
+    {
+        If (Item.Level >= 50)
+        {
+            Item.MaxSockets := 6
+        }
+        Else If (Item.Level >= 35)
+        {
+            Item.MaxSockets := 5
+        }
+        Else If (Item.Level >= 25)
+        {
+            Item.MaxSockets := 4
+        }
+        Else If (Item.Level >= 1)
+        {
+            Item.MaxSockets := 3
+        }
+        Else
+        {
+            Item.MaxSockets := 2
+        }
+        
+        If(Item.IsFourSocket and Item.MaxSockets > 4)
+        {
+            Item.MaxSockets := 4
+        }
+        Else If(Item.IsThreeSocket and Item.MaxSockets > 3)
+        {
+            Item.MaxSockets := 3
+        }
+        Else If(Item.IsSingleSocket)
+        {
+            Item.MaxSockets := 1
+        }
+    }
 }
 
 DoParseClipboardFunction()
