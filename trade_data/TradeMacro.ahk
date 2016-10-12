@@ -39,12 +39,14 @@ OpenWiki:
 		Sleep 250
 		DoParseClipboardFunction()
 
-		if (Item.IsUnique) {
+		if (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
 			UrlAffix := Item.Name
-		} else if (Item.IsFlask) {
+		} else if (Item.IsFlask or Item.IsMap) {
 			UrlAffix := Item.SubType
+		} else if (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ")) {
+			UrlAffix := Item.Name
 		} else {
-			UrlAffix := Item.TypeName
+			UrlAffix := Item.BaseType
 		}
 
 		UrlAffix := StrReplace(UrlAffix," ","_")
