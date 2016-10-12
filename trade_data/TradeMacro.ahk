@@ -43,7 +43,7 @@ OpenWiki:
 			UrlAffix := Item.Name
 		} else if (Item.IsFlask or Item.IsMap) {
 			UrlAffix := Item.SubType
-		} else if (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ")) {
+		} else if (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key")) {
 			UrlAffix := Item.Name
 		} else {
 			UrlAffix := Item.BaseType
