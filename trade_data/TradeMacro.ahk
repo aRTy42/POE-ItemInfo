@@ -98,21 +98,23 @@ return
 ; isAdvancedPriceCheck : set to true if the GUI to select mods should be openend
 ; isAdvancedPriceCheckRedirect : set to true if the search is triggered from the GUI
 TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdvancedPriceCheckRedirect = false)
-{
+{	
+    out("+ Start of TradeMacroMainFunction")
 	LeagueName := TradeGlobals.Get("LeagueName")
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList, Opts
-
+	
+	DoParseClipboardFunction()
+	
 	if (Opts.ShowMaxSockets != 1) {
 		FunctionSetItemSockets()
 	}
-
-	;MsgBox % Item.MaxSockets
-	iLvl := Item.Level
-	;MsgBox % iLvl
-    out("+ Start of TradeMacroMainFunction")
-
-	DoParseClipboardFunction()
 	
+	; prepare Data for advanced search
+	Stats := {}
+	Stats.Quality := Item.Quality
+	Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats)
+	Stats.Offense := FunctionParseItemOffenseStats(Item.DamageDetails)
+
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
 	; ignore item name in certain cases
@@ -151,7 +153,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)			
 			; open AdvancedPriceCheckGui to select mods and their min/max values
 			if (isAdvancedPriceCheck) {
-				AdvancedPriceCheckGui(s)
+				AdvancedPriceCheckGui(s, Stats)
 				return
 			}		
 			; ignore mod rolls unless the AdvancedPriceCheckGui is used to search
@@ -165,6 +167,37 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 						modParam.mod_min := s.mods[A_Index].min
 						modParam.mod_max := s.mods[A_Index].max
 						RequestParams.modGroup.AddMod(modParam)
+					}	
+				}
+				Loop % s.stats.Length() {
+					if (s.stats[A_Index].selected > 0) {
+						; defense
+						if (InStr(s.stats[A_Index].Param, "Armour")) {
+							RequestParams.armour_min  := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
+							RequestParams.armour_max  := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
+						} 
+						else if (InStr(s.stats[A_Index].Param, "Evasion")) {
+							RequestParams.evasion_min := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
+							RequestParams.evasion_max := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
+						}
+						else if (InStr(s.stats[A_Index].Param, "Energy")) {
+							RequestParams.shield_min  := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
+							RequestParams.shield_max  := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
+						}
+						else if (InStr(s.stats[A_Index].Param, "Block")) {
+							RequestParams.block_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
+							RequestParams.block_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
+						}
+						
+						; offense
+						else if (InStr(s.stats[A_Index].Param, "Physical")) {
+							RequestParams.pdps_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
+							RequestParams.pdps_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
+						}
+						else if (InStr(s.stats[A_Index].Param, "Elemental")) {
+							RequestParams.edps_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
+							RequestParams.edps_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
+						}						
 					}	
 				}
 			}			
@@ -305,6 +338,45 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		SetClipboardContents(ParsedData)
 		ShowToolTip(ParsedData)
 	}    
+}
+
+; parse items defense stats
+FunctionParseItemDefenseStats(stats){
+	iStats := {}
+	
+	RegExMatch(stats, "i)chance to block ?:.*?(\d+)", Block)
+	RegExMatch(stats, "i)armour ?:.*?(\d+)", Armour)
+	RegExMatch(stats, "i)energy shield ?:.*?(\d+)", EnergyShield)
+	RegExMatch(stats, "i)evasion rating ?:.*?(\d+)", Evasion)
+	
+	iStats.TotalBlock := {}
+	iStats.TotalBlock.Value := Block1
+	iStats.TotalBlock.Name  := "Block Chance"
+	iStats.TotalArmour := {}
+	iStats.TotalArmour.Value := Armour1
+	iStats.TotalArmour.Name  := "Armour"
+	iStats.TotalEnergyShield := {}
+	iStats.TotalEnergyShield.Value := EnergyShield1
+	iStats.TotalEnergyShield.Name  := "Energy Shield"
+	iStats.TotalEvasion := {}
+	iStats.TotalEvasion.Value := Evasion1
+	iStats.TotalEvasion.Name  := "Evasion Rating"
+	
+	return iStats
+}
+
+; parse items dmg stats
+FunctionParseItemOffenseStats(Stats){
+	iStats := {}
+
+	iStats.PhysDps        := {}
+    iStats.PhysDps.Name   := "Physical Dps (Q20)"	
+    iStats.PhysDps.Value  := (Stats.Q20Dps > 0) ? (Stats.Q20Dps - Stats.EleDps - Stats.ChaosDps) : Stats.PhysDps 
+    iStats.EleDps         := {}
+    iStats.EleDps.Name    := "Elemetal Dps"
+    iStats.EleDps.Value   := Stats.EleDps
+	
+	return iStats
 }
 
 ; copied from PoE-ItemInfo because there it'll only be called if the optioen "ShowMaxSockets" is enabled
@@ -1118,50 +1190,104 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 }
 
 ; Open Gui window to show the items variable mods, select the ones that should be used in the search and se their min/max values
-AdvancedPriceCheckGui(item){	
+AdvancedPriceCheckGui(advItem, Stats){	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	Global 
-	
-	TradeGlobals.Set("AdvancedPriceCheckItem", item)
+
+	TradeGlobals.Set("AdvancedPriceCheckItem", advItem)
 	ValueRange := TradeOpts.AdvancedSearchModValueRange
-	Gui, SelectModsGui:Destroy
-    ;Gui, SelectModsGui:Add, Text, x10 y12, "Value to create min-max range: +/- `%"
+	
+	Gui, SelectModsGui:Destroy    
     Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
 	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRange "`%" 
-    Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the items mods difference between their`ntheoretical min and max value as 100`%
-	;Gui, SelectModsGui:Add, Edit, x200 y10 w40 vValueRange r1, 20
+    Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the items mods difference between their theoretical`nmin and max value as 100`%.			
 	
-	ValueRange := ValueRange / 100 
-	
-	Loop % item.mods.Length() {		
-		tempValue := StrLen(item.mods[A_Index].name)
+	ValueRange := ValueRange / 100 	
+		
+	Loop % advItem.mods.Length() {		
+		tempValue := StrLen(advItem.mods[A_Index].name)
 		if(modLengthMax < tempValue ) {
 			modLengthMax := tempValue
 			modGroupBox := modLengthMax * 6
 		}				
 	}
-	modCount := item.mods.Length()
+	modCount := advItem.mods.Length()
+	
+	statCount := 0
+	For i, stat in Stats.Defense {
+		statCount := (stat.value) ? statCount + 1 : statCount
+	}
+	For i, stat in Stats.Offense {
+		statCount := (stat.value) ? statCount + 1 : statCount
+	}
 
-	boxRows := modCount * 3 ; 2
-	Gui, SelectModsGui:Add, Groupbox, x10 y+10 w%modGroupBox% r%boxRows%, mods
+	boxRows := modCount * 3 + statCount ; 2
+	Gui, SelectModsGui:Add, Groupbox, x10 y+10 w%modGroupBox% r%boxRows%, Mods
 	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, min
+	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, current
 	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, max
-	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w45 r%boxRows%, select
+	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w45 r%boxRows%, Select
+		
+	;add defense stats
+	j := 1
+	For i, stat in Stats.Defense {
+		If (stat.value) {			
+			xPosMin := modGroupBox + 25
+			yPosFirst := ( j = 1 ) ? 20 : 30
 
-	;add mods
-	Loop % item.mods.Length() {
+			if (stat.Name != "Block Chance") {
+				stat.value   := Round(stat.value * 100 / (100 + Stats.Quality)) 
+				statValueQ20 := Round(stat.value * ((100 + 20) / 100))
+			}
+
+			statValueMin := Round(statValueQ20 - (statValueQ20 * ValueRange))
+			statValueMax := Round(statValueQ20 + (statValueQ20 * ValueRange))
+			
+			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%, % "(Total Q20) " stat.name
+			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedStatMin%j% r1, %statValueMin%
+			Gui, SelectModsGui:Add, Text, x+20 yp+3 w70 r1, % statValueQ20
+			Gui, SelectModsGui:Add, Edit, x+20 yp+0 w70 vTradeAdvancedStatMax%j% r1, %statValueMax%
+			Gui, SelectModsGui:Add, CheckBox, x+30 yp+4 vTradeAdvancedStatSelected%j%
+			
+			TradeAdvancedStatParam%j% := stat.name			
+			j++
+		}
+	}	
+	
+	;add dmg stats
+	For i, stat in Stats.Offense {
+		If (stat.value) {			
+			xPosMin := modGroupBox + 25
+			yPosFirst := ( j = 1 ) ? 20 : 30
+
+			statValueMin := Round(stat.value - (stat.value * ValueRange))
+			statValueMax := Round(stat.value + (stat.value * ValueRange))
+			
+			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%, % stat.name
+			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedStatMin%j% r1, %statValueMin%
+			Gui, SelectModsGui:Add, Text, x+20 yp+3 w70 r1, % stat.value
+			Gui, SelectModsGui:Add, Edit, x+20 yp-3 w70 vTradeAdvancedStatMax%j% r1, %statValueMax%
+			Gui, SelectModsGui:Add, CheckBox, x+30 yp+4 vTradeAdvancedStatSelected%j%
+			
+			TradeAdvancedStatParam%j% := stat.name			
+			j++
+		}
+	}	
+	
+	;add mods	
+	Loop % advItem.mods.Length() {
 		xPosMin := modGroupBox + 25			
 		
-		if (item.mods[A_Index].ranges.Length() > 1) {
-			theoreticalMinValue := item.mods[A_Index].ranges[1][1]
-			theoreticalMaxValue := item.mods[A_Index].ranges[2][2]
+		if (advItem.mods[A_Index].ranges.Length() > 1) {
+			theoreticalMinValue := advItem.mods[A_Index].ranges[1][1]
+			theoreticalMaxValue := advItem.mods[A_Index].ranges[2][2]
 		}
 		else {
-			theoreticalMinValue := item.mods[A_Index].ranges[1][1]
-			theoreticalMaxValue := item.mods[A_Index].ranges[1][2]
+			theoreticalMinValue := advItem.mods[A_Index].ranges[1][1]
+			theoreticalMaxValue := advItem.mods[A_Index].ranges[1][2]
 		}
 		
-		modValues := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, item.mods[A_Index].param)
+		modValues := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)
 		if (modValues.Length() > 1) {
 			modValue := (modValues[1] + modValues[2]) / 2
 		}
@@ -1178,26 +1304,26 @@ AdvancedPriceCheckGui(item){
 		modValueMax := (modValueMax > 2) ? Floor(modValueMax) : modValueMax
 		
 		; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
-		modValueMin := (modValueMin < theoreticalMinValue) ? theoreticalMinValue : modValueMin
-		modValueMax := (modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax	
-		
-		rangeLength := item.mods[A_Index].ranges.Length()
+		modValueMin := zerotrimmer((modValueMin < theoreticalMinValue) ? theoreticalMinValue : modValueMin)
+		modValueMax := zerotrimmer((modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax	)
+
 		; create Labels to show unique items theoretical rolls
-		minLabelFirst := "(" item.mods[A_Index].ranges[1][1]
-		minLabelSecond := item.mods[A_Index].ranges[2][1] ? (" - " item.mods[A_Index].ranges[2][1] ")") : (")") 
-		maxLabelFirst := "(" item.mods[A_Index].ranges[1][2]
-		maxLabelSecond := item.mods[A_Index].ranges[2][2] ? (" - " item.mods[A_Index].ranges[2][2] ")") : (")")
+		minLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][1])
+		minLabelSecond := advItem.mods[A_Index].ranges[2][1] ? (" - " zerotrimmer(advItem.mods[A_Index].ranges[2][1]) ")") : (")") 
+		maxLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][2])
+		maxLabelSecond := advItem.mods[A_Index].ranges[2][2] ? (" - " zerotrimmer(advItem.mods[A_Index].ranges[2][2]) ")") : (")")
 		
 		yPosFirst := ( A_Index = 1 ) ? 30 : 45
 	
-		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%, % item.mods[A_Index].name
-		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedModMin%A_Index% r1, %modValueMin%
-		Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen, % minLabelFirst minLabelSecond
-		Gui, SelectModsGui:Add, Edit, x+20 yp-25 w70 vTradeAdvancedModMax%A_Index% r1, %modValueMax%
-		Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen, % maxLabelFirst maxLabelSecond
-		Gui, SelectModsGui:Add, CheckBox, x+30 yp-21 vTradeAdvancedSelected%A_Index%
+		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%                                   , % advItem.mods[A_Index].name
+		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedModMin%A_Index% r1 , % modValueMin
+		Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % minLabelFirst minLabelSecond
+		Gui, SelectModsGui:Add, Text, x+20 yp-22      w70 r1                               , % modValue
+		Gui, SelectModsGui:Add, Edit, x+20 yp-3       w70 vTradeAdvancedModMax%A_Index% r1 , % modValueMax
+		Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % maxLabelFirst maxLabelSecond
+		Gui, SelectModsGui:Add, CheckBox, x+30 yp-21      vTradeAdvancedSelected%A_Index%
 		
-		TradeAdvancedParam%A_Index% := item.mods[A_Index].param
+		TradeAdvancedParam%A_Index% := advItem.mods[A_Index].param
 	}
 	
 	; closes this window and starts the search
@@ -1206,23 +1332,24 @@ AdvancedPriceCheckGui(item){
 	; open search on poe.trade instead
 	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Open on poe.trade
 	
-	windowWidth := modGroupBox + 80 + 10 + 10 + 80 + 60 + 20
+	windowWidth := modGroupBox + 80 + 10 + 10 + 80 + 80 + 10 + 60 + 20
 	windowWidth := (windowWidth > 250) ? windowWidth : 250
     Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search
 }
 
 AdvancedPriceCheckSearch:	
 	Gui, SelectModsGui:Submit
-	newItem := {mods:[]}
-	mods := []	
+	newItem := {mods:[], stats:[]}
+	mods  := []	
+	stats := []	
 	
 	Loop {
 		mod := {param:"",selected:"",min:"",max:""}
 		If (TradeAdvancedModMin%A_Index%) {
-			mod.param := TradeAdvancedParam%A_Index%
+			mod.param    := TradeAdvancedParam%A_Index%
 			mod.selected := TradeAdvancedSelected%A_Index%
-			mod.min := TradeAdvancedModMin%A_Index%
-			mod.max := TradeAdvancedModMax%A_Index%
+			mod.min      := TradeAdvancedModMin%A_Index%
+			mod.max      := TradeAdvancedModMax%A_Index%
 			
 			mods.Push(mod)
 		}
@@ -1230,7 +1357,24 @@ AdvancedPriceCheckSearch:
 			break
 		}
 	}
+	
+	Loop {
+		stat := {param:"",selected:"",min:"",max:""}
+		If (TradeAdvancedStatMin%A_Index%) {
+			stat.param    := TradeAdvancedStatParam%A_Index%
+			stat.selected := TradeAdvancedStatSelected%A_Index%
+			stat.min      := TradeAdvancedStatMin%A_Index%
+			stat.max      := TradeAdvancedStatMax%A_Index%
+			
+			stats.Push(stat)
+		}
+		Else {
+			break
+		}
+	}
+	
 	newItem.mods := mods
+	newItem.stats := stats
 
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)
 	Gui, SelectModsGui:Destroy
@@ -1239,16 +1383,17 @@ return
 
 AdvancedOpenSearchOnPoeTrade:	
 	Gui, SelectModsGui:Submit
-	newItem := {mods:[]}
-	mods := []	
+	newItem := {mods:[], stats:[]}
+	mods  := []	
+	stats := []	
 	
 	Loop {
 		mod := {param:"",selected:"",min:"",max:""}
 		If (TradeAdvancedModMin%A_Index%) {
-			mod.param := TradeAdvancedParam%A_Index%
+			mod.param    := TradeAdvancedParam%A_Index%
 			mod.selected := TradeAdvancedSelected%A_Index%
-			mod.min := TradeAdvancedModMin%A_Index%
-			mod.max := TradeAdvancedModMax%A_Index%
+			mod.min      := TradeAdvancedModMin%A_Index%
+			mod.max      := TradeAdvancedModMax%A_Index%
 			
 			mods.Push(mod)
 		}
@@ -1256,7 +1401,24 @@ AdvancedOpenSearchOnPoeTrade:
 			break
 		}
 	}
+	
+	Loop {
+		stat := {param:"",selected:"",min:"",max:""}
+		If (TradeAdvancedStatMin%A_Index%) {
+			stat.param    := TradeAdvancedStatParam%A_Index%
+			stat.selected := TradeAdvancedStatSelected%A_Index%
+			stat.min      := TradeAdvancedStatMin%A_Index%
+			stat.max      := TradeAdvancedStatMax%A_Index%
+			
+			stats.Push(stat)
+		}
+		Else {
+			break
+		}
+	}
+	
 	newItem.mods := mods
+	newItem.stats := stats
 	
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)
 	Gui, SelectModsGui:Destroy

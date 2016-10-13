@@ -5649,6 +5649,8 @@ ParseClipBoardChanges()
 
 AssembleDamageDetails(FullItemData)
 {
+    Global Item
+    
     Quality := 0
     AttackSpeed := 0
     PhysMult := 0
@@ -5763,7 +5765,7 @@ AssembleDamageDetails(FullItemData)
 	ChaosDps := ((ChaoLo + ChaoHi) / 2) * AttackSpeed
 	MainHChaosDps := ((MainHChaoLo + MainHChaoHi) / 2) * AttackSpeed
 	OffHChaosDps := ((OffHChaoLo + OffHChaoHi) / 2) * AttackSpeed
-	
+    
 	If ( MainHEleDps > 0 or OffHEleDps > 0 or MainHChaosDps > 0 or OffHChaosDps > 0 )
 	{
 		twoColDisplay := true
@@ -5815,7 +5817,29 @@ AssembleDamageDetails(FullItemData)
 			Q20Dps := Q20Dps + EleDps + ChaosDps
 			Result = %Result%`nQ20 DPS:    %Q20Dps%
 		}		
-    }
+    }            
+    
+    Item.DamageDetails.MainHEleDps := MainHEleDps
+    Item.DamageDetails.OffHEleDps := OffHEleDps
+    Item.DamageDetails.MainHChaosDps := MainHChaosDps
+    Item.DamageDetails.OffHChaosDps := OffHChaosDps
+    Item.DamageDetails.TotalMainHDps := TotalMainHDps
+    Item.DamageDetails.TotalOffHDps := TotalOffHDps
+    Item.DamageDetails.TotalMainHEleDps := TotalMainHEleDps
+    Item.DamageDetails.TotalOffHEleDps := TotalOffHEleDps
+    Item.DamageDetails.TotalMainHChaosDps := TotalMainHChaosDps
+    Item.DamageDetails.TotalOffHChaosDps := TotalOffHChaosDps
+    Item.DamageDetails.Q20MainHDps := Q20MainHDps
+    Item.DamageDetails.Q20OffHDps := Q20OffHDps
+    Item.DamageDetails.BasePhysDps := BasePhysDps
+    Item.DamageDetails.TotalPhysMult := TotalPhysMult
+        
+    Item.DamageDetails.Q20Dps  := Q20Dps        
+    Item.DamageDetails.Quality := Quality       
+    Item.DamageDetails.PhysDps := PhysDps
+    Item.DamageDetails.EleDps  := EleDps
+    Item.DamageDetails.TotalDps:= TotalDps
+    Item.DamageDetails.ChaosDps:= ChaosDps
 
     return Result
 }
@@ -6188,6 +6212,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     RarityLevel =  
     TempResult =
 
+    Item.DamageDetails := {}
     Item.IsWeapon := False
 	Item.IsArmour := False
     Item.IsQuiver := False
