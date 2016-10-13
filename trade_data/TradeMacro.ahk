@@ -229,7 +229,12 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		else {
 			RequestParams.q_min := Item.Quality
 		}
-		if (Item.Level >= TradeOpts.GemLevel) {
+		; match exact gem level if enhance, empower or enlighten
+		if (InStr(Item.Name, "Empower") or InStr(Item.Name, "Enlighten") or InStr(Item.Name, "Enhance")) {
+			RequestParams.level_min := Item.Level
+			RequestParams.level_max := Item.Level
+		}
+		else if (Item.Level >= TradeOpts.GemLevel) {
 			RequestParams.level_min := Item.Level
 		}
 	}
