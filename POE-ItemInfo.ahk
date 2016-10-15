@@ -173,6 +173,9 @@ Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
+Globals.Set("SettingsUIHeight", 710)
+Globals.Set("SettingsUITitle", "PoE Item Info Settings")
+
 global SuspendPOEItemScript = 0
 
 class UserOptions {
@@ -547,12 +550,12 @@ Menu, Tray, Tip, Path of Exile Item Info %RelVer%
 
 Menu, Tray, NoStandard
 Menu, Tray, Add, About..., MenuTray_About
-Menu, Tray, Add, PoE Item Info Settings, ShowSettingsUI
+Menu, Tray, Add, % Globals.Get("SettingsUITitle", "PoE Item Info Settings"), ShowSettingsUI
 Menu, Tray, Add ; Separator
 Menu, Tray, Add, Edit, :TextFiles
 Menu, Tray, Add ; Separator
 Menu, Tray, Standard
-Menu, Tray, Default, PoE Item Info Settings
+Menu, Tray, Default, % Globals.Get("SettingsUITitle", "PoE Item Info Settings")
 
 
 IfNotExist, %A_ScriptDir%\data
@@ -5816,6 +5819,28 @@ AssembleDamageDetails(FullItemData)
 			Result = %Result%`nQ20 DPS:    %Q20Dps%
 		}		
     }
+    
+    Item.DamageDetails.MainHEleDps := MainHEleDps
+    Item.DamageDetails.OffHEleDps := OffHEleDps
+    Item.DamageDetails.MainHChaosDps := MainHChaosDps
+    Item.DamageDetails.OffHChaosDps := OffHChaosDps
+    Item.DamageDetails.TotalMainHDps := TotalMainHDps
+    Item.DamageDetails.TotalOffHDps := TotalOffHDps
+    Item.DamageDetails.TotalMainHEleDps := TotalMainHEleDps
+    Item.DamageDetails.TotalOffHEleDps := TotalOffHEleDps
+    Item.DamageDetails.TotalMainHChaosDps := TotalMainHChaosDps
+    Item.DamageDetails.TotalOffHChaosDps := TotalOffHChaosDps
+    Item.DamageDetails.Q20MainHDps := Q20MainHDps
+    Item.DamageDetails.Q20OffHDps := Q20OffHDps
+    Item.DamageDetails.BasePhysDps := BasePhysDps
+    Item.DamageDetails.TotalPhysMult := TotalPhysMult
+        
+    Item.DamageDetails.Q20Dps  := Q20Dps        
+    Item.DamageDetails.Quality := Quality       
+    Item.DamageDetails.PhysDps := PhysDps
+    Item.DamageDetails.EleDps  := EleDps
+    Item.DamageDetails.TotalDps:= TotalDps
+    Item.DamageDetails.ChaosDps:= ChaosDps
 
     return Result
 }
@@ -6188,6 +6213,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     RarityLevel =  
     TempResult =
 
+    Item.DamageDetails := {}
     Item.IsWeapon := False
 	Item.IsArmour := False
     Item.IsQuiver := False
@@ -6907,39 +6933,57 @@ GuiGet(ControlID, DefaultValue="")
     return curVal
 }
 
-GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Param4="") 
+GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Param4="", GuiName="") 
 {
     Global
     Local av, ah, al
     av := StrPrefix(AssocVar, "v")
     al := StrPrefix(AssocLabel, "g")
     ah := StrPrefix(AssocHwnd, "hwnd")
-    Gui, Add, %ControlType%, %PositionInfo% %av% %al% %ah% %Param4%, %Contents%
+    GuiName := (StrLen(GuiName) > 0) ? Trim(GuiName) . ":Add" : "Add" 
+    Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Param4%, %Contents%
 }
 
-GuiAddButton(Contents, PositionInfo, AssocLabel="", AssocVar="", AssocHwnd="", Options="")
+GuiAddButton(Contents, PositionInfo, AssocLabel="", AssocVar="", AssocHwnd="", Options="", GuiName="")
 {
-    GuiAdd("Button", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
+    GuiAdd("Button", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
 }
 
-GuiAddGroupBox(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="") 
+GuiAddGroupBox(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
 {
-    GuiAdd("GroupBox", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
+    GuiAdd("GroupBox", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
 }
 
-GuiAddCheckbox(Contents, PositionInfo, CheckedState=0, AssocVar="", AssocHwnd="", AssocLabel="", Options="") 
+GuiAddCheckbox(Contents, PositionInfo, CheckedState=0, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
 {
-    GuiAdd("Checkbox", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, "Checked" . CheckedState . " " . Options)
+    GuiAdd("Checkbox", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, "Checked" . CheckedState . " " . Options, GuiName)
 }
 
-GuiAddText(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="") 
+GuiAddText(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
 {
-    GuiAdd("Text", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
+    ; static controls like Text need "0x0100" added to their options for the tooltip to work 
+    ; either add it always here or don't forget to add it manually when using this function
+    GuiAdd("Text", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
 }
 
-GuiAddEdit(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="") 
+GuiAddEdit(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
 {
-    GuiAdd("Edit", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
+    GuiAdd("Edit", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
+}
+
+GuiAddDropDownList(Contents, PositionInfo, Selected="", AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
+{
+    ; usage : add list items as a | delimited string, for example = "item1|item2|item3"
+    ListItems := StrSplit(Contents, "|")
+    Contents := ""
+    Loop % ListItems.MaxIndex() { 
+        Contents .= Trim(ListItems[A_Index]) . "|"
+        ; add second | to mark pre-select list item
+        if (Trim(ListItems[A_Index]) == Selected) {
+            Contents .= "|"
+        }
+    }
+    GuiAdd("DropDownList", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
 }
 
 AddToolTip(con, text, Modify=0){
@@ -7069,7 +7113,7 @@ CreateSettingsUI()
 
     GuiAddGroupBox("General", "x7 y15 w260 h90")
     
-    ; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
+    ; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.    
     
     GuiAddCheckbox("Only show tooltip if PoE is frontmost", "x17 y35 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
     AddToolTip(OnlyActiveIfPOEIsFrontH, "If checked the script does nothing if the`nPath of Exile window isn't the frontmost")
@@ -7102,7 +7146,7 @@ CreateSettingsUI()
         GuiAddText("Y:", "x105 y372 w20 h20", "LblScreenOffsetY")
         GuiAddEdit(Opts.ScreenOffsetY, "x125 y370 w40 h20", "ScreenOffsetY")
 
-    GuiAddText("Mousemove threshold (px):", "x17 y402 w160 h20", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
+    GuiAddText("Mousemove threshold (px):", "x17 y402 w160 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
     AddToolTip(LblMouseMoveThresholdH, "Hide tooltip automatically after the mouse has moved x amount of pixels")
     GuiAddEdit(Opts.MouseMoveThreshold, "x187 y400 w50 h20", "MouseMoveThreshold", "MouseMoveThresholdH")
 
@@ -7281,7 +7325,9 @@ ShowSettingsUI()
     ToolTip
     Fonts.SetUIFont(9)
     SettingsUIWidth := Globals.Get("SettingsUIWidth", 545)
-    Gui, Show, w%SettingsUIWidth% h710, PoE Item Info Settings
+    SettingsUIHeight := Globals.Get("SettingsUIHeight", 710)
+    SettingsUITitle := Globals.Get("SettingsUITitle", "PoE Item Info Settings")
+    Gui, Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
 }
 
 IniRead(ConfigPath, Section_, Key, Default_) 
