@@ -880,10 +880,14 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         ;    the word lists used for the randomly assigned (first line) item name. 
         
         ; "$" means line end, "|" is the usual "or" operator.
-        
+        ; Using "$" perfectly matches all normal and rare items but completely fails on magic items.
+        ; I don't see a reason why "$" should be used.
+        ; There should be 2 solutions here:
+        ;   1. Don't use "$".
+        ;   2. Use Trim(RegExReplace(A_LoopField, "i) of .*", "")) to remove the suffix from magic items first.
 
         ; Shields
-        If (RegExMatch(A_LoopField, "Buckler$|Bundle$|Shield$"))
+        If (RegExMatch(A_LoopField, "Buckler|Bundle|Shield"))
         {
             BaseType = Armour
             SubType = Shield
@@ -891,7 +895,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Gloves
-        If (RegExMatch(A_LoopField, "Gauntlets$|Gloves$|Mitts$"))
+        If (RegExMatch(A_LoopField, "Gauntlets|Gloves|Mitts"))
         {
             BaseType = Armour
             SubType = Gloves
@@ -899,7 +903,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Boots
-        If (RegExMatch(A_LoopField, "Boots$|Greaves$|Slippers$"))
+        If (RegExMatch(A_LoopField, "Boots|Greaves|Slippers"))
         {
             BaseType = Armour
             SubType = Boots
@@ -907,7 +911,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Helmets
-        If (RegExMatch(A_LoopField, "Bascinet$|Burgonet$|Cage$|Circlet$|Crown$|Hood$|Helm$|Helmet$|Mask$|Sallet$|Tricorne$"))
+        If (RegExMatch(A_LoopField, "Bascinet|Burgonet|Cage|Circlet|Crown|Hood|Helm|Helmet|Mask|Sallet|Tricorne"))
         {
             BaseType = Armour
             SubType = Helmet
@@ -925,12 +929,17 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; BodyArmour
-        If (RegExMatch(A_LoopField, "Armour$|Brigandine$|Chainmail$|Coat$|Doublet$|Garb$|Hauberk$|Jacket$|Lamellar$|Leather$|Plate$|Raiment$|Regalia$|Ringmail$|Robe$|Tunic$|Vest$|Vestment$"))
+        ; Note: Not using "$" could match "Leather Belt", therefore we first check that the item is no belt.
+        If (!RegExMatch(A_LoopField, "Belt"))
         {
-            BaseType = Armour
-            SubType = BodyArmour
-            return
+            If (RegExMatch(A_LoopField, "Armour|Brigandine|Chainmail|Coat|Doublet|Garb|Hauberk|Jacket|Lamellar|Leather|Plate|Raiment|Regalia|Ringmail|Robe|Tunic|Vest|Vestment"))
+            {
+                BaseType = Armour
+                SubType = BodyArmour
+                return
+            }
         }
+       
 
         If (RegExMatch(A_LoopField, "Chestplate|Full Dragonscale|Full Wyrmscale|Necromancer Silks|Shabby Jerkin|Silken Wrap"))
         {
