@@ -104,7 +104,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList, Opts
 	
 	DoParseClipboardFunction()
-	
+	iLvl := Item.Level
 	; cancel search if Item is empty
 	if (!Item.name) {
 		return
@@ -350,7 +350,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		ShowToolTip(ParsedData)
 	}
 	else {
-		ParsedData := FunctionParseHtml(Html, Payload)
+		ParsedData := FunctionParseHtml(Html, Payload, iLvl)
 		out("Parsing HTML done")
 		
 		SetClipboardContents(ParsedData)
@@ -390,7 +390,7 @@ FunctionParseItemDefenseStats(stats, mods, isUnique){
 	EnergyShield := FunctionCalculateQ20(baseES, affixFlatES1, affixPercentES1)
 	Evasion      := FunctionCalculateQ20(baseEV, affixFlatEV1, affixPercentEV1)
 	
-	; calculate items Q20 min/max defense stat values
+	; calculate items Q20 defense stat min/max values
 	Affixes := StrSplit(ItemData.Affixes, "`n")
 	For key, mod in mods.mods {
 		For i, affix in Affixes {
@@ -763,7 +763,7 @@ FunctionParseCurrencyIDs(html){
 FunctionParseCurrencyHtml(html, payload){
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
-	
+
 	Title := Item.Name
 	Title .= " (" LeagueName ")"
 	Title .= "`n------------------------------ `n"	
@@ -907,11 +907,11 @@ FunctionGetMeanMedianPrice(html, payload){
 }
 
 ; Parse poe.trade html to display the search result tooltip with X listings
-FunctionParseHtml(html, payload)
+FunctionParseHtml(html, payload, iLvl = "")
 {	
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
-	
+
 	; Target HTML Looks like the ff:
     ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
 
@@ -957,7 +957,7 @@ FunctionParseHtml(html, payload)
 		Title := Name " " ItemData.Sockets "s" ItemData.Links "l"
 	}
 	if (showItemLevel) {
-		Title .= ", iLvl: " Item.Level
+		Title .= ", iLvl: " iLvl
 	}
 	
 	Title .= ", (" LeagueName ")"
