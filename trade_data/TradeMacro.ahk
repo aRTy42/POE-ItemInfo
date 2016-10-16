@@ -105,16 +105,24 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	DoParseClipboardFunction()
 	
+	; cancel search if Item is empty
+	if (!Item.name) {
+		return
+	}
+	
 	if (Opts.ShowMaxSockets != 1) {
 		FunctionSetItemSockets()
 	}
 	
+
 	; prepare Data for advanced search
+	;UniqueStats := FunctionGetUniqueStats(Item.Name)
 	Stats := {}
 	Stats.Quality := Item.Quality
-	Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats)
-	Stats.Offense := FunctionParseItemOffenseStats(Item.DamageDetails)
-
+	DamageDetails := Item.DamageDetails
+	;Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, UniqueStats, Item.IsUnique)
+	;Stats.Offense := FunctionParseItemOffenseStats(Item.DamageDetails)
+	
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
 	; ignore item name in certain cases
@@ -146,14 +154,19 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	*/
 	
 	if (Item.IsUnique) {
+		UniqueStats := FunctionGetUniqueStats(Item.Name)
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
 		uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
 		if (uniqueWithVariableMods) {
 			Gui, SelectModsGui:Destroy
-			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)			
+			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
+			Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, s, Item.IsUnique)
+			Stats.Offense := FunctionParseItemOffenseStats(DamageDetails, s, Item.IsUnique)	
+
 			; open AdvancedPriceCheckGui to select mods and their min/max values
 			if (isAdvancedPriceCheck) {
-				AdvancedPriceCheckGui(s, Stats)
+				UniqueStats := FunctionGetUniqueStats(Item.Name)
+				AdvancedPriceCheckGui(s, Stats, UniqueStats)
 				return
 			}		
 			; ignore mod rolls unless the AdvancedPriceCheckGui is used to search
@@ -343,45 +356,247 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		SetClipboardContents(ParsedData)
 		ShowToolTip(ParsedData)
 	}    
+	
+	; reser Item and ItemData after search
+	Item := {}
+	ItemData := {}
 }
 
 ; parse items defense stats
-FunctionParseItemDefenseStats(stats){
+FunctionParseItemDefenseStats(stats, mods, isUnique){
+	Global ItemData
 	iStats := {}
 	
 	RegExMatch(stats, "i)chance to block ?:.*?(\d+)", Block)
-	RegExMatch(stats, "i)armour ?:.*?(\d+)", Armour)
-	RegExMatch(stats, "i)energy shield ?:.*?(\d+)", EnergyShield)
-	RegExMatch(stats, "i)evasion rating ?:.*?(\d+)", Evasion)
+	RegExMatch(stats, "i)armour ?:.*?(\d+)"         , Armour)
+	RegExMatch(stats, "i)energy shield ?:.*?(\d+)"  , EnergyShield)
+	RegExMatch(stats, "i)evasion rating ?:.*?(\d+)" , Evasion)
+	RegExMatch(stats, "i)quality ?:.*?(\d+)"        , Quality)
+
+	RegExMatch(ItemData.Affixes, "i)(\d+).*maximum.*?Energy Shield"  , affixFlatES) 
+	RegExMatch(ItemData.Affixes, "i)(\d+).*maximum.*?Armour"         , affixFlatAR) 
+	RegExMatch(ItemData.Affixes, "i)(\d+).*maximum.*?Evasion"        , affixFlatEV) 
+	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Energy Shield", affixPercentES) 
+	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Evasion"      , affixPercentEV) 
+	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Armour"       , affixPercentAR) 
+
+	; calculate items base defense stats
+	baseES := FunctionCalculateBase(EnergyShield1, affixPercentES1, Quality1, affixFlatES1)
+	baseAR := FunctionCalculateBase(Armour1      , affixPercentAR1, Quality1, affixFlatAR1)
+	baseEV := FunctionCalculateBase(Evasion1     , affixPercentEV1, Quality1, affixFlatEV1)
 	
-	iStats.TotalBlock := {}
-	iStats.TotalBlock.Value := Block1
-	iStats.TotalBlock.Name  := "Block Chance"
-	iStats.TotalArmour := {}
-	iStats.TotalArmour.Value := Armour1
-	iStats.TotalArmour.Name  := "Armour"
-	iStats.TotalEnergyShield := {}
-	iStats.TotalEnergyShield.Value := EnergyShield1
-	iStats.TotalEnergyShield.Name  := "Energy Shield"
-	iStats.TotalEvasion := {}
-	iStats.TotalEvasion.Value := Evasion1
-	iStats.TotalEvasion.Name  := "Evasion Rating"
+	; calculate items Q20 total defense stats
+	Armour       := FunctionCalculateQ20(baseAR, affixFlatAR1, affixPercentAR1)
+	EnergyShield := FunctionCalculateQ20(baseES, affixFlatES1, affixPercentES1)
+	Evasion      := FunctionCalculateQ20(baseEV, affixFlatEV1, affixPercentEV1)
+	
+	; calculate items Q20 min/max defense stat values
+	Affixes := StrSplit(ItemData.Affixes, "`n")
+	For key, mod in mods.mods {
+		For i, affix in Affixes {
+			affix := RegExReplace(affix, "i)(\d+.?\d+?)", "#")
+			affix := RegExReplace(affix, "i)# %", "#%")
+			affix := Trim(RegExReplace(affix, "\s", " "))
+			name :=  Trim(mod.name)		
+			
+			If ( affix = name ){
+				; ignore mods like " ... per X dexterity"
+				If (RegExMatch(affix, "i) per ")) {
+					continue
+				}
+				if (RegExMatch(affix, "i)#.*to maximum.*?Energy Shield"  , affixFlatES)) {
+					min_affixFlatES    := mod.ranges[1][1] 
+					max_affixFlatES    := mod.ranges[1][2] 
+					;MsgBox % affix "`nmax es : " min_affixFlatES " - " max_affixFlatES
+				}
+				if (RegExMatch(affix, "i)#.*to maximum.*?Armour"         , affixFlatAR)) {
+					min_affixFlatAR    := mod.ranges[1][1]
+					max_affixFlatAR    := mod.ranges[1][2]
+					;MsgBox % affix "`nmax ar : " min_affixFlatAR " - " max_affixFlatAR
+				}
+				if (RegExMatch(affix, "i)#.*to maximum.*?Evasion"        , affixFlatEV)) {
+					min_affixFlatEV    := mod.ranges[1][1]
+					max_affixFlatEV    := mod.ranges[1][2]
+					;MsgBox % affix "`nmax ev : " min_affixFlatEV " - " max_affixFlatEV
+				}
+				if (RegExMatch(affix, "i)#.*increased.*?Energy Shield"   , affixPercentES)) {
+					min_affixPercentES := mod.ranges[1][1]
+					max_affixPercentES := mod.ranges[1][2]
+					;MsgBox % affix "`ninc es : " min_affixPercentES " - " max_affixPercentES
+				}
+				if (RegExMatch(affix, "i)#.*increased.*?Evasion"         , affixPercentEV)) {
+					min_affixPercentEV := mod.ranges[1][1]
+					max_affixPercentEV := mod.ranges[1][2]
+					;MsgBox % affix "`ninc ev : " min_affixPercentEV " - " max_affixPercentEV
+				}
+				if (RegExMatch(affix, "i)#.*increased.*?Armour"          , affixPercentAR)) {
+					min_affixPercentAR := mod.ranges[1][1]
+					max_affixPercentAR := mod.ranges[1][2]
+					;MsgBox % affix "`ninc ar : " min_affixPercentAR " - " max_affixPercentAR
+				}
+			}
+		}
+	}
+	
+	min_Armour       := FunctionCalculateQ20(baseAR, min_affixFlatAR   , min_affixPercentAR)
+	max_Armour       := FunctionCalculateQ20(baseAR, max_affixFlatAR   , max_affixPercentAR)
+	min_EnergyShield := FunctionCalculateQ20(baseES, min_affixFlatES   , min_affixPercentES)
+	max_EnergyShield := FunctionCalculateQ20(baseES, max_affixFlatES   , max_affixPercentES)
+	min_Evasion      := FunctionCalculateQ20(baseEV, min_affixPercentEV, min_affixPercentEV)	
+	max_Evasion      := FunctionCalculateQ20(baseEV, max_affixPercentEV, max_affixPercentEV)	
+	
+	iStats.TotalBlock 				:= {}
+	iStats.TotalBlock.Value 		:= Block1
+	iStats.TotalBlock.Name  		:= "Block Chance"
+	iStats.TotalArmour 				:= {}
+	iStats.TotalArmour.Value 		:= Armour
+	iStats.TotalArmour.Name  		:= "Armour"
+	iStats.TotalArmour.Base  		:= baseAR
+	iStats.TotalArmour.min  		:= min_Armour
+	iStats.TotalArmour.max  		:= max_Armour
+	iStats.TotalEnergyShield 		:= {}
+	iStats.TotalEnergyShield.Value 	:= EnergyShield
+	iStats.TotalEnergyShield.Name  	:= "Energy Shield"
+	iStats.TotalEnergyShield.Base  	:= baseES
+	iStats.TotalEnergyShield.min 	:= min_EnergyShield
+	iStats.TotalEnergyShield.max  	:= max_EnergyShield
+	iStats.TotalEvasion 			:= {}
+	iStats.TotalEvasion.Value 		:= Evasion
+	iStats.TotalEvasion.Name  		:= "Evasion Rating"
+	iStats.TotalEvasion.Base  		:= baseEV
+	iStats.TotalEvasion.min  		:= min_Evasion
+	iStats.TotalEvasion.max  		:= max_Evasion
+	iStats.Quality 					:= Quality1
 	
 	return iStats
 }
 
+FunctionCalculateBase(total, affixPercent, qualityPercent, affixFlat){
+	SetFormat, FloatFast, 5.2
+	If (total) {
+		affixPercent  := (affixPercent) ? (affixPercent / 100) : 0
+		affixFlat     := (affixFlat) ? affixFlat : 0
+		qualityPercent:= (qualityPercent) ? (qualityPercent / 100) : 0
+		base := Round((total / (1 + affixPercent + qualityPercent)) - affixFlat)
+		return base
+	}
+	return
+}
+FunctionCalculateQ20(base, affixFlat, affixPercent){
+	SetFormat, FloatFast, 5.2
+	If (base) {
+		affixPercent  := (affixPercent) ? (affixPercent / 100) : 0
+		affixFlat     := (affixFlat) ? affixFlat : 0
+		total := Round((base + affixFlat) * (1 + affixPercent + (20 / 100)))
+		return total
+	}
+	return
+}
+
 ; parse items dmg stats
-FunctionParseItemOffenseStats(Stats){
+FunctionParseItemOffenseStats(Stats, mods, isUnique){
+	Global ItemData
 	iStats := {}
 
+	RegExMatch(ItemData.Stats, "i)Physical Damage ?:.*?(\d+)-(\d+)", match)
+	physicalDamageLow := match1
+	physicalDamageHi  := match2
+	RegExMatch(ItemData.Stats, "i)Attacks per Second ?: ?(\d+.?\d+)", match)
+	AttacksPerSecond := match1
+	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Physical Damage", match)
+	affixPercentPhys := match1
+	RegExMatch(ItemData.Affixes, "i)Adds\D+(\d+)\D+(\d+).*Physical Damage", match)
+	affixFlatPhysLow := match1
+	affixFlatPhysHi  := match2
+
+	Affixes := StrSplit(ItemData.Affixes, "`n")
+	For key, mod in mods.mods {
+		For i, affix in Affixes {
+			If (RegExMatch(affix, "i)(\d+.?\d+?).*increased Attack Speed", match)) {
+				affixAttackSpeed := match1
+			}
+					
+			If (RegExMatch(affix, "Adds.*Lightning Damage")) {
+				affix := RegExReplace(affix, "i)to (\d+)", "to #")
+				affix := RegExReplace(affix, "i)to (\d+.*?\d+?)", "to #")
+			} 
+			Else {
+				affix := RegExReplace(affix, "i)(\d+ to \d+)", "#")
+				affix := RegExReplace(affix, "i)(\d+.*?\d+?)", "#")
+			}						
+			affix := RegExReplace(affix, "i)# %", "#%")
+			affix := Trim(RegExReplace(affix, "\s", " "))
+			name :=  Trim(mod.name)	
+			
+			If ( affix = name ){
+				match :=
+				; ignore mods like " ... per X dexterity"
+				If (RegExMatch(affix, "i) per ")) {
+					continue
+				}
+				If (RegExMatch(affix, "i)Adds.*#.*(Physical|Fire|Cold|Chaos) Damage", dmgType)) {
+					min_affixFlat%dmgType1%Low    := mod.ranges[1][1] 
+					min_affixFlat%dmgType1%Hi     := mod.ranges[1][2] 
+					max_affixFlat%dmgType1%Low    := mod.ranges[2][1] 
+					max_affixFlat%dmgType1%Hi     := mod.ranges[2][2] 
+					;MsgBox % affix "`nflat " dmgType1 " : " min_affixFlat%dmgType1%Low " - " min_affixFlat%dmgType1%Hi " to " max_affixFlat%dmgType1%Low " - " max_affixFlat%dmgType1%Hi
+				}
+				If (RegExMatch(affix, "i)Adds.*(\d+) to #.*(Lightning) Damage", match)) {
+					min_affixFlat%match2%Low    := match1 
+					min_affixFlat%match2%Hi     := mod.ranges[1][1] 
+					max_affixFlat%match2%Low    := match1
+					max_affixFlat%match2%Hi     := mod.ranges[1][2] 
+					;MsgBox % affix "`nflat " match2 " : " min_affixFlat%match2%Low " - " min_affixFlat%match2%Hi " to " max_affixFlat%match2%Low " - " max_affixFlat%match2%Hi
+				}
+				If (RegExMatch(affix, "i)#.*increased Physical Damage")) {
+					min_affixPercentPhys    := mod.ranges[1][1] 
+					max_affixPercentPhys    := mod.ranges[1][2] 
+					;MsgBox % affix "`ninc Phys : " min_affixPercentPhys " - " max_affixPercentPhys
+				}
+				If (RegExMatch(affix, "i)#.*increased Attack Speed")) {
+					min_affixPercentAPS     := mod.ranges[1][1] 
+					max_affixPercentAPS     := mod.ranges[1][2] 
+					;MsgBox % affix "`ninc attack speed : " min_affixPercentAPS " - " max_affixPercentAPS
+				}
+			}
+		}
+	}
+	
+	SetFormat, FloatFast, 5.2	
+	baseAPS      := (!affixAttackSpeed) ? AttacksPerSecond : AttacksPerSecond / (1 + (affixAttackSpeed / 100))
+	basePhysLow  := FunctionCalculateBase(physicalDamageLow, affixPercentPhys, Stats.Quality, affixFlatPhysLow)
+	basePhysHi   := FunctionCalculateBase(physicalDamageHi , affixPercentPhys, Stats.Quality, affixFlatPhysHi)
+	
+	minPhysLow   := FunctionCalculateQ20(basePhysLow, min_affixFlatPhysicalLow, min_affixPercentPhys)
+	minPhysHi    := FunctionCalculateQ20(basePhysHi , min_affixFlatPhysicalHi , min_affixPercentPhys)
+	maxPhysLow   := FunctionCalculateQ20(basePhysLow, max_affixFlatPhysicalLow, max_affixPercentPhys)
+	maxPhysHi    := FunctionCalculateQ20(basePhysHi , max_affixFlatPhysicalHi , max_affixPercentPhys)
+	minAPS       := baseAPS * (1 + (min_affixPercentAPS / 100))
+	maxAPS       := baseAPS * (1 + (max_affixPercentAPS / 100))
+	
 	iStats.PhysDps        := {}
-    iStats.PhysDps.Name   := "Physical Dps (Q20)"	
+    iStats.PhysDps.Name   := "Physical Dps (Q20)"
     iStats.PhysDps.Value  := (Stats.Q20Dps > 0) ? (Stats.Q20Dps - Stats.EleDps - Stats.ChaosDps) : Stats.PhysDps 
+    iStats.PhysDps.Min    := ((minPhysLow + minPhysHi) / 2) * minAPS
+    iStats.PhysDps.Max    := ((maxPhysLow + maxPhysHi) / 2) * maxAPS
     iStats.EleDps         := {}
-    iStats.EleDps.Name    := "Elemetal Dps"
+    iStats.EleDps.Name    := "Elemental Dps"
     iStats.EleDps.Value   := Stats.EleDps
+	iStats.EleDps.Min     := ((min_affixFlatFireLow + min_affixFlatFireHi + min_affixFlatColdLow + min_affixFlatColdHi + min_affixFlatLightningLow + min_affixFlatLightningHi) / 2) * minAPS
+	iStats.EleDps.Max     := ((max_affixFlatFireLow + max_affixFlatFireHi + max_affixFlatColdLow + max_affixFlatColdHi + max_affixFlatLightningLow + max_affixFlatLightningHi) / 2) * maxAPS
+	
+	;MsgBox % "Phys DPS: " iStats.PhysDps.Value "`n" "Phys Min: " iStats.PhysDps.Min "`n" "Phys Max: " iStats.PhysDps.Max "`n" "EleDps: " iStats.EleDps.Value "`n" "Ele Min: " iStats.EleDps.Min "`n" "Ele Max: "  iStats.EleDps.Max
 	
 	return iStats
+}
+
+FunctionGetUniqueStats(name){
+	items := TradeGlobals.Get("VariableUniqueData")
+	For i, item in items {
+		If (name = item.name) {
+			return item.stats
+		}
+	}
 }
 
 ; copied from PoE-ItemInfo because there it'll only be called if the optioen "ShowMaxSockets" is enabled
@@ -1195,26 +1410,26 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 }
 
 ; Open Gui window to show the items variable mods, select the ones that should be used in the search and se their min/max values
-AdvancedPriceCheckGui(advItem, Stats){	
+AdvancedPriceCheckGui(advItem, Stats, UniqueStats = ""){	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	Global 
 
 	TradeGlobals.Set("AdvancedPriceCheckItem", advItem)
 	ValueRange := TradeOpts.AdvancedSearchModValueRange
-	
+
 	Gui, SelectModsGui:Destroy    
     Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
 	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRange "`%" 
-    Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the items mods difference between their theoretical`nmin and max value as 100`%.			
+    Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the items mods difference between their min and max value as 100`%.			
 	
 	ValueRange := ValueRange / 100 	
 		
-	Loop % advItem.mods.Length() {		
+	Loop % advItem.mods.Length() {	
 		tempValue := StrLen(advItem.mods[A_Index].name)
 		if(modLengthMax < tempValue ) {
 			modLengthMax := tempValue
 			modGroupBox := modLengthMax * 6
-		}				
+		}
 	}
 	modCount := advItem.mods.Length()
 	
@@ -1226,7 +1441,7 @@ AdvancedPriceCheckGui(advItem, Stats){
 		statCount := (stat.value) ? statCount + 1 : statCount
 	}
 
-	boxRows := modCount * 3 + statCount ; 2
+	boxRows := modCount * 3 + statCount * 3 ; 2
 	Gui, SelectModsGui:Add, Groupbox, x10 y+10 w%modGroupBox% r%boxRows%, Mods
 	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, min
 	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, current
@@ -1238,21 +1453,30 @@ AdvancedPriceCheckGui(advItem, Stats){
 	For i, stat in Stats.Defense {
 		If (stat.value) {			
 			xPosMin := modGroupBox + 25
-			yPosFirst := ( j = 1 ) ? 20 : 30
-
+			yPosFirst := ( j = 1 ) ? 30 : 45		
+			
 			if (stat.Name != "Block Chance") {
 				stat.value   := Round(stat.value * 100 / (100 + Stats.Quality)) 
 				statValueQ20 := Round(stat.value * ((100 + 20) / 100))
 			}
-
-			statValueMin := Round(statValueQ20 - (statValueQ20 * ValueRange))
-			statValueMax := Round(statValueQ20 + (statValueQ20 * ValueRange))
 			
-			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%, % "(Total Q20) " stat.name
-			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedStatMin%j% r1, %statValueMin%
-			Gui, SelectModsGui:Add, Text, x+20 yp+3 w70 r1, % statValueQ20
-			Gui, SelectModsGui:Add, Edit, x+20 yp+0 w70 vTradeAdvancedStatMax%j% r1, %statValueMax%
-			Gui, SelectModsGui:Add, CheckBox, x+30 yp+4 vTradeAdvancedStatSelected%j%
+			; calculate values to prefill min/max fields		
+			; assume the difference between the theoretical max and min value as 100%
+			statValueMin := Round(statValueQ20 - ((stat.max - stat.min) * valueRange))
+			statValueMax := Round(statValueQ20 + ((stat.max - stat.min) * valueRange))			
+			
+			minLabelFirst := "(" zerotrimmer(stat.min)
+			minLabelSecond := ")" 
+			maxLabelFirst := "(" zerotrimmer(stat.max)
+			maxLabelSecond := ")"
+			
+			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							 , % "(Total Q20) " stat.name
+			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedStatMin%j% r1, % statValueMin
+			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % minLabelFirst minLabelSecond
+			Gui, SelectModsGui:Add, Text, x+20 yp-22 w70 r1								 , % statValueQ20
+			Gui, SelectModsGui:Add, Edit, x+20 yp-3 w70 vTradeAdvancedStatMax%j% r1	     , % statValueMax
+			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % maxLabelFirst maxLabelSecond
+			Gui, SelectModsGui:Add, CheckBox, x+30 yp-20 vTradeAdvancedStatSelected%j%
 			
 			TradeAdvancedStatParam%j% := stat.name			
 			j++
@@ -1263,16 +1487,25 @@ AdvancedPriceCheckGui(advItem, Stats){
 	For i, stat in Stats.Offense {
 		If (stat.value) {			
 			xPosMin := modGroupBox + 25
-			yPosFirst := ( j = 1 ) ? 20 : 30
+			yPosFirst := ( j = 1 ) ? 20 : 45			
 
-			statValueMin := Round(stat.value - (stat.value * ValueRange))
-			statValueMax := Round(stat.value + (stat.value * ValueRange))
+			; calculate values to prefill min/max fields		
+			; assume the difference between the theoretical max and min value as 100%
+			statValueMin := Round(stat.value - ((stat.max - stat.min) * valueRange))
+			statValueMax := Round(stat.value + ((stat.max - stat.min) * valueRange))			
 			
-			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%, % stat.name
-			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedStatMin%j% r1, %statValueMin%
-			Gui, SelectModsGui:Add, Text, x+20 yp+3 w70 r1, % stat.value
-			Gui, SelectModsGui:Add, Edit, x+20 yp-3 w70 vTradeAdvancedStatMax%j% r1, %statValueMax%
-			Gui, SelectModsGui:Add, CheckBox, x+30 yp+4 vTradeAdvancedStatSelected%j%
+			minLabelFirst := "(" zerotrimmer(stat.min)
+			minLabelSecond := ")" 
+			maxLabelFirst := "(" zerotrimmer(stat.max)
+			maxLabelSecond := ")"
+			
+			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							 , % stat.name
+			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedStatMin%j% r1, % statValueMin
+			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % minLabelFirst minLabelSecond
+			Gui, SelectModsGui:Add, Text, x+20 yp-22 w70 r1								 , % stat.value
+			Gui, SelectModsGui:Add, Edit, x+20 yp-3 w70 vTradeAdvancedStatMax%j% r1	     , % statValueMax
+			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % maxLabelFirst maxLabelSecond
+			Gui, SelectModsGui:Add, CheckBox, x+30 yp-20 vTradeAdvancedStatSelected%j%
 			
 			TradeAdvancedStatParam%j% := stat.name			
 			j++
@@ -1318,7 +1551,7 @@ AdvancedPriceCheckGui(advItem, Stats){
 		maxLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][2])
 		maxLabelSecond := advItem.mods[A_Index].ranges[2][2] ? (" - " zerotrimmer(advItem.mods[A_Index].ranges[2][2]) ")") : (")")
 		
-		yPosFirst := ( A_Index = 1 ) ? 30 : 45
+		yPosFirst := ( j > 1 ) ? 45 : 30
 	
 		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%                                   , % advItem.mods[A_Index].name
 		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedModMin%A_Index% r1 , % modValueMin
