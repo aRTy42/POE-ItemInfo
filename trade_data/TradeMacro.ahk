@@ -1362,7 +1362,9 @@ FunctionFindInModGroup(modgroup, needle) {
 		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
 		s  := RegExReplace(s, "# ?to ? #", "#")
 		ss := Trim(needle.name)	
-			 
+		;matches "1 to" in for example "adds 1 to (20-40) lightning damage"
+		ss := RegExReplace(ss, "\d+ ?to ?#", "#")	
+		
 		If (s = ss) {
 			return mod
 		}
@@ -1515,24 +1517,43 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = ""){
 	;add mods	
 	Loop % advItem.mods.Length() {
 		xPosMin := modGroupBox + 25			
+	
+		; matches "1 to #" in for example "adds 1 to # lightning damage"
+		if (RegExMatch(advItem.mods[A_Index].name, "i)Adds (\d+(.\d+)?) to #.*Damage", match)) {
+			displayName := RegExReplace(advItem.mods[A_Index].name, "\d+(.\d+)? to #", "#")
+			staticValue := match1
+		}
+		else {
+			displayName := advItem.mods[A_Index].name			
+			staticValue := 	
+		}
 		
 		if (advItem.mods[A_Index].ranges.Length() > 1) {
 			theoreticalMinValue := advItem.mods[A_Index].ranges[1][1]
 			theoreticalMaxValue := advItem.mods[A_Index].ranges[2][2]
 		}
 		else {
-			theoreticalMinValue := advItem.mods[A_Index].ranges[1][1]
-			theoreticalMaxValue := advItem.mods[A_Index].ranges[1][2]
+			; use staticValue to create 2 ranges; for example (1 to 50) to (1 to 70) instead of having only (50 to 70)  
+			if (staticValuee) {
+				theoreticalMinValue := staticValue
+				theoreticalMaxValue := advItem.mods[A_Index].ranges[1][2]
+			}
+			else {
+				theoreticalMinValue := advItem.mods[A_Index].ranges[1][1]
+				theoreticalMaxValue := advItem.mods[A_Index].ranges[1][2]
+			}
 		}
+		
+		SetFormat, FloatFast, 5.2
 		
 		modValues := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)
 		if (modValues.Length() > 1) {
 			modValue := (modValues[1] + modValues[2]) / 2
 		}
 		else {
-			modValue := modValues[1]		
-		}		
-		
+			modValue := modValues[1]
+		}	
+
 		; calculate values to prefill min/max fields		
 		; assume the difference between the theoretical max and min value as 100%
 		modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRange)
@@ -1542,23 +1563,31 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = ""){
 		modValueMax := (modValueMax > 2) ? Floor(modValueMax) : modValueMax
 		
 		; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
-		modValueMin := zerotrimmer((modValueMin < theoreticalMinValue) ? theoreticalMinValue : modValueMin)
-		modValueMax := zerotrimmer((modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax	)
+		modValueMin := zerotrimmer((modValueMin < theoreticalMinValue and not staticValue) ? theoreticalMinValue : modValueMin)
+		modValueMax := zerotrimmer((modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax)
 
-		; create Labels to show unique items theoretical rolls
-		minLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][1])
-		minLabelSecond := advItem.mods[A_Index].ranges[2][1] ? (" - " zerotrimmer(advItem.mods[A_Index].ranges[2][1]) ")") : (")") 
-		maxLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][2])
-		maxLabelSecond := advItem.mods[A_Index].ranges[2][2] ? (" - " zerotrimmer(advItem.mods[A_Index].ranges[2][2]) ")") : (")")
+		; create Labels to show unique items min/max rolls		
+		if (advItem.mods[A_Index].ranges[2][1]) {
+			minLabelFirst := "(" zerotrimmer((advItem.mods[A_Index].ranges[1][1] + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
+			maxLabelFirst := "(" zerotrimmer((advItem.mods[A_Index].ranges[2][1] + advItem.mods[A_Index].ranges[2][2]) / 2) ")"
+		}
+		else if (staticValue) {
+			minLabelFirst := "(" zerotrimmer((staticValue + advItem.mods[A_Index].ranges[1][1]) / 2) ")"
+			maxLabelFirst := "(" zerotrimmer((staticValue + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
+		}
+		else {
+			minLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][1]) ")"
+			maxLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][2]) ")"
+		}
 		
 		yPosFirst := ( j > 1 ) ? 45 : 30
 	
-		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%                                   , % advItem.mods[A_Index].name
+		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%                                   , % displayName
 		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedModMin%A_Index% r1 , % modValueMin
-		Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % minLabelFirst minLabelSecond
-		Gui, SelectModsGui:Add, Text, x+20 yp-22      w70 r1                               , % modValue
+		Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % minLabelFirst
+		Gui, SelectModsGui:Add, Text, x+20 yp-22      w70 r1                               , % zerotrimmer(modValue)
 		Gui, SelectModsGui:Add, Edit, x+20 yp-3       w70 vTradeAdvancedModMax%A_Index% r1 , % modValueMax
-		Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % maxLabelFirst maxLabelSecond
+		Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % maxLabelFirst
 		Gui, SelectModsGui:Add, CheckBox, x+30 yp-21      vTradeAdvancedSelected%A_Index%
 		
 		TradeAdvancedParam%A_Index% := advItem.mods[A_Index].param
