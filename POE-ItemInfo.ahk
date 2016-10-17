@@ -5855,41 +5855,65 @@ AssembleDamageDetails(FullItemData)
 }
 
 ; ParseItemName fixed by user: uldo_.  Thanks!
-ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName)
+ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = "")
 {
     Loop, Parse, ItemDataChunk, `n, `r
     {
-	If (A_Index == 1)
-	{
-	    IfNotInString, A_LoopField, Rarity:
-	    {
-		return
-	    }
-		Else
-		{
-		    Continue
-		}
-	}
+        If (A_Index == 1)
+        {
+            IfNotInString, A_LoopField, Rarity:
+            {
+                return
+            }
+            Else
+            {
+                Continue
+            }
+        }
+        
 	    If (StrLen(A_LoopField) == 0 or A_LoopField == "--------" or A_Index > 3)
 	    {
-		return
+            return
 	    }
-	If (A_Index = 2)
-	{
-	    If InStr(A_LoopField, ">>")
-	    {
-		StringGetPos, pos, A_LoopField, >>, R
-		ItemName := SubStr(A_LoopField, pos+3)
-	    }
-		else
-		{
-		    ItemName := A_LoopField
-		}
-	}
-	If (A_Index = 3)
-	{
-	    ItemTypeName := A_LoopField
-	}
+        
+        If (A_Index = 2)
+        {
+            If InStr(A_LoopField, ">>")
+            {
+                StringGetPos, pos, A_LoopField, >>, R
+                ItemName := SubStr(A_LoopField, pos+3)
+            }
+            Else
+            {
+                ItemName := A_LoopField
+            }
+            ; Normal items don't have a third line and the item name equals the typename if we sanitize it ("superior").
+            If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Normal"))
+            {
+                ItemTypeName := Trim(RegExReplace(ItemName, "i)Superior", ""))
+            }
+            ; Magic items don't have a third line.
+            ; Sanitizing the item name is a bit more complicated but should work with the following assumptions:
+            ;   1. The suffix always begins with " of".
+            ;   2. The prefix consists of only 1 word, never more.
+            ; We need to know the AffixCount for this though.
+            Else If (AffixCount > 0) {
+                If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Magic"))
+                {
+                    ItemTypeName := Trim(RegExReplace(ItemName, "i) of .*", "", matchCount))
+                    If (matchCount and AffixCount > 1)
+                    {
+                        ; We replaced the suffix and have 2 affixes, therefore we must also have a prefix that we can replace.
+                        ItemTypeName := Trim(RegExReplace(ItemTypeName, "iU)^.* ", ""))
+                    }                    
+                }
+            }            
+        }
+        
+        If (A_Index = 3)
+        {
+            ItemTypeName := A_LoopField
+        }
     }
 }
 
@@ -6360,7 +6384,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
             Item.GripType := ItemGripType
         }
     }
-    
+
     Item.RarityLevel := RarityLevel
 
     Item.IsBow := (Item.SubType == "Bow")
@@ -6416,6 +6440,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     NumSuffixes := AffixTotals.NumSuffixes
     TotalAffixes := NumPrefixes + NumSuffixes
     AffixTotals.NumTotals := TotalAffixes
+    
+    ; We need to call this function a second time because now we know the AffixCount.
+    ParseItemName(ItemData.NamePlate, ItemName, ItemTypeName, TotalAffixes)
+    Item.TypeName := ItemTypeName 
 
     ; Start assembling the text for the tooltip
     TT := Item.Name 
