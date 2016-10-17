@@ -103,6 +103,7 @@ TradeGlobals.Set("Leagues", FunctionGETLeagues())
 TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
 TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
 TradeGlobals.Set("ModsData", TradeModsData)
+TradeGlobals.Set("CraftingData", ReadCraftingBases())
 TradeGlobals.Set("CurrencyIDs", object := {})
 
 CreateTradeSettingsUI()
@@ -496,21 +497,6 @@ FunctionGetLatestRelease() {
 
 ;----------------------- Trade Settings UI (added onto ItemInfos Settings UI) ---------------------------------------
 
-GuiAddDropDownList(Contents, PositionInfo, Selected="", AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
-{
-    ; usage : add list items as a | delimited string, for example = "item1|item2|item3"
-    ListItems := StrSplit(Contents, "|")
-    Contents := ""
-    Loop % ListItems.MaxIndex() { 
-        Contents .= Trim(ListItems[A_Index]) . "|"
-        ; add second | to mark pre-select list item
-        if (Trim(ListItems[A_Index]) == Selected) {
-            Contents .= "|"
-        }
-    }
-    GuiAdd("DropDownList", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
-}
-
 CreateTradeSettingsUI() 
 {
     Global
@@ -629,6 +615,15 @@ UpdateTradeSettingsUI()
     GuiControl,, Corrupted, % TradeOpts.Corrupted
     GuiControl,, OnlineOnly, % TradeOpts.OnlineOnly
     GuiControl,, RemoveMultipleListingsFromSameAccount, % TradeOpts.RemoveMultipleListingsFromSameAccount
+}
+
+ReadCraftingBases(){
+    bases := []
+    Loop, read, %A_ScriptDir%\trade_data\crafting_bases.txt
+    {
+        bases.push(A_LoopReadLine)
+    }
+    return bases    
 }
 
 ;----------------------- SplashScreens ---------------------------------------

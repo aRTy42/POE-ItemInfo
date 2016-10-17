@@ -173,6 +173,9 @@ Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
+Globals.Set("SettingsUIHeight", 710)
+Globals.Set("SettingsUITitle", "PoE Item Info Settings")
+
 global SuspendPOEItemScript = 0
 
 class UserOptions {
@@ -547,12 +550,12 @@ Menu, Tray, Tip, Path of Exile Item Info %RelVer%
 
 Menu, Tray, NoStandard
 Menu, Tray, Add, About..., MenuTray_About
-Menu, Tray, Add, PoE Item Info Settings, ShowSettingsUI
+Menu, Tray, Add, % Globals.Get("SettingsUITitle", "PoE Item Info Settings"), ShowSettingsUI
 Menu, Tray, Add ; Separator
 Menu, Tray, Add, Edit, :TextFiles
 Menu, Tray, Add ; Separator
 Menu, Tray, Standard
-Menu, Tray, Default, PoE Item Info Settings
+Menu, Tray, Default, % Globals.Get("SettingsUITitle", "PoE Item Info Settings")
 
 
 IfNotExist, %A_ScriptDir%\data
@@ -877,10 +880,14 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         ;    the word lists used for the randomly assigned (first line) item name. 
         
         ; "$" means line end, "|" is the usual "or" operator.
-        
+        ; Using "$" perfectly matches all normal and rare items but completely fails on magic items.
+        ; I don't see a reason why "$" should be used.
+        ; There should be 2 solutions here:
+        ;   1. Don't use "$".
+        ;   2. Use Trim(RegExReplace(A_LoopField, "i) of .*", "")) to remove the suffix from magic items first.
 
         ; Shields
-        If (RegExMatch(A_LoopField, "Buckler$|Bundle$|Shield$"))
+        If (RegExMatch(A_LoopField, "Buckler|Bundle|Shield"))
         {
             BaseType = Armour
             SubType = Shield
@@ -888,7 +895,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Gloves
-        If (RegExMatch(A_LoopField, "Gauntlets$|Gloves$|Mitts$"))
+        If (RegExMatch(A_LoopField, "Gauntlets|Gloves|Mitts"))
         {
             BaseType = Armour
             SubType = Gloves
@@ -896,7 +903,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Boots
-        If (RegExMatch(A_LoopField, "Boots$|Greaves$|Slippers$"))
+        If (RegExMatch(A_LoopField, "Boots|Greaves|Slippers"))
         {
             BaseType = Armour
             SubType = Boots
@@ -904,7 +911,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Helmets
-        If (RegExMatch(A_LoopField, "Bascinet$|Burgonet$|Cage$|Circlet$|Crown$|Hood$|Helm$|Helmet$|Mask$|Sallet$|Tricorne$"))
+        If (RegExMatch(A_LoopField, "Bascinet|Burgonet|Cage|Circlet|Crown|Hood|Helm|Helmet|Mask|Sallet|Tricorne"))
         {
             BaseType = Armour
             SubType = Helmet
@@ -922,12 +929,17 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; BodyArmour
-        If (RegExMatch(A_LoopField, "Armour$|Brigandine$|Chainmail$|Coat$|Doublet$|Garb$|Hauberk$|Jacket$|Lamellar$|Leather$|Plate$|Raiment$|Regalia$|Ringmail$|Robe$|Tunic$|Vest$|Vestment$"))
+        ; Note: Not using "$" could match "Leather Belt", therefore we first check that the item is no belt.
+        If (!RegExMatch(A_LoopField, "Belt"))
         {
-            BaseType = Armour
-            SubType = BodyArmour
-            return
+            If (RegExMatch(A_LoopField, "Armour|Brigandine|Chainmail|Coat|Doublet|Garb|Hauberk|Jacket|Lamellar|Leather|Plate|Raiment|Regalia|Ringmail|Robe|Tunic|Vest|Vestment"))
+            {
+                BaseType = Armour
+                SubType = BodyArmour
+                return
+            }
         }
+       
 
         If (RegExMatch(A_LoopField, "Chestplate|Full Dragonscale|Full Wyrmscale|Necromancer Silks|Shabby Jerkin|Silken Wrap"))
         {
@@ -5649,8 +5661,6 @@ ParseClipBoardChanges()
 
 AssembleDamageDetails(FullItemData)
 {
-    Global Item
-    
     Quality := 0
     AttackSpeed := 0
     PhysMult := 0
@@ -5765,7 +5775,7 @@ AssembleDamageDetails(FullItemData)
 	ChaosDps := ((ChaoLo + ChaoHi) / 2) * AttackSpeed
 	MainHChaosDps := ((MainHChaoLo + MainHChaoHi) / 2) * AttackSpeed
 	OffHChaosDps := ((OffHChaoLo + OffHChaoHi) / 2) * AttackSpeed
-    
+	
 	If ( MainHEleDps > 0 or OffHEleDps > 0 or MainHChaosDps > 0 or OffHChaosDps > 0 )
 	{
 		twoColDisplay := true
@@ -5817,7 +5827,7 @@ AssembleDamageDetails(FullItemData)
 			Q20Dps := Q20Dps + EleDps + ChaosDps
 			Result = %Result%`nQ20 DPS:    %Q20Dps%
 		}		
-    }            
+    }
     
     Item.DamageDetails.MainHEleDps := MainHEleDps
     Item.DamageDetails.OffHEleDps := OffHEleDps
@@ -5845,41 +5855,65 @@ AssembleDamageDetails(FullItemData)
 }
 
 ; ParseItemName fixed by user: uldo_.  Thanks!
-ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName)
+ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = "")
 {
     Loop, Parse, ItemDataChunk, `n, `r
     {
-	If (A_Index == 1)
-	{
-	    IfNotInString, A_LoopField, Rarity:
-	    {
-		return
-	    }
-		Else
-		{
-		    Continue
-		}
-	}
+        If (A_Index == 1)
+        {
+            IfNotInString, A_LoopField, Rarity:
+            {
+                return
+            }
+            Else
+            {
+                Continue
+            }
+        }
+        
 	    If (StrLen(A_LoopField) == 0 or A_LoopField == "--------" or A_Index > 3)
 	    {
-		return
+            return
 	    }
-	If (A_Index = 2)
-	{
-	    If InStr(A_LoopField, ">>")
-	    {
-		StringGetPos, pos, A_LoopField, >>, R
-		ItemName := SubStr(A_LoopField, pos+3)
-	    }
-		else
-		{
-		    ItemName := A_LoopField
-		}
-	}
-	If (A_Index = 3)
-	{
-	    ItemTypeName := A_LoopField
-	}
+        
+        If (A_Index = 2)
+        {
+            If InStr(A_LoopField, ">>")
+            {
+                StringGetPos, pos, A_LoopField, >>, R
+                ItemName := SubStr(A_LoopField, pos+3)
+            }
+            Else
+            {
+                ItemName := A_LoopField
+            }
+            ; Normal items don't have a third line and the item name equals the typename if we sanitize it ("superior").
+            If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Normal"))
+            {
+                ItemTypeName := Trim(RegExReplace(ItemName, "i)Superior", ""))
+            }
+            ; Magic items don't have a third line.
+            ; Sanitizing the item name is a bit more complicated but should work with the following assumptions:
+            ;   1. The suffix always begins with " of".
+            ;   2. The prefix consists of only 1 word, never more.
+            ; We need to know the AffixCount for this though.
+            Else If (AffixCount > 0) {
+                If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Magic"))
+                {
+                    ItemTypeName := Trim(RegExReplace(ItemName, "i) of .*", "", matchCount))
+                    If (matchCount and AffixCount > 1)
+                    {
+                        ; We replaced the suffix and have 2 affixes, therefore we must also have a prefix that we can replace.
+                        ItemTypeName := Trim(RegExReplace(ItemTypeName, "iU)^.* ", ""))
+                    }                    
+                }
+            }            
+        }
+        
+        If (A_Index = 3)
+        {
+            ItemTypeName := A_LoopField
+        }
     }
 }
 
@@ -6350,7 +6384,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
             Item.GripType := ItemGripType
         }
     }
-    
+
     Item.RarityLevel := RarityLevel
 
     Item.IsBow := (Item.SubType == "Bow")
@@ -6406,6 +6440,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     NumSuffixes := AffixTotals.NumSuffixes
     TotalAffixes := NumPrefixes + NumSuffixes
     AffixTotals.NumTotals := TotalAffixes
+    
+    ; We need to call this function a second time because now we know the AffixCount.
+    ParseItemName(ItemData.NamePlate, ItemName, ItemTypeName, TotalAffixes)
+    Item.TypeName := ItemTypeName 
 
     ; Start assembling the text for the tooltip
     TT := Item.Name 
@@ -6932,39 +6970,57 @@ GuiGet(ControlID, DefaultValue="")
     return curVal
 }
 
-GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Param4="") 
+GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Param4="", GuiName="") 
 {
     Global
     Local av, ah, al
     av := StrPrefix(AssocVar, "v")
     al := StrPrefix(AssocLabel, "g")
     ah := StrPrefix(AssocHwnd, "hwnd")
-    Gui, Add, %ControlType%, %PositionInfo% %av% %al% %ah% %Param4%, %Contents%
+    GuiName := (StrLen(GuiName) > 0) ? Trim(GuiName) . ":Add" : "Add" 
+    Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Param4%, %Contents%
 }
 
-GuiAddButton(Contents, PositionInfo, AssocLabel="", AssocVar="", AssocHwnd="", Options="")
+GuiAddButton(Contents, PositionInfo, AssocLabel="", AssocVar="", AssocHwnd="", Options="", GuiName="")
 {
-    GuiAdd("Button", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
+    GuiAdd("Button", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
 }
 
-GuiAddGroupBox(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="") 
+GuiAddGroupBox(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
 {
-    GuiAdd("GroupBox", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
+    GuiAdd("GroupBox", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
 }
 
-GuiAddCheckbox(Contents, PositionInfo, CheckedState=0, AssocVar="", AssocHwnd="", AssocLabel="", Options="") 
+GuiAddCheckbox(Contents, PositionInfo, CheckedState=0, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
 {
-    GuiAdd("Checkbox", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, "Checked" . CheckedState . " " . Options)
+    GuiAdd("Checkbox", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, "Checked" . CheckedState . " " . Options, GuiName)
 }
 
-GuiAddText(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="") 
+GuiAddText(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
 {
-    GuiAdd("Text", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
+    ; static controls like Text need "0x0100" added to their options for the tooltip to work 
+    ; either add it always here or don't forget to add it manually when using this function
+    GuiAdd("Text", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
 }
 
-GuiAddEdit(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="") 
+GuiAddEdit(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
 {
-    GuiAdd("Edit", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options)
+    GuiAdd("Edit", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
+}
+
+GuiAddDropDownList(Contents, PositionInfo, Selected="", AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="") 
+{
+    ; usage : add list items as a | delimited string, for example = "item1|item2|item3"
+    ListItems := StrSplit(Contents, "|")
+    Contents := ""
+    Loop % ListItems.MaxIndex() { 
+        Contents .= Trim(ListItems[A_Index]) . "|"
+        ; add second | to mark pre-select list item
+        if (Trim(ListItems[A_Index]) == Selected) {
+            Contents .= "|"
+        }
+    }
+    GuiAdd("DropDownList", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
 }
 
 AddToolTip(con, text, Modify=0){
@@ -7094,7 +7150,7 @@ CreateSettingsUI()
 
     GuiAddGroupBox("General", "x7 y15 w260 h90")
     
-    ; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
+    ; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.    
     
     GuiAddCheckbox("Only show tooltip if PoE is frontmost", "x17 y35 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
     AddToolTip(OnlyActiveIfPOEIsFrontH, "If checked the script does nothing if the`nPath of Exile window isn't the frontmost")
@@ -7127,7 +7183,7 @@ CreateSettingsUI()
         GuiAddText("Y:", "x105 y372 w20 h20", "LblScreenOffsetY")
         GuiAddEdit(Opts.ScreenOffsetY, "x125 y370 w40 h20", "ScreenOffsetY")
 
-    GuiAddText("Mousemove threshold (px):", "x17 y402 w160 h20", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
+    GuiAddText("Mousemove threshold (px):", "x17 y402 w160 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
     AddToolTip(LblMouseMoveThresholdH, "Hide tooltip automatically after the mouse has moved x amount of pixels")
     GuiAddEdit(Opts.MouseMoveThreshold, "x187 y400 w50 h20", "MouseMoveThreshold", "MouseMoveThresholdH")
 
@@ -7306,7 +7362,9 @@ ShowSettingsUI()
     ToolTip
     Fonts.SetUIFont(9)
     SettingsUIWidth := Globals.Get("SettingsUIWidth", 545)
-    Gui, Show, w%SettingsUIWidth% h710, PoE Item Info Settings
+    SettingsUIHeight := Globals.Get("SettingsUIHeight", 710)
+    SettingsUITitle := Globals.Get("SettingsUITitle", "PoE Item Info Settings")
+    Gui, Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
 }
 
 IniRead(ConfigPath, Section_, Key, Default_) 

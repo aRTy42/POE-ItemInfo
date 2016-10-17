@@ -104,7 +104,8 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList, Opts
 	
 	DoParseClipboardFunction()
-	iLvl := Item.Level
+	iLvl     := Item.Level
+
 	; cancel search if Item is empty
 	if (!Item.name) {
 		return
@@ -114,36 +115,31 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		FunctionSetItemSockets()
 	}
 	
-
-	; prepare Data for advanced search
-	;UniqueStats := FunctionGetUniqueStats(Item.Name)
 	Stats := {}
 	Stats.Quality := Item.Quality
 	DamageDetails := Item.DamageDetails
-	;Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, UniqueStats, Item.IsUnique)
-	;Stats.Offense := FunctionParseItemOffenseStats(Item.DamageDetails)
 	
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
+	
 	; ignore item name in certain cases
-	if (!Item.Jewel and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask) 
-	{
+	if (!Item.Jewel and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask) {
 		IgnoreName := true
 	}
 	
 	; remove "Superior" from item name to exclude it from name search
-	;if (!IgnoreName) {
+	if (!IgnoreName) {
 		RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))
-	/*} else {
+	} else {
+		isCraftingBase         := CheckIfItemIsCraftingBase(Item.TypeName)
+		hasHighestCraftingILvl := CheckIfItemHasHighestCraftingLevel(Item.SubType, iLvl)
 		; xtype = Item.SubType (Helmet)
 		; xbase = Item.TypeName (Eternal Burgonet)
-		
-		isCraftingBase 			:= false
-		hasHighestCraftingILvl 	:= false
+
 		;if desired crafting base
 		if (isCraftingBase) {			
 			RequestParams.xbase := Item.TypeName
-			; if highest itemlevel needed for crafting
+			; if highest item level needed for crafting
 			if (hasHighestCraftingILvl) {
 				RequestParams.ilvl_min := Item.Level
 			}			
@@ -151,7 +147,12 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			RequestParams.xtype := Item.SubType
 		}		
 	}	
-	*/
+		
+	; handle item sockets
+	; maybe don't use this for unique-items as default
+	if (ItemData.Sockets >= 5) {
+		RequestParams.sockets_min := ItemData.Sockets
+	}
 	
 	if (Item.IsUnique) {
 		UniqueStats := FunctionGetUniqueStats(Item.Name)
@@ -255,11 +256,6 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	; handle item links
 	if (ItemData.Links >= 5) {
 		RequestParams.link_min := ItemData.Links
-	}
-	
-	; handle item sockets
-	if (ItemData.Sockets >= 5) {
-		RequestParams.sockets_min := ItemData.Sockets
 	}
 	
 	; handle corruption
@@ -639,6 +635,29 @@ FunctionSetItemSockets() {
             Item.MaxSockets := 1
         }
     }
+}
+
+CheckIfItemIsCraftingBase(type){
+	bases := TradeGlobals.Get("CraftingData")
+	For i, base in bases {
+		If (type = base) {
+			return true
+		}
+	}
+	return false
+}
+
+CheckIfItemHasHighestCraftingLevel(subtype, iLvl){
+	If (RegExMatch(subtype, "i)Helmet|Gloves|Boots|Body Armour|Shield|Quiver")) {
+		return (iLvl >= 84)
+	}
+	Else If (RegExMatch(subtype, "i)Weapon")) {
+		return (iLvl >= 83)
+	}	
+	Else If (RegExMatch(subtype, "i)Belt|Amulet|Ring")) {
+		return (iLvl >= 83)
+	}
+	return false
 }
 
 DoParseClipboardFunction()
