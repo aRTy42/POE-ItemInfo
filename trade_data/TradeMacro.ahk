@@ -126,17 +126,19 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	RequestParams.league := LeagueName
 	
 	; ignore item name in certain cases
-	if (!Item.Jewel and Item.RarityLevel > 0 and Item.RarityLevel < 4 and !Item.IsFlask) {
+	if (!Item.IsJewel and Item.RarityLevel > 0 and Item.RarityLevel < 4 and !Item.IsFlask) {
 		IgnoreName := true
 	}
 	
 	if (Item.hasImplicit) {
 		Enchantment := FunctionGetEnchantment(Item, Item.SubType)
+		Corruption  := FunctionGetCorruption(Item)
 	}
 	
 	; remove "Superior" from item name to exclude it from name search
 	if (!IgnoreName) {
-		RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))
+		RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))		
+		Item.UsedInSearch.FullName := true
 	} else if (!Item.isUnique) {
 		isCraftingBase         := CheckIfItemIsCraftingBase(Item.TypeName)
 		hasHighestCraftingILvl := CheckIfItemHasHighestCraftingLevel(Item.SubType, iLvl)
@@ -144,7 +146,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		; xbase = Item.TypeName (Eternal Burgonet)
 
 		;if desired crafting base
-		if (isCraftingBase and not Enchantment) {			
+		if (isCraftingBase and not Enchantment and not Corruption) {			
 			RequestParams.xbase := Item.TypeName
 			Item.UsedInSearch.ItemBase := Item.TypeName
 			; if highest item level needed for crafting
@@ -159,6 +161,12 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			modParam.mod_max  := Enchantment.max
 			RequestParams.modGroup.AddMod(modParam)	
 			Item.UsedInSearch.Enchantment := true
+		} else if (Corruption) {			
+			modParam := new _ParamMod()
+			modParam.mod_name := Corruption.param
+			modParam.mod_min  := (Corruption.min) ? Corruption.min : ""
+			RequestParams.modGroup.AddMod(modParam)	
+			Item.UsedInSearch.CorruptedMod := true
 		} else {
 			RequestParams.xtype := Item.SubType
 		}		
@@ -176,12 +184,12 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		Item.UsedInSearch.Links := ItemData.Links
 	}
 	
-		
 	; handle corruption
 	if (Item.IsCorrupted) {
 		; search for both corrupted and un-corrupted
-		RequestParams.corrupted := "x"
-		Item.UsedInSearch.Corruption := "Either"
+		; "x" for "Either"
+		RequestParams.corrupted := "1"
+		Item.UsedInSearch.Corruption := "Yes"
 		; for gems only search corrupted ones
 		if (Item.IsGem) {
 			RequestParams.corrupted := "1"
@@ -252,7 +260,12 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			; open AdvancedPriceCheckGui to select mods and their min/max values
 			if (isAdvancedPriceCheck) {
 				UniqueStats := FunctionGetUniqueStats(Item.Name)
-				AdvancedPriceCheckGui(s, Stats, UniqueStats, Enchantment)
+				if (Enchantment) {
+					AdvancedPriceCheckGui(s, Stats, UniqueStats, Enchantment)
+				}
+				else if (Corruption) {
+					AdvancedPriceCheckGui(s, Stats, UniqueStats, Corruption)
+				}				
 				return
 			}		
 			; ignore mod rolls unless the AdvancedPriceCheckGui is used to search
@@ -302,6 +315,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 				
 				If(s.UsedInSearch) {
 					Item.UsedInSearch.Enchantment := s.UsedInSearch.Enchantment
+					Item.UsedInSearch.CorruptedMod:= s.UsedInSearch.Corruption
 				}
 			}			
 		}
@@ -1025,9 +1039,11 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 	Title .= "`n------------------------------ `n"	
 	
 	; add notes what parameters where used in the search
-	if (Item.UsedInSearch.Enchantment or Item.UsedInSearch.Sockets or Item.UsedInSearch.Links or Item.UsedInSearch.iLvl.min or Item.UsedInSearch.iLvl.max or Item.UsedInSearch.ItemBase or Item.UsedInSearch.Corruption) {
+	;if (Item.UsedInSearch.Enchantment or Item.UsedInSearch.Sockets or Item.UsedInSearch.Links or Item.UsedInSearch.iLvl.min or Item.UsedInSearch.iLvl.max or Item.UsedInSearch.ItemBase or Item.UsedInSearch.Corruption or Item.UsedInSearch.FullName) {
+	if (Item.UsedInSearch) {
 		Title .= "Used in " . Item.UsedInSearch.SearchType . " Search: "
 		Title .= (Item.UsedInSearch.Enchantment)  ? "Enchantment" : "" 	
+		Title .= (Item.UsedInSearch.CorruptedMod) ? "Corr. Implicit" : "" 	
 		Title .= (Item.UsedInSearch.Sockets)      ? "| " . Item.UsedInSearch.Sockets . "S" : ""
 		Title .= (Item.UsedInSearch.Links)        ? "| " . Item.UsedInSearch.Links   . "L" : ""
 		if (Item.UsedInSearch.iLvl.min and Item.UsedInSearch.iLvl.max) {
@@ -1037,6 +1053,7 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 			Title .= (Item.UsedInSearch.iLvl.min) ? "| iLvl (>=" . Item.UsedInSearch.iLvl.min . ")" : ""
 			Title .= (Item.UsedInSearch.iLvl.max) ? "| iLvl (<=" . Item.UsedInSearch.iLvl.max . ")" : ""
 		}		
+		Title .= (Item.UsedInSearch.FullName)   ? "| Full Name" : ""
 		Title .= (Item.UsedInSearch.Corruption)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ")" : ""
 		Title .= (Item.UsedInSearch.ItemBase)     ? "| Base (" . Item.UsedInSearch.ItemBase . ")" : ""
 		
@@ -1454,6 +1471,44 @@ FunctionFindInModGroup(modgroup, needle) {
 	return ""
 }
 
+FunctionGetCorruption(item) {
+	mods     := TradeGlobals.Get("ModsData")	
+	corrMods := TradeGlobals.Get("CorruptedModsData")
+	RegExMatch(item.Implicit, "i)([-.0-9]+)", value)
+	imp      := RegExReplace(item.Implicit, "i)([-.0-9]+)", "#")
+	
+	corrMod  := {}
+	For i, corr in corrMods {	
+		If (imp = corr) {
+			For j, mod in mods["implicit"] {					
+				match := Trim(RegExReplace(mod, "i)\(implicit\)", ""))					
+				If (match = corr) {
+					corrMod.param := mod
+					corrMod.name  := item.implicit
+				}
+			}
+		}
+	}	
+	
+	valueCount := 0
+	Loop {
+		If (!value%A_Index%) {
+			break
+		}	
+		valueCount++
+	}
+
+	If (StrLen(corrMod.param)) {
+		If (valueCount = 1) {
+			corrMod.min := value1
+		}
+		return corrMod
+	}
+	Else {
+		return false
+	}
+}
+
 FunctionGetEnchantment(item, type) {
 	mods     := TradeGlobals.Get("ModsData")	
 	enchants := TradeGlobals.Get("EnchantmentData")	
@@ -1551,7 +1606,7 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 }
 
 ; Open Gui window to show the items variable mods, select the ones that should be used in the search and se their min/max values
-AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", Enchantment = ""){	
+AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	Global 
 
@@ -1581,8 +1636,9 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", Enchantment = ""){
 	For i, stat in Stats.Offense {
 		statCount := (stat.value) ? statCount + 1 : statCount
 	}
+	statCount := (ChangedImplicit) ? statCount + 1 : statCount
 
-	boxRows := modCount * 3 + statCount * 3 ; 2
+	boxRows := modCount * 3 + statCount * 3 
 	Gui, SelectModsGui:Add, Groupbox, x10 y+10 w%modGroupBox% r%boxRows%, Mods
 	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, min
 	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, current
@@ -1654,14 +1710,15 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", Enchantment = ""){
 	}
 
 	e := 0
-	If (Enchantment) {
+	; Enchantment or Corrupted Implicit
+	If (ChangedImplicit) {
 		e := 1
 		xPosMin := modGroupBox + 25	
 		yPosFirst := ( j > 1 ) ? 45 : 30
 		
-		modValueMin := Enchantment.min
-		modValueMax := Enchantment.max
-		displayName := Enchantment.name
+		modValueMin := ChangedImplicit.min
+		modValueMax := ChangedImplicit.max
+		displayName := ChangedImplicit.name
 		
 		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%                                   , % displayName
 		;Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedModMin%e% r1       , % modValueMin
@@ -1669,11 +1726,12 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", Enchantment = ""){
 		;Gui, SelectModsGui:Add, Text, x+20 yp-22      w70 r1                               , % modValueMax
 		;Gui, SelectModsGui:Add, Edit, x+20 yp-3       w70 vTradeAdvancedModMax%e% r1       , % modValueMax
 		;Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % ""
-		Gui, SelectModsGui:Add, CheckBox, x+264 yp+1      vTradeAdvancedSelected%e%
+		Gui, SelectModsGui:Add, CheckBox, x449 yp+1      vTradeAdvancedSelected%e%
 		
-		TradeAdvancedModMin%e% := Enchantment.min
-		TradeAdvancedModMax%e% := Enchantment.max
-		TradeAdvancedParam%e%  := Enchantment.param
+		TradeAdvancedModMin%e% 		:= ChangedImplicit.min
+		TradeAdvancedModMax%e% 		:= ChangedImplicit.max
+		TradeAdvancedParam%e%  		:= ChangedImplicit.param
+		TradeAdvancedIsImplicit%e%  := true
 	}
 	
 	;add mods	
@@ -1795,8 +1853,13 @@ FunctionHandleGuiSubmit(){
 			mod.min      := TradeAdvancedModMin%A_Index%
 			mod.max      := TradeAdvancedModMax%A_Index%
 			
+			; has Enchantment
 			If (RegExMatch(TradeAdvancedParam%A_Index%, "i)enchant")) {
 				newItem.UsedInSearch.Enchantment := true
+			}
+			; has Corrupted Implicit
+			Else If (TradeAdvancedIsImplicit%A_Index%) {
+				newItem.UsedInSearch.CorruptedMod := true
 			}
 			
 			mods.Push(mod)

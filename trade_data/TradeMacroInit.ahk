@@ -106,6 +106,7 @@ TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
 TradeGlobals.Set("ModsData", TradeModsData)
 TradeGlobals.Set("CraftingData", ReadCraftingBases())
 TradeGlobals.Set("EnchantmentData", ReadEnchantments())
+TradeGlobals.Set("CorruptedModsData", ReadCorruptions())
 TradeGlobals.Set("CurrencyIDs", object := {})
 
 CreateTradeSettingsUI()
@@ -653,6 +654,18 @@ ReadEnchantments(){
         }
     }
     return enchantments    
+}
+
+ReadCorruptions(){
+    mods := []    
+    
+    Loop, read, %A_ScriptDir%\trade_data\item_corrupted_mods.txt
+    {
+        If (StrLen(Trim(A_LoopReadLine)) > 0) {        
+            mods.push(A_LoopReadLine)            
+        }
+    }
+    return mods
 }
 
 ;----------------------- SplashScreens ---------------------------------------
