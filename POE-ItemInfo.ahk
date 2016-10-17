@@ -6271,6 +6271,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsCorrupted := False
     Item.IsMirrored := False
     Item.HasEffect := False
+    Item.HasImplicit := False
     
     ResetAffixDetailVars()
     
@@ -6289,7 +6290,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
     ItemData.NamePlate := ItemDataParts1
     ItemData.Stats := ItemDataParts2
-    
+
     ItemDataIndexLast := ItemDataParts0
     ItemDataPartsLast := ItemDataParts%ItemDataIndexLast%
     ItemData.ClearParts()
@@ -6416,7 +6417,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         }
     }
     
-    ItemDataIndexAffixes := ItemData.IndexLast - GetNegativeAffixOffset(Item)
+    ItemDataIndexAffixes := ItemData.IndexLast - GetNegativeAffixOffset(Item)    
     If (ItemDataIndexAffixes <= 0)
     {
         ; ItemDataParts doesn't have the parts/text we need. Bail. 
@@ -6425,7 +6426,24 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     }
     ItemData.Affixes := ItemDataParts%ItemDataIndexAffixes%
     ItemData.IndexAffixes := ItemDataIndexAffixes
-    
+
+    ; Retrieve items implicit mod if it has one
+    If (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet) {
+        ; Magic and higher rarity
+        If (RarityLevel > 1) {
+            ItemDataIndexImplicit := ItemData.IndexLast - GetNegativeAffixOffset(Item) - 1
+        }
+        ; Normal rarity
+        Else {
+            ItemDataIndexImplicit := ItemData.IndexLast - GetNegativeAffixOffset(Item)    
+        }        
+        ; Check that there is no ":" in the retrieved text = can only be an implicit mod
+        If (!InStr(ItemDataParts%ItemDataIndexImplicit%, ":")) {
+            Item.Implicit := ItemDataParts%ItemDataIndexImplicit%
+            Item.hasImplicit := True
+        }
+    }  
+
     ItemData.Stats := ItemDataParts2
 
     If (Item.IsFlask) 
@@ -6588,6 +6606,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         }
 
         TT := TT . "`nQuality 20%:`n" . GemQualityDescription
+    }
+    
+    If (Item.hasImplicit and not Item.IsUnique) {
+        Implicit := Item.Implicit
+        TT = %TT%`n--------`n%Implicit% 
     }
     
     If (RarityLevel > 1 and RarityLevel < 4) 

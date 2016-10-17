@@ -19,7 +19,7 @@ If (A_AhkVersion <= TradeAHKVersionRequired)
     ExitApp
 }
 
-Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-bw.ico
+Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade.ico
 
 StartSplashScreen()
 
@@ -94,6 +94,7 @@ TradeGlobals.Set("DefaultLeague", (tempLeagueIsRunning > 0) ? "tmpstandard" : "s
 TradeGlobals.Set("GithubUser", "thirdy")
 TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
 TradeGlobals.Set("ReleaseVersion", TradeReleaseVersion)
+TradeGlobals.Set("SettingsUITitle", "PoE (Trade) Item Info Settings")
 
 FunctionGetLatestRelease()
 ReadTradeConfig()
@@ -104,6 +105,7 @@ TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeagu
 TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
 TradeGlobals.Set("ModsData", TradeModsData)
 TradeGlobals.Set("CraftingData", ReadCraftingBases())
+TradeGlobals.Set("EnchantmentData", ReadEnchantments())
 TradeGlobals.Set("CurrencyIDs", object := {})
 
 CreateTradeSettingsUI()
@@ -626,14 +628,41 @@ ReadCraftingBases(){
     return bases    
 }
 
+ReadEnchantments(){
+    enchantments := {}
+    enchantments.boots   := []
+    enchantments.helmet  := []
+    enchantments.gloves  := []
+    
+    Loop, read, %A_ScriptDir%\trade_data\boot_enchantment_mods.txt
+    {
+        If (StrLen(Trim(A_LoopReadLine)) > 0) {        
+            enchantments.boots.push(A_LoopReadLine)            
+        }
+    }
+    Loop, read, %A_ScriptDir%\trade_data\helmet_enchantment_mods.txt
+    {
+        If (StrLen(Trim(A_LoopReadLine)) > 0) {
+            enchantments.helmet.push(A_LoopReadLine)
+        }
+    }
+    Loop, read, %A_ScriptDir%\trade_data\glove_enchantment_mods.txt
+    {
+        If (StrLen(Trim(A_LoopReadLine)) > 0) {
+            enchantments.gloves.push(A_LoopReadLine)
+        }
+    }
+    return enchantments    
+}
+
 ;----------------------- SplashScreens ---------------------------------------
 StartSplashScreen() {
     SplashTextOn, , , Initializing PoE-TradeMacro...
 }
 StopSplashScreen() {
     SplashTextOff 
-    ; Let timer run until SettingsUIWidth is set and overwrite it.
-    SetTimer, OverwriteSettingsUIWidthTimer, 500
+    ; Let timer run until SettingsUIWidth is set and overwrite some options.
+    SetTimer, OverwriteSettingsTimer, 500
 }
 
 
