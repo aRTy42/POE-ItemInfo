@@ -880,10 +880,14 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         ;    the word lists used for the randomly assigned (first line) item name. 
         
         ; "$" means line end, "|" is the usual "or" operator.
-        
+        ; Using "$" perfectly matches all normal and rare items but completely fails on magic items.
+        ; I don't see a reason why "$" should be used.
+        ; There should be 2 solutions here:
+        ;   1. Don't use "$".
+        ;   2. Use Trim(RegExReplace(A_LoopField, "i) of .*", "")) to remove the suffix from magic items first.
 
         ; Shields
-        If (RegExMatch(A_LoopField, "Buckler$|Bundle$|Shield$"))
+        If (RegExMatch(A_LoopField, "Buckler|Bundle|Shield"))
         {
             BaseType = Armour
             SubType = Shield
@@ -891,7 +895,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Gloves
-        If (RegExMatch(A_LoopField, "Gauntlets$|Gloves$|Mitts$"))
+        If (RegExMatch(A_LoopField, "Gauntlets|Gloves|Mitts"))
         {
             BaseType = Armour
             SubType = Gloves
@@ -899,7 +903,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Boots
-        If (RegExMatch(A_LoopField, "Boots$|Greaves$|Slippers$"))
+        If (RegExMatch(A_LoopField, "Boots|Greaves|Slippers"))
         {
             BaseType = Armour
             SubType = Boots
@@ -907,7 +911,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Helmets
-        If (RegExMatch(A_LoopField, "Bascinet$|Burgonet$|Cage$|Circlet$|Crown$|Hood$|Helm$|Helmet$|Mask$|Sallet$|Tricorne$"))
+        If (RegExMatch(A_LoopField, "Bascinet|Burgonet|Cage|Circlet|Crown|Hood|Helm|Helmet|Mask|Sallet|Tricorne"))
         {
             BaseType = Armour
             SubType = Helmet
@@ -925,12 +929,17 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; BodyArmour
-        If (RegExMatch(A_LoopField, "Armour$|Brigandine$|Chainmail$|Coat$|Doublet$|Garb$|Hauberk$|Jacket$|Lamellar$|Leather$|Plate$|Raiment$|Regalia$|Ringmail$|Robe$|Tunic$|Vest$|Vestment$"))
+        ; Note: Not using "$" could match "Leather Belt", therefore we first check that the item is no belt.
+        If (!RegExMatch(A_LoopField, "Belt"))
         {
-            BaseType = Armour
-            SubType = BodyArmour
-            return
+            If (RegExMatch(A_LoopField, "Armour|Brigandine|Chainmail|Coat|Doublet|Garb|Hauberk|Jacket|Lamellar|Leather|Plate|Raiment|Regalia|Ringmail|Robe|Tunic|Vest|Vestment"))
+            {
+                BaseType = Armour
+                SubType = BodyArmour
+                return
+            }
         }
+       
 
         If (RegExMatch(A_LoopField, "Chestplate|Full Dragonscale|Full Wyrmscale|Necromancer Silks|Shabby Jerkin|Silken Wrap"))
         {
@@ -5846,41 +5855,65 @@ AssembleDamageDetails(FullItemData)
 }
 
 ; ParseItemName fixed by user: uldo_.  Thanks!
-ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName)
+ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = "")
 {
     Loop, Parse, ItemDataChunk, `n, `r
     {
-	If (A_Index == 1)
-	{
-	    IfNotInString, A_LoopField, Rarity:
-	    {
-		return
-	    }
-		Else
-		{
-		    Continue
-		}
-	}
+        If (A_Index == 1)
+        {
+            IfNotInString, A_LoopField, Rarity:
+            {
+                return
+            }
+            Else
+            {
+                Continue
+            }
+        }
+        
 	    If (StrLen(A_LoopField) == 0 or A_LoopField == "--------" or A_Index > 3)
 	    {
-		return
+            return
 	    }
-	If (A_Index = 2)
-	{
-	    If InStr(A_LoopField, ">>")
-	    {
-		StringGetPos, pos, A_LoopField, >>, R
-		ItemName := SubStr(A_LoopField, pos+3)
-	    }
-		else
-		{
-		    ItemName := A_LoopField
-		}
-	}
-	If (A_Index = 3)
-	{
-	    ItemTypeName := A_LoopField
-	}
+        
+        If (A_Index = 2)
+        {
+            If InStr(A_LoopField, ">>")
+            {
+                StringGetPos, pos, A_LoopField, >>, R
+                ItemName := SubStr(A_LoopField, pos+3)
+            }
+            Else
+            {
+                ItemName := A_LoopField
+            }
+            ; Normal items don't have a third line and the item name equals the typename if we sanitize it ("superior").
+            If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Normal"))
+            {
+                ItemTypeName := Trim(RegExReplace(ItemName, "i)Superior", ""))
+            }
+            ; Magic items don't have a third line.
+            ; Sanitizing the item name is a bit more complicated but should work with the following assumptions:
+            ;   1. The suffix always begins with " of".
+            ;   2. The prefix consists of only 1 word, never more.
+            ; We need to know the AffixCount for this though.
+            Else If (AffixCount > 0) {
+                If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Magic"))
+                {
+                    ItemTypeName := Trim(RegExReplace(ItemName, "i) of .*", "", matchCount))
+                    If (matchCount and AffixCount > 1)
+                    {
+                        ; We replaced the suffix and have 2 affixes, therefore we must also have a prefix that we can replace.
+                        ItemTypeName := Trim(RegExReplace(ItemTypeName, "iU)^.* ", ""))
+                    }                    
+                }
+            }            
+        }
+        
+        If (A_Index = 3)
+        {
+            ItemTypeName := A_LoopField
+        }
     }
 }
 
@@ -6238,6 +6271,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsCorrupted := False
     Item.IsMirrored := False
     Item.HasEffect := False
+    Item.HasImplicit := False
     
     ResetAffixDetailVars()
     
@@ -6256,7 +6290,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
     ItemData.NamePlate := ItemDataParts1
     ItemData.Stats := ItemDataParts2
-    
+
     ItemDataIndexLast := ItemDataParts0
     ItemDataPartsLast := ItemDataParts%ItemDataIndexLast%
     ItemData.ClearParts()
@@ -6351,7 +6385,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
             Item.GripType := ItemGripType
         }
     }
-    
+
     Item.RarityLevel := RarityLevel
 
     Item.IsBow := (Item.SubType == "Bow")
@@ -6383,7 +6417,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         }
     }
     
-    ItemDataIndexAffixes := ItemData.IndexLast - GetNegativeAffixOffset(Item)
+    ItemDataIndexAffixes := ItemData.IndexLast - GetNegativeAffixOffset(Item)    
     If (ItemDataIndexAffixes <= 0)
     {
         ; ItemDataParts doesn't have the parts/text we need. Bail. 
@@ -6392,7 +6426,24 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     }
     ItemData.Affixes := ItemDataParts%ItemDataIndexAffixes%
     ItemData.IndexAffixes := ItemDataIndexAffixes
-    
+
+    ; Retrieve items implicit mod if it has one
+    If (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet) {
+        ; Magic and higher rarity
+        If (RarityLevel > 1) {
+            ItemDataIndexImplicit := ItemData.IndexLast - GetNegativeAffixOffset(Item) - 1
+        }
+        ; Normal rarity
+        Else {
+            ItemDataIndexImplicit := ItemData.IndexLast - GetNegativeAffixOffset(Item)    
+        }        
+        ; Check that there is no ":" in the retrieved text = can only be an implicit mod
+        If (!InStr(ItemDataParts%ItemDataIndexImplicit%, ":")) {
+            Item.Implicit := ItemDataParts%ItemDataIndexImplicit%
+            Item.hasImplicit := True
+        }
+    }  
+
     ItemData.Stats := ItemDataParts2
 
     If (Item.IsFlask) 
@@ -6407,6 +6458,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     NumSuffixes := AffixTotals.NumSuffixes
     TotalAffixes := NumPrefixes + NumSuffixes
     AffixTotals.NumTotals := TotalAffixes
+    
+    ; We need to call this function a second time because now we know the AffixCount.
+    ParseItemName(ItemData.NamePlate, ItemName, ItemTypeName, TotalAffixes)
+    Item.TypeName := ItemTypeName 
 
     ; Start assembling the text for the tooltip
     TT := Item.Name 
@@ -6551,6 +6606,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         }
 
         TT := TT . "`nQuality 20%:`n" . GemQualityDescription
+    }
+    
+    If (Item.hasImplicit and not Item.IsUnique) {
+        Implicit := Item.Implicit
+        TT = %TT%`n--------`n%Implicit% 
     }
     
     If (RarityLevel > 1 and RarityLevel < 4) 
