@@ -863,13 +863,13 @@ FunctionParseCurrencyHtml(html, payload){
 	Title .= StrPad("--------------------",20)	
 	Title .= StrPad("--------------------",20)		
 	Title .= "`n"
-	
+
 	While A_Index < NoOfItemsToShow {
         Offer       := StrX( html,   "data-username=""",     N, 0, "<a href"   , 1,1, N )
         SellCurrency:= StrX( Offer,  "data-sellcurrency=""", 1,19, """"        , 1,1, T )
         SellValue   := StrX( Offer,  "data-sellvalue=""",    1,16, """"        , 1,1, T )
-        BuyCurrency := StrX( Offer,  "data-buycurrency=""",  1,18, """"        , 1,1, T )
         BuyValue    := StrX( Offer,  "data-buyvalue=""",     1,15, """"        , 1,1, T )
+        BuyCurrency := StrX( Offer,  "data-buycurrency=""",  1,18, """"        , 1,1, T )
         AccountName := StrX( Offer,  "data-ign=""",          1,10, """"        , 1,1    )
 	
 		RatioBuying := BuyValue / SellValue
@@ -886,9 +886,7 @@ FunctionParseCurrencyHtml(html, payload){
 				Break
 			}
 			DisplayNames.Push(Column)
-		}
-
-		StringTrimLeft, html, html, N		
+		}	
 		
 		subAcc := FunctionTrimNames(AccountName, 10, true)
 		Title .= StrPad(subAcc,10) 
@@ -1066,8 +1064,7 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 		Title .= (Item.UsedInSearch.ItemBase)     ? "| Base (" . Item.UsedInSearch.ItemBase . ")" : ""
 		
 		Title .= "`n------------------------------ `n"	
-	}
-	
+	}	
 	
 	; add average and median prices to title	
 	Title .= FunctionGetMeanMedianPrice(html, payload)
@@ -1108,9 +1105,9 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 	accounts := []
     While A_Index < NoOfItemsToShow {
         TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "</tbody>", 1,23, N )
-        AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"  ,                      1,1,  T )
-        Buyout      := StrX( TBody,  "data-buyout=""",                           T,13, """"  ,                      1,1,  T )
-        IGN         := StrX( TBody,  "data-ign=""",                              T,10, """"  ,                      1,1     )
+        AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"  ,     1,1,  T )
+        Buyout      := StrX( TBody,  "data-buyout=""",                           T,13, """"  ,     1,1,  T )
+        IGN         := StrX( TBody,  "data-ign=""",                              T,10, """"  ,     1,1     )
 		
 		; skip multiple results from the same account
 		if (TradeOpts.RemoveMultipleListingsFromSameAccount) {
