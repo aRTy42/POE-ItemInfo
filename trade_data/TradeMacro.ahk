@@ -614,7 +614,7 @@ FunctionParseItemOffenseStats(Stats, mods, isUnique){
 			affix := RegExReplace(affix, "i)# %", "#%")
 			affix := Trim(RegExReplace(affix, "\s", " "))
 			name :=  Trim(mod.name)	
-			
+
 			If ( affix = name ){
 				match :=
 				; ignore mods like " ... per X dexterity"
@@ -641,8 +641,8 @@ FunctionParseItemOffenseStats(Stats, mods, isUnique){
 					;MsgBox % affix "`ninc Phys : " min_affixPercentPhys " - " max_affixPercentPhys
 				}
 				If (RegExMatch(affix, "i)#.*increased Attack Speed")) {
-					min_affixPercentAPS     := mod.ranges[1][1] 
-					max_affixPercentAPS     := mod.ranges[1][2] 
+					min_affixPercentAPS     := mod.ranges[1][1] / 100
+					max_affixPercentAPS     := mod.ranges[1][2] / 100
 					;MsgBox % affix "`ninc attack speed : " min_affixPercentAPS " - " max_affixPercentAPS
 				}
 			}
@@ -658,8 +658,10 @@ FunctionParseItemOffenseStats(Stats, mods, isUnique){
 	minPhysHi    := FunctionCalculateQ20(basePhysHi , min_affixFlatPhysicalHi , min_affixPercentPhys)
 	maxPhysLow   := FunctionCalculateQ20(basePhysLow, max_affixFlatPhysicalLow, max_affixPercentPhys)
 	maxPhysHi    := FunctionCalculateQ20(basePhysHi , max_affixFlatPhysicalHi , max_affixPercentPhys)
-	minAPS       := baseAPS * (1 + (min_affixPercentAPS / 100))
-	maxAPS       := baseAPS * (1 + (max_affixPercentAPS / 100))
+	min_affixPercentAPS := (min_affixPercentAPS) ? min_affixPercentAPS : 0
+	max_affixPercentAPS := (max_affixPercentAPS) ? max_affixPercentAPS : 0
+	minAPS       := baseAPS * (1 + min_affixPercentAPS)
+	maxAPS       := baseAPS * (1 + max_affixPercentAPS)
 	
 	iStats.PhysDps        := {}
     iStats.PhysDps.Name   := "Physical Dps (Q20)"
@@ -671,7 +673,7 @@ FunctionParseItemOffenseStats(Stats, mods, isUnique){
     iStats.EleDps.Value   := Stats.EleDps
 	iStats.EleDps.Min     := ((min_affixFlatFireLow + min_affixFlatFireHi + min_affixFlatColdLow + min_affixFlatColdHi + min_affixFlatLightningLow + min_affixFlatLightningHi) / 2) * minAPS
 	iStats.EleDps.Max     := ((max_affixFlatFireLow + max_affixFlatFireHi + max_affixFlatColdLow + max_affixFlatColdHi + max_affixFlatLightningLow + max_affixFlatLightningHi) / 2) * maxAPS
-	
+
 	;MsgBox % "Phys DPS: " iStats.PhysDps.Value "`n" "Phys Min: " iStats.PhysDps.Min "`n" "Phys Max: " iStats.PhysDps.Max "`n" "EleDps: " iStats.EleDps.Value "`n" "Ele Min: " iStats.EleDps.Min "`n" "Ele Max: "  iStats.EleDps.Max
 	
 	return iStats
@@ -686,7 +688,7 @@ FunctionGetUniqueStats(name){
 	}
 }
 
-; copied from PoE-ItemInfo because there it'll only be called if the optioen "ShowMaxSockets" is enabled
+; copied from PoE-ItemInfo because there it'll only be called if the option "ShowMaxSockets" is enabled
 FunctionSetItemSockets() {
 	Global Item
 	
@@ -1180,6 +1182,9 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 			; add item level
 			Title .= StrPad("| " . StrPad(iLvl1,3,"left") . "  |" ,8,"right")
 		}	
+		else {
+			Title .= "|"
+		}
 		; add item age
 		Title .= StrPad(FunctionFormatItemAge(Age1),10)
 		Title .= "`n"
@@ -1696,6 +1701,10 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 			xPosMin := modGroupBox + 25
 			yPosFirst := ( j = 1 ) ? 30 : 45		
 			
+			If (!stat.min or !stat.max or (stat.min = stat.max)) {
+				continue
+			}
+			
 			if (stat.Name != "Block Chance") {
 				stat.value   := Round(stat.value * 100 / (100 + Stats.Quality)) 
 				statValueQ20 := Round(stat.value * ((100 + 20) / 100))
@@ -1706,15 +1715,15 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 			statValueMin := Round(statValueQ20 - ((stat.max - stat.min) * valueRange))
 			statValueMax := Round(statValueQ20 + ((stat.max - stat.min) * valueRange))			
 			
-			minLabelFirst := "(" zerotrimmer(stat.min)
+			minLabelFirst := "(" Floor(zerotrimmer(stat.min))
 			minLabelSecond := ")" 
-			maxLabelFirst := "(" zerotrimmer(stat.max)
+			maxLabelFirst := "(" Floor(zerotrimmer(stat.max))
 			maxLabelSecond := ")"
 			
 			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							 , % "(Total Q20) " stat.name
 			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedStatMin%j% r1, % statValueMin
 			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % minLabelFirst minLabelSecond
-			Gui, SelectModsGui:Add, Text, x+20 yp-22 w70 r1								 , % statValueQ20
+			Gui, SelectModsGui:Add, Text, x+20 yp-22 w70 r1								 , % Floor(statValueQ20)
 			Gui, SelectModsGui:Add, Edit, x+20 yp-3 w70 vTradeAdvancedStatMax%j% r1	     , % statValueMax
 			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % maxLabelFirst maxLabelSecond
 			Gui, SelectModsGui:Add, CheckBox, x+30 yp-20 vTradeAdvancedStatSelected%j%
@@ -1735,20 +1744,24 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 			xPosMin := modGroupBox + 25
 			yPosFirst := ( j = 1 ) ? 20 : 45			
 
+			If (!stat.min or !stat.max or (stat.min == stat.max)) {
+				continue
+			}
+
 			; calculate values to prefill min/max fields		
 			; assume the difference between the theoretical max and min value as 100%
 			statValueMin := Round(stat.value - ((stat.max - stat.min) * valueRange))
 			statValueMax := Round(stat.value + ((stat.max - stat.min) * valueRange))			
 			
-			minLabelFirst := "(" zerotrimmer(stat.min)
+			minLabelFirst := "(" Floor(zerotrimmer(stat.min))
 			minLabelSecond := ")" 
-			maxLabelFirst := "(" zerotrimmer(stat.max)
+			maxLabelFirst := "(" Floor(zerotrimmer(stat.max))
 			maxLabelSecond := ")"
 			
 			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							 , % stat.name
 			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedStatMin%j% r1, % statValueMin
 			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % minLabelFirst minLabelSecond
-			Gui, SelectModsGui:Add, Text, x+20 yp-22 w70 r1								 , % stat.value
+			Gui, SelectModsGui:Add, Text, x+20 yp-22 w70 r1								 , % Floor(stat.value)
 			Gui, SelectModsGui:Add, Edit, x+20 yp-3 w70 vTradeAdvancedStatMax%j% r1	     , % statValueMax
 			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % maxLabelFirst maxLabelSecond
 			Gui, SelectModsGui:Add, CheckBox, x+30 yp-20 vTradeAdvancedStatSelected%j%
@@ -1945,7 +1958,7 @@ FunctionHandleGuiSubmit(){
 	
 	newItem.mods := mods
 	newItem.stats := stats
-	
+
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)	
 	Gui, SelectModsGui:Destroy
 }
