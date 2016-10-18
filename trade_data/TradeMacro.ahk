@@ -137,9 +137,20 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		IgnoreName := true
 	}
 	
+	; check if the item implicit mod is an enchantment or corrupted. retrieve this mods data.
 	if (Item.hasImplicit) {
 		Enchantment := FunctionGetEnchantment(Item, Item.SubType)
 		Corruption  := Item.IsCorrupted ? FunctionGetCorruption(Item) : false
+	}
+	
+	; prepend the item.subtype to match the options used on poe.trade
+	if (RegExMatch(Item.SubType, "i)Mace|Axe|Sword")) {
+		if (Item.IsThreeSocket) {
+			Item.xtype := "One Hand " . Item.SubType
+		}
+		else {
+			Item.xtype := "Two Hand " . Item.SubType
+		}
 	}
 	
 	; remove "Superior" from item name to exclude it from name search
@@ -175,7 +186,8 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			RequestParams.modGroup.AddMod(modParam)	
 			Item.UsedInSearch.CorruptedMod := true
 		} else {
-			RequestParams.xtype := Item.SubType
+			RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
+			Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType
 		}		
 	}	
 		
@@ -1047,7 +1059,6 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 	Title .= "`n------------------------------ `n"	
 	
 	; add notes what parameters where used in the search
-	;if (Item.UsedInSearch.Enchantment or Item.UsedInSearch.Sockets or Item.UsedInSearch.Links or Item.UsedInSearch.iLvl.min or Item.UsedInSearch.iLvl.max or Item.UsedInSearch.ItemBase or Item.UsedInSearch.Corruption or Item.UsedInSearch.FullName) {
 	if (Item.UsedInSearch) {
 		Title .= "Used in " . Item.UsedInSearch.SearchType . " Search: "
 		Title .= (Item.UsedInSearch.Enchantment)  ? "Enchantment" : "" 	
@@ -1061,8 +1072,9 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 			Title .= (Item.UsedInSearch.iLvl.min) ? "| iLvl (>=" . Item.UsedInSearch.iLvl.min . ")" : ""
 			Title .= (Item.UsedInSearch.iLvl.max) ? "| iLvl (<=" . Item.UsedInSearch.iLvl.max . ")" : ""
 		}		
-		Title .= (Item.UsedInSearch.FullName)   ? "| Full Name" : ""
+		Title .= (Item.UsedInSearch.FullName)     ? "| Full Name" : ""
 		Title .= (Item.UsedInSearch.Corruption)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ")" : ""
+		Title .= (Item.UsedInSearch.Type)         ? "| Type (" . Item.UsedInSearch.Type . ")" : ""
 		Title .= (Item.UsedInSearch.ItemBase)     ? "| Base (" . Item.UsedInSearch.ItemBase . ")" : ""
 		
 		Title .= "`n------------------------------ `n"	
