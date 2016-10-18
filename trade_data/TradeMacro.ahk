@@ -121,12 +121,19 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	Item.UsedInSearch := {}
 	Item.UsedInSearch.iLvl := {}
+	Item.IsEssence    := 
+	if (RegExMatch(Item.Name, "i)essence of")) {
+		Item.IsEssence:= true
+	}
 		
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
 	
 	; ignore item name in certain cases
-	if (!Item.IsJewel and Item.RarityLevel > 0 and Item.RarityLevel < 4 and !Item.IsFlask) {
+	if (!Item.IsJewel and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask) {
+		IgnoreName := true
+	}
+	if (Item.RarityLevel > 0 and Item.RarityLevel < 4 and (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet)) {
 		IgnoreName := true
 	}
 	
@@ -374,7 +381,8 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	out("------------------------------------")
 	
 	ShowToolTip("Running search...")
-	if (Item.isCurrency) {		
+	
+	if (Item.isCurrency and !Item.IsEssence) {		
 		Html := FunctionDoCurrencyRequest(Item.Name, openSearchInBrowser)
 	}
 	else {
@@ -384,7 +392,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	if(openSearchInBrowser) {
 		; redirect was prevented to get the url and open the search on poe.trade instead
-		if (Item.isCurrency) {
+		if (Item.isCurrency and !Item.IsEssence) {
 			IDs := TradeGlobals.Get("CurrencyIDs")
 			ParsedUrl1 := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[Item.Name] . "&have=" . IDs["Chaos Orb"]
 		}
@@ -393,7 +401,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		}		
 		FunctionOpenUrlInBrowser(ParsedUrl1)
 	}
-	else if (Item.isCurrency) {
+	else if (Item.isCurrency and !Item.IsEssence) {
 		ParsedData := FunctionParseCurrencyHtml(Html, Payload)
 		out("Parsing HTML done")
 		
@@ -1905,7 +1913,7 @@ OverwriteSettingsTimer:
 		OldMenuTrayName := Globals.Get("SettingsUITitle")
 		NewMenuTrayName := TradeGlobals.Get("SettingsUITitle")
 		Menu, Tray, Rename, % OldMenuTrayName, % NewMenuTrayName	
-		Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade.ico		
+		Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico		
 		SetTimer, OverwriteSettingsTimer, Off
 	}	
 return

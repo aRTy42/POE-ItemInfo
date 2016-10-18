@@ -19,7 +19,7 @@ If (A_AhkVersion <= TradeAHKVersionRequired)
     ExitApp
 }
 
-Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade.ico
+Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico
 
 StartSplashScreen()
 
