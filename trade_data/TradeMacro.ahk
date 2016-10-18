@@ -1671,12 +1671,24 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 	statCount := (ChangedImplicit) ? statCount + 1 : statCount
 
 	boxRows := modCount * 3 + statCount * 3 
-	Gui, SelectModsGui:Add, Groupbox, x10 y+10 w%modGroupBox% r%boxRows%, Mods
-	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, min
-	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, current
-	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, max
-	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w45 r%boxRows%, Select
-		
+	;Gui, SelectModsGui:Add, Groupbox, x10 y+10 w%modGroupBox% r%boxRows%, Mods
+	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, min
+	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, current
+;	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, max
+	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w45 r%boxRows%, Select
+	
+	Gui, SelectModsGui:Add, Text, x14 y+10 w%modGroupBox%, Mods
+	Gui, SelectModsGui:Add, Text, x+10 yp+0 w80, min
+	Gui, SelectModsGui:Add, Text, x+10 yp+0 w80, current
+	Gui, SelectModsGui:Add, Text, x+10 yp+0 w80, max
+	Gui, SelectModsGui:Add, Text, x+10 yp+0 w45, Select
+
+	line :=
+	Loop, 500 {
+		line := line . "-"
+	}
+	Gui, SelectModsGui:Add, Text, x0 w700 yp+13, %line% 	
+	
 	;add defense stats
 	j := 1
 	For i, stat in Stats.Defense {
@@ -1712,6 +1724,11 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 		}
 	}	
 	
+	If (j > 1) {
+		Gui, SelectModsGui:Add, Text, x0 w700 yp+33 cc9cacd, %line% 
+	}	
+		
+	k := 1
 	;add dmg stats
 	For i, stat in Stats.Offense {
 		If (stat.value) {			
@@ -1738,15 +1755,20 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 			
 			TradeAdvancedStatParam%j% := stat.name			
 			j++
+			k++
 		}
 	}
+
+	If (k > 1) {
+		Gui, SelectModsGui:Add, Text, x0 w700 yp+33 cc9cacd, %line% 
+	}	
 
 	e := 0
 	; Enchantment or Corrupted Implicit
 	If (ChangedImplicit) {
 		e := 1
 		xPosMin := modGroupBox + 25	
-		yPosFirst := ( j > 1 ) ? 45 : 30
+		yPosFirst := ( j > 1 ) ? 20 : 30
 		
 		modValueMin := ChangedImplicit.min
 		modValueMax := ChangedImplicit.max
@@ -1765,6 +1787,10 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 		TradeAdvancedParam%e%  		:= ChangedImplicit.param
 		TradeAdvancedIsImplicit%e%  := true
 	}
+	
+	If (ChangedImplicit) {
+		Gui, SelectModsGui:Add, Text, x0 w700 yp+18 cc9cacd, %line% 
+	}	
 	
 	;add mods	
 	Loop % advItem.mods.Length() {
@@ -1832,7 +1858,7 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 			maxLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][2]) ")"
 		}
 		
-		yPosFirst := ( j > 1 ) ? 45 : 30
+		yPosFirst := ( j > 1 ) ? 20 : 30
 		; increment index if the item has an enchantment
 		index := A_Index + e
 		
@@ -1849,10 +1875,12 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 	
 	Item.UsedInSearch.SearchType := "Advanced"
 	; closes this window and starts the search
-	Gui, SelectModsGui:Add, Button, x10 y+50 gAdvancedPriceCheckSearch, Search
+	Gui, SelectModsGui:Add, Button, x10 y+50 gAdvancedPriceCheckSearch, &Search
 	
 	; open search on poe.trade instead
-	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Open on poe.trade
+	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Op&en on poe.trade
+	
+	Gui, SelectModsGui:Add, Text, x+20 yp+5 cGray, (Pro-Tip: Use Alt + S/E to submit the buttons)
 	
 	windowWidth := modGroupBox + 80 + 10 + 10 + 80 + 80 + 10 + 60 + 20
 	windowWidth := (windowWidth > 250) ? windowWidth : 250
