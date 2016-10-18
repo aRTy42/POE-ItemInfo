@@ -525,13 +525,13 @@ FunctionParseItemDefenseStats(stats, mods, isUnique){
 		}
 	}
 	
-	min_Armour       := FunctionCalculateQ20(baseAR, min_affixFlatAR   , min_affixPercentAR)
-	max_Armour       := FunctionCalculateQ20(baseAR, max_affixFlatAR   , max_affixPercentAR)
-	min_EnergyShield := FunctionCalculateQ20(baseES, min_affixFlatES   , min_affixPercentES)
-	max_EnergyShield := FunctionCalculateQ20(baseES, max_affixFlatES   , max_affixPercentES)
-	min_Evasion      := FunctionCalculateQ20(baseEV, min_affixPercentEV, min_affixPercentEV)	
-	max_Evasion      := FunctionCalculateQ20(baseEV, max_affixPercentEV, max_affixPercentEV)	
-	
+	min_Armour       := FunctionCalculateQ20(baseAR, min_affixFlatAR, min_affixPercentAR)
+	max_Armour       := FunctionCalculateQ20(baseAR, max_affixFlatAR, max_affixPercentAR)
+	min_EnergyShield := FunctionCalculateQ20(baseES, min_affixFlatES, min_affixPercentES)
+	max_EnergyShield := FunctionCalculateQ20(baseES, max_affixFlatES, max_affixPercentES)
+	min_Evasion      := FunctionCalculateQ20(baseEV, min_affixFlatEV, min_affixPercentEV)	
+	max_Evasion      := FunctionCalculateQ20(baseEV, max_affixFlatEV, max_affixPercentEV)	
+
 	iStats.TotalBlock 				:= {}
 	iStats.TotalBlock.Value 		:= Block1
 	iStats.TotalBlock.Name  		:= "Block Chance"
@@ -1289,72 +1289,72 @@ StrX(H,  BS="",BO=0,BT=1,   ES="",EO=0,ET=1,  ByRef N="" )
 ; | by Skan | 19-Nov-2009
 
 class RequestParams_ {
-	league := ""
-	xtype := ""
-	xbase := ""
-	name := ""
-	dmg_min := ""
-	dmg_max := ""
-	aps_min := ""
-	aps_max := ""
-	crit_min := ""
-	crit_max := ""
-	dps_min := ""
-	dps_max := ""
-	edps_min := ""
-	edps_max := ""
-	pdps_min := ""
-	pdps_max := ""
-	armour_min := ""
-	armour_max := ""
+	league 		:= ""
+	xtype 		:= ""
+	xbase 		:= ""
+	name 		:= ""
+	dmg_min 	:= ""
+	dmg_max 	:= ""
+	aps_min 	:= ""
+	aps_max 	:= ""
+	crit_min 	:= ""
+	crit_max 	:= ""
+	dps_min 	:= ""
+	dps_max		:= ""
+	edps_min	:= ""
+	edps_max	:= ""
+	pdps_min 	:= ""
+	pdps_max 	:= ""
+	armour_min 	:= ""
+	armour_max 	:= ""
 	evasion_min := ""
 	evasion_max := ""
-	shield_min := ""
-	shield_max := ""
-	block_min := ""
-	block_max := ""
+	shield_min 	:= ""
+	shield_max 	:= ""
+	block_min	:= ""
+	block_max 	:= ""
 	sockets_min := ""
 	sockets_max := ""
-	link_min := ""
-	link_max := ""
-	sockets_r := ""
-	sockets_g := ""
-	sockets_b := ""
-	sockets_w := ""
-	linked_r := ""
-	linked_g := ""
-	linked_b := ""
-	linked_w := ""
-	rlevel_min := ""
-	rlevel_max := ""
-	rstr_min := ""
-	rstr_max := ""
-	rdex_min := ""
-	rdex_max := ""
-	rint_min := ""
-	rint_max := ""
+	link_min 	:= ""
+	link_max 	:= ""
+	sockets_r 	:= ""
+	sockets_g 	:= ""
+	sockets_b 	:= ""
+	sockets_w 	:= ""
+	linked_r 	:= ""
+	linked_g 	:= ""
+	linked_b 	:= ""
+	linked_w 	:= ""
+	rlevel_min 	:= ""
+	rlevel_max 	:= ""
+	rstr_min 	:= ""
+	rstr_max 	:= ""
+	rdex_min 	:= ""
+	rdex_max 	:= ""
+	rint_min 	:= ""
+	rint_max 	:= ""
 	; For future development, change this to array to provide multi mod groups
-	modGroup := new _ParamModGroup()
-	q_min := ""
-	q_max := ""
-	level_min := ""
-	level_max := ""
-	ilvl_min := ""
-	ilvl_max := ""
-	rarity := ""
-	seller := ""
-	xthread := ""
-	identified := ""
-	corrupted := "0"
-	online := (TradeOpts.OnlineOnly == 0) ? "" : "x"
-	buyout := "x"
-	altart := ""
-	capquality := "x"
-	buyout_min := ""
-	buyout_max := ""
+	modGroup 	:= new _ParamModGroup()
+	q_min 		:= ""
+	q_max 		:= ""
+	level_min 	:= ""
+	level_max 	:= ""
+	ilvl_min 	:= ""
+	ilvl_max	:= ""
+	rarity 		:= ""
+	seller 		:= ""
+	xthread 	:= ""
+	identified 	:= ""
+	corrupted	:= "0"
+	online 		:= (TradeOpts.OnlineOnly == 0) ? "" : "x"
+	buyout 		:= "x"
+	altart 		:= ""
+	capquality 	:= "x"
+	buyout_min 	:= ""
+	buyout_max 	:= ""
 	buyout_currency := ""
-	crafted := ""
-	enchanted := ""
+	crafted		:= ""
+	enchanted 	:= ""
 	
 	ToPayload() 
 	{
@@ -1715,9 +1715,9 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 			statValueMin := Round(statValueQ20 - ((stat.max - stat.min) * valueRange))
 			statValueMax := Round(statValueQ20 + ((stat.max - stat.min) * valueRange))			
 			
-			minLabelFirst := "(" Floor(zerotrimmer(stat.min))
+			minLabelFirst := "(" Floor(stat.min)
 			minLabelSecond := ")" 
-			maxLabelFirst := "(" Floor(zerotrimmer(stat.max))
+			maxLabelFirst := "(" Floor(stat.max)
 			maxLabelSecond := ")"
 			
 			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							 , % "(Total Q20) " stat.name
@@ -1806,6 +1806,7 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 	}	
 	
 	;add mods	
+	l := 1
 	Loop % advItem.mods.Length() {
 		xPosMin := modGroupBox + 25			
 	
@@ -1871,7 +1872,7 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 			maxLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][2]) ")"
 		}
 		
-		yPosFirst := ( j > 1 ) ? 20 : 30
+		yPosFirst := ( l > 1 ) ? 45 : 20
 		; increment index if the item has an enchantment
 		index := A_Index + e
 		
@@ -1884,6 +1885,7 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 		Gui, SelectModsGui:Add, CheckBox, x+30 yp-21      vTradeAdvancedSelected%index%
 		
 		TradeAdvancedParam%index% := advItem.mods[A_Index].param
+		l++
 	}
 	
 	Item.UsedInSearch.SearchType := "Advanced"
@@ -1892,8 +1894,7 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 	
 	; open search on poe.trade instead
 	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Op&en on poe.trade
-	
-	Gui, SelectModsGui:Add, Text, x+20 yp+5 cGray, (Pro-Tip: Use Alt + S/E to submit the buttons)
+	Gui, SelectModsGui:Add, Text, x+20 yp+5 cGray, (Pro-Tip: Use Alt + S/E to submit a button)
 	
 	windowWidth := modGroupBox + 80 + 10 + 10 + 80 + 80 + 10 + 60 + 20
 	windowWidth := (windowWidth > 250) ? windowWidth : 250
