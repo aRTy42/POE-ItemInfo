@@ -118,6 +118,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	Stats := {}
 	Stats.Quality := Item.Quality
 	DamageDetails := Item.DamageDetails
+	Name := Item.Name
 	
 	Item.UsedInSearch := {}
 	Item.UsedInSearch.iLvl := {}
@@ -141,6 +142,115 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	if (Item.hasImplicit) {
 		Enchantment := FunctionGetEnchantment(Item, Item.SubType)
 		Corruption  := Item.IsCorrupted ? FunctionGetCorruption(Item) : false
+	}	
+	
+	if (Item.IsUnique) {		
+		; returns mods with their ranges of the searched item if it is unique and has variable mods
+		uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Name)
+
+		; return if the advanced search was used but the checked item doesn't have variable mods
+		if(!uniqueWithVariableMods and isAdvancedPriceCheck) {
+			ShowToolTip("Advanced search not available for this item (no variable mods).")
+			return
+		}
+		
+		UniqueStats := FunctionGetUniqueStats(Name)
+		if (uniqueWithVariableMods) {
+			Gui, SelectModsGui:Destroy
+
+			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
+			Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, s, Item.IsUnique)
+			Stats.Offense := FunctionParseItemOffenseStats(DamageDetails, s, Item.IsUnique)	
+
+			; open AdvancedPriceCheckGui to select mods and their min/max values
+			if (isAdvancedPriceCheck) {
+				UniqueStats := FunctionGetUniqueStats(Name)
+				if (Enchantment) {
+					AdvancedPriceCheckGui(s, Stats, UniqueStats, Enchantment)
+				}
+				else if (Corruption) {
+					AdvancedPriceCheckGui(s, Stats, UniqueStats, Corruption)
+				} else {
+					AdvancedPriceCheckGui(s, Stats, UniqueStats)
+				}				
+				return
+			}		
+			; ignore mod rolls unless the AdvancedPriceCheckGui is used to search
+			if (isAdvancedPriceCheckRedirect) {
+				; submitting the AdvancedPriceCheck Gui sets TradeOpts.Set("AdvancedPriceCheckItem") with the edited item (selected mods and their min/max values)
+				s := TradeGlobals.Get("AdvancedPriceCheckItem")
+				Loop % s.mods.Length() {
+					if (s.mods[A_Index].selected > 0) {
+						modParam := new _ParamMod()
+						modParam.mod_name := s.mods[A_Index].param
+						modParam.mod_min := s.mods[A_Index].min
+						modParam.mod_max := s.mods[A_Index].max
+						RequestParams.modGroup.AddMod(modParam)
+					}	
+				}
+				Loop % s.stats.Length() {
+					if (s.stats[A_Index].selected > 0) {
+						; defense
+						if (InStr(s.stats[A_Index].Param, "Armour")) {
+							RequestParams.armour_min  := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
+							RequestParams.armour_max  := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
+						} 
+						else if (InStr(s.stats[A_Index].Param, "Evasion")) {
+							RequestParams.evasion_min := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
+							RequestParams.evasion_max := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
+						}
+						else if (InStr(s.stats[A_Index].Param, "Energy")) {
+							RequestParams.shield_min  := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
+							RequestParams.shield_max  := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
+						}
+						else if (InStr(s.stats[A_Index].Param, "Block")) {
+							RequestParams.block_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
+							RequestParams.block_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
+						}
+						
+						; offense
+						else if (InStr(s.stats[A_Index].Param, "Physical")) {
+							RequestParams.pdps_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
+							RequestParams.pdps_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
+						}
+						else if (InStr(s.stats[A_Index].Param, "Elemental")) {
+							RequestParams.edps_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
+							RequestParams.edps_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
+						}						
+					}	
+				}
+				
+				If(s.UsedInSearch) {
+					Item.UsedInSearch.Enchantment := s.UsedInSearch.Enchantment
+					Item.UsedInSearch.CorruptedMod:= s.UsedInSearch.Corruption
+				}
+			}			
+		}
+		else {
+			RequestParams.name   := Trim(StrReplace(Name, "Superior", ""))		
+			Item.UsedInSearch.FullName := true
+		}		
+
+		; only find items that can have the same amount of sockets
+		if (Item.MaxSockets = 6) {
+			RequestParams.ilevel_min  := 50
+			Item.UsedInSearch.iLvl.min:= 50
+		} 
+		else if (Item.MaxSockets = 5) {
+			RequestParams.ilevel_min := 35
+			RequestParams.ilevel_max := 49
+			Item.UsedInSearch.iLvl.min := 35
+			Item.UsedInSearch.iLvl.max := 49
+		} 
+		else if (Item.MaxSockets = 5) {
+			RequestParams.ilevel_min := 35
+			Item.UsedInSearch.iLvl.min := 35
+		}
+		; is (no 1-hand or shield or unset ring or helmet or glove or boots) but is weapon or armor
+		else if ((not Item.IsFourSocket and not Item.IsThreeSocket and not Item.IsSingleSocket) and (Item.IsWeapon or Item.IsArmour) and Item.Level < 35) {		
+			RequestParams.ilevel_max := 34
+			Item.UsedInSearch.iLvl.max := 34
+		}		
 	}
 	
 	; prepend the item.subtype to match the options used on poe.trade
@@ -155,7 +265,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	; remove "Superior" from item name to exclude it from name search
 	if (!IgnoreName) {
-		RequestParams.name   := Trim(StrReplace(Item.Name, "Superior", ""))		
+		RequestParams.name   := Trim(StrReplace(Name, "Superior", ""))		
 		Item.UsedInSearch.FullName := true
 	} else if (!Item.isUnique) {
 		isCraftingBase         := CheckIfItemIsCraftingBase(Item.TypeName)
@@ -261,106 +371,9 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			RequestParams.name   := Trim(StrReplace(Item.SubType, "Superior", ""))		
 		}
 		; Ivory Temple fix, not sure why it's not recognized and if there are more cases like it
-		if (InStr(Item.name, "Ivory Temple")){
+		if (InStr(Name, "Ivory Temple")){
 			RequestParams.xbase  := "Ivory Temple Map"
 		}
-	}
-	
-	if (Item.IsUnique) {
-		UniqueStats := FunctionGetUniqueStats(Item.Name)
-		; returns mods with their ranges of the searched item if it is unique and has variable mods
-		uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Item.Name)
-		if (uniqueWithVariableMods) {
-			Gui, SelectModsGui:Destroy
-			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
-			Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, s, Item.IsUnique)
-			Stats.Offense := FunctionParseItemOffenseStats(DamageDetails, s, Item.IsUnique)	
-
-			; open AdvancedPriceCheckGui to select mods and their min/max values
-			if (isAdvancedPriceCheck) {
-				UniqueStats := FunctionGetUniqueStats(Item.Name)
-				if (Enchantment) {
-					AdvancedPriceCheckGui(s, Stats, UniqueStats, Enchantment)
-				}
-				else if (Corruption) {
-					AdvancedPriceCheckGui(s, Stats, UniqueStats, Corruption)
-				} else {
-					AdvancedPriceCheckGui(s, Stats, UniqueStats)
-				}				
-				return
-			}		
-			; ignore mod rolls unless the AdvancedPriceCheckGui is used to search
-			if (isAdvancedPriceCheckRedirect) {
-				; submitting the AdvancedPriceCheck Gui sets TradeOpts.Set("AdvancedPriceCheckItem") with the edited item (selected mods and their min/max values)
-				s := TradeGlobals.Get("AdvancedPriceCheckItem")
-				Loop % s.mods.Length() {
-					if (s.mods[A_Index].selected > 0) {
-						modParam := new _ParamMod()
-						modParam.mod_name := s.mods[A_Index].param
-						modParam.mod_min := s.mods[A_Index].min
-						modParam.mod_max := s.mods[A_Index].max
-						RequestParams.modGroup.AddMod(modParam)
-					}	
-				}
-				Loop % s.stats.Length() {
-					if (s.stats[A_Index].selected > 0) {
-						; defense
-						if (InStr(s.stats[A_Index].Param, "Armour")) {
-							RequestParams.armour_min  := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
-							RequestParams.armour_max  := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
-						} 
-						else if (InStr(s.stats[A_Index].Param, "Evasion")) {
-							RequestParams.evasion_min := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
-							RequestParams.evasion_max := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
-						}
-						else if (InStr(s.stats[A_Index].Param, "Energy")) {
-							RequestParams.shield_min  := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
-							RequestParams.shield_max  := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
-						}
-						else if (InStr(s.stats[A_Index].Param, "Block")) {
-							RequestParams.block_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
-							RequestParams.block_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
-						}
-						
-						; offense
-						else if (InStr(s.stats[A_Index].Param, "Physical")) {
-							RequestParams.pdps_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
-							RequestParams.pdps_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
-						}
-						else if (InStr(s.stats[A_Index].Param, "Elemental")) {
-							RequestParams.edps_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
-							RequestParams.edps_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
-						}						
-					}	
-				}
-				
-				If(s.UsedInSearch) {
-					Item.UsedInSearch.Enchantment := s.UsedInSearch.Enchantment
-					Item.UsedInSearch.CorruptedMod:= s.UsedInSearch.Corruption
-				}
-			}			
-		}
-
-		; only find items that can have the same amount of sockets
-		if (Item.MaxSockets = 6) {
-			RequestParams.ilevel_min  := 50
-			Item.UsedInSearch.iLvl.min:= 50
-		} 
-		else if (Item.MaxSockets = 5) {
-			RequestParams.ilevel_min := 35
-			RequestParams.ilevel_max := 49
-			Item.UsedInSearch.iLvl.min := 35
-			Item.UsedInSearch.iLvl.max := 49
-		} 
-		else if (Item.MaxSockets = 5) {
-			RequestParams.ilevel_min := 35
-			Item.UsedInSearch.iLvl.min := 35
-		}
-		; is (no 1-hand or shield or unset ring or helmet or glove or boots) but is weapon or armor
-		else if ((not Item.IsFourSocket and not Item.IsThreeSocket and not Item.IsSingleSocket) and (Item.IsWeapon or Item.IsArmour) and Item.Level < 35) {		
-			RequestParams.ilevel_max := 34
-			Item.UsedInSearch.iLvl.max := 34
-		}		
 	}
 
 	; handle gems
@@ -373,7 +386,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			RequestParams.q_min := Item.Quality
 		}
 		; match exact gem level if enhance, empower or enlighten
-		if (InStr(Item.Name, "Empower") or InStr(Item.Name, "Enlighten") or InStr(Item.Name, "Enhance")) {
+		if (InStr(Name, "Empower") or InStr(Name, "Enlighten") or InStr(Name, "Enhance")) {
 			RequestParams.level_min := Item.Level
 			RequestParams.level_max := Item.Level
 		}
@@ -408,7 +421,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		; redirect was prevented to get the url and open the search on poe.trade instead
 		if (Item.isCurrency and !Item.IsEssence) {
 			IDs := TradeGlobals.Get("CurrencyIDs")
-			ParsedUrl1 := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[Item.Name] . "&have=" . IDs["Chaos Orb"]
+			ParsedUrl1 := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[Name] . "&have=" . IDs["Chaos Orb"]
 		}
 		else {
 			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
@@ -666,9 +679,9 @@ FunctionParseItemOffenseStats(Stats, mods, isUnique){
 
 FunctionGetUniqueStats(name){
 	items := TradeGlobals.Get("VariableUniqueData")
-	For i, item in items {
-		If (name = item.name) {
-			return item.stats
+	For i, uitem in items {
+		If (name = uitem.name) {
+			return uitem.stats
 		}
 	}
 }
@@ -1061,21 +1074,21 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 	; add notes what parameters where used in the search
 	if (Item.UsedInSearch) {
 		Title .= "Used in " . Item.UsedInSearch.SearchType . " Search: "
-		Title .= (Item.UsedInSearch.Enchantment)  ? "Enchantment" : "" 	
-		Title .= (Item.UsedInSearch.CorruptedMod) ? "Corr. Implicit" : "" 	
-		Title .= (Item.UsedInSearch.Sockets)      ? "| " . Item.UsedInSearch.Sockets . "S" : ""
-		Title .= (Item.UsedInSearch.Links)        ? "| " . Item.UsedInSearch.Links   . "L" : ""
+		Title .= (Item.UsedInSearch.Enchantment)  ? "Enchantment " : "" 	
+		Title .= (Item.UsedInSearch.CorruptedMod) ? "Corr. Implicit " : "" 	
+		Title .= (Item.UsedInSearch.Sockets)      ? "| " . Item.UsedInSearch.Sockets . "S " : ""
+		Title .= (Item.UsedInSearch.Links)        ? "| " . Item.UsedInSearch.Links   . "L " : ""
 		if (Item.UsedInSearch.iLvl.min and Item.UsedInSearch.iLvl.max) {
 			Title .= "| iLvl (" . Item.UsedInSearch.iLvl.min . "-" . Item.UsedInSearch.iLvl.max . ")"
 		}
 		else {
-			Title .= (Item.UsedInSearch.iLvl.min) ? "| iLvl (>=" . Item.UsedInSearch.iLvl.min . ")" : ""
-			Title .= (Item.UsedInSearch.iLvl.max) ? "| iLvl (<=" . Item.UsedInSearch.iLvl.max . ")" : ""
+			Title .= (Item.UsedInSearch.iLvl.min) ? "| iLvl (>=" . Item.UsedInSearch.iLvl.min . ") " : ""
+			Title .= (Item.UsedInSearch.iLvl.max) ? "| iLvl (<=" . Item.UsedInSearch.iLvl.max . ") " : ""
 		}		
-		Title .= (Item.UsedInSearch.FullName)     ? "| Full Name" : ""
-		Title .= (Item.UsedInSearch.Corruption)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ")" : ""
-		Title .= (Item.UsedInSearch.Type)         ? "| Type (" . Item.UsedInSearch.Type . ")" : ""
-		Title .= (Item.UsedInSearch.ItemBase)     ? "| Base (" . Item.UsedInSearch.ItemBase . ")" : ""
+		Title .= (Item.UsedInSearch.FullName)     ? "| Full Name " : ""
+		Title .= (Item.UsedInSearch.Corruption)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ") " : ""
+		Title .= (Item.UsedInSearch.Type)         ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
+		Title .= (Item.UsedInSearch.ItemBase)     ? "| Base (" . Item.UsedInSearch.ItemBase . ") " : ""
 		
 		Title .= "`n------------------------------ `n"	
 	}	
@@ -1389,11 +1402,12 @@ class _ParamMod {
 FunctionFindUniqueItemIfItHasVariableRolls(name)
 {
 	data := TradeGlobals.Get("VariableUniqueData")
-	For index, item in data {
-		If (item.name == name ) {
-			return item
+	For index, uitem in data {		
+		If (uitem.name = name ) {
+			return uitem
 		}
-	} 
+	}  
+	return false
 }
 
 ; Add poetrades mod names to the items mods to use as POST parameter
