@@ -959,7 +959,7 @@ FunctionGetMeanMedianPrice(html, payload){
 	; calculate average and median prices
     If (prices.MaxIndex() > 0) {
 		; average
-        average := average / itemCount - 1
+        average := average / (itemCount - 1)
 		Title .= "Average price in chaos: " average " (" prices.MaxIndex() " results"
 		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed" : ""		
 		Title .= ") `n"
@@ -1075,7 +1075,7 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 	; add table headers to tooltip
 	Title .= FunctionShowAcc(StrPad("Account",10), "|") 
 	Title .= StrPad("IGN",20) 	
-	Title .= StrPad("Price |",20,"left")	
+	Title .= StrPad(StrPad("| Price ", 19, "right") . "|",20,"left")	
 		
 	if (Item.IsGem) {
 		; add gem headers
@@ -1092,13 +1092,13 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 	; add table head underline
 	Title .= FunctionShowAcc(StrPad("----------",10), "-") 
 	Title .= StrPad("--------------------",20) 
-	Title .= StrPad("--------------------",20,"left")
+	Title .= StrPad("--------------------",19,"left")
 	if (Item.IsGem) {
 		Title .= StrPad("------",6,"left")
 		Title .= StrPad("------",6,"left")
 	}	
 	if (showItemLevel) {
-		Title .= StrPad("-------",7,"left")
+		Title .= StrPad("-------",8,"left")
 	}
 	Title .= StrPad("----------",8,"left")	
 	Title .= "`n"
@@ -1140,20 +1140,20 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 		
         Title .= FunctionShowAcc(StrPad(subAcc,10), "|") 
 		Title .= StrPad(subIGN,20) 
-		Title .= StrPad(Buyout . "|",20,"left") 
+		Title .= StrPad("| " . Buyout . "",19,"right") 
 		
 		if (Item.IsGem) {
 			; add gem info
 			if (Q1 > 0) {
-				Title .= StrPad(" " . Q1 . "% |",6,"left")
+				Title .= StrPad("| " . StrPad(Q1,2,"left") . "% ",6,"right")
 			} else {
-				Title .= StrPad(" -  |",6,"left")
+				Title .= StrPad("|  -  ",6,"right")
 			}
-			Title .= StrPad(" " . LVL1 . " |" ,6,"left")
+			Title .= StrPad("| " . StrPad(LVL1,3,"left") . " |" ,7,"right")
 		}
 		if (showItemLevel) {
 			; add item level
-			Title .= StrPad(" " . iLvl1 . "  |" ,7,"left")
+			Title .= StrPad("| " . StrPad(iLvl1,3,"left") . "  |" ,8,"right")
 		}	
 		; add item age
 		Title .= StrPad(FunctionFormatItemAge(Age1),10)
