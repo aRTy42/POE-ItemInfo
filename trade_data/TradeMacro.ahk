@@ -139,7 +139,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	if (Item.hasImplicit) {
 		Enchantment := FunctionGetEnchantment(Item, Item.SubType)
-		Corruption  := FunctionGetCorruption(Item)
+		Corruption  := Item.IsCorrupted ? FunctionGetCorruption(Item) : false
 	}
 	
 	; remove "Superior" from item name to exclude it from name search
@@ -272,6 +272,8 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 				}
 				else if (Corruption) {
 					AdvancedPriceCheckGui(s, Stats, UniqueStats, Corruption)
+				} else {
+					AdvancedPriceCheckGui(s, Stats, UniqueStats)
 				}				
 				return
 			}		
@@ -1502,7 +1504,6 @@ FunctionGetCorruption(item) {
 		}	
 		valueCount++
 	}
-
 	If (StrLen(corrMod.param)) {
 		If (valueCount = 1) {
 			corrMod.min := value1
@@ -1857,7 +1858,6 @@ FunctionHandleGuiSubmit(){
 			mod.selected := TradeAdvancedSelected%A_Index%
 			mod.min      := TradeAdvancedModMin%A_Index%
 			mod.max      := TradeAdvancedModMax%A_Index%
-			
 			; has Enchantment
 			If (RegExMatch(TradeAdvancedParam%A_Index%, "i)enchant")) {
 				newItem.UsedInSearch.Enchantment := true
@@ -1891,7 +1891,7 @@ FunctionHandleGuiSubmit(){
 	
 	newItem.mods := mods
 	newItem.stats := stats
-
+	
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)	
 	Gui, SelectModsGui:Destroy
 }
