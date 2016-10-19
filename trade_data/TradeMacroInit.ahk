@@ -585,6 +585,7 @@ CreateTradeSettingsUI()
     GuiAddCheckbox("Remove multiple Listings from same Account", "x827 y223 w230 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
     AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
     
+    Gui, Add, Link, x827 y263 w230 cBlue, <a href="https://github.com/thirdy/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
     
     GuiAddText("Mouse over settings to see what these settings do exactly.", "x827 y585 w250 h30")
 
