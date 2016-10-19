@@ -130,7 +130,11 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	if (RegExMatch(Item.Name, "i)sextant$")) {
 		Item.IsSextant:= true
 	}
-		
+	Item.IsMapFragment := false
+	If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") and not Item.IsWeapon and not Item.IsArmour) {	
+		Item.IsMapFragment := true
+	}
+
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
 	
@@ -353,6 +357,10 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		if(ItemData.Links >= 5) {
 			RequestParams.corrupted := "1"
 			Item.UsedInSearch.Corruption := "Yes"
+		}
+		if(Item.IsDivinationCard) {
+			RequestParams.corrupted := "0"
+			Item.UsedInSearch.Corruption := "No"
 		}
 	}
 	else {
@@ -1164,6 +1172,11 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 	Title .= "`n------------------------------ `n"	
 	
 	; add notes what parameters where used in the search
+	ShowFullNameNote := false 
+	If (not Item.IsUnique and not Item.IsGem and not Item.IsDivinationCard and not Item.IsMapFragment) {
+		ShowFullNameNote := true
+	}
+	
 	if (Item.UsedInSearch) {
 		Title .= "Used in " . Item.UsedInSearch.SearchType . " Search: "
 		Title .= (Item.UsedInSearch.Enchantment)  ? "Enchantment " : "" 	
@@ -1177,10 +1190,10 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 			Title .= (Item.UsedInSearch.iLvl.min) ? "| iLvl (>=" . Item.UsedInSearch.iLvl.min . ") " : ""
 			Title .= (Item.UsedInSearch.iLvl.max) ? "| iLvl (<=" . Item.UsedInSearch.iLvl.max . ") " : ""
 		}		
-		Title .= (Item.UsedInSearch.FullName and not Item.IsUnique) ? "| Full Name " : ""
-		Title .= (Item.UsedInSearch.Corruption)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ") " : ""
-		Title .= (Item.UsedInSearch.Type and not Item.IsUnique)     ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
-		Title .= (Item.UsedInSearch.ItemBase and not Item.IsUnique) ? "| Base (" . Item.UsedInSearch.ItemBase . ") " : ""
+		Title .= (Item.UsedInSearch.FullName and ShowFullNameNote) ? "| Full Name " : ""
+		Title .= (Item.UsedInSearch.Corruption and not Item.IsMapFragment and not Item.IsDivinationCard and not Item.IsCurrency)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ") " : ""
+		Title .= (Item.UsedInSearch.Type)     ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
+		Title .= (Item.UsedInSearch.ItemBase and ShowFullNameNote) ? "| Base (" . Item.UsedInSearch.ItemBase . ") " : ""
 		
 		Title .= "`n------------------------------ `n"	
 	}	
@@ -1272,7 +1285,7 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 			} else {
 				Title .= StrPad("|  -  ",6,"right")
 			}
-			Title .= StrPad("| " . StrPad(LVL1,3,"left") . " |" ,7,"right")
+			Title .= StrPad("| " . StrPad(LVL1,3,"left") . " " ,6,"right")
 		}
 		if (showItemLevel) {
 			; add item level
@@ -1866,9 +1879,6 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		modValueMin := ChangedImplicit.min
 		modValueMax := ChangedImplicit.max
 		displayName := ChangedImplicit.name
-		
-		;Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%  , % displayName
-		;Gui, SelectModsGui:Add, CheckBox, x449 yp+1 vTradeAdvancedSelected%e%	
 
 		xPosMin := xPosMin + 70 + 70 + 70 + 70
 		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%  , % displayName
