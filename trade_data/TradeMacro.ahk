@@ -126,6 +126,10 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	if (RegExMatch(Item.Name, "i)essence of")) {
 		Item.IsEssence:= true
 	}
+	Item.IsSextant    := 
+	if (RegExMatch(Item.Name, "i)sextant$")) {
+		Item.IsSextant:= true
+	}
 		
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
@@ -166,12 +170,14 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			if (isAdvancedPriceCheck) {
 				UniqueStats := FunctionGetUniqueStats(Name)
 				if (Enchantment) {
-					AdvancedPriceCheckGui(s, Stats, UniqueStats, Enchantment)
+					MsgBox % ItemData.Sockets
+					AdvancedPriceCheckGui(s, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Enchantment)
 				}
 				else if (Corruption) {
-					AdvancedPriceCheckGui(s, Stats, UniqueStats, Corruption)
+					MsgBox % ItemData.Sockets
+					AdvancedPriceCheckGui(s, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Corruption)
 				} else {
-					AdvancedPriceCheckGui(s, Stats, UniqueStats)
+					AdvancedPriceCheckGui(s, Stats, ItemData.Sockets, ItemData.Links, UniqueStats)
 				}				
 				return
 			}		
@@ -219,6 +225,17 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 						}						
 					}	
 				}
+		
+				; handle item sockets
+				If (s.UseSockets) {
+					RequestParams.sockets_min := ItemData.Sockets
+					Item.UsedInSearch.Sockets := ItemData.Sockets
+				}	
+				; handle item links
+				If (s.UseLinks) {
+					RequestParams.link_min := ItemData.Links
+					Item.UsedInSearch.Links := ItemData.Links
+				}					
 				
 				If(s.UsedInSearch) {
 					Item.UsedInSearch.Enchantment := s.UsedInSearch.Enchantment
@@ -299,23 +316,26 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
 			Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType
 		}		
+	}			
+
+	; don't overwrite advancedItemPriceChecks decision to inlucde/exclude sockets/links
+	if (not isAdvancedPriceCheckRedirect) {
+		; handle item sockets
+		; maybe don't use this for unique-items as default
+		if (ItemData.Sockets >= 5 and not Item.IsUnique) {
+			RequestParams.sockets_min := ItemData.Sockets
+			Item.UsedInSearch.Sockets := ItemData.Sockets
+		}	
+		if (ItemData.Sockets >= 6) {
+			RequestParams.sockets_min := ItemData.Sockets
+			Item.UsedInSearch.Sockets := ItemData.Sockets
+		}
+		; handle item links
+		if (ItemData.Links >= 5) {
+			RequestParams.link_min := ItemData.Links
+			Item.UsedInSearch.Links := ItemData.Links
+		}
 	}	
-		
-	; handle item sockets
-	; maybe don't use this for unique-items as default
-	if (ItemData.Sockets >= 5 and not Item.IsUnique) {
-		RequestParams.sockets_min := ItemData.Sockets
-		Item.UsedInSearch.Sockets := ItemData.Sockets
-	}	
-	if (ItemData.Sockets >= 6) {
-		RequestParams.sockets_min := ItemData.Sockets
-		Item.UsedInSearch.Sockets := ItemData.Sockets
-	}
-	; handle item links
-	if (ItemData.Links >= 5) {
-		RequestParams.link_min := ItemData.Links
-		Item.UsedInSearch.Links := ItemData.Links
-	}
 	
 	; handle corruption
 	if (Item.IsCorrupted) {
@@ -413,7 +433,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	ShowToolTip("Running search...")
 	
-	if (Item.isCurrency and !Item.IsEssence) {		
+	if (Item.isCurrency and !Item.IsEssence and !Item.IsSextant) {		
 		Html := FunctionDoCurrencyRequest(Item.Name, openSearchInBrowser)
 	}
 	else {
@@ -1657,7 +1677,7 @@ FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 }
 
 ; Open Gui window to show the items variable mods, select the ones that should be used in the search and se their min/max values
-AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){	
+AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedImplicit = ""){	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	Global 
 
@@ -1902,9 +1922,26 @@ AdvancedPriceCheckGui(advItem, Stats, UniqueStats = "", ChangedImplicit = ""){
 		l++
 	}
 	
+	m := 1
+	if (Sockets >= 5 or Links >= 5) {
+		Gui, SelectModsGui:Add, Text, x0 w700 y+10 cc9cacd, %line% 
+
+		if (Sockets >= 5) {
+			m++
+			text := "Sockets: " . Trim(Sockets)
+			Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets     , % text
+		}
+		if (Links >= 5) {
+			offset := (m > 1 ) ? "+15" : "15"
+			text := "Links:  " . Trim(Links)
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks Checked, % text
+		}
+	}
+	
 	Item.UsedInSearch.SearchType := "Advanced"
 	; closes this window and starts the search
-	Gui, SelectModsGui:Add, Button, x10 y+50 gAdvancedPriceCheckSearch, &Search
+	offset := (m > 1) ? "+20" : "+50"
+	Gui, SelectModsGui:Add, Button, x10 y%offset% gAdvancedPriceCheckSearch, &Search
 	
 	; open search on poe.trade instead
 	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Op&en on poe.trade
@@ -1971,8 +2008,10 @@ FunctionHandleGuiSubmit(){
 		}
 	}
 	
-	newItem.mods := mods
-	newItem.stats := stats
+	newItem.mods       := mods
+	newItem.stats      := stats
+	newItem.useSockets := TradeAdvancedUseSockets
+	newItem.useLinks   := TradeAdvancedUseLinks
 
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)	
 	Gui, SelectModsGui:Destroy
