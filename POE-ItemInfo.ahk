@@ -6186,11 +6186,11 @@ ParseUnique(ItemName)
 }
 
 ItemIsMirrored(ItemDataText)
-{
+{    
     Loop, Parse, ItemDataText, `n, `r
     {
-        If (A_LoopField == "Mirrored")
-        {
+        RegExMatch(Trim(A_LoopField), "i)^Mirrored$", match)
+        If (match) {
             return True
         }
     }
@@ -6276,10 +6276,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     ResetAffixDetailVars()
     
     ItemData.FullText := ItemDataText
-
-    IfInString, ItemDataText, Corrupted
+    
+    Loop, Parse, ItemDataText, `n, `r
     {
-        Item.IsCorrupted := True
+        RegExMatch(Trim(A_LoopField), "i)^Corrupted$", match)
+        If (match) {
+            Item.IsCorrupted := True
+        }
     }
     
     ; AHK only allows splitting on single chars, so first 
@@ -6290,9 +6293,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
     ItemData.NamePlate := ItemDataParts1
     ItemData.Stats := ItemDataParts2
-
+    
     ItemDataIndexLast := ItemDataParts0
     ItemDataPartsLast := ItemDataParts%ItemDataIndexLast%
+
     ItemData.ClearParts()
     Loop, %ItemDataParts0%
     {
@@ -6404,7 +6408,15 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsMap := (Item.BaseType == "Map")
     Item.IsJewel := (Item.BaseType == "Jewel")
     Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
-    Item.HasEffect := (InStr(ItemData.PartsLast, "Has"))
+    
+    TempStr := ItemData.PartsLast
+    Loop, Parse, TempStr, `n, `r
+    {
+        RegExMatch(Trim(A_LoopField), "i)^Has ", match)
+        If (match) {
+            Item.HasEffect := True
+        }
+    }    
     
     If Item.IsTalisman {
         Loop, Read, %A_ScriptDir%\data\TalismanTiers.txt 
@@ -6416,7 +6428,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
             }
         }
     }
-    
+
     ItemDataIndexAffixes := ItemData.IndexLast - GetNegativeAffixOffset(Item)    
     If (ItemDataIndexAffixes <= 0)
     {
@@ -6743,7 +6755,6 @@ GetNegativeAffixOffset(Item)
         ; And mirrored items
         NegativeAffixOffset := NegativeAffixOffset + 1
     }
-	
     return NegativeAffixOffset
 }
 
