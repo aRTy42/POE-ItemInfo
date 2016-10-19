@@ -170,11 +170,9 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			if (isAdvancedPriceCheck) {
 				UniqueStats := FunctionGetUniqueStats(Name)
 				if (Enchantment) {
-					MsgBox % ItemData.Sockets
 					AdvancedPriceCheckGui(s, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Enchantment)
 				}
 				else if (Corruption) {
-					MsgBox % ItemData.Sockets
 					AdvancedPriceCheckGui(s, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Corruption)
 				} else {
 					AdvancedPriceCheckGui(s, Stats, ItemData.Sockets, ItemData.Links, UniqueStats)
@@ -433,7 +431,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	ShowToolTip("Running search...")
 	
-	if (Item.isCurrency and !Item.IsEssence and !Item.IsSextant) {		
+	if (Item.isCurrency and !Item.IsEssence) {		
 		Html := FunctionDoCurrencyRequest(Item.Name, openSearchInBrowser)
 	}
 	else {
@@ -519,7 +517,7 @@ FunctionParseItemDefenseStats(stats, mods, isUnique){
 				if (RegExMatch(affix, "i)#.*to maximum.*?Energy Shield"  , affixFlatES)) {
 					min_affixFlatES    := mod.ranges[1][1] 
 					max_affixFlatES    := mod.ranges[1][2] 
-					MsgBox % affix "`nmax es : " min_affixFlatES " - " max_affixFlatES
+					;MsgBox % affix "`nmax es : " min_affixFlatES " - " max_affixFlatES
 				}
 				if (RegExMatch(affix, "i)#.*to maximum.*?Armour"         , affixFlatAR)) {
 					min_affixFlatAR    := mod.ranges[1][1]
@@ -1749,9 +1747,13 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			statValueMin := Round(statValueQ20 - ((stat.max - stat.min) * valueRange))
 			statValueMax := Round(statValueQ20 + ((stat.max - stat.min) * valueRange))			
 			
-			minLabelFirst := "(" Floor(stat.min)
+			; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
+			statValueMin := Floor((statValueMin < stat.min) ? stat.min : statValueMin)
+			statValueMax := Floor((statValueMax > stat.max) ? stat.max : statValueMax)
+			
+			minLabelFirst := "(" Floor(statValueMin)
 			minLabelSecond := ")" 
-			maxLabelFirst := "(" Floor(stat.max)
+			maxLabelFirst := "(" Floor(statValueMax)
 			maxLabelSecond := ")"
 			
 			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							 , % "(Total Q20) " stat.name
@@ -1787,9 +1789,13 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			statValueMin := Round(stat.value - ((stat.max - stat.min) * valueRange))
 			statValueMax := Round(stat.value + ((stat.max - stat.min) * valueRange))			
 			
-			minLabelFirst := "(" Floor(zerotrimmer(stat.min))
+			; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
+			statValueMin := Floor((statValueMin < stat.min) ? stat.min : statValueMin)
+			statValueMax := Floor((statValueMax > stat.max) ? stat.max : statValueMax)
+			
+			minLabelFirst := "(" Floor(statValueMin)
 			minLabelSecond := ")" 
-			maxLabelFirst := "(" Floor(zerotrimmer(stat.max))
+			maxLabelFirst := "(" Floor(statValueMax)
 			maxLabelSecond := ")"
 			
 			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							 , % stat.name
