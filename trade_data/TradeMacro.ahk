@@ -515,33 +515,69 @@ FunctionParseItemDefenseStats(stats, mods, isUnique){
 					continue
 				}
 				if (RegExMatch(affix, "i)#.*to maximum.*?Energy Shield"  , affixFlatES)) {
-					min_affixFlatES    := mod.ranges[1][1] 
-					max_affixFlatES    := mod.ranges[1][2] 
+					If (not mod.isVariable) {
+						min_affixFlatES    := mod.values[1] 
+						max_affixFlatES    := mod.values[1]
+					}
+					Else {
+						min_affixFlatES    := mod.ranges[1][1] 
+						max_affixFlatES    := mod.ranges[1][2] 
+					}
 					;MsgBox % affix "`nmax es : " min_affixFlatES " - " max_affixFlatES
 				}
 				if (RegExMatch(affix, "i)#.*to maximum.*?Armour"         , affixFlatAR)) {
-					min_affixFlatAR    := mod.ranges[1][1]
-					max_affixFlatAR    := mod.ranges[1][2]
+					If (not mod.isVariable) {
+						min_affixFlatAR    := mod.values[1]
+						max_affixFlatAR    := mod.values[1]
+					}
+					Else {
+						min_affixFlatAR    := mod.ranges[1][1]
+						max_affixFlatAR    := mod.ranges[1][2]
+					}
 					;MsgBox % affix "`nmax ar : " min_affixFlatAR " - " max_affixFlatAR
 				}
 				if (RegExMatch(affix, "i)#.*to maximum.*?Evasion"        , affixFlatEV)) {
-					min_affixFlatEV    := mod.ranges[1][1]
-					max_affixFlatEV    := mod.ranges[1][2]
+					If (not mod.isVariable) {
+						min_affixFlatEV    := mod.values[1]
+						max_affixFlatEV    := mod.values[1]
+					}
+					Else {
+						min_affixFlatEV    := mod.ranges[1][1]
+						max_affixFlatEV    := mod.ranges[1][2]
+					}
 					;MsgBox % affix "`nmax ev : " min_affixFlatEV " - " max_affixFlatEV
 				}
 				if (RegExMatch(affix, "i)#.*increased.*?Energy Shield"   , affixPercentES)) {
-					min_affixPercentES := mod.ranges[1][1]
-					max_affixPercentES := mod.ranges[1][2]
+					If (not mod.isVariable) {
+						min_affixPercentES := mod.values[1]
+						max_affixPercentES := mod.values[1]
+					}
+					Else {
+						min_affixPercentES := mod.ranges[1][1]
+						max_affixPercentES := mod.ranges[1][2]
+					}
 					;MsgBox % affix "`ninc es : " min_affixPercentES " - " max_affixPercentES
 				}
 				if (RegExMatch(affix, "i)#.*increased.*?Evasion"         , affixPercentEV)) {
-					min_affixPercentEV := mod.ranges[1][1]
-					max_affixPercentEV := mod.ranges[1][2]
+					If (not mod.isVariable) {
+						min_affixPercentEV := mod.values[1]
+						max_affixPercentEV := mod.values[1]
+					}
+					Else {
+						min_affixPercentEV := mod.ranges[1][1]
+						max_affixPercentEV := mod.ranges[1][2]
+					}
 					;MsgBox % affix "`ninc ev : " min_affixPercentEV " - " max_affixPercentEV
 				}
 				if (RegExMatch(affix, "i)#.*increased.*?Armour"          , affixPercentAR)) {
-					min_affixPercentAR := mod.ranges[1][1]
-					max_affixPercentAR := mod.ranges[1][2]
+					If (not mod.isVariable) {
+						min_affixPercentAR := mod.values[1]
+						max_affixPercentAR := mod.values[1]
+					}
+					Else {
+						min_affixPercentAR := mod.ranges[1][1]
+						max_affixPercentAR := mod.ranges[1][2]
+					}
 					;MsgBox % affix "`ninc ar : " min_affixPercentAR " - " max_affixPercentAR
 				}
 			}
@@ -645,27 +681,55 @@ FunctionParseItemOffenseStats(Stats, mods, isUnique){
 					continue
 				}
 				If (RegExMatch(affix, "i)Adds.*#.*(Physical|Fire|Cold|Chaos) Damage", dmgType)) {
-					min_affixFlat%dmgType1%Low    := mod.ranges[1][1] 
-					min_affixFlat%dmgType1%Hi     := mod.ranges[1][2] 
-					max_affixFlat%dmgType1%Low    := mod.ranges[2][1] 
-					max_affixFlat%dmgType1%Hi     := mod.ranges[2][2] 
-					;MsgBox % affix "`nflat " dmgType1 " : " min_affixFlat%dmgType1%Low " - " min_affixFlat%dmgType1%Hi " to " max_affixFlat%dmgType1%Low " - " max_affixFlat%dmgType1%Hi
+					If (not mod.isVariable) {
+						min_affixFlat%dmgType1%Low    := mod.values[1] 
+						min_affixFlat%dmgType1%Hi     := mod.values[2] 
+						max_affixFlat%dmgType1%Low    := mod.values[1] 
+						max_affixFlat%dmgType1%Hi     := mod.values[2] 						
+					}
+					Else {
+						min_affixFlat%dmgType1%Low    := mod.ranges[1][1] 
+						min_affixFlat%dmgType1%Hi     := mod.ranges[1][2] 
+						max_affixFlat%dmgType1%Low    := mod.ranges[2][1] 
+						max_affixFlat%dmgType1%Hi     := mod.ranges[2][2] 						
+					}		
+					;MsgBox % affix "`nflat " dmgType1 " : " min_affixFlat%dmgType1%Low " - " min_affixFlat%dmgType1%Hi " to " max_affixFlat%dmgType1%Low " - " max_affixFlat%dmgType1%Hi					
 				}
 				If (RegExMatch(affix, "i)Adds.*(\d+) to #.*(Lightning) Damage", match)) {
-					min_affixFlat%match2%Low    := match1 
-					min_affixFlat%match2%Hi     := mod.ranges[1][1] 
-					max_affixFlat%match2%Low    := match1
-					max_affixFlat%match2%Hi     := mod.ranges[1][2] 
+					If (not mod.isVariable) {
+						min_affixFlat%match2%Low    := match1 
+						min_affixFlat%match2%Hi     := mod.values[1] 
+						max_affixFlat%match2%Low    := match1
+						max_affixFlat%match2%Hi     := mod.values[1] 
+					}
+					Else {
+						min_affixFlat%match2%Low    := match1 
+						min_affixFlat%match2%Hi     := mod.ranges[1][1] 
+						max_affixFlat%match2%Low    := match1
+						max_affixFlat%match2%Hi     := mod.ranges[1][2] 
+					}					
 					;MsgBox % affix "`nflat " match2 " : " min_affixFlat%match2%Low " - " min_affixFlat%match2%Hi " to " max_affixFlat%match2%Low " - " max_affixFlat%match2%Hi
 				}
 				If (RegExMatch(affix, "i)#.*increased Physical Damage")) {
-					min_affixPercentPhys    := mod.ranges[1][1] 
-					max_affixPercentPhys    := mod.ranges[1][2] 
+					If (not mod.isVariable) {
+						min_affixPercentPhys    := mod.values[1] 
+						max_affixPercentPhys    := mod.values[1] 
+					}
+					Else {
+						min_affixPercentPhys    := mod.ranges[1][1] 
+						max_affixPercentPhys    := mod.ranges[1][2] 
+					}
 					;MsgBox % affix "`ninc Phys : " min_affixPercentPhys " - " max_affixPercentPhys
 				}
 				If (RegExMatch(affix, "i)#.*increased Attack Speed")) {
-					min_affixPercentAPS     := mod.ranges[1][1] / 100
-					max_affixPercentAPS     := mod.ranges[1][2] / 100
+					If (not mod.isVariable) {
+						min_affixPercentAPS     := mod.values[1] / 100
+						max_affixPercentAPS     := mod.values[1] / 100
+					}
+					Else {
+						min_affixPercentAPS     := mod.ranges[1][1] / 100
+						max_affixPercentAPS     := mod.ranges[1][2] / 100
+					}
 					;MsgBox % affix "`ninc attack speed : " min_affixPercentAPS " - " max_affixPercentAPS
 				}
 			}
@@ -1451,33 +1515,6 @@ FunctionFindUniqueItemIfItHasVariableRolls(name)
 FunctionGetItemsPoeTradeMods(item) {
 	mods := TradeGlobals.Get("ModsData")
 	
-	/*
-	; loop over poetrade mod groups
-	returnItem := item	
-
-	matchCount := 0
-	For i, modgroup in mods {		
-		; loop over modgroup mods
-		For j, mod in modgroup {
-			; loop over items variable mods
-			For k, imod in item.mods {	
-				s := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
-				ss := Trim(imod.name)				
-				If (s = ss) {
-					;MsgBox % s
-					; add poetrades mod name to item (POST param)
-					returnItem.mods[k]["param"] := mod
-					
-					If (matchCount >= item.mods.maxIndex()) {						
-						return returnItem
-					}
-					matchCount++
-				}
-			}
-		}	
-	} 
-	*/
-	
 	; use this to control search order (which group is more important)
 	For k, imod in item.mods {	
 		item.mods[k]["param"] := FunctionFindInModGroup(mods["[total] mods"], item.mods[k])
@@ -1690,6 +1727,9 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	ValueRange := ValueRange / 100 	
 		
 	Loop % advItem.mods.Length() {	
+		if (!advItem.mods[A_Index].isVariable) {
+			continue
+		}
 		tempValue := StrLen(advItem.mods[A_Index].name)
 		if(modLengthMax < tempValue ) {
 			modLengthMax := tempValue
@@ -1793,9 +1833,9 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			statValueMin := Floor((statValueMin < stat.min) ? stat.min : statValueMin)
 			statValueMax := Floor((statValueMax > stat.max) ? stat.max : statValueMax)
 			
-			minLabelFirst := "(" Floor(statValueMin)
+			minLabelFirst := "(" Floor(stat.min)
 			minLabelSecond := ")" 
-			maxLabelFirst := "(" Floor(statValueMax)
+			maxLabelFirst := "(" Floor(stat.max)
 			maxLabelSecond := ")"
 			
 			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							 , % stat.name
@@ -1827,13 +1867,12 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		modValueMax := ChangedImplicit.max
 		displayName := ChangedImplicit.name
 		
-		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%                                   , % displayName
-		;Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedModMin%e% r1       , % modValueMin
-		;Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % modValueMin
-		;Gui, SelectModsGui:Add, Text, x+20 yp-22      w70 r1                               , % modValueMax
-		;Gui, SelectModsGui:Add, Edit, x+20 yp-3       w70 vTradeAdvancedModMax%e% r1       , % modValueMax
-		;Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % ""
-		Gui, SelectModsGui:Add, CheckBox, x449 yp+1      vTradeAdvancedSelected%e%
+		;Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%  , % displayName
+		;Gui, SelectModsGui:Add, CheckBox, x449 yp+1 vTradeAdvancedSelected%e%	
+
+		xPosMin := xPosMin + 70 + 70 + 70 + 70
+		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%  , % displayName
+		Gui, SelectModsGui:Add, CheckBox, x%xPosMin% yp+1 vTradeAdvancedSelected%e%
 		
 		TradeAdvancedModMin%e% 		:= ChangedImplicit.min
 		TradeAdvancedModMax%e% 		:= ChangedImplicit.max
@@ -1848,6 +1887,9 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	;add mods	
 	l := 1
 	Loop % advItem.mods.Length() {
+		if (!advItem.mods[A_Index].isVariable) {
+			continue
+		}
 		xPosMin := modGroupBox + 25			
 	
 		; matches "1 to #" in for example "adds 1 to # lightning damage"
