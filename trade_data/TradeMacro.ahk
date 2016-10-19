@@ -303,10 +303,14 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		
 	; handle item sockets
 	; maybe don't use this for unique-items as default
-	if (ItemData.Sockets >= 5) {
+	if (ItemData.Sockets >= 5 and not Item.IsUnique) {
 		RequestParams.sockets_min := ItemData.Sockets
 		Item.UsedInSearch.Sockets := ItemData.Sockets
 	}	
+	if (ItemData.Sockets >= 6) {
+		RequestParams.sockets_min := ItemData.Sockets
+		Item.UsedInSearch.Sockets := ItemData.Sockets
+	}
 	; handle item links
 	if (ItemData.Links >= 5) {
 		RequestParams.link_min := ItemData.Links
@@ -335,7 +339,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	}
 	else {
 		; always exclude corrupted gems from results if the source is not corrupted
-		if (Item.IsGem) {
+		if (Item.IsGem or Item.IsUnique) {
 			RequestParams.corrupted := "0"
 			Item.UsedInSearch.Corruption := "No"
 		}
@@ -453,7 +457,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 FunctionParseItemDefenseStats(stats, mods, isUnique){
 	Global ItemData
 	iStats := {}
-	
+
 	RegExMatch(stats, "i)chance to block ?:.*?(\d+)", Block)
 	RegExMatch(stats, "i)armour ?:.*?(\d+)"         , Armour)
 	RegExMatch(stats, "i)energy shield ?:.*?(\d+)"  , EnergyShield)
@@ -479,13 +483,14 @@ FunctionParseItemDefenseStats(stats, mods, isUnique){
 	
 	; calculate items Q20 defense stat min/max values
 	Affixes := StrSplit(ItemData.Affixes, "`n")
+
 	For key, mod in mods.mods {
 		For i, affix in Affixes {
 			affix := RegExReplace(affix, "i)(\d+.?\d+?)", "#")
 			affix := RegExReplace(affix, "i)# %", "#%")
 			affix := Trim(RegExReplace(affix, "\s", " "))
 			name :=  Trim(mod.name)		
-			
+
 			If ( affix = name ){
 				; ignore mods like " ... per X dexterity"
 				If (RegExMatch(affix, "i) per ")) {
@@ -494,7 +499,7 @@ FunctionParseItemDefenseStats(stats, mods, isUnique){
 				if (RegExMatch(affix, "i)#.*to maximum.*?Energy Shield"  , affixFlatES)) {
 					min_affixFlatES    := mod.ranges[1][1] 
 					max_affixFlatES    := mod.ranges[1][2] 
-					;MsgBox % affix "`nmax es : " min_affixFlatES " - " max_affixFlatES
+					MsgBox % affix "`nmax es : " min_affixFlatES " - " max_affixFlatES
 				}
 				if (RegExMatch(affix, "i)#.*to maximum.*?Armour"         , affixFlatAR)) {
 					min_affixFlatAR    := mod.ranges[1][1]
@@ -987,9 +992,6 @@ FunctionGetMeanMedianPrice(html, payload){
     If (prices.MaxIndex() > 0) {
 		; average
         average := average / (itemCount - 1)
-		Title .= "Average price in chaos: " average " (" prices.MaxIndex() " results"
-		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed" : ""		
-		Title .= ") `n"
 		
 		; median
         If (prices.MaxIndex()&1) {
@@ -1009,8 +1011,14 @@ FunctionGetMeanMedianPrice(html, payload){
 				median := Round(median, 2)
 			}
         } 
-		Title .= "Median  price in chaos: " median " (" prices.MaxIndex() " results"
-		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed" : ""		
+		
+		length := (StrLen(average) > StrLen(median)) ? StrLen(average) : StrLen(median)
+		Title .= "Average price in chaos: " StrPad(average, length, "left") " (" prices.MaxIndex() " results"
+		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed by Account Filter" : ""		
+		Title .= ") `n"
+		
+		Title .= "Median  price in chaos: " StrPad(median, length, "left") " (" prices.MaxIndex() " results"
+		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed by Account Filter" : ""		
 		Title .= ") `n`n"
     }  
 	return Title
@@ -1087,10 +1095,10 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 			Title .= (Item.UsedInSearch.iLvl.min) ? "| iLvl (>=" . Item.UsedInSearch.iLvl.min . ") " : ""
 			Title .= (Item.UsedInSearch.iLvl.max) ? "| iLvl (<=" . Item.UsedInSearch.iLvl.max . ") " : ""
 		}		
-		Title .= (Item.UsedInSearch.FullName)     ? "| Full Name " : ""
+		Title .= (Item.UsedInSearch.FullName and not Item.IsUnique) ? "| Full Name " : ""
 		Title .= (Item.UsedInSearch.Corruption)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ") " : ""
-		Title .= (Item.UsedInSearch.Type)         ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
-		Title .= (Item.UsedInSearch.ItemBase)     ? "| Base (" . Item.UsedInSearch.ItemBase . ") " : ""
+		Title .= (Item.UsedInSearch.Type and not Item.IsUnique)     ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
+		Title .= (Item.UsedInSearch.ItemBase and not Item.IsUnique) ? "| Base (" . Item.UsedInSearch.ItemBase . ") " : ""
 		
 		Title .= "`n------------------------------ `n"	
 	}	
@@ -1167,7 +1175,13 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 		
         Title .= FunctionShowAcc(StrPad(subAcc,10), "|") 
 		Title .= StrPad(subIGN,20) 
-		Title .= StrPad("| " . Buyout . "",19,"right") 
+		
+		RegExMatch(Buyout, "i)([-.0-9]+) (.*)", BuyoutText)
+		RegExMatch(BuyoutText1, "i)(\d+)(.\d+)?", BuyoutPrice)
+		BuyoutPrice    := (BuyoutPrice2) ? StrPad(BuyoutPrice1 BuyoutPrice2, (3 - StrLen(BuyoutPrice1), "left")) : StrPad(StrPad(BuyoutPrice1, 2 + StrLen(BuyoutPrice1), "right"), 3 - StrLen(BuyoutPrice1), "left")
+		BuyoutCurrency := BuyoutText2
+		BuyoutText := StrPad(BuyoutPrice, 5, "left") . " " BuyoutCurrency
+		Title .= StrPad("| " . BuyoutText . "",19,"right")
 		
 		if (Item.IsGem) {
 			; add gem info
