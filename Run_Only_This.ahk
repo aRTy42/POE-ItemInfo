@@ -1,4 +1,6 @@
 ; This script merges TradeMacroInit, PoE-ItemInfo and TradeMacro into one script and executes it.
+RunAsAdmin()
+StartSplashScreen()
 
 FileRead, info, POE-ItemInfo.ahk
 FileRead, tradeInit, %A_ScriptDir%\trade_data\TradeMacroInit.ahk
@@ -11,7 +13,6 @@ FileCopy, %A_ScriptDir%\trade_data\TradeMacroInit.ahk, %A_ScriptDir%\main.ahk
 FileAppend, %info%, %A_ScriptDir%\main.ahk
 FileAppend, %trade%, %A_ScriptDir%\main.ahk
 
-RunAsAdmin()
 Run %A_ScriptDir%\main.ahk
 ExitApp 
 
@@ -44,3 +45,7 @@ RunAsAdmin()
         ExitApp 
     }
 }	
+
+StartSplashScreen() {
+    SplashTextOn, , , Merging and starting Scripts...
+}

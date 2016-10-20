@@ -1,9 +1,37 @@
+setAfkMessage(){		
+	T1 := A_Now
+	T2 := A_NowUTC
+	EnvSub, T1, %T2%, M
+	TZD := "UTC +" Round( T1/60, 2 )
+	FormatTime, currentTime, A_NowUTC, HH:mm
+	clipboard := "/afk AFK for about X minutes, since " currentTime " (" TZD "). Leave a message and I'll reply."
+	
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		SendInput {Enter} ^{v} {Home}	
+		clipboard :=
+		Pos := RegExMatch(clipboard, " X ")
+		If (Pos) {
+			Loop {
+				SendInput {Right}
+				If (A_Index > Pos) {
+					Break
+				}
+			}
+			Send {Shift Down} 
+			Sleep 100
+			Send {Right} 
+			Sleep 100
+			Send {Shift Up} 
+		}
+	}		
+}
 
-;   F5::SendInput {Enter}/hideout{Enter}		;go to hideout with F5
-;   ^WheelUp::SendInput {Left}			;ctrl-mouse wheel up toggles stash tabs left
-;   ^WheelDown::SendInput {Right}		;ctrl-mouse wheel down toggles stash tabs right	
-;   ^RButton::SendInput ^c			;ctrl-right mouse button sends ctrl-c
-;   F2::^c					;binds ctrl-c to F2 key (in addition, not instead)
-;   F9::SendInput {Enter}/remaining{Enter}	;mobs remaining with F9
-;   F10::SendInput {Enter}/global 820{Enter}	;join a channel with F10
-
+;   F5::SendInput {Enter}/hideout{Enter}		; go to hideout with F5
+;   ^WheelUp::SendInput {Left}					; ctrl-mouse wheel up toggles stash tabs left
+;   ^WheelDown::SendInput {Right}				; ctrl-mouse wheel down toggles stash tabs right	
+;   ^RButton::SendInput ^c						; ctrl-right mouse button sends ctrl-c
+;   F2::^c										; binds ctrl-c to F2 key (in addition, not instead)
+;   F9::SendInput {Enter}/remaining{Enter}		; mobs remaining with F9
+;   F10::SendInput {Enter}/global 820{Enter}	; join a channel with F10
+;	F11::setAfkMessage()						; pastes afk message to your chat, just change "X" to your estimated afk time
