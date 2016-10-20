@@ -463,6 +463,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		out("Parsing HTML done")
 		
 		SetClipboardContents(ParsedData)
+		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}
 	else {
@@ -471,6 +472,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		out("Parsing HTML done")
 		
 		SetClipboardContents(ParsedData)
+		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}    
 	
