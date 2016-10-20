@@ -686,11 +686,11 @@ CheckRarityLevel(RarityString)
     return 0 ; unknown rarity. shouldn't happen!
 }
 
-ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, ByRef GripType)
+ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, ByRef GripType, IsMapFragment, RarityLevel)
 {
     ; Grip type only matters for weapons at this point. For all others it will be 'None'.
     GripType = None
-
+    
     ; Check stats section first as weapons usually have their sub type as first line
     Loop, Parse, ItemDataStats, `n, `r
     {
@@ -784,53 +784,65 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 
     ; Check name plate section 
     Loop, Parse, ItemDataNamePlate, `n, `r
-    {
+    {       
+        ; Get third line in case of unique item and retrieve the base item name
+        LoopField := RegExReplace(A_LoopField, "<<.*>>", "")
+        If (RarityLevel = 4) 
+        {    
+            Loop, Parse, ItemDataNamePlate, `n, `r             
+            {   
+                If (A_Index = 3) {
+                   LoopField := Trim(A_LoopField) ? Trim(A_LoopField) : LoopField
+                }
+            }
+        } 
+        
         ; Belts, Amulets, Rings, Quivers, Flasks
-        IfInString, A_LoopField, Rustic Sash
+        IfInString, LoopField, Rustic Sash
         {
             BaseType = Item
             SubType = Belt
             return
         }
-        IfInString, A_LoopField, Belt
+        IfInString, LoopField, Belt
         {
             BaseType = Item
             SubType = Belt
             return
         }
-        If (InStr(A_LoopField, "Amulet") or InStr(A_LoopField, "Talisman"))
+        If (InStr(LoopField, "Amulet") or InStr(LoopField, "Talisman"))
         {
             BaseType = Item
             SubType = Amulet
             return
         }
         
-        If(RegExMatch(A_LoopField, "\bRing\b"))
+        If(RegExMatch(LoopField, "\bRing\b"))
         {
             BaseType = Item
             SubType = Ring
             return
         }
-        IfInString, A_LoopField, Quiver
+        IfInString, LoopField, Quiver
         {
             BaseType = Item
             SubType = Quiver
             return
         }
-        IfInString, A_LoopField, Flask
+        IfInString, LoopField, Flask
         {
             BaseType = Item
             SubType = Flask
             return
         }
-        IfInString, A_LoopField, %A_Space%Map
+        IfInString, LoopField, %A_Space%Map
         {
             Global matchList
             BaseType = Map      
             Loop % matchList.MaxIndex()
             {
                 Match := matchList[A_Index]
-                IfInString, A_LoopField, %Match%
+                IfInString, LoopField, %Match%
                 {
                     SubType = %Match%
                     return
@@ -841,7 +853,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
             return
         }
         ; Dry Peninsula fix
-        IfInString, A_LoopField, Dry%A_Space%Peninsula
+        IfInString, LoopField, Dry%A_Space%Peninsula
         {
             BaseType = Map
             SubType = Dry%A_Space%Peninsula
@@ -849,25 +861,25 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }       
 		
         ; Jewels
-        IfInString, A_LoopField, Cobalt%A_Space%Jewel
+        IfInString, LoopField, Cobalt%A_Space%Jewel
         {
             BaseType = Jewel
             SubType = Cobalt Jewel
             return
         }
-        IfInString, A_LoopField, Crimson%A_Space%Jewel
+        IfInString, LoopField, Crimson%A_Space%Jewel
         {
             BaseType = Jewel
             SubType = Crimson Jewel
             return
         }
-        IfInString, A_LoopField, Viridian%A_Space%Jewel
+        IfInString, LoopField, Viridian%A_Space%Jewel
         {
             BaseType = Jewel
             SubType = Viridian Jewel
             return
         }
-        IfInString, A_LoopField, Prismatic%A_Space%Jewel
+        IfInString, LoopField, Prismatic%A_Space%Jewel
         {
             BaseType = Jewel
             SubType = Prismatic Jewel
@@ -887,7 +899,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         ;   2. Use Trim(RegExReplace(A_LoopField, "i) of .*", "")) to remove the suffix from magic items first.
 
         ; Shields
-        If (RegExMatch(A_LoopField, "Buckler|Bundle|Shield"))
+        If (RegExMatch(LoopField, "Buckler|Bundle|Shield"))
         {
             BaseType = Armour
             SubType = Shield
@@ -895,7 +907,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Gloves
-        If (RegExMatch(A_LoopField, "Gauntlets|Gloves|Mitts"))
+        If (RegExMatch(LoopField, "Gauntlets|Gloves|Mitts"))
         {
             BaseType = Armour
             SubType = Gloves
@@ -903,7 +915,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Boots
-        If (RegExMatch(A_LoopField, "Boots|Greaves|Slippers"))
+        If (RegExMatch(LoopField, "Boots|Greaves|Slippers"))
         {
             BaseType = Armour
             SubType = Boots
@@ -911,7 +923,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; Helmets
-        If (RegExMatch(A_LoopField, "Bascinet|Burgonet|Cage|Circlet|Crown|Hood|Helm|Helmet|Mask|Sallet|Tricorne"))
+        If (RegExMatch(LoopField, "Bascinet|Burgonet|Cage|Circlet|Crown|Hood|Helm|Helmet|Mask|Sallet|Tricorne"))
         {
             BaseType = Armour
             SubType = Helmet
@@ -921,7 +933,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         ; Note: Body armours can have "Pelt" in their randomly assigned name,
         ;    explicitly matching the three pelt base items to be safe.
         
-        If (RegExMatch(A_LoopField, "Iron Hat|Leather Cap|Rusted Coif|Wolf Pelt|Ursine Pelt|Lion Pelt"))
+        If (RegExMatch(LoopField, "Iron Hat|Leather Cap|Rusted Coif|Wolf Pelt|Ursine Pelt|Lion Pelt"))
         {
             BaseType = Armour
             SubType = Helmet
@@ -929,10 +941,10 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
 
         ; BodyArmour
-        ; Note: Not using "$" could match "Leather Belt", therefore we first check that the item is no belt.
-        If (!RegExMatch(A_LoopField, "Belt"))
+        ; Note: Not using "$" could match "Leather Belt", therefore we first check that the item is not a belt.
+        If (!RegExMatch(LoopField, "Belt"))
         {
-            If (RegExMatch(A_LoopField, "Armour|Brigandine|Chainmail|Coat|Doublet|Garb|Hauberk|Jacket|Lamellar|Leather|Plate|Raiment|Regalia|Ringmail|Robe|Tunic|Vest|Vestment"))
+            If (RegExMatch(LoopField, "Armour|Brigandine|Chainmail|Coat|Doublet|Garb|Hauberk|Jacket|Lamellar|Leather|Plate|Raiment|Regalia|Ringmail|Robe|Tunic|Vest|Vestment"))
             {
                 BaseType = Armour
                 SubType = BodyArmour
@@ -941,15 +953,18 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
         }
        
 
-        If (RegExMatch(A_LoopField, "Chestplate|Full Dragonscale|Full Wyrmscale|Necromancer Silks|Shabby Jerkin|Silken Wrap"))
+        If (RegExMatch(LoopField, "Chestplate|Full Dragonscale|Full Wyrmscale|Necromancer Silks|Shabby Jerkin|Silken Wrap"))
         {
             BaseType = Armour
             SubType = BodyArmour
             return
         }
-	
     }
-
+    
+    If (IsMapFragment) {
+        SubType = MapFragment
+        return
+    }
 }
 
 GetClipboardContents(DropNewlines=False)
@@ -6272,6 +6287,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsMirrored := False
     Item.HasEffect := False
     Item.HasImplicit := False
+    Item.IsMapFragment := False
+    Item.IsEssence := False
     
     ResetAffixDetailVars()
     
@@ -6380,10 +6397,15 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         ; Don't do this on Divination Cards or this script crashes on trying to do the ParseItemLevel
         Else If (Not Item.IsCurrency and Not Item.IsDivinationCard)
         {
+            If (RegExMatch(Item.Name, "i)^Sacrifice At") or RegExMatch(Item.Name, "i)^Fragment of") or RegExMatch(Item.Name, "i)^Mortal ") or RegExMatch(Item.Name, "i)^Offering to ") or RegExMatch(Item.Name, "i)'s Key$"))
+            {
+                Item.IsMapFragment := True
+            }
+            
             RarityLevel := CheckRarityLevel(ItemData.Rarity)
             Item.Level := ParseItemLevel(ItemDataText)
             ItemLevelWord := "Item Level:"
-            ParseItemType(ItemData.Stats, ItemData.NamePlate, ItemBaseType, ItemSubType, ItemGripType)
+            ParseItemType(ItemData.Stats, ItemData.NamePlate, ItemBaseType, ItemSubType, ItemGripType, Item.IsMapFragment, RarityLevel)
             Item.BaseType := ItemBaseType
             Item.SubType := ItemSubType
             Item.GripType := ItemGripType
@@ -6407,8 +6429,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsArmour := (Item.BaseType == "Armour")
     Item.IsMap := (Item.BaseType == "Map")
     Item.IsJewel := (Item.BaseType == "Jewel")
-    Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
-    
+    Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency) 
+    Item.IsEssence := Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of ")
+
     TempStr := ItemData.PartsLast
     Loop, Parse, TempStr, `n, `r
     {
