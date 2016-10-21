@@ -17,6 +17,8 @@ See the following pages for more information.
 [Go to: Troubleshooting](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Troubleshooting)
 
 
-![screenshot](http://i.imgur.com/Zw2frfP.png)
-![screenshot](http://i.imgur.com/Q3V9ODC.png)
+![screenshot](http://i.imgur.com/Zw2frfP.png)   
+
+![screenshot](http://i.imgur.com/Q3V9ODC.png)   
+
 ![screenshot](http://i.imgur.com/ThuzbtI.png)
