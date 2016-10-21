@@ -8,13 +8,13 @@ TradeMacro will be updated to always have the latest PoE-ItemInfo code, you don'
 
 See the following pages for more information.
 
-[Go to: Usage - Installation - Shortcuts](https://github.com/thirdy/POE-TradeMacro/wiki/Usage---Installation)
+[Go to: Usage - Installation - Shortcuts](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Usage---Installation)
 
-[Go to: FAQ](https://github.com/thirdy/POE-TradeMacro/wiki/FAQ)
+[Go to: FAQ](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/FAQ)
 
-[Go to: Options](https://github.com/thirdy/POE-TradeMacro/wiki/Options)
+[Go to: Options](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options)
 
-[Go to: Troubleshooting](https://github.com/thirdy/POE-TradeMacro/wiki/Troubleshooting)
+[Go to: Troubleshooting](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Troubleshooting)
 
 
 ![screenshot](http://i.imgur.com/Zw2frfP.png)
