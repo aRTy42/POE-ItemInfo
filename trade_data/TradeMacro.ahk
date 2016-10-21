@@ -123,17 +123,6 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	Item.UsedInSearch := {}
 	Item.UsedInSearch.iLvl := {}
 	Item.IsEssence    := 
-	if (RegExMatch(Item.Name, "i)essence of")) {
-		Item.IsEssence:= true
-	}
-	Item.IsSextant    := 
-	if (RegExMatch(Item.Name, "i)sextant$")) {
-		Item.IsSextant:= true
-	}
-	Item.IsMapFragment := false
-	If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") and not Item.IsWeapon and not Item.IsArmour) {	
-		Item.IsMapFragment := true
-	}
 
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
@@ -1175,7 +1164,7 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 	
 	; add notes what parameters where used in the search
 	ShowFullNameNote := false 
-	If (not Item.IsUnique and not Item.IsGem and not Item.IsDivinationCard and not Item.IsMapFragment) {
+	If (not Item.IsUnique and not Item.IsGem and not Item.IsDivinationCard) {
 		ShowFullNameNote := true
 	}
 	
