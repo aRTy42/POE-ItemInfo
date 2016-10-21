@@ -1,1 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
+
+1.1.2
+==================================================================================================
+Updated version number used in the update-check, shouldn't make release versions while being tired.
+
+1.1.1
+==================================================================================================
+Fixed the update-check url after moving the repository.
+
