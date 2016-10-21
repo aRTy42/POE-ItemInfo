@@ -6,9 +6,33 @@ This builds on top of [PoE-ItemInfo](https://github.com/aRTy42/POE-ItemInfo) whi
 With TradeMacro, price checking is added via **ctrl+d**, **ctrl+alt+d** or **ctrl+i**. You can also open the items wiki page via **ctrl+w** or open the item search on poe.trade instead via **ctrl+q**.   
 TradeMacro will be updated to always have the latest PoE-ItemInfo code, you don't have to run their script since it's included here.
 
-See the following pages for more information.
+####Usage / Instructions####
 
-[Go to: Usage - Installation - Shortcuts](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Usage---Installation)
+1. Install AHK (http://ahkscript.org)
+2. Download the [latest release](https://github.com/POE-TradeMacro/POE-TradeMacro/releases/latest) and extract the zip-file. 
+3. Make sure to run PoE in (borderless) windowed mode. Otherwise it won't work!
+4. Run **_Run_Only_This.ahk_**.
+5. Default league is set to `tmpstandard` (Softcore Temp-League).
+6. A lot of options, including the league can be changed by opening the settings window or editing `trade_config.ini`.   
+
+> **Right-click the script icon in your system tray and select `PoE Item Info Settings` to open the settings window and to edit both `PoE-ItemInfos` and `PoE-TradeMacros` settings.**
+
+####Shortcuts####
+
+|Shortcut|Description|
+|---	|---	|
+| ctrl+c      | See item info (via PoE-ItemInfo). 
+| ctrl+d      | Search item on poe.trade.
+| ctrl+alt+d  | Advanced item search for `uniques`. 
+| ctrl+i      | Opens a text input where you can type an item name to search for.
+| ctrl+w      | Open the items wiki page. 
+| ctrl+q      | Open the item search on poe.trade instead of showing a tooltip with results.
+
+####Additional Macros####
+
+`AdditionalMacros.txt` allows you to add your own macros to be included in the script or to use some of the already created macros. Simply remove the comment by deleting the `;` in front of a line.
+
+See the following pages for more information.
 
 [Go to: FAQ](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/FAQ)
 
