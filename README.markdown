@@ -43,6 +43,7 @@ See the following pages for more information.
 
 [Go to: Troubleshooting](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Troubleshooting)
 
+[Path of Exile Forum Thread](https://www.pathofexile.com/forum/view-thread/1757730)
 
 ![screenshot](http://i.imgur.com/Zw2frfP.png)   
 
