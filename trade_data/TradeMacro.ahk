@@ -78,6 +78,7 @@ CustomInputSearch:
 		Html := FunctionDoPostRequest(Payload)
 		ParsedData := FunctionParseHtml(Html, Payload)
 		SetClipboardContents(ParsedData)
+		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	  }
 	}
