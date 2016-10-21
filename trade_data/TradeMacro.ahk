@@ -1797,6 +1797,13 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			statValueMin := Floor((statValueMin < stat.min) ? stat.min : statValueMin)
 			statValueMax := Floor((statValueMax > stat.max) ? stat.max : statValueMax)
 			
+			if (not TradeOpts.PrefillMinValue) {
+				statValueMin := 
+			}
+			if (not TradeOpts.PrefillMaxValue) {
+				statValueMax := 
+			}
+			
 			minLabelFirst := "(" Floor(statValueMin)
 			minLabelSecond := ")" 
 			maxLabelFirst := "(" Floor(statValueMax)
@@ -1838,6 +1845,13 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
 			statValueMin := Floor((statValueMin < stat.min) ? stat.min : statValueMin)
 			statValueMax := Floor((statValueMax > stat.max) ? stat.max : statValueMax)
+			
+			if (not TradeOpts.PrefillMinValue) {
+				statValueMin := 
+			}
+			if (not TradeOpts.PrefillMaxValue) {
+				statValueMax := 
+			}
 			
 			minLabelFirst := "(" Floor(stat.min)
 			minLabelSecond := ")" 
@@ -1956,6 +1970,13 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		else {
 			minLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][1]) ")"
 			maxLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][2]) ")"
+		}
+		
+		if (not TradeOpts.PrefillMinValue) {
+			modValueMin := 
+		}
+		if (not TradeOpts.PrefillMaxValue) {
+			modValueMax := 
 		}
 		
 		yPosFirst := ( l > 1 ) ? 45 : 20

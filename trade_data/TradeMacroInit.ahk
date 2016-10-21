@@ -476,6 +476,7 @@ FunctionGetLatestRelease() {
 	user := TradeGlobals.Get("GithubUser")
     HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
     url := "https://api.github.com/repos/" . user . "/" . repo . "/releases/latest"
+    MsgBox % "https://api.github.com/repos/" . user . "/" . repo . "/releases/latest"
     ;https://api.github.com/repos/thirdy/POE-TradeMacro/releases/latest    
     HttpObj.Open("GET",url)
     HttpObj.SetRequestHeader("Content-type","application/html")
