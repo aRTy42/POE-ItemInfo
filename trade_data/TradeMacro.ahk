@@ -122,7 +122,6 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	Item.UsedInSearch := {}
 	Item.UsedInSearch.iLvl := {}
-	Item.IsEssence    := 
 
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
