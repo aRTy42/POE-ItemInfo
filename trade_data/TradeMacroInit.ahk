@@ -694,7 +694,8 @@ StartSplashScreen() {
 StopSplashScreen() {
     SplashTextOff 
     ; Let timer run until SettingsUIWidth is set and overwrite some options.
-    SetTimer, OverwriteSettingsTimer, 500
+    SetTimer, OverwriteSettingsWidthTimer, 500
+    SetTimer, OverwriteSettingsNameTimer, 500
 }
 
 
