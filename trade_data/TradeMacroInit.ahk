@@ -91,7 +91,7 @@ IfNotExist, %A_ScriptDir%\trade_config.ini
 ; Check if Temp-Leagues are active and set defaultLeague accordingly
 TradeGlobals.Set("TempLeagueIsRunning", FunctionCheckIfTempLeagueIsRunning())
 TradeGlobals.Set("DefaultLeague", (tempLeagueIsRunning > 0) ? "tmpstandard" : "standard")
-TradeGlobals.Set("GithubUser", "thirdy")
+TradeGlobals.Set("GithubUser", "POE-TradeMacro")
 TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
 TradeGlobals.Set("ReleaseVersion", TradeReleaseVersion)
 TradeGlobals.Set("SettingsUITitle", "PoE (Trade) Item Info Settings")
