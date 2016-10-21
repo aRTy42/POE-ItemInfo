@@ -74,6 +74,8 @@ class TradeUserOptions {
 	Corrupted := "Either"           ; 1 = yes; 0 = no; 2 = either, This setting gets ignored when you use the search on corrupted items.
 	AdvancedSearchModValueRange := 20 ; 
     RemoveMultipleListingsFromSameAccount := 0 ;
+    PrefillMinValue := 1            ;
+    PrefillMaxValue := 1            ;
     
 	Expire := 3						; cache expire min
 }
@@ -155,6 +157,8 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
         
 		TradeOpts.AdvancedSearchModValueRange := ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchModValueRange", TradeOpts.AdvancedSearchModValueRange)	
 		TradeOpts.RemoveMultipleListingsFromSameAccount := ReadIniValue(TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount", TradeOpts.RemoveMultipleListingsFromSameAccount)	
+		TradeOpts.PrefillMinValue := ReadIniValue(TradeConfigPath, "Search", "PrefillMinValue", TradeOpts.PrefillMinValue)	
+		TradeOpts.PrefillMaxValue := ReadIniValue(TradeConfigPath, "Search", "PrefillMaxValue", TradeOpts.PrefillMaxValue)	
 		
         ; Cache        
         TradeOpts.Expire := ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
@@ -198,6 +202,8 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
         TradeOpts.Corrupted := Corrupted
         TradeOpts.AdvancedSearchModValueRange := AdvancedSearchModValueRange
         TradeOpts.RemoveMultipleListingsFromSameAccount := RemoveMultipleListingsFromSameAccount
+        TradeOpts.PrefillMinValue := PrefillMinValue
+        TradeOpts.PrefillMaxValue := PrefillMaxValue
     }        
     SavedTradeSettings := false
     
@@ -225,7 +231,9 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	WriteIniValue(TradeOpts.Corrupted, TradeConfigPath, "Search", "Corrupted")
 	WriteIniValue(TradeOpts.AdvancedSearchModValueRange, TradeConfigPath, "Search", "AdvancedSearchModValueRange")
 	WriteIniValue(TradeOpts.RemoveMultipleListingsFromSameAccount, TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount")
-	
+    WriteIniValue(TradeOpts.PrefillMinValue, TradeConfigPath, "Search", "PrefillMinValue")
+	WriteIniValue(TradeOpts.PrefillMaxValue, TradeConfigPath, "Search", "PrefillMaxValue")
+    
 	; Cache	
 	WriteIniValue(TradeOpts.Expire, TradeConfigPath, "Cache", "Expire")
 }
@@ -468,32 +476,37 @@ FunctionGetLatestRelease() {
 	user := TradeGlobals.Get("GithubUser")
     HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
     url := "https://api.github.com/repos/" . user . "/" . repo . "/releases/latest"
-    ;https://api.github.com/repos/thirdy/POE-TradeMacro/releases/latest    
-    HttpObj.Open("GET",url)
-    HttpObj.SetRequestHeader("Content-type","application/html")
-    HttpObj.Send("")
-    HttpObj.WaitForResponse()   
-    html := HttpObj.ResponseText
 
-    RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)
-    RegExMatch(html, "i)""name"":""(.*?)""", vName)
-    RegExMatch(html, "i)""html_url"":""(.*?)""", url)
+    ;https://api.github.com/repos/thirdy/POE-TradeMacro/releases/latest 
+    Try  {
+        HttpObj.Open("GET",url)
+        HttpObj.SetRequestHeader("Content-type","application/html")
+        HttpObj.Send("")
+        HttpObj.WaitForResponse()   
+        html := HttpObj.ResponseText
 
-    tag := tag1
-    vName := vName1
-    url := url1    
-    
-    RegExReplace(tag, "^v", tag)
-    ; works only in x.x.x format
-    RegExMatch(tag, "(\d+).(\d+).(\d+)(.*)", latestVersion)
-    RegExMatch(TradeGlobals.Get("ReleaseVersion"), "(\d+).(\d+).(\d+)(.*)", currentVersion)    
+        RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)
+        RegExMatch(html, "i)""name"":""(.*?)""", vName)
+        RegExMatch(html, "i)""html_url"":""(.*?)""", url)
+
+        tag := tag1
+        vName := vName1
+        url := url1    
         
-    If (latestVersion > currentVersion) {
-        Gui, UpdateNotification:Add, Text, cGreen, Update available!
-        Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>, the lastest version is <%latestVersion%>.
-        Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
-        Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
-        Gui, UpdateNotification:Show, w300 , Update 
+        RegExReplace(tag, "^v", tag)
+        ; works only in x.x.x format
+        RegExMatch(tag, "(\d+).(\d+).(\d+)(.*)", latestVersion)
+        RegExMatch(TradeGlobals.Get("ReleaseVersion"), "(\d+).(\d+).(\d+)(.*)", currentVersion)    
+            
+        If (latestVersion > currentVersion) {
+            Gui, UpdateNotification:Add, Text, cGreen, Update available!
+            Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>, the lastest version is <%latestVersion%>.
+            Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
+            Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
+            Gui, UpdateNotification:Show, w300 , Update 
+        }
+    } catch e {
+        MsgBox % "Update-Check failed, Github is probably down."
     }
     return
 }
@@ -585,7 +598,12 @@ CreateTradeSettingsUI()
     GuiAddCheckbox("Remove multiple Listings from same Account", "x827 y223 w230 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
     AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
     
-    Gui, Add, Link, x827 y263 w230 cBlue, <a href="https://github.com/thirdy/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
+    GuiAddCheckbox("Pre-Fill Min-Values", "x827 y253 w230 h40", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
+    AddToolTip(PrefillMinValueH, "Automatically fill the min-values in the advanced search GUI.")
+    GuiAddCheckbox("Pre-Fill Max-Values", "x827 y283 w230 h40", TradeOpts.PrefillMinValue, "PrefillMaxValue", "PrefillMaxValueH")
+    AddToolTip(PrefillMaxValueH, "Automatically fill the max-values in the advanced search GUI.")
+    
+    Gui, Add, Link, x827 y323 w230 cBlue, <a href="https://github.com/thirdy/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
     
     GuiAddText("Mouse over settings to see what these settings do exactly.", "x827 y585 w250 h30")
 
