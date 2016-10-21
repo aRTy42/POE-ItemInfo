@@ -14,7 +14,7 @@ TradeMacro will be updated to always have the latest PoE-ItemInfo code, you don'
 1. Install AHK (http://ahkscript.org)
 2. Download the [latest release](https://github.com/POE-TradeMacro/POE-TradeMacro/releases/latest) and extract the zip-file. 
 3. Make sure to run PoE in (borderless) windowed mode. Otherwise it won't work!
-4. Run **_Run_Only_This.ahk_**.
+4. Run **_Run_Only_This.ahk_** or (`Run_without_Admin_Elevation.ahk` if you don't need and want it).
 5. Default league is set to `tmpstandard` (Softcore Temp-League).
 6. A lot of options, including the league can be changed by opening the settings window or editing `trade_config.ini`.   
 
