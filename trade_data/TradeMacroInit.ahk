@@ -477,32 +477,36 @@ FunctionGetLatestRelease() {
     HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
     url := "https://api.github.com/repos/" . user . "/" . repo . "/releases/latest"
 
-    ;https://api.github.com/repos/thirdy/POE-TradeMacro/releases/latest    
-    HttpObj.Open("GET",url)
-    HttpObj.SetRequestHeader("Content-type","application/html")
-    HttpObj.Send("")
-    HttpObj.WaitForResponse()   
-    html := HttpObj.ResponseText
+    ;https://api.github.com/repos/thirdy/POE-TradeMacro/releases/latest 
+    Try  {
+        HttpObj.Open("GET",url)
+        HttpObj.SetRequestHeader("Content-type","application/html")
+        HttpObj.Send("")
+        HttpObj.WaitForResponse()   
+        html := HttpObj.ResponseText
 
-    RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)
-    RegExMatch(html, "i)""name"":""(.*?)""", vName)
-    RegExMatch(html, "i)""html_url"":""(.*?)""", url)
+        RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)
+        RegExMatch(html, "i)""name"":""(.*?)""", vName)
+        RegExMatch(html, "i)""html_url"":""(.*?)""", url)
 
-    tag := tag1
-    vName := vName1
-    url := url1    
-    
-    RegExReplace(tag, "^v", tag)
-    ; works only in x.x.x format
-    RegExMatch(tag, "(\d+).(\d+).(\d+)(.*)", latestVersion)
-    RegExMatch(TradeGlobals.Get("ReleaseVersion"), "(\d+).(\d+).(\d+)(.*)", currentVersion)    
+        tag := tag1
+        vName := vName1
+        url := url1    
         
-    If (latestVersion > currentVersion) {
-        Gui, UpdateNotification:Add, Text, cGreen, Update available!
-        Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>, the lastest version is <%latestVersion%>.
-        Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
-        Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
-        Gui, UpdateNotification:Show, w300 , Update 
+        RegExReplace(tag, "^v", tag)
+        ; works only in x.x.x format
+        RegExMatch(tag, "(\d+).(\d+).(\d+)(.*)", latestVersion)
+        RegExMatch(TradeGlobals.Get("ReleaseVersion"), "(\d+).(\d+).(\d+)(.*)", currentVersion)    
+            
+        If (latestVersion > currentVersion) {
+            Gui, UpdateNotification:Add, Text, cGreen, Update available!
+            Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>, the lastest version is <%latestVersion%>.
+            Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
+            Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
+            Gui, UpdateNotification:Show, w300 , Update 
+        }
+    } catch e {
+        MsgBox % "Update-Check failed, Github is probably down."
     }
     return
 }
