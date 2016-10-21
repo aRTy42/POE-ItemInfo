@@ -1187,6 +1187,8 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 		Title .= (Item.UsedInSearch.Type)     ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
 		Title .= (Item.UsedInSearch.ItemBase and ShowFullNameNote) ? "| Base (" . Item.UsedInSearch.ItemBase . ") " : ""
 		
+		Title .= (Item.IsUnique and Item.UsedInSearch.SearchType = "Default") ? "`n" . "!! Mod rolls are being ignored !!" : ""
+		
 		Title .= "`n------------------------------ `n"	
 	}	
 	
