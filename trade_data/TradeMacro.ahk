@@ -2129,18 +2129,30 @@ CloseUpdateWindow:
 	Gui, UpdateNotification:Destroy
 return
 
-OverwriteSettingsTimer:
+OverwriteSettingsWidthTimer:
 	o := Globals.Get("SettingsUIWidth")
 	
 	If (o) {
 		Globals.Set("SettingsUIWidth", 1085)
+		SetTimer, OverwriteSettingsWidthTimer, Off
+	}	
+return
+
+OverwriteSettingsNameTimer:
+	o := Globals.Get("SettingsUITitle")
+	
+	If (o) {
 		RelVer := TradeGlobals.Get("ReleaseVersion")
 		Menu, Tray, Tip, Path of Exile TradeMacro %RelVer%
 		OldMenuTrayName := Globals.Get("SettingsUITitle")
 		NewMenuTrayName := TradeGlobals.Get("SettingsUITitle")
-		Menu, Tray, Rename, % OldMenuTrayName, % NewMenuTrayName	
-		Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico		
-		SetTimer, OverwriteSettingsTimer, Off
+		Menu, Tray, UseErrorLevel
+		Menu, Tray, Rename, % OldMenuTrayName, % NewMenuTrayName
+		if (ErrorLevel = 0) {		
+			Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico		
+			SetTimer, OverwriteSettingsNameTimer, Off
+		}
+		Menu, Tray, UseErrorLevel, off		
 	}	
 return
 

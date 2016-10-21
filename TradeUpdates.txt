@@ -1,5 +1,17 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+
+1.1.3.4
+==================================================================================================
+Hot-fix for non-existent menu item error.
+
+1.1.3.3
+==================================================================================================
+Fixed custom search tooltip.
+Added alternative `Run_without_Admin_Elevation.ahk`.
+Added note to tooltip if mod rolls are being ignored.
+Added Prefill Min/Max-Values Option.
+
 1.1.3
 ==================================================================================================
 Hot-fix for unique search not resetting variables properly (using old data).
