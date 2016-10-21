@@ -1,5 +1,5 @@
 [Discord](https://discord.gg/taKZqWw)   
-[![Join the chat at https://gitter.im/PoE-TradeMacro/Lobby](https://badges.gitter.im/PoE-TradeMacro/Lobby.svg)](https://gitter.im/exiletrade/exiletrade?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/PoE-TradeMacro/Lobby](https://badges.gitter.im/PoE-TradeMacro/Lobby.svg)](https://gitter.im/PoE-TradeMacro/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Welcome to POE-TradeMacro!
 
