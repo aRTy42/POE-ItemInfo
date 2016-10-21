@@ -142,6 +142,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	if (Item.IsUnique) {		
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
+		uniqueWithVariableMods :=
 		uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Name)
 
 		; return if the advanced search was used but the checked item doesn't have variable mods
@@ -153,7 +154,8 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		UniqueStats := FunctionGetUniqueStats(Name)
 		if (uniqueWithVariableMods) {
 			Gui, SelectModsGui:Destroy
-
+			
+			s :=
 			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
 			Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, s, Item.IsUnique)
 			Stats.Offense := FunctionParseItemOffenseStats(DamageDetails, s, Item.IsUnique)	
@@ -1719,9 +1721,10 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	Global 
 
-	TradeGlobals.Set("AdvancedPriceCheckItem", advItem)
+	FunctionResetGUI()
+	;TradeGlobals.Set("AdvancedPriceCheckItem", advItem)
 	ValueRange := TradeOpts.AdvancedSearchModValueRange
-
+	
 	Gui, SelectModsGui:Destroy    
     Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
 	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRange "`%" 
@@ -1851,6 +1854,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			
 			TradeAdvancedStatParam%j% := stat.name			
 			j++
+			TradeAdvancedStatsCount := j
 			k++
 		}
 	}
@@ -1968,6 +1972,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		
 		TradeAdvancedParam%index% := advItem.mods[A_Index].param
 		l++
+		TradeAdvancedModsCount := l
 	}
 	
 	m := 1
@@ -2010,6 +2015,37 @@ AdvancedOpenSearchOnPoeTrade:
 	TradeMacroMainFunction(true, false, true)
 return
 
+FunctionResetGUI(){
+	Global 
+	Loop {
+		If (TradeAdvancedModMin%A_Index%) {
+			TradeAdvancedParam%A_Index%		:=
+			TradeAdvancedSelected%A_Index%	:=
+			TradeAdvancedModMin%A_Index%	:=
+			TradeAdvancedModMax%A_Index%	:=
+		}
+		Else If (A_Index >= 20){
+			TradeAdvancedStatCount :=
+			break
+		}
+	}
+	
+	Loop {
+		If (TradeAdvancedStatMin%A_Index%) {
+			TradeAdvancedStatParam%A_Index%		:=
+			TradeAdvancedStatSelected%A_Index%	:=
+			TradeAdvancedStatMin%A_Index%		:=
+			TradeAdvancedStatMax%A_Index%		:=
+		}
+		Else If (A_Index >= 20){
+			TradeAdvancedModCount := 
+			break
+		}
+	}
+	;resetItem := {}
+	;TradeGlobals.Set("AdvancedPriceCheckItem", resetItem)	
+}
+
 FunctionHandleGuiSubmit(){
 	Global 
 	
@@ -2036,7 +2072,7 @@ FunctionHandleGuiSubmit(){
 			
 			mods.Push(mod)
 		}
-		Else {
+		Else If (A_Index >= 20) {
 			break
 		}
 	}
@@ -2051,7 +2087,7 @@ FunctionHandleGuiSubmit(){
 			
 			stats.Push(stat)
 		}
-		Else {
+		Else If (A_Index >= 20) {
 			break
 		}
 	}
