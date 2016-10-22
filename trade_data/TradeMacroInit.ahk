@@ -76,6 +76,7 @@ class TradeUserOptions {
     RemoveMultipleListingsFromSameAccount := 0 ;
     PrefillMinValue := 1            ;
     PrefillMaxValue := 1            ;
+    CurrencySearchHave := "Chaos Orb" ;
     
 	Expire := 3						; cache expire min
 }
@@ -111,10 +112,12 @@ TradeGlobals.Set("EnchantmentData", ReadEnchantments())
 TradeGlobals.Set("CorruptedModsData", ReadCorruptions())
 TradeGlobals.Set("CurrencyIDs", object := {})
 
-CreateTradeSettingsUI()
-StopSplashScreen()
 ; get currency ids from currency.poe.trade
 FunctionDoCurrencyRequest("", false, true)
+
+CreateTradeSettingsUI()
+StopSplashScreen()
+
 
 ReadTradeConfig(TradeConfigPath="trade_config.ini")
 {
@@ -159,6 +162,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.RemoveMultipleListingsFromSameAccount := ReadIniValue(TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount", TradeOpts.RemoveMultipleListingsFromSameAccount)	
 		TradeOpts.PrefillMinValue := ReadIniValue(TradeConfigPath, "Search", "PrefillMinValue", TradeOpts.PrefillMinValue)	
 		TradeOpts.PrefillMaxValue := ReadIniValue(TradeConfigPath, "Search", "PrefillMaxValue", TradeOpts.PrefillMaxValue)	
+		TradeOpts.CurrencySearchHave := ReadIniValue(TradeConfigPath, "Search", "CurrencySearchHave", TradeOpts.CurrencySearchHave)	
 		
         ; Cache        
         TradeOpts.Expire := ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
@@ -204,6 +208,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
         TradeOpts.RemoveMultipleListingsFromSameAccount := RemoveMultipleListingsFromSameAccount
         TradeOpts.PrefillMinValue := PrefillMinValue
         TradeOpts.PrefillMaxValue := PrefillMaxValue
+        TradeOpts.CurrencySearchHave := CurrencySearchHave
     }        
     SavedTradeSettings := false
     
@@ -233,6 +238,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	WriteIniValue(TradeOpts.RemoveMultipleListingsFromSameAccount, TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount")
     WriteIniValue(TradeOpts.PrefillMinValue, TradeConfigPath, "Search", "PrefillMinValue")
 	WriteIniValue(TradeOpts.PrefillMaxValue, TradeConfigPath, "Search", "PrefillMaxValue")
+	WriteIniValue(TradeOpts.CurrencySearchHave, TradeConfigPath, "Search", "CurrencySearchHave")
     
 	; Cache	
 	WriteIniValue(TradeOpts.Expire, TradeConfigPath, "Cache", "Expire")
@@ -593,17 +599,26 @@ CreateTradeSettingsUI()
     AddToolTip(LblCorruptedH, "This setting gets ignored when you use`nthe search on corrupted items.")
     GuiAddDropDownList("Either|Yes|No", "x+10 yp-2", TradeOpts.Corrupted, "Corrupted", "CorruptedH")
     
-    GuiAddCheckbox("Online only", "x827 y193 w210 h40 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
+    CurrencyList := ""
+    CurrencyTemp := TradeGlobals.Get("CurrencyIDs")
+    For currName, currID in CurrencyTemp {        
+        CurrencyList .= "|" . currName 
+    }    
+    GuiAddText("Currency Search:", "x827 y193 w100 h20 0x0100", "LblCurrencySearchHave", "LblCurrencySearchHaveH")
+    AddToolTip(LblCurrencySearchHaveH, "This settings sets the currency that you`nwant to use as ""have"" for the currency search.")
+    GuiAddDropDownList(CurrencyList, "x+10 yp-2", TradeOpts.CurrencySearchHave, "CurrencySearchHave", "CurrencySearchHaveH")
     
-    GuiAddCheckbox("Remove multiple Listings from same Account", "x827 y223 w230 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
+    GuiAddCheckbox("Online only", "x827 y223 w210 h40 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
+    
+    GuiAddCheckbox("Remove multiple Listings from same Account", "x827 y253 w230 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
     AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
     
-    GuiAddCheckbox("Pre-Fill Min-Values", "x827 y253 w230 h40", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
+    GuiAddCheckbox("Pre-Fill Min-Values", "x827 y283 w230 h40", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
     AddToolTip(PrefillMinValueH, "Automatically fill the min-values in the advanced search GUI.")
-    GuiAddCheckbox("Pre-Fill Max-Values", "x827 y283 w230 h40", TradeOpts.PrefillMinValue, "PrefillMaxValue", "PrefillMaxValueH")
+    GuiAddCheckbox("Pre-Fill Max-Values", "x827 y313 w230 h40", TradeOpts.PrefillMinValue, "PrefillMaxValue", "PrefillMaxValueH")
     AddToolTip(PrefillMaxValueH, "Automatically fill the max-values in the advanced search GUI.")
     
-    Gui, Add, Link, x827 y323 w230 cBlue, <a href="https://github.com/thirdy/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
+    Gui, Add, Link, x827 y353 w230 cBlue, <a href="https://github.com/thirdy/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
     
     GuiAddText("Mouse over settings to see what these settings do exactly.", "x827 y585 w250 h30")
 

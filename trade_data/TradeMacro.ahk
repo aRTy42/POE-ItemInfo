@@ -442,7 +442,8 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		; redirect was prevented to get the url and open the search on poe.trade instead
 		if (Item.isCurrency and !Item.IsEssence) {
 			IDs := TradeGlobals.Get("CurrencyIDs")
-			ParsedUrl1 := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[Name] . "&have=" . IDs["Chaos Orb"]
+			Have:= TradeOpts.CurrencySearchHave
+			ParsedUrl1 := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[Name] . "&have=" . IDs[Have]
 		}
 		else {
 			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
@@ -909,7 +910,8 @@ FunctionDoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init =
 	else {
 		LeagueName := TradeGlobals.Get("LeagueName")
 		IDs := TradeGlobals.Get("CurrencyIDs")
-		Url := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[currencyName] . "&have=" . IDs["Chaos Orb"]
+		Have:= TradeOpts.CurrencySearchHave
+		Url := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[currencyName] . "&have=" . IDs[Have]
 	}
 	
     HttpObj.Open("GET",Url)
