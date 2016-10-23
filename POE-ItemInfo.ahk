@@ -6502,7 +6502,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
     ; Start assembling the text for the tooltip
     TT := Item.Name
-    If (Item.TypeName)
+    If (Item.TypeName && (Item.TypeName != Item.Name))
     {
         TT := TT . "`n" . Item.TypeName
     }
