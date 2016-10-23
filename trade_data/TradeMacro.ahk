@@ -982,7 +982,11 @@ FunctionDoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init =
 FunctionOpenUrlInBrowser(Url){
 	Global TradeOpts
 	
-	if (TradeOpts.OpenWithDefaultWin10Fix) {
+	if (CheckBrowserPath(TradeOpts.BrowserPath, false)) {
+		openWith := TradeOpts.BrowserPath
+		Run, %openWith% -new-tab "%Url%"
+	}		
+	else if (TradeOpts.OpenWithDefaultWin10Fix) {
 		openWith := AssociatedProgram("html") 
 		Run, %openWith% -new-tab "%Url%"
 	}
