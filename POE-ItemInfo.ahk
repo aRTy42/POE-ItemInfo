@@ -6433,11 +6433,16 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsEssence := Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of ")
 
     TempStr := ItemData.PartsLast
+    Item.Note :=
     Loop, Parse, TempStr, `n, `r
     {
         RegExMatch(Trim(A_LoopField), "i)^Has ", match)
         If (match) {
             Item.HasEffect := True
+        }
+        RegExMatch(Trim(A_LoopField), "i)^Note: ", match)
+        If (match) {            
+            Item.Note := A_LoopField
         }
     }    
     

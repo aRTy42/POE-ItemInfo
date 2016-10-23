@@ -33,6 +33,19 @@ AdvancedPriceCheck:
 	}
 return
 
+ShowItemAge:
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global TradeOpts, Item
+		Item := {}
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeMacroMainFunction(false, false, false, true)
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
+return
+
 OpenWiki:
 	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 	{
@@ -98,7 +111,7 @@ return
 ; openSearchInBrowser : set to true to open the search on poe.trade instead of showing the tooltip
 ; isAdvancedPriceCheck : set to true if the GUI to select mods should be openend
 ; isAdvancedPriceCheckRedirect : set to true if the search is triggered from the GUI
-TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdvancedPriceCheckRedirect = false)
+TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdvancedPriceCheckRedirect = false, isItemAgeRequest = false)
 {	
     out("+ Start of TradeMacroMainFunction")
 	LeagueName := TradeGlobals.Get("LeagueName")
@@ -126,6 +139,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 
 	RequestParams := new RequestParams_()
 	RequestParams.league := LeagueName
+	RequestParams.buyout := "1"
 	
 	; ignore item name in certain cases
 	if (!Item.IsJewel and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask) {
@@ -140,6 +154,11 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		Enchantment := FunctionGetEnchantment(Item, Item.SubType)
 		Corruption  := Item.IsCorrupted ? FunctionGetCorruption(Item) : false
 	}	
+	
+	if (Item.IsWeapon or Item.IsArmour and not Item.IsUnique) {
+		Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, Item)
+		Stats.Offense := FunctionParseItemOffenseStats(DamageDetails, Item)	
+	}
 	
 	if (Item.IsUnique) {		
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
@@ -158,8 +177,8 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			
 			s :=
 			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
-			Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, s, Item.IsUnique)
-			Stats.Offense := FunctionParseItemOffenseStats(DamageDetails, s, Item.IsUnique)	
+			Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, s)
+			Stats.Offense := FunctionParseItemOffenseStats(DamageDetails, s)	
 
 			; open AdvancedPriceCheckGui to select mods and their min/max values
 			if (isAdvancedPriceCheck) {
@@ -415,10 +434,42 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			RequestParams.level_min := Item.Level
 		}
 	}
-	
+
 	; handle divination cards
 	if (Item.IsDivinationCard) {
 		RequestParams.xtype := Item.BaseType
+	}
+	
+	; show item age
+	if (isItemAgeRequest) {
+		RequestParams.name        := Item.Name
+		RequestParams.buyout      := ""
+		RequestParams.seller      := TradeOpts.AccountName
+		RequestParams.q_min       := Item.Quality
+		RequestParams.q_max       := Item.Quality
+		RequestParams.rarity      := Item.Rarity
+		RequestParams.link_min    := ItemData.Links
+		RequestParams.link_max    := ItemData.Links
+		RequestParams.sockets_min := ItemData.Sockets
+		RequestParams.sockets_max := ItemData.Sockets
+		RequestParams.identified  := (!Item.IsUnidentified) ? "1" : "0"
+		RequestParams.corrupted   := (Item.IsCorrupted) ? "1" : "0"
+		RequestParams.enchanted   := (Enchantment) ? "1" : "0"		
+		RequestParams.armour_min  := Stats.Defense.TotalArmour.Value
+		RequestParams.armour_max  := Stats.Defense.TotalArmour.Value
+		RequestParams.evasion_min := Stats.Defense.TotalEvasion.Value 
+		RequestParams.evasion_max := Stats.Defense.TotalEvasion.Value
+		RequestParams.shield_min  := Stats.Defense.TotalEnergyShield.Value
+		RequestParams.shield_max  := Stats.Defense.TotalEnergyShield.Value
+		
+		if(Item.IsGem) {
+			RequestParams.level_min := Item.Level
+			RequestParams.level_max := Item.Level
+		}
+		else if (Item.Level and not Item.IsDivinationCard and not Item.IsCurrency) {
+			RequestParams.ilvl_min := Item.Level
+			RequestParams.ilvl_max := Item.Level
+		}		
 	}
 	
 	Payload := RequestParams.ToPayload()
@@ -474,7 +525,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 }
 
 ; parse items defense stats
-FunctionParseItemDefenseStats(stats, mods, isUnique){
+FunctionParseItemDefenseStats(stats, mods){
 	Global ItemData
 	iStats := {}
 
@@ -484,12 +535,12 @@ FunctionParseItemDefenseStats(stats, mods, isUnique){
 	RegExMatch(stats, "i)evasion rating ?:.*?(\d+)" , Evasion)
 	RegExMatch(stats, "i)quality ?:.*?(\d+)"        , Quality)
 
-	RegExMatch(ItemData.Affixes, "i)(\d+).*maximum.*?Energy Shield"  , affixFlatES) 
+	RegExMatch(ItemData.Affixes, "i)(\d+).*maximum.*?Energy Shield"  , affixFlatES)
 	RegExMatch(ItemData.Affixes, "i)(\d+).*maximum.*?Armour"         , affixFlatAR) 
-	RegExMatch(ItemData.Affixes, "i)(\d+).*maximum.*?Evasion"        , affixFlatEV) 
-	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Energy Shield", affixPercentES) 
-	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Evasion"      , affixPercentEV) 
-	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Armour"       , affixPercentAR) 
+	RegExMatch(ItemData.Affixes, "i)(\d+).*maximum.*?Evasion"        , affixFlatEV)
+	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Energy Shield", affixPercentES)
+	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Evasion"      , affixPercentEV)
+	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Armour"       , affixPercentAR)
 
 	; calculate items base defense stats
 	baseES := FunctionCalculateBase(EnergyShield1, affixPercentES1, Quality1, affixFlatES1)
@@ -500,7 +551,7 @@ FunctionParseItemDefenseStats(stats, mods, isUnique){
 	Armour       := FunctionCalculateQ20(baseAR, affixFlatAR1, affixPercentAR1)
 	EnergyShield := FunctionCalculateQ20(baseES, affixFlatES1, affixPercentES1)
 	Evasion      := FunctionCalculateQ20(baseEV, affixFlatEV1, affixPercentEV1)
-	
+
 	; calculate items Q20 defense stat min/max values
 	Affixes := StrSplit(ItemData.Affixes, "`n")
 
@@ -586,12 +637,12 @@ FunctionParseItemDefenseStats(stats, mods, isUnique){
 		}
 	}
 	
-	min_Armour       := FunctionCalculateQ20(baseAR, min_affixFlatAR, min_affixPercentAR)
-	max_Armour       := FunctionCalculateQ20(baseAR, max_affixFlatAR, max_affixPercentAR)
-	min_EnergyShield := FunctionCalculateQ20(baseES, min_affixFlatES, min_affixPercentES)
-	max_EnergyShield := FunctionCalculateQ20(baseES, max_affixFlatES, max_affixPercentES)
-	min_Evasion      := FunctionCalculateQ20(baseEV, min_affixFlatEV, min_affixPercentEV)	
-	max_Evasion      := FunctionCalculateQ20(baseEV, max_affixFlatEV, max_affixPercentEV)	
+	min_Armour       := Round(FunctionCalculateQ20(baseAR, min_affixFlatAR, min_affixPercentAR))
+	max_Armour       := Round(FunctionCalculateQ20(baseAR, max_affixFlatAR, max_affixPercentAR))
+	min_EnergyShield := Round(FunctionCalculateQ20(baseES, min_affixFlatES, min_affixPercentES))
+	max_EnergyShield := Round(FunctionCalculateQ20(baseES, max_affixFlatES, max_affixPercentES))
+	min_Evasion      := Round(FunctionCalculateQ20(baseEV, min_affixFlatEV, min_affixPercentEV))
+	max_Evasion      := Round(FunctionCalculateQ20(baseEV, max_affixFlatEV, max_affixPercentEV))
 
 	iStats.TotalBlock 				:= {}
 	iStats.TotalBlock.Value 		:= Block1
@@ -635,14 +686,14 @@ FunctionCalculateQ20(base, affixFlat, affixPercent){
 	If (base) {
 		affixPercent  := (affixPercent) ? (affixPercent / 100) : 0
 		affixFlat     := (affixFlat) ? affixFlat : 0
-		total := Round((base + affixFlat) * (1 + affixPercent + (20 / 100)))
+		total := (base + affixFlat) * (1 + affixPercent + (20 / 100))
 		return total
 	}
 	return
 }
 
 ; parse items dmg stats
-FunctionParseItemOffenseStats(Stats, mods, isUnique){
+FunctionParseItemOffenseStats(Stats, mods){
 	Global ItemData
 	iStats := {}
 
@@ -743,10 +794,10 @@ FunctionParseItemOffenseStats(Stats, mods, isUnique){
 	basePhysLow  := FunctionCalculateBase(physicalDamageLow, affixPercentPhys, Stats.Quality, affixFlatPhysLow)
 	basePhysHi   := FunctionCalculateBase(physicalDamageHi , affixPercentPhys, Stats.Quality, affixFlatPhysHi)
 	
-	minPhysLow   := FunctionCalculateQ20(basePhysLow, min_affixFlatPhysicalLow, min_affixPercentPhys)
-	minPhysHi    := FunctionCalculateQ20(basePhysHi , min_affixFlatPhysicalHi , min_affixPercentPhys)
-	maxPhysLow   := FunctionCalculateQ20(basePhysLow, max_affixFlatPhysicalLow, max_affixPercentPhys)
-	maxPhysHi    := FunctionCalculateQ20(basePhysHi , max_affixFlatPhysicalHi , max_affixPercentPhys)
+	minPhysLow   := Round(FunctionCalculateQ20(basePhysLow, min_affixFlatPhysicalLow, min_affixPercentPhys))
+	minPhysHi    := Round(FunctionCalculateQ20(basePhysHi , min_affixFlatPhysicalHi , min_affixPercentPhys))
+	maxPhysLow   := Round(FunctionCalculateQ20(basePhysLow, max_affixFlatPhysicalLow, max_affixPercentPhys))
+	maxPhysHi    := Round(FunctionCalculateQ20(basePhysHi , max_affixFlatPhysicalHi , max_affixPercentPhys))
 	min_affixPercentAPS := (min_affixPercentAPS) ? min_affixPercentAPS : 0
 	max_affixPercentAPS := (max_affixPercentAPS) ? max_affixPercentAPS : 0
 	minAPS       := baseAPS * (1 + min_affixPercentAPS)
@@ -1453,7 +1504,7 @@ class RequestParams_ {
 	identified 	:= ""
 	corrupted	:= "0"
 	online 		:= (TradeOpts.OnlineOnly == 0) ? "" : "x"
-	buyout 		:= "x"
+	buyout 		:= ""
 	altart 		:= ""
 	capquality 	:= "x"
 	buyout_min 	:= ""
@@ -1762,7 +1813,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	;Gui, SelectModsGui:Add, Groupbox, x10 y+10 w%modGroupBox% r%boxRows%, Mods
 	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, min
 	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, current
-;	Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, max
+	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, max
 	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w45 r%boxRows%, Select
 	
 	Gui, SelectModsGui:Add, Text, x14 y+10 w%modGroupBox%, Mods
@@ -1779,6 +1830,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	
 	;add defense stats
 	j := 1
+	
 	For i, stat in Stats.Defense {
 		If (stat.value) {			
 			xPosMin := modGroupBox + 25

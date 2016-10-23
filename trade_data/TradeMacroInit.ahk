@@ -1,11 +1,5 @@
-; TradeMacro Add-on to POE-ItemInfo v0.1
-; IGN: ManicCompression
-; Notes:
-; 1. To enable debug output, find the out() function and uncomment
-;
-; Todo:
-; Support for modifiers
-; Allow user to customize which mod and value to use
+; TradeMacro Add-on to POE-ItemInfo
+; IGN: Eruyome, ManicCompression
 
 #Include, %A_ScriptDir%/lib/JSON.ahk
 #Include, %A_ScriptDir%/lib/AssociatedProgram.ahk
@@ -58,10 +52,19 @@ class TradeUserOptions {
 	
     PriceCheckHotKey := ^d        	; 
     AdvancedPriceCheckHotKey := ^!s ; 
-    OpenWiki := ^w             		; 
+    OpenWikiHotKey := ^w            ; 
     CustomInputSearch := ^i         ;     
     OpenSearchOnPoeTrade := ^q      ;     
+    ShowItemAge := ^a               ;     
     
+    PriceCheckEnabled :=1
+    AdvancedPriceCheckEnabled :=1
+    OpenWikiEnabled :=1
+    CustomInputSearchEnabled :=1
+    OpenSearchOnPoeTradeEnabled :=1
+    ShowItemAgeEnabled :=1
+    
+    AccountName := ""               ; 
     SearchLeague := "tmpstandard"   ; Defaults to "standard" or "tmpstandard" if there is an active Temp-League at the time of script execution.
 									; Possible values: 
 									; 	"tmpstandard" (current SC Temp-League) 
@@ -139,10 +142,19 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
         TradeOpts.OpenWikiHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenWiki", TradeOpts.OpenWikiHotKey)
         TradeOpts.CustomInputSearchHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey", TradeOpts.CustomInputSearchHotKey)
         TradeOpts.OpenSearchOnPoeTradeHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "OpenSearchOnPoeTradeHotKey", TradeOpts.OpenSearchOnPoeTradeHotKey)
+        TradeOpts.ShowItemAgeHotKey := ReadIniValue(TradeConfigPath, "Hotkeys", "ShowItemAgeHotKey", TradeOpts.ShowItemAgeHotKey)
+        
+        TradeOpts.PriceCheckEnabled := ReadIniValue(TradeConfigPath, "HotkeyStates", "PriceCheckEnabled", TradeOpts.PriceCheckEnabled)        
+        TradeOpts.AdvancedPriceCheckEnabled := ReadIniValue(TradeConfigPath, "HotkeyStates", "AdvancedPriceCheckEnabled", TradeOpts.AdvancedPriceCheckEnabled)        
+        TradeOpts.OpenWikiEnabled := ReadIniValue(TradeConfigPath, "HotkeyStates", "OpenWikiEnabled", TradeOpts.OpenWikiEnabled)        
+        TradeOpts.CustomInputSearchEnabled := ReadIniValue(TradeConfigPath, "HotkeyStates", "CustomInputSearchEnabled", TradeOpts.CustomInputSearchEnabled)        
+        TradeOpts.OpenSearchOnPoeTradeEnabled := ReadIniValue(TradeConfigPath, "HotkeyStates", "OpenSearchOnPoeTradeEnabled", TradeOpts.OpenSearchOnPoeTradeEnabled)        
+        TradeOpts.ShowItemAgeEnabled := ReadIniValue(TradeConfigPath, "HotkeyStates", "ShowItemAgeEnabled", TradeOpts.ShowItemAgeEnabled)        
 
 		AssignAllHotkeys()
 		
         ; Search     	
+		TradeOpts.AccountName := ReadIniValue(TradeConfigPath, "Search", "AccountName", TradeOpts.AccountName)	
 		TradeOpts.SearchLeague := ReadIniValue(TradeConfigPath, "Search", "SearchLeague", TradeGlobals.Get("DefaultLeague"))	
         temp := TradeOpts.SearchLeague
         StringLower, temp, temp
@@ -170,11 +182,24 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 }
 
 AssignAllHotkeys() {
-    AssignHotkey(TradeOpts.PriceCheckHotKey, "PriceCheck")
-    AssignHotkey(TradeOpts.AdvancedPriceCheckHotKey, "AdvancedPriceCheck")
-    AssignHotkey(TradeOpts.OpenWikiHotKey, "OpenWiki")
-    AssignHotkey(TradeOpts.CustomInputSearchHotKey, "CustomInputSearch")
-    AssignHotkey(TradeOpts.OpenSearchOnPoeTradeHotKey, "OpenSearchOnPoeTrade")
+    If (TradeOpts.PriceCheckEnabled) {
+        AssignHotkey(TradeOpts.PriceCheckHotKey, "PriceCheck")
+    }
+    If (TradeOpts.AdvancedPriceCheckEnabled) {
+        AssignHotkey(TradeOpts.AdvancedPriceCheckHotKey, "AdvancedPriceCheck")
+    }
+    If (TradeOpts.OpenWikiEnabled) {
+        AssignHotkey(TradeOpts.OpenWikiHotKey, "OpenWiki")
+    }
+    If (TradeOpts.CustomInputSearchEnabled) {
+        AssignHotkey(TradeOpts.CustomInputSearchHotKey, "CustomInputSearch")
+    }
+    If (TradeOpts.OpenSearchOnPoeTradeEnabled) {
+        AssignHotkey(TradeOpts.OpenSearchOnPoeTradeHotKey, "OpenSearchOnPoeTrade")
+    }
+    If (TradeOpts.ShowItemAgeEnabled) {
+        AssignHotkey(TradeOpts.ShowItemAgeHotKey, "ShowItemAge")
+    }
 }
 
 WriteTradeConfig(TradeConfigPath="trade_config.ini")
@@ -193,9 +218,11 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
         TradeOpts.OpenWikiHotKey := OpenWikiHotKey
         TradeOpts.CustomInputSearchHotKey := CustomInputSearchHotKey
         TradeOpts.OpenSearchOnPoeTradeHotKey := OpenSearchOnPoeTradeHotKey
+        TradeOpts.ShowItemAgeHotKey := ShowItemAgeHotKey
         
         AssignAllHotkeys()
         
+        TradeOpts.AccountName := AccountName
         TradeOpts.SearchLeague := SearchLeague
         SetLeagueIfSelectedIsInactive()        
         TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
@@ -227,8 +254,10 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	WriteIniValue(TradeOpts.OpenWikiHotKey, TradeConfigPath, "Hotkeys", "OpenWikiHotKey")
 	WriteIniValue(TradeOpts.CustomInputSearchHotKey, TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey")
 	WriteIniValue(TradeOpts.OpenSearchOnPoeTradeHotKey, TradeConfigPath, "Hotkeys", "OpenSearchOnPoeTradeHotKey")
+	WriteIniValue(TradeOpts.ShowItemAgeHotKey, TradeConfigPath, "Hotkeys", "ShowItemAgeHotKey")
 	
 	; Search	
+	WriteIniValue(TradeOpts.AccountName, TradeConfigPath, "Search", "AccountName")
 	WriteIniValue(TradeOpts.SearchLeague, TradeConfigPath, "Search", "SearchLeague")
 	WriteIniValue(TradeOpts.GemLevel, TradeConfigPath, "Search", "GemLevel")
 	WriteIniValue(TradeOpts.GemQualityRange, TradeConfigPath, "Search", "GemQualityRange")
@@ -274,13 +303,14 @@ SetLeagueIfSelectedIsInactive()
 }
 
 ; ------------------ READ INI AND CHECK IF VARIABLES ARE SET ------------------ 
-ReadIniValue(iniFilePath, Section = "Misc", IniKey="", DefaultValue = "")
+ReadIniValue(iniFilePath, Section = "General", IniKey="", DefaultValue = "")
 {
 	IniRead, OutputVar, %iniFilePath%, %Section%, %IniKey%
 	If (!OutputVar | RegExMatch(OutputVar, "^ERROR$")) { 
 		OutputVar := DefaultValue
         ; Somehow reading some ini-values is not working with IniRead
-        ; Fallback for these cases via FileReadLine        
+        ; Fallback for these cases via FileReadLine 
+        lastSection := ""        
         Loop {
             FileReadLine, line, %iniFilePath%, %A_Index%
             If ErrorLevel
@@ -288,14 +318,20 @@ ReadIniValue(iniFilePath, Section = "Misc", IniKey="", DefaultValue = "")
             
             l := StrLen(IniKey)
             NewStr := SubStr(Trim(line), 1 , l)
-            If (NewStr = IniKey) {
+            RegExMatch(line, "i)\[(.*)\]", match)
+            If(not InStr(line, ";") and match) {
+                lastSection := match1
+            }
+
+            If (NewStr = IniKey and lastSection = Section) {
                 RegExMatch(line, "= *(.*)", value)
                 If (StrLen(value1) = 0) {
                     OutputVar := DefaultValue                    
                 }
                 Else {
                     OutputVar := value1
-                }                
+                }              
+                ;MsgBox % "`n`n`n`n" lastSection ": " IniKey  " = " OutputVar 
             }
         }
     }   
@@ -569,33 +605,42 @@ CreateTradeSettingsUI()
     AddToolTip(OpenSearchOnPoeTradeHotKeyH, "Default: ctrl + q")
     
     GuiAddText("Open Item on Wiki:", "x557 y323 w160 h20 0x0100", "LblOpenWikiHotkey", "LblOpenWikiHotkeyH")
-    AddToolTip(LblOpenWikiHotkeyH, "Open your items page on the PoE-Wiki.")
-    GuiAddEdit(TradeOpts.OpenWikiHotkey, "x+10 yp-2 w50 h20", "OpenWikiHotkey", "OpenWikiHotkeyH")
-    AddToolTip(OpenWikiHotkeyH, "Default: ctrl + w")
+    AddToolTip(LblOpenWikiHotKeyH, "Open your items page on the PoE-Wiki.")
+    GuiAddEdit(TradeOpts.OpenWikiHotKey, "x+10 yp-2 w50 h20", "OpenWikiHotKey", "OpenWikiHotKeyH")
+    AddToolTip(OpenWikiHotKeyH, "Default: ctrl + w")
     
-    Gui, Add, Link, x557 y353 w160 h20 cBlue, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
+    GuiAddText("Show Item Age:", "x557 y353 w160 h20 0x0100", "LblShowItemAgeHotkey", "LblShowItemAgeHotkeyH")
+    AddToolTip(LblShowItemAgeHotkeyH, "Checks your item's age.")
+    GuiAddEdit(TradeOpts.ShowItemAgeHotkey, "x+10 yp-2 w50 h20", "ShowItemAgeHotkey", "ShowItemAgeHotkeyH")
+    AddToolTip(ShowItemAgeHotkeyH, "Default: ctrl + a")
+    
+    Gui, Add, Link, x557 y383 w160 h20 cBlue, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
     
     ; Search
     
     GuiAddGroupBox("[TradeMacro] Search", "x817 y15 w260 h555")
     
-    GuiAddText("League:", "x827 y43 w100 h20 0x0100", "LblSearchLeague", "LblSearchLeagueH")
+    GuiAddText("League:", "x827 yp+30 w100 h20 0x0100", "LblSearchLeague", "LblSearchLeagueH")
     AddToolTip(LblSearchLeagueH, "Defaults to ""standard"" or ""tmpstandard"" if there is a`nTemp-League active at the time of script execution.`n`n""tmpstandard"" and ""tmphardcore"" are automatically replaced`nwith their permanent counterparts if no Temp-League is active.")
     GuiAddDropDownList("tmpstandard|tmphardcore|standard|hardcore", "x+10 yp-2", TradeOpts.SearchLeague, "SearchLeague", "SearchLeagueH")
     
-    GuiAddText("Gem Level:", "x827 y73 w170 h20 0x0100", "LblGemLevel", "LblGemLevelH")
+    GuiAddText("Account Name:", "x827 yp+30 w100 h20 0x0100", "LblAccountName", "LblAccountNameH")
+    AddToolTip(LblAccountNameH, "Your Account Name used to check your item's age.")
+    GuiAddEdit(TradeOpts.AccountName, "x+10 yp-2 w120 h20", "AccountName", "AccountNameH")
+    
+    GuiAddText("Gem Level:", "x827 yp+30 w170 h20 0x0100", "LblGemLevel", "LblGemLevelH")
     AddToolTip(LblGemLevelH, "Gem level is ignored in the search unless it's equal`nor higher than this value.`n`nSet to something like 30 to completely ignore the level.")
     GuiAddEdit(TradeOpts.GemLevel, "x+10 yp-2 w50 h20", "GemLevel", "GemLevelH")
     
-    GuiAddText("Gem Quality Range:", "x827 y103 w170 h20 0x0100", "LblGemQualityRange", "LblGemQualityRangeH")
+    GuiAddText("Gem Quality Range:", "x827 yp+30 w170 h20 0x0100", "LblGemQualityRange", "LblGemQualityRangeH")
     AddToolTip(LblGemQualityRangeH, "Use this to set a range to quality Gem searches. For example a range of 1`n searches 14% - 16% when you have a 15% Quality Gem.`nSetting it to 0 (default) uses your Gems quality as min_quality`nwithout max_quality in your search.")
     GuiAddEdit(TradeOpts.GemQualityRange, "x+10 yp-2 w50 h20", "GemQualityRange", "GemQualityRangeH")
     
-    GuiAddText("Mod Range Modifier (%):", "x827 y133 w170 h20 0x0100", "LblAdvancedSearchModValueRange", "LblAdvancedSearchModValueRangeH")
+    GuiAddText("Mod Range Modifier (%):", "x827 yp+30 w170 h20 0x0100", "LblAdvancedSearchModValueRange", "LblAdvancedSearchModValueRangeH")
     AddToolTip(LblAdvancedSearchModValueRangeH, "Advanced search lets you select the items mods to include in your`nsearch and lets you set their min/max values.`n`nThese min/max values are pre-filled, to calculate them we look at`nthe difference between the mods theoretical max and min value and`ntreat it as 100%.`n`nWe then use this modifier as a percentage of this differences to`ncreate a range (min/max value) to search in. ")
     GuiAddEdit(TradeOpts.AdvancedSearchModValueRange, "x+10 yp-2 w50 h20", "AdvancedSearchModValueRange", "AdvancedSearchModValueRangeH")
     
-    GuiAddText("Corrupted:", "x827 y163 w100 h20 0x0100", "LblCorrupted", "LblCorruptedH")
+    GuiAddText("Corrupted:", "x827 yp+30 w100 h20 0x0100", "LblCorrupted", "LblCorruptedH")
     AddToolTip(LblCorruptedH, "This setting gets ignored when you use`nthe search on corrupted items.")
     GuiAddDropDownList("Either|Yes|No", "x+10 yp-2", TradeOpts.Corrupted, "Corrupted", "CorruptedH")
     
@@ -604,21 +649,21 @@ CreateTradeSettingsUI()
     For currName, currID in CurrencyTemp {        
         CurrencyList .= "|" . currName 
     }    
-    GuiAddText("Currency Search:", "x827 y193 w100 h20 0x0100", "LblCurrencySearchHave", "LblCurrencySearchHaveH")
+    GuiAddText("Currency Search:", "x827 yp+30 w100 h20 0x0100", "LblCurrencySearchHave", "LblCurrencySearchHaveH")
     AddToolTip(LblCurrencySearchHaveH, "This settings sets the currency that you`nwant to use as ""have"" for the currency search.")
     GuiAddDropDownList(CurrencyList, "x+10 yp-2", TradeOpts.CurrencySearchHave, "CurrencySearchHave", "CurrencySearchHaveH")
     
-    GuiAddCheckbox("Online only", "x827 y223 w210 h40 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
+    GuiAddCheckbox("Online only", "x827 yp+30 w210 h40 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
     
-    GuiAddCheckbox("Remove multiple Listings from same Account", "x827 y253 w230 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
+    GuiAddCheckbox("Remove multiple Listings from same Account", "x827 yp+30 w230 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
     AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
     
-    GuiAddCheckbox("Pre-Fill Min-Values", "x827 y283 w230 h40", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
+    GuiAddCheckbox("Pre-Fill Min-Values", "x827 yp+30 w230 h40", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
     AddToolTip(PrefillMinValueH, "Automatically fill the min-values in the advanced search GUI.")
-    GuiAddCheckbox("Pre-Fill Max-Values", "x827 y313 w230 h40", TradeOpts.PrefillMinValue, "PrefillMaxValue", "PrefillMaxValueH")
+    GuiAddCheckbox("Pre-Fill Max-Values", "x827 yp+30 w230 h40", TradeOpts.PrefillMinValue, "PrefillMaxValue", "PrefillMaxValueH")
     AddToolTip(PrefillMaxValueH, "Automatically fill the max-values in the advanced search GUI.")
     
-    Gui, Add, Link, x827 y353 w230 cBlue, <a href="https://github.com/thirdy/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
+    Gui, Add, Link, x827 yp+30 w230 cBlue, <a href="https://github.com/thirdy/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
     
     GuiAddText("Mouse over settings to see what these settings do exactly.", "x827 y585 w250 h30")
 
@@ -643,7 +688,7 @@ UpdateTradeSettingsUI()
     GuiControl,, AdvancedPriceCheckHotKey, % TradeOpts.AdvancedPriceCheckHotKey
     GuiControl,, CustomInputSearchHotkey, % TradeOpts.CustomInputSearchHotkey
     GuiControl,, OpenSearchOnPoeTradeHotKey, % TradeOpts.OpenSearchOnPoeTradeHotKey
-    GuiControl,, OpenWikiHotkey, % TradeOpts.OpenWikiHotkey
+    GuiControl,, OpenWikiHotKey, % TradeOpts.OpenWikiHotKey
     
     GuiControl,, SearchLeague, % TradeOpts.SearchLeague
     GuiControl,, GemLevel, % TradeOpts.GemLevel
