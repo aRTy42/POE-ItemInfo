@@ -452,19 +452,20 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		RequestParams.q_min       := Item.Quality
 		RequestParams.q_max       := Item.Quality
 		RequestParams.rarity      := Item.Rarity
-		RequestParams.link_min    := ItemData.Links
-		RequestParams.link_max    := ItemData.Links
-		RequestParams.sockets_min := ItemData.Sockets
-		RequestParams.sockets_max := ItemData.Sockets
+		RequestParams.link_min    := ItemData.Links ? ItemData.Links : ""
+		RequestParams.link_max    := ItemData.Links ? ItemData.Links : ""
+		RequestParams.sockets_min := ItemData.Sockets ? ItemData.Sockets : ""
+		RequestParams.sockets_max := ItemData.Sockets ? ItemData.Sockets : ""
 		RequestParams.identified  := (!Item.IsUnidentified) ? "1" : "0"
 		RequestParams.corrupted   := (Item.IsCorrupted) ? "1" : "0"
 		RequestParams.enchanted   := (Enchantment) ? "1" : "0"		
-		RequestParams.armour_min  := Stats.Defense.TotalArmour.Value
-		RequestParams.armour_max  := Stats.Defense.TotalArmour.Value
-		RequestParams.evasion_min := Stats.Defense.TotalEvasion.Value 
-		RequestParams.evasion_max := Stats.Defense.TotalEvasion.Value
-		RequestParams.shield_min  := Stats.Defense.TotalEnergyShield.Value
-		RequestParams.shield_max  := Stats.Defense.TotalEnergyShield.Value
+		; change values a bit to accommodate for rounding differences
+		RequestParams.armour_min  := Stats.Defense.TotalArmour.Value - 2
+		RequestParams.armour_max  := Stats.Defense.TotalArmour.Value + 2
+		RequestParams.evasion_min := Stats.Defense.TotalEvasion.Value - 2
+		RequestParams.evasion_max := Stats.Defense.TotalEvasion.Value + 2
+		RequestParams.shield_min  := Stats.Defense.TotalEnergyShield.Value - 2
+		RequestParams.shield_max  := Stats.Defense.TotalEnergyShield.Value + 2
 		
 		if(Item.IsGem) {
 			RequestParams.level_min := Item.Level
