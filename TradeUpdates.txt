@@ -1,5 +1,12 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.1.4
+==================================================================================================
+Added option to choose payment currency (currency search).
+Added ItemAgeCheck for own listed items (ctrl + a).
+Added GemLevelRange option.
+Added option to disable specific hotkeys.
+Added option to specify the browser to open urls with.
 
 1.1.3.4
 ==================================================================================================

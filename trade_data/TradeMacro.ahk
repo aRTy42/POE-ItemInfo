@@ -37,6 +37,10 @@ ShowItemAge:
 	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 	{
 		Global TradeOpts, Item
+		If (!TradeOpts.AccountName) {
+			ShowTooltip("No Account Name specified in settings menu.")
+			return
+		}
 		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		Send ^c
