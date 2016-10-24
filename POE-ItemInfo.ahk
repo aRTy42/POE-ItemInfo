@@ -1,4 +1,4 @@
-﻿﻿; Path of Exile Item Info Tooltip
+﻿; Path of Exile Item Info Tooltip
 ;
 ; Version: 1.9.2 (hazydoc / IGN:Sadou) Original Author
 ; Script is currently maintained by various people and kept up to date by aRTy42 / IGN: Erinyen
