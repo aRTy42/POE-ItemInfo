@@ -515,8 +515,8 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		ShowToolTip(ParsedData)
 	}
 	else {
-		Item.UsedInSearch.SearchType := "Default"
-		ParsedData := FunctionParseHtml(Html, Payload, iLvl, Enchantment)
+		Item.UsedInSearch.SearchType := isItemAgeRequest ? "Item Age Search" : "Default" 
+		ParsedData := FunctionParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
 		out("Parsing HTML done")
 		
 		SetClipboardContents(ParsedData)
@@ -1170,7 +1170,7 @@ FunctionGetMeanMedianPrice(html, payload){
 }
 
 ; Parse poe.trade html to display the search result tooltip with X listings
-FunctionParseHtml(html, payload, iLvl = "", ench = "")
+FunctionParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
 {	
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
@@ -1233,30 +1233,38 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 	}
 	
 	if (Item.UsedInSearch) {
-		Title .= "Used in " . Item.UsedInSearch.SearchType . " Search: "
-		Title .= (Item.UsedInSearch.Enchantment)  ? "Enchantment " : "" 	
-		Title .= (Item.UsedInSearch.CorruptedMod) ? "Corr. Implicit " : "" 	
-		Title .= (Item.UsedInSearch.Sockets)      ? "| " . Item.UsedInSearch.Sockets . "S " : ""
-		Title .= (Item.UsedInSearch.Links)        ? "| " . Item.UsedInSearch.Links   . "L " : ""
-		if (Item.UsedInSearch.iLvl.min and Item.UsedInSearch.iLvl.max) {
-			Title .= "| iLvl (" . Item.UsedInSearch.iLvl.min . "-" . Item.UsedInSearch.iLvl.max . ")"
-		}
-		else {
-			Title .= (Item.UsedInSearch.iLvl.min) ? "| iLvl (>=" . Item.UsedInSearch.iLvl.min . ") " : ""
-			Title .= (Item.UsedInSearch.iLvl.max) ? "| iLvl (<=" . Item.UsedInSearch.iLvl.max . ") " : ""
+		if (isItemAgeRequest) {
+			Title .= Item.UsedInSearch.SearchType
 		}		
-		Title .= (Item.UsedInSearch.FullName and ShowFullNameNote) ? "| Full Name " : ""
-		Title .= (Item.UsedInSearch.Corruption and not Item.IsMapFragment and not Item.IsDivinationCard and not Item.IsCurrency)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ") " : ""
-		Title .= (Item.UsedInSearch.Type)     ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
-		Title .= (Item.UsedInSearch.ItemBase and ShowFullNameNote) ? "| Base (" . Item.UsedInSearch.ItemBase . ") " : ""
-		
-		Title .= (Item.UsedInSearch.SearchType = "Default") ? "`n" . "!! Mod rolls are being ignored !!" : ""
-		
+		else {
+			Title .= "Used in " . Item.UsedInSearch.SearchType . " Search: "
+			Title .= (Item.UsedInSearch.Enchantment)  ? "Enchantment " : "" 	
+			Title .= (Item.UsedInSearch.CorruptedMod) ? "Corr. Implicit " : "" 	
+			Title .= (Item.UsedInSearch.Sockets)      ? "| " . Item.UsedInSearch.Sockets . "S " : ""
+			Title .= (Item.UsedInSearch.Links)        ? "| " . Item.UsedInSearch.Links   . "L " : ""
+			if (Item.UsedInSearch.iLvl.min and Item.UsedInSearch.iLvl.max) {
+				Title .= "| iLvl (" . Item.UsedInSearch.iLvl.min . "-" . Item.UsedInSearch.iLvl.max . ")"
+			}
+			else {
+				Title .= (Item.UsedInSearch.iLvl.min) ? "| iLvl (>=" . Item.UsedInSearch.iLvl.min . ") " : ""
+				Title .= (Item.UsedInSearch.iLvl.max) ? "| iLvl (<=" . Item.UsedInSearch.iLvl.max . ") " : ""
+			}		
+			Title .= (Item.UsedInSearch.FullName and ShowFullNameNote) ? "| Full Name " : ""
+			Title .= (Item.UsedInSearch.Corruption and not Item.IsMapFragment and not Item.IsDivinationCard and not Item.IsCurrency)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ") " : ""
+			Title .= (Item.UsedInSearch.Type)     ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
+			Title .= (Item.UsedInSearch.ItemBase and ShowFullNameNote) ? "| Base (" . Item.UsedInSearch.ItemBase . ") " : ""
+			
+			Title .= (Item.UsedInSearch.SearchType = "Default") ? "`n" . "!! Mod rolls are being ignored !!" : ""
+		}
 		Title .= "`n------------------------------ `n"	
-	}	
+	}
 	
 	; add average and median prices to title	
-	Title .= FunctionGetMeanMedianPrice(html, payload)
+	if (not isItemAgeRequest) {
+		Title .= FunctionGetMeanMedianPrice(html, payload)
+	} else {
+		Title .= "`n"
+	}	
 	
     NoOfItemsToShow := TradeOpts.ShowItemResults
 	; add table headers to tooltip
@@ -1292,14 +1300,22 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 	
 	; add search results to tooltip in table format
 	accounts := []
+	itemsListed := 0
     While A_Index < NoOfItemsToShow {
         TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "</tbody>", 1,23, N )
         AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"  ,     1,1,  T )
         Buyout      := StrX( TBody,  "data-buyout=""",                           T,13, """"  ,     1,1,  T )
         IGN         := StrX( TBody,  "data-ign=""",                              T,10, """"  ,     1,1     )
 		
+		if(not AccountName){
+			continue
+		}
+		else {
+			itemsListed++
+		}
+		
 		; skip multiple results from the same account
-		if (TradeOpts.RemoveMultipleListingsFromSameAccount) {
+		if (TradeOpts.RemoveMultipleListingsFromSameAccount and not isItemAgeRequest) {
 			if (FunctionIsInArray(AccountName, accounts)) {
 				NoOfItemsToShow := NoOfItemsToShow + 1
 				continue
@@ -1353,9 +1369,10 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "")
 		}
 		; add item age
 		Title .= StrPad(FunctionFormatItemAge(Age1),10)
-		Title .= "`n"
-    }
-
+		Title .= "`n"		
+    }	
+	Title .= (itemsListed > 0) ? "" : "`nNo item found.`n"
+	
     Return, Title
 }
 
