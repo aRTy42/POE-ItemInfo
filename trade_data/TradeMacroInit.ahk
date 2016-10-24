@@ -77,6 +77,7 @@ class TradeUserOptions {
     GemQualityRange := 0            ; Use this to set a range to quality gems searches
 	OnlineOnly := 1                 ; 1 = search online only; 0 = search offline, too.
 	Corrupted := "Either"           ; 1 = yes; 0 = no; 2 = either, This setting gets ignored when you use the search on corrupted items.
+	CorruptedOverride := 0          ;
 	AdvancedSearchModValueRange := 20 ; 
     RemoveMultipleListingsFromSameAccount := 0 ;
     PrefillMinValue := 1            ;
@@ -177,6 +178,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.GemQualityRange := ReadIniValue(TradeConfigPath, "Search", "GemQualityRange", TradeOpts.GemQualityRange)	
 		TradeOpts.OnlineOnly := ReadIniValue(TradeConfigPath, "Search", "OnlineOnly", TradeOpts.OnlineOnly)
         
+		TradeOpts.CorruptedOverride := ReadIniValue(TradeConfigPath, "Search", "CorruptedOverride", TradeOpts.CorruptedOverride)	
 		TradeOpts.Corrupted := ReadIniValue(TradeConfigPath, "Search", "Corrupted", TradeOpts.Corrupted)	
         temp := TradeOpts.Corrupted
         StringUpper, temp, temp, T
@@ -284,6 +286,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
         TradeOpts.GemQualityRange := GemQualityRange
         TradeOpts.OnlineOnly := OnlineOnly
         TradeOpts.Corrupted := Corrupted
+        TradeOpts.CorruptedOverride := CorruptedOverride
         TradeOpts.AdvancedSearchModValueRange := AdvancedSearchModValueRange
         TradeOpts.RemoveMultipleListingsFromSameAccount := RemoveMultipleListingsFromSameAccount
         TradeOpts.PrefillMinValue := PrefillMinValue
@@ -330,6 +333,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	WriteIniValue(TradeOpts.GemLevelRange, TradeConfigPath, "Search", "GemLevelRange")
 	WriteIniValue(TradeOpts.GemQualityRange, TradeConfigPath, "Search", "GemQualityRange")
 	WriteIniValue(TradeOpts.OnlineOnly, TradeConfigPath, "Search", "OnlineOnly")
+	WriteIniValue(TradeOpts.CorruptedOverride, TradeConfigPath, "Search", "CorruptedOverride")
 	WriteIniValue(TradeOpts.Corrupted, TradeConfigPath, "Search", "Corrupted")
 	WriteIniValue(TradeOpts.AdvancedSearchModValueRange, TradeConfigPath, "Search", "AdvancedSearchModValueRange")
 	WriteIniValue(TradeOpts.RemoveMultipleListingsFromSameAccount, TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount")
@@ -729,15 +733,18 @@ CreateTradeSettingsUI()
     GuiAddEdit(TradeOpts.AdvancedSearchModValueRange, "x+10 yp-2 w50 h20", "AdvancedSearchModValueRange", "AdvancedSearchModValueRangeH")
     
     GuiAddText("Corrupted:", "x827 yp+32 w100 h20 0x0100", "LblCorrupted", "LblCorruptedH")
-    AddToolTip(LblCorruptedH, "This setting gets ignored when you use`nthe search on corrupted items.")
-    GuiAddDropDownList("Either|Yes|No", "x+10 yp-2", TradeOpts.Corrupted, "Corrupted", "CorruptedH")
+    AddToolTip(LblCorruptedH, "Default = search results have the same corrupted state as the checked item.`nUse this option to override that and always search as selected.")
+    GuiAddDropDownList("Either|Yes|No", "x+10 yp-2 w52", TradeOpts.Corrupted, "Corrupted", "CorruptedH")
+    GuiAddCheckbox("Override", "x+10 yp+2 0x0100", TradeOpts.CorruptedOverride, "CorruptedOverride", "CorruptedOverrideH", "TradeSettingsUI_ChkCorruptedOverride")
+    
+    gosub, TradeSettingsUI_ChkCorruptedOverride
     
     CurrencyList := ""
     CurrencyTemp := TradeGlobals.Get("CurrencyIDs")
     For currName, currID in CurrencyTemp {        
         CurrencyList .= "|" . currName 
     }    
-    GuiAddText("Currency Search:", "x827 yp+32 w100 h20 0x0100", "LblCurrencySearchHave", "LblCurrencySearchHaveH")
+    GuiAddText("Currency Search:", "x827 yp+30 w100 h20 0x0100", "LblCurrencySearchHave", "LblCurrencySearchHaveH")
     AddToolTip(LblCurrencySearchHaveH, "This settings sets the currency that you`nwant to use as ""have"" for the currency search.")
     GuiAddDropDownList(CurrencyList, "x+10 yp-2", TradeOpts.CurrencySearchHave, "CurrencySearchHave", "CurrencySearchHaveH")
     

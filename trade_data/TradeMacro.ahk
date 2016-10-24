@@ -352,54 +352,31 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			Item.UsedInSearch.Links := ItemData.Links
 		}
 	}	
-	
+		
 	; handle corruption
-	if (Item.IsCorrupted) {
-		; search for both corrupted and un-corrupted
-		; "x" for "Either"
-		RequestParams.corrupted := "1"
-		Item.UsedInSearch.Corruption := "Yes"
-		; for gems only search corrupted ones
-		if (Item.IsGem) {
-			RequestParams.corrupted := "1"
-			Item.UsedInSearch.Corruption := "Yes"
-		}
-		if(Item.IsUnique) {
-			RequestParams.corrupted := "1"
-			Item.UsedInSearch.Corruption := "Yes"	
-		}
-		if(ItemData.Links >= 5) {
-			RequestParams.corrupted := "1"
-			Item.UsedInSearch.Corruption := "Yes"
-		}
-		if(Item.IsDivinationCard) {
-			RequestParams.corrupted := "0"
-			Item.UsedInSearch.Corruption := "No"
-		}
-	}
-	else {
-		; always exclude corrupted gems from results if the source is not corrupted
-		if (Item.IsGem or Item.IsUnique) {
-			RequestParams.corrupted := "0"
-			Item.UsedInSearch.Corruption := "No"
-		}
-		; either
-		else if (TradeOpts.Corrupted = "Either") {
+	if (Item.IsCorrupted and TradeOpts.CorruptedOverride) {
+		if (TradeOpts.Corrupted = "Either") {
 			RequestParams.corrupted := "x"
 			Item.UsedInSearch.Corruption := "Either"
 		}
-		; corrupted
-		else if (TradeOpts.Corrupted = "Yes") {		
+		else if (TradeOpts.Corrupted = "Yes") {
 			RequestParams.corrupted := "1"
 			Item.UsedInSearch.Corruption := "Yes"
 		}
-		; non-corrupted
-		else if (TradeOpts.Corrupted = "No") {		
+		else if (TradeOpts.Corrupted = "No") {
 			RequestParams.corrupted := "0"
 			Item.UsedInSearch.Corruption := "No"
-		}
+		}	
 	}
-	
+	else if (Item.IsCorrupted) {
+		RequestParams.corrupted := "1"
+		Item.UsedInSearch.Corruption := "Yes"
+	}
+	else {
+		RequestParams.corrupted := "0"
+		Item.UsedInSearch.Corruption := "No"
+	}
+		
 	if (Item.IsMap) {	
 		; add Item.subtype to make sure to only find maps
 		; handle shaped maps, Item.subtype or Item.name won't work here
@@ -2263,4 +2240,16 @@ TradeSettingsUI_BtnDefaults:
     Sleep, 75
     UpdateTradeSettingsUI()
     ShowSettingsUI()
+return
+
+TradeSettingsUI_ChkCorruptedOverride:
+    GuiControlGet, IsChecked,, CorruptedOverride
+    If (Not IsChecked)
+    {
+        GuiControl, Disable, Corrupted
+    }
+    Else
+    {
+        GuiControl, Enable, Corrupted
+    }
 return
