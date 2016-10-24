@@ -1,4 +1,4 @@
-﻿; Path of Exile Item Info Tooltip
+﻿﻿; Path of Exile Item Info Tooltip
 ;
 ; Version: 1.9.2 (hazydoc / IGN:Sadou) Original Author
 ; Script is currently maintained by various people and kept up to date by aRTy42 / IGN: Erinyen
@@ -6433,16 +6433,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsEssence := Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of ")
 
     TempStr := ItemData.PartsLast
-    Item.Note :=
     Loop, Parse, TempStr, `n, `r
     {
         RegExMatch(Trim(A_LoopField), "i)^Has ", match)
         If (match) {
             Item.HasEffect := True
-        }
-        RegExMatch(Trim(A_LoopField), "i)^Note: ", match)
-        If (match) {            
-            Item.Note := A_LoopField
         }
     }    
     
