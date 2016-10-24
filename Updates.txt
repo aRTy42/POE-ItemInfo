@@ -1,6 +1,11 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.4.04
+================================
+from aRTy42
+Minor fix for map matching (Ivory Temple Map and Vaal Temple Map were detected as Temple Map)
+
 2.4.03
 ================================
 from aRTy42 and Eruyome
