@@ -73,6 +73,7 @@ class TradeUserOptions {
 									;	"standard", 
 									;   "hardcore"
     GemLevel := 16                  ; Gem level is ignored in the search unless it's equal or higher than this value
+    GemLevelRange := 0              ; Gem level is ignored in the search unless it's equal or higher than this value
     GemQualityRange := 0            ; Use this to set a range to quality gems searches
 	OnlineOnly := 1                 ; 1 = search online only; 0 = search offline, too.
 	Corrupted := "Either"           ; 1 = yes; 0 = no; 2 = either, This setting gets ignored when you use the search on corrupted items.
@@ -172,6 +173,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
         TradeOpts.SearchLeague := temp
         
 		TradeOpts.GemLevel := ReadIniValue(TradeConfigPath, "Search", "GemLevel", TradeOpts.GemLevel)	
+		TradeOpts.GemLevelRange := ReadIniValue(TradeConfigPath, "Search", "GemLevelRange", TradeOpts.GemLevelRange)	
 		TradeOpts.GemQualityRange := ReadIniValue(TradeConfigPath, "Search", "GemQualityRange", TradeOpts.GemQualityRange)	
 		TradeOpts.OnlineOnly := ReadIniValue(TradeConfigPath, "Search", "OnlineOnly", TradeOpts.OnlineOnly)
         
@@ -278,6 +280,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
         TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
         
         TradeOpts.GemLevel := GemLevel
+        TradeOpts.GemLevelRange := GemLevelRange
         TradeOpts.GemQualityRange := GemQualityRange
         TradeOpts.OnlineOnly := OnlineOnly
         TradeOpts.Corrupted := Corrupted
@@ -324,6 +327,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	WriteIniValue(TradeOpts.AccountName, TradeConfigPath, "Search", "AccountName")
 	WriteIniValue(TradeOpts.SearchLeague, TradeConfigPath, "Search", "SearchLeague")
 	WriteIniValue(TradeOpts.GemLevel, TradeConfigPath, "Search", "GemLevel")
+	WriteIniValue(TradeOpts.GemLevelRange, TradeConfigPath, "Search", "GemLevelRange")
 	WriteIniValue(TradeOpts.GemQualityRange, TradeConfigPath, "Search", "GemQualityRange")
 	WriteIniValue(TradeOpts.OnlineOnly, TradeConfigPath, "Search", "OnlineOnly")
 	WriteIniValue(TradeOpts.Corrupted, TradeConfigPath, "Search", "Corrupted")
@@ -711,6 +715,10 @@ CreateTradeSettingsUI()
     GuiAddText("Gem Level:", "x827 yp+32 w170 h20 0x0100", "LblGemLevel", "LblGemLevelH")
     AddToolTip(LblGemLevelH, "Gem level is ignored in the search unless it's equal`nor higher than this value.`n`nSet to something like 30 to completely ignore the level.")
     GuiAddEdit(TradeOpts.GemLevel, "x+10 yp-2 w50 h20", "GemLevel", "GemLevelH")
+    
+    GuiAddText("Gem Level Range:", "x827 yp+32 w170 h20 0x0100", "LblGemLevelRange", "LblGemLevelRangeH")
+    AddToolTip(LblGemLevelRangeH, "Uses GemLevel option to create a range around it.`n `nSetting it to 0 ignores this option.")
+    GuiAddEdit(TradeOpts.GemLevelRange, "x+10 yp-2 w50 h20", "GemLevelRange", "GemLevelRangeH")
     
     GuiAddText("Gem Quality Range:", "x827 yp+32 w170 h20 0x0100", "LblGemQualityRange", "LblGemQualityRangeH")
     AddToolTip(LblGemQualityRangeH, "Use this to set a range to quality Gem searches. For example a range of 1`n searches 14% - 16% when you have a 15% Quality Gem.`nSetting it to 0 (default) uses your Gems quality as min_quality`nwithout max_quality in your search.")

@@ -430,6 +430,10 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			RequestParams.level_min := Item.Level
 			RequestParams.level_max := Item.Level
 		}
+		else if (TradeOpts.GemLevelRange > 0 and Item.Level >= TradeOpts.GemLevel) {
+			RequestParams.level_min := Item.Level - TradeOpts.GemLevelRange
+			RequestParams.level_max := Item.Level + TradeOpts.GemLevelRange
+		}
 		else if (Item.Level >= TradeOpts.GemLevel) {
 			RequestParams.level_min := Item.Level
 		}
