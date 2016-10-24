@@ -379,18 +379,10 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		
 	if (Item.IsMap) {	
 		; add Item.subtype to make sure to only find maps
-		; handle shaped maps, Item.subtype or Item.name won't work here
-		if (InStr(ItemData.Nameplate, "Shaped")) {
-			RequestParams.xbase := "Shaped " Trim(StrReplace(Item.SubType, "Superior", ""))
-		}
-		else {
-			RequestParams.xbase := Item.SubType
-		}
+		RequestParams.xbase := Item.SubType
+		RequestParams.xtype := ""
+		RequestParams.name := ""
 		
-		; Quick map fix (wrong Item.name on magic/rare maps), map name prefixes/suffixes can be ignored
-		if (!Item.isUnique) {	
-			RequestParams.name   := Trim(StrReplace(Item.SubType, "Superior", ""))		
-		}
 		; Ivory Temple fix, not sure why it's not recognized and if there are more cases like it
 		if (InStr(Name, "Ivory Temple")){
 			RequestParams.xbase  := "Ivory Temple Map"
@@ -458,6 +450,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		}		
 	}
 	
+;	DebugOutputObject(RequestParams, false)
 	Payload := RequestParams.ToPayload()
 	
 	out("Running request with Payload:")
@@ -1170,16 +1163,11 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
 		; map fix (wrong Item.name on magic/rare maps)
 		Title := 
 		newName := Trim(StrReplace(Item.Name, "Superior", ""))
-		newName := Trim(StrReplace(newName, "Shaped", ""))
 		; prevent duplicate name on white and magic maps
 		if (newName != Item.SubType) {
-			s := Trim(RegExReplace(Item.Name, "Superior|Shaped", "")) 
+			s := Trim(RegExReplace(Item.Name, "Superior", "")) 
 			s := Trim(StrReplace(s, Item.SubType, "")) 
 			Title .= "(" RegExReplace(s, " +", " ") ") "
-		}
-		; add "Shaped" to item title since it's missing from Item.name	 		
-		if (InStr(ItemData.Nameplate, "Shaped")) {
-			Title .= "Shaped "
 		}
 		Title .= Trim(StrReplace(Item.SubType, "Superior", ""))
 	}
@@ -2253,3 +2241,78 @@ TradeSettingsUI_ChkCorruptedOverride:
         GuiControl, Enable, Corrupted
     }
 return
+
+
+DebugParseObject(obj, key=""){
+	n := "`n"
+	tab := "    "
+	output :=
+	
+	If (IsObject(obj)) {
+		If (IsArray(obj)) {		
+			For key, val in obj {
+				If (val) {
+					output .= n
+					output .= tab
+					If(isObject(val)){
+						output .= key ": "
+					}
+					output .= DebugParseObject(val, key)	
+				}
+			}	
+		}
+		Else {
+			For key, val in obj {
+				If (val) {
+					i++
+					output .= n
+					;output .= tab
+					If(isObject(val)){
+						output .= key ": "
+					}				
+					output .= DebugParseObject(val, key)	
+				}
+			}
+		}
+	}
+	Else if (obj) {
+		RegExMatch(key, "[a-zA-Z]", match)
+		If (match and key) {
+			output .= tab . key ": "
+		}
+		Else If (key) {
+			output .= tab . "[" key "] "
+		}
+		output .= obj ? obj : obj
+	}
+	
+	return output
+}
+
+DebugOutputObject(obj, writeToConsole = true){
+	output := "" DebugParseObject(obj) ""
+
+	; https://autohotkey.com/board/topic/18574-how-to-print-to-stdout-from-a-script/
+	; to dumb too output all the text in cmd, so using powershell
+	If(writeToConsole) {		
+		TempFile = %A_Temp%\TempDat.ps1
+	
+		; don't add any spaces/tabs in front of the file contents
+		FileAppend, 	
+		(	
+$x = @" %output%
+"@
+$x
+cmd /c pause
+		), %TempFile%		
+		RunWait, powershell.exe "%TempFile%"		
+		FileDelete %TempFile%
+	}	
+	Else {
+		MsgBox % output
+	}
+}
+
+IsArray(obj) {
+	return	!!obj.MaxIndex()
+}
