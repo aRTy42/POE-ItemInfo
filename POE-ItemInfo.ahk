@@ -970,13 +970,15 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 GetClipboardContents(DropNewlines=False)
 {
     Result =
+    Note =
     If Not DropNewlines
     {
         Loop, Parse, Clipboard, `n, `r
         {   
             IfInString, A_LoopField, note:  ; new code added by Bahnzo - The ability to add prices to items causes issues. Building the code sent from the clipboard
             {                               ; differently, and ommiting the line with "Note:" on it partially fixes this. We also have to omit the \newline \return
-                break                       ; that gets added at the end
+                Note := A_LoopField         ; that gets added at the end
+                break                       ; Not adding the note to ClipboardContents but its own variable should solve all problems
             }
 			IfInString, A_LoopField, Map drop
 			{
@@ -988,9 +990,9 @@ GetClipboardContents(DropNewlines=False)
             }
             else
             {
-            Result := Result . "`r`n" . A_LoopField  ; and then adding those before adding lines. This makes sure there are no trailing `n or `r. 
-            ;Result := Result . A_LoopField . "`r`n"  ; the original line, left in for clarity. 
-        }
+                Result := Result . "`r`n" . A_LoopField  ; and then adding those before adding lines. This makes sure there are no trailing `n or `r. 
+                ;Result := Result . A_LoopField . "`r`n"  ; the original line, left in for clarity. 
+            }
         }
     }
     Else
@@ -999,11 +1001,16 @@ GetClipboardContents(DropNewlines=False)
         {
             IfInString, A_LoopField, note:
             {
+                Note := A_LoopField
                 break
             }
             Result := Result . A_LoopField
         }
     }
+        
+    RegExMatch(Trim(Note), "i)^Note: (.*)", match)
+    Globals.Set("ItemNote", match1)
+    
     return Result
 }
 
@@ -5649,7 +5656,7 @@ PostProcessData(ParsedData)
 ParseClipBoardChanges()
 {
     Global Opts, Globals
-
+    
     CBContents := GetClipboardContents()
     CBContents := PreProcessContents(CBContents)
 
@@ -6431,8 +6438,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsJewel := (Item.BaseType == "Jewel")
     Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency) 
     Item.IsEssence := Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of ")
+    Item.Note := Globals.Get("ItemNote")
 
-    TempStr := ItemData.PartsLast
+    TempStr := ItemData.PartsLast    
     Loop, Parse, TempStr, `n, `r
     {
         RegExMatch(Trim(A_LoopField), "i)^Has ", match)
