@@ -117,7 +117,6 @@ return
 ; isAdvancedPriceCheckRedirect : set to true if the search is triggered from the GUI
 TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdvancedPriceCheckRedirect = false, isItemAgeRequest = false)
 {	
-    out("+ Start of TradeMacroMainFunction")
 	LeagueName := TradeGlobals.Get("LeagueName")
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList, Opts
 	
@@ -382,7 +381,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		RequestParams.xbase := Item.SubType
 		RequestParams.xtype := ""
 		RequestParams.name := ""
-		
+
 		; Ivory Temple fix, not sure why it's not recognized and if there are more cases like it
 		if (InStr(Name, "Ivory Temple")){
 			RequestParams.xbase  := "Ivory Temple Map"
@@ -450,13 +449,10 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		}		
 	}
 	
-;	DebugOutputObject(RequestParams, false)
+	;DebugOutputObject(RequestParams, false)
+	;console.log(RequestParams)
+	;console.show()
 	Payload := RequestParams.ToPayload()
-	
-	out("Running request with Payload:")
-	out("------------------------------------")
-	out(Payload)
-	out("------------------------------------")
 	
 	ShowToolTip("Running search...")
 	
@@ -466,7 +462,6 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	else {
 		Html := FunctionDoPostRequest(Payload, openSearchInBrowser)	
 	}
-	out("POST Request success")
 	
 	if(openSearchInBrowser) {
 		; redirect was prevented to get the url and open the search on poe.trade instead
@@ -482,7 +477,6 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	}
 	else if (Item.isCurrency and !Item.IsEssence) {
 		ParsedData := FunctionParseCurrencyHtml(Html, Payload)
-		out("Parsing HTML done")
 		
 		SetClipboardContents(ParsedData)
 		ShowToolTip("")
@@ -491,7 +485,6 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	else {
 		Item.UsedInSearch.SearchType := isItemAgeRequest ? "Item Age Search" : "Default" 
 		ParsedData := FunctionParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
-		out("Parsing HTML done")
 		
 		SetClipboardContents(ParsedData)
 		ShowToolTip("")
@@ -881,25 +874,17 @@ DoParseClipboardFunction()
     Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)
 
     ParsedData := ParseItemData(CBContents)
-	out("ItemInfo Parsing Success")
-}
-
-
-out(str)
-{
-	;stdout := FileOpen("*", "w")
-	;stdout.WriteLine(str)
 }
 
 FunctionDoPostRequest(payload, openSearchInBrowser = false)
 {	
+	ComObjError(0)
+	Encoding := "utf-8"
     ; Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
     HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	if (openSearchInBrowser) {
 		HttpObj.Option(6) := False ;
 	}    
-    ;HttpObj := ComObjCreate("MSXML2.ServerXMLHTTP") 
-    ; We use this instead of WinHTTP to support gzip and deflate - http://microsoft.public.winhttp.narkive.com/NDkh5vEw/get-request-for-xml-gzip-file-winhttp-wont-uncompress-automagically
     HttpObj.Open("POST","http://poe.trade/search")
     HttpObj.SetRequestHeader("Host","poe.trade")
     HttpObj.SetRequestHeader("Connection","keep-alive")
@@ -911,19 +896,33 @@ FunctionDoPostRequest(payload, openSearchInBrowser = false)
     HttpObj.SetRequestHeader("Content-type","application/x-www-form-urlencoded")
     HttpObj.SetRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
     HttpObj.SetRequestHeader("Referer","http://poe.trade/")
-    HttpObj.SetRequestHeader("Accept-Encoding","gzip;q=0,deflate;q=0") ; disables compression
+    ;HttpObj.SetRequestHeader("Accept-Encoding","gzip;q=0,deflate;q=0") ; disables compression
     ;HttpObj.SetRequestHeader("Accept-Encoding","gzip, deflate")
-    HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")	
+    ;HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")	
     HttpObj.Send(payload)
     HttpObj.WaitForResponse()
+	
+	If Encoding {
+		oADO          := ComObjCreate("adodb.stream")
+		oADO.Type     := 1
+		oADO.Mode     := 3
+		oADO.Open()
+		oADO.Write( HttpObj.ResponseBody )
+		oADO.Position := 0
+		oADO.Type     := 2
+		oADO.Charset  := Encoding
+		return oADO.ReadText(), oADO.Close()
+	}
+	
+	if A_LastError
+		MsgBox % A_LastError	
 
     ;MsgBox % HttpObj.StatusText . HttpObj.GetAllResponseHeaders()
     ;MsgBox % HttpObj.ResponseText
     ; Dear GGG, it would be nice if you can provide an API like http://pathofexile.com/trade/search?name=Veil+of+the+night&links=4
     ; Pete's indexer is open sourced here - https://github.com/trackpete/exiletools-indexer you can use this to provide this api
-    html := HttpObj.ResponseText
     
-    Return, html
+    Return, HttpObj.ResponseText
 }
 
 ; Get currency.poe.trade html
@@ -2316,3 +2315,4 @@ cmd /c pause
 IsArray(obj) {
 	return	!!obj.MaxIndex()
 }
+

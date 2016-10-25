@@ -1,7 +1,11 @@
 ; TradeMacro Add-on to POE-ItemInfo
 ; IGN: Eruyome, ManicCompression
 
+;https://autohotkey.com/boards/viewtopic.php?f=6&t=53
 #Include, %A_ScriptDir%/lib/JSON.ahk
+; Console https://autohotkey.com/boards/viewtopic.php?f=6&t=2116
+#Include, %A_ScriptDir%/lib/Class_Console.ahk
+#Include, %A_ScriptDir%/lib/PrintArray.ahk
 #Include, %A_ScriptDir%/lib/AssociatedProgram.ahk
 #Include, %A_ScriptDir%/trade_data/uniqueData.ahk
 #Include, %A_ScriptDir%/trade_data/Version.txt
@@ -252,6 +256,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
         TradeOpts.ShowUpdateNotifications := ShowUpdateNotifications
         TradeOpts.OpenWithDefaultWin10Fix := OpenWithDefaultWin10Fix
         TradeOpts.ShowAccountName := ShowAccountName
+        TradeOpts.Debug := Debug
         
         If(ValidBrowserPath) {
             TradeOpts.BrowserPath := BrowserPath            
@@ -635,7 +640,7 @@ CreateTradeSettingsUI()
     
     ; General 
 
-    GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h186")
+    GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h216")
     
     ; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
     
@@ -655,7 +660,10 @@ CreateTradeSettingsUI()
     GuiAddText("Browser Path:", "x557 yp+38 w70 h20 0x0100", "LblBrowserPath", "LblBrowserPathH")
     AddToolTip(LblBrowserPathH, "Optional: Set the path to the browser (.exe) to open Urls with.")
     GuiAddEdit(TradeOpts.BrowserPath, "x+10 yp-2 w150 h20", "BrowserPath", "BrowserPathH")
-
+    
+    GuiAddCheckbox("Debug Output", "x557 yp+30 w100 h30 cRed", TradeOpts.Debug, "Debug", "DebugH")
+    AddToolTip(DebugH, "Don't use this unless you're developing!")
+    
     ; Hotkeys
     
     GuiAddGroupBox("[TradeMacro] Hotkeys", "x547 yp+65 w260 h235")
@@ -780,6 +788,7 @@ UpdateTradeSettingsUI()
 	GuiControl,, ShowUpdateNotifications, % TradeOpts.ShowUpdateNotifications
     GuiControl,, OpenWithDefaultWin10Fix, % TradeOpts.OpenWithDefaultWin10Fix
     GuiControl,, BrowserPath, % TradeOpts.BrowserPath
+    GuiControl,, Debug, % TradeOpts.Debug
     
     GuiControl,, PriceCheckHotKey, % TradeOpts.PriceCheckHotKey
     GuiControl,, AdvancedPriceCheckHotKey, % TradeOpts.AdvancedPriceCheckHotKey
@@ -871,9 +880,13 @@ StartSplashScreen() {
 }
 StopSplashScreen() {
     SplashTextOff 
+    
+    If(TradeOpts.Debug) {
+        MsgBox Debug enabled! Disable in settings-menu unless you're developing!
+        Class_Console("console",0,335,600,900,,,,9)
+    }    
+    
     ; Let timer run until SettingsUIWidth is set and overwrite some options.
     SetTimer, OverwriteSettingsWidthTimer, 500
     SetTimer, OverwriteSettingsNameTimer, 500
 }
-
-
