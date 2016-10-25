@@ -1,126 +1,121 @@
-; TradeMacro Add-on to POE-ItemInfo v0.1
-; IGN: ManicCompression
-; Notes:
-; 1. To enable debug output, find the out() function and uncomment
-;
-; Todo:
-; Support for modifiers
-; Allow user to customize which mod and value to use
+; TradeMacro Add-on to POE-ItemInfo
+; IGN: Eruyome
 
 PriceCheck:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global TradeOpts, Item
-	Item := {}
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^c
-	Sleep 250
-	TradeMacroMainFunction()
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-}
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global TradeOpts, Item
+		Item := {}
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeFunc_Main()
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
 return
 
 AdvancedPriceCheck:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global TradeOpts, Item
-	Item := {}
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^c
-	Sleep 250
-	TradeMacroMainFunction(false, true)
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-}
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global TradeOpts, Item
+		Item := {}
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeFunc_Main(false, true)
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
 return
 
 ShowItemAge:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global TradeOpts, Item
-	If (!TradeOpts.AccountName) {
-		ShowTooltip("No Account Name specified in settings menu.")
-		return
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global TradeOpts, Item
+		If (!TradeOpts.AccountName) {
+			ShowTooltip("No Account Name specified in settings menu.")
+			return
+		}
+		Item := {}
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeFunc_Main(false, false, false, true)
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
-	Item := {}
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^c
-	Sleep 250
-	TradeMacroMainFunction(false, false, false, true)
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-}
 return
 
 OpenWiki:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global Item
-	Item := {}
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^c
-	Sleep 250
-	DoParseClipboardFunction()
-	
-	if (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
-		UrlAffix := Item.Name
-	} else if (Item.IsFlask or Item.IsMap) {
-		UrlAffix := Item.SubType
-	} else if (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key")) {
-		UrlAffix := Item.Name
-	} else {
-		UrlAffix := Item.BaseType
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global Item
+		Item := {}
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeFunc_DoParseClipboard()
+		
+		if (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
+			UrlAffix := Item.Name
+		} else if (Item.IsFlask or Item.IsMap) {
+			UrlAffix := Item.SubType
+		} else if (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key")) {
+			UrlAffix := Item.Name
+		} else {
+			UrlAffix := Item.BaseType
+		}
+		
+		UrlAffix := StrReplace(UrlAffix," ","_")
+		WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
+		TradeFunc_OpenUrlInBrowser(WikiUrl)
+		
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
-	
-	UrlAffix := StrReplace(UrlAffix," ","_")
-	WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
-	FunctionOpenUrlInBrowser(WikiUrl)
-	
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-}
 return
 
 CustomInputSearch:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global X
-	Global Y
-	MouseGetPos, X, Y	
-	InputBox,ItemName,Price Check,Item Name,,250,100,X-160,Y - 250,,30,
-	if ItemName {
-		RequestParams := new RequestParams_()
-		LeagueName := TradeGlobals.Get("LeagueName")
-		RequestParams.name   := ItemName
-		RequestParams.league := LeagueName
-		Item.Name := ItemName
-		Payload := RequestParams.ToPayload()
-		Html := FunctionDoPostRequest(Payload)
-		ParsedData := FunctionParseHtml(Html, Payload)
-		SetClipboardContents(ParsedData)
-		ShowToolTip("")
-		ShowToolTip(ParsedData)
-	}
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global X
+		Global Y
+		MouseGetPos, X, Y	
+		InputBox,ItemName,Price Check,Item Name,,250,100,X-160,Y - 250,,30,
+		if ItemName {
+			RequestParams := new RequestParams_()
+			LeagueName := TradeGlobals.Get("LeagueName")
+			RequestParams.name   := ItemName
+			RequestParams.league := LeagueName
+			Item.Name := ItemName
+			Payload := RequestParams.ToPayload()
+			Html := TradeFunc_DoPostRequest(Payload)
+			ParsedData := TradeFunc_ParseHtml(Html, Payload)
+			SetClipboardContents(ParsedData)
+			ShowToolTip("")
+			ShowToolTip(ParsedData)
+		}
 }
 return
 
 OpenSearchOnPoeTrade:
-Global TradeOpts, Item
-Item := {}
-SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-Send ^c
-Sleep 250
-TradeMacroMainFunction(true)
-SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	Global TradeOpts, Item
+	Item := {}
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+	Send ^c
+	Sleep 250
+	TradeFunc_Main(true)
+	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 return
 
 ; Prepare Reqeust Parametes and send Post Request
 ; openSearchInBrowser : set to true to open the search on poe.trade instead of showing the tooltip
 ; isAdvancedPriceCheck : set to true if the GUI to select mods should be openend
 ; isAdvancedPriceCheckRedirect : set to true if the search is triggered from the GUI
-TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdvancedPriceCheckRedirect = false, isItemAgeRequest = false)
+; isItemAgeRequest : set to true to check own listed items age
+TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdvancedPriceCheckRedirect = false, isItemAgeRequest = false)
 {	
 	LeagueName := TradeGlobals.Get("LeagueName")
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList, Opts
 	
-	DoParseClipboardFunction()
+	TradeFunc_DoParseClipboard()
 	iLvl     := Item.Level
 	
 	; cancel search if Item is empty
@@ -129,7 +124,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	}
 	
 	if (Opts.ShowMaxSockets != 1) {
-		FunctionSetItemSockets()
+		TradeFunc_SetItemSockets()
 	}
 	
 	Stats := {}
@@ -154,19 +149,19 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	
 	; check if the item implicit mod is an enchantment or corrupted. retrieve this mods data.
 	if (Item.hasImplicit) {
-		Enchantment := FunctionGetEnchantment(Item, Item.SubType)
-		Corruption  := Item.IsCorrupted ? FunctionGetCorruption(Item) : false
+		Enchantment := TradeFunc_GetEnchantment(Item, Item.SubType)
+		Corruption  := Item.IsCorrupted ? TradeFunc_GetCorruption(Item) : false
 	}	
 	
 	if (Item.IsWeapon or Item.IsArmour and not Item.IsUnique) {
-		Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, Item)
-		Stats.Offense := FunctionParseItemOffenseStats(DamageDetails, Item)	
+		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, Item)
+		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, Item)	
 	}
 	
 	if (Item.IsUnique) {		
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
 		uniqueWithVariableMods :=
-		uniqueWithVariableMods := FunctionFindUniqueItemIfItHasVariableRolls(Name)
+		uniqueWithVariableMods := TradeFunc_FindUniqueItemIfItHasVariableRolls(Name)
 		
 		; return if the advanced search was used but the checked item doesn't have variable mods
 		if(!uniqueWithVariableMods and isAdvancedPriceCheck) {
@@ -174,18 +169,18 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 			return
 		}
 		
-		UniqueStats := FunctionGetUniqueStats(Name)
+		UniqueStats := TradeFunc_GetUniqueStats(Name)
 		if (uniqueWithVariableMods) {
 			Gui, SelectModsGui:Destroy
 			
 			s :=
-			s := FunctionGetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
-			Stats.Defense := FunctionParseItemDefenseStats(ItemData.Stats, s)
-			Stats.Offense := FunctionParseItemOffenseStats(DamageDetails, s)	
+			s := TradeFunc_GetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
+			Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, s)
+			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, s)	
 			
 			; open AdvancedPriceCheckGui to select mods and their min/max values
 			if (isAdvancedPriceCheck) {
-				UniqueStats := FunctionGetUniqueStats(Name)
+				UniqueStats := TradeFunc_GetUniqueStats(Name)
 				if (Enchantment) {
 					AdvancedPriceCheckGui(s, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Enchantment)
 				}
@@ -300,8 +295,8 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		RequestParams.name   := Trim(StrReplace(Name, "Superior", ""))		
 		Item.UsedInSearch.FullName := true
 	} else if (!Item.isUnique) {
-		isCraftingBase         := CheckIfItemIsCraftingBase(Item.TypeName)
-		hasHighestCraftingILvl := CheckIfItemHasHighestCraftingLevel(Item.SubType, iLvl)
+		isCraftingBase         := TradeFunc_CheckIfItemIsCraftingBase(Item.TypeName)
+		hasHighestCraftingILvl := TradeFunc_CheckIfItemHasHighestCraftingLevel(Item.SubType, iLvl)
 		; xtype = Item.SubType (Helmet)
 		; xbase = Item.TypeName (Eternal Burgonet)
 		
@@ -458,10 +453,10 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 	ShowToolTip("Running search...")
 	
 	if (Item.isCurrency and !Item.IsEssence) {		
-		Html := FunctionDoCurrencyRequest(Item.Name, openSearchInBrowser)
+		Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser)
 	}
 	else {
-		Html := FunctionDoPostRequest(Payload, openSearchInBrowser)	
+		Html := TradeFunc_DoPostRequest(Payload, openSearchInBrowser)	
 	}
 	
 	if(openSearchInBrowser) {
@@ -474,10 +469,10 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		else {
 			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
 		}		
-		FunctionOpenUrlInBrowser(ParsedUrl1)
+		TradeFunc_OpenUrlInBrowser(ParsedUrl1)
 	}
 	else if (Item.isCurrency and !Item.IsEssence) {
-		ParsedData := FunctionParseCurrencyHtml(Html, Payload)
+		ParsedData := TradeFunc_ParseCurrencyHtml(Html, Payload)
 		
 		SetClipboardContents(ParsedData)
 		ShowToolTip("")
@@ -493,7 +488,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		Else {
 			Item.UsedInSearch.SearchType := "Default" 
 		}
-		ParsedData := FunctionParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
+		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
 		
 		SetClipboardContents(ParsedData)
 		ShowToolTip("")
@@ -506,7 +501,7 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 }
 
 ; parse items defense stats
-FunctionParseItemDefenseStats(stats, mods){
+TradeFunc_ParseItemDefenseStats(stats, mods){
 	Global ItemData
 	iStats := {}
 	debugOutput := ""
@@ -525,14 +520,14 @@ FunctionParseItemDefenseStats(stats, mods){
 	RegExMatch(ItemData.Affixes, "i)(\d+).*increased.*?Armour"       , affixPercentAR)
 	
 	; calculate items base defense stats
-	baseES := FunctionCalculateBase(EnergyShield1, affixPercentES1, Quality1, affixFlatES1)
-	baseAR := FunctionCalculateBase(Armour1      , affixPercentAR1, Quality1, affixFlatAR1)
-	baseEV := FunctionCalculateBase(Evasion1     , affixPercentEV1, Quality1, affixFlatEV1)
+	baseES := TradeFunc_CalculateBase(EnergyShield1, affixPercentES1, Quality1, affixFlatES1)
+	baseAR := TradeFunc_CalculateBase(Armour1      , affixPercentAR1, Quality1, affixFlatAR1)
+	baseEV := TradeFunc_CalculateBase(Evasion1     , affixPercentEV1, Quality1, affixFlatEV1)
 	
 	; calculate items Q20 total defense stats
-	Armour       := FunctionCalculateQ20(baseAR, affixFlatAR1, affixPercentAR1)
-	EnergyShield := FunctionCalculateQ20(baseES, affixFlatES1, affixPercentES1)
-	Evasion      := FunctionCalculateQ20(baseEV, affixFlatEV1, affixPercentEV1)
+	Armour       := TradeFunc_CalculateQ20(baseAR, affixFlatAR1, affixPercentAR1)
+	EnergyShield := TradeFunc_CalculateQ20(baseES, affixFlatES1, affixPercentES1)
+	Evasion      := TradeFunc_CalculateQ20(baseEV, affixFlatEV1, affixPercentEV1)
 	
 	; calculate items Q20 defense stat min/max values
 	Affixes := StrSplit(ItemData.Affixes, "`n")
@@ -619,12 +614,12 @@ FunctionParseItemDefenseStats(stats, mods){
 		}
 	}
 	
-	min_Armour       := Round(FunctionCalculateQ20(baseAR, min_affixFlatAR, min_affixPercentAR))
-	max_Armour       := Round(FunctionCalculateQ20(baseAR, max_affixFlatAR, max_affixPercentAR))
-	min_EnergyShield := Round(FunctionCalculateQ20(baseES, min_affixFlatES, min_affixPercentES))
-	max_EnergyShield := Round(FunctionCalculateQ20(baseES, max_affixFlatES, max_affixPercentES))
-	min_Evasion      := Round(FunctionCalculateQ20(baseEV, min_affixFlatEV, min_affixPercentEV))
-	max_Evasion      := Round(FunctionCalculateQ20(baseEV, max_affixFlatEV, max_affixPercentEV))
+	min_Armour       := Round(TradeFunc_CalculateQ20(baseAR, min_affixFlatAR, min_affixPercentAR))
+	max_Armour       := Round(TradeFunc_CalculateQ20(baseAR, max_affixFlatAR, max_affixPercentAR))
+	min_EnergyShield := Round(TradeFunc_CalculateQ20(baseES, min_affixFlatES, min_affixPercentES))
+	max_EnergyShield := Round(TradeFunc_CalculateQ20(baseES, max_affixFlatES, max_affixPercentES))
+	min_Evasion      := Round(TradeFunc_CalculateQ20(baseEV, min_affixFlatEV, min_affixPercentEV))
+	max_Evasion      := Round(TradeFunc_CalculateQ20(baseEV, max_affixFlatEV, max_affixPercentEV))
 	
 	iStats.TotalBlock			:= {}
 	iStats.TotalBlock.Value 		:= Block1
@@ -656,7 +651,7 @@ FunctionParseItemDefenseStats(stats, mods){
 	return iStats
 }
 
-FunctionCalculateBase(total, affixPercent, qualityPercent, affixFlat){
+TradeFunc_CalculateBase(total, affixPercent, qualityPercent, affixFlat){
 	SetFormat, FloatFast, 5.2
 	If (total) {
 		affixPercent  := (affixPercent) ? (affixPercent / 100) : 0
@@ -667,7 +662,7 @@ FunctionCalculateBase(total, affixPercent, qualityPercent, affixFlat){
 	}
 	return
 }
-FunctionCalculateQ20(base, affixFlat, affixPercent){
+TradeFunc_CalculateQ20(base, affixFlat, affixPercent){
 	SetFormat, FloatFast, 5.2
 	If (base) {
 		affixPercent  := (affixPercent) ? (affixPercent / 100) : 0
@@ -679,7 +674,7 @@ FunctionCalculateQ20(base, affixFlat, affixPercent){
 }
 
 ; parse items dmg stats
-FunctionParseItemOffenseStats(Stats, mods){
+TradeFunc_ParseItemOffenseStats(Stats, mods){
 	Global ItemData
 	iStats := {}
 	debugOutput :=
@@ -778,13 +773,13 @@ FunctionParseItemOffenseStats(Stats, mods){
 	
 	SetFormat, FloatFast, 5.2	
 	baseAPS      := (!affixAttackSpeed) ? AttacksPerSecond : AttacksPerSecond / (1 + (affixAttackSpeed / 100))
-	basePhysLow  := FunctionCalculateBase(physicalDamageLow, affixPercentPhys, Stats.Quality, affixFlatPhysLow)
-	basePhysHi   := FunctionCalculateBase(physicalDamageHi , affixPercentPhys, Stats.Quality, affixFlatPhysHi)
+	basePhysLow  := TradeFunc_CalculateBase(physicalDamageLow, affixPercentPhys, Stats.Quality, affixFlatPhysLow)
+	basePhysHi   := TradeFunc_CalculateBase(physicalDamageHi , affixPercentPhys, Stats.Quality, affixFlatPhysHi)
 	
-	minPhysLow   := Round(FunctionCalculateQ20(basePhysLow, min_affixFlatPhysicalLow, min_affixPercentPhys))
-	minPhysHi    := Round(FunctionCalculateQ20(basePhysHi , min_affixFlatPhysicalHi , min_affixPercentPhys))
-	maxPhysLow   := Round(FunctionCalculateQ20(basePhysLow, max_affixFlatPhysicalLow, max_affixPercentPhys))
-	maxPhysHi    := Round(FunctionCalculateQ20(basePhysHi , max_affixFlatPhysicalHi , max_affixPercentPhys))
+	minPhysLow   := Round(TradeFunc_CalculateQ20(basePhysLow, min_affixFlatPhysicalLow, min_affixPercentPhys))
+	minPhysHi    := Round(TradeFunc_CalculateQ20(basePhysHi , min_affixFlatPhysicalHi , min_affixPercentPhys))
+	maxPhysLow   := Round(TradeFunc_CalculateQ20(basePhysLow, max_affixFlatPhysicalLow, max_affixPercentPhys))
+	maxPhysHi    := Round(TradeFunc_CalculateQ20(basePhysHi , max_affixFlatPhysicalHi , max_affixPercentPhys))
 	min_affixPercentAPS := (min_affixPercentAPS) ? min_affixPercentAPS : 0
 	max_affixPercentAPS := (max_affixPercentAPS) ? max_affixPercentAPS : 0
 	minAPS       := baseAPS * (1 + min_affixPercentAPS)
@@ -810,7 +805,7 @@ FunctionParseItemOffenseStats(Stats, mods){
 	return iStats
 }
 
-FunctionGetUniqueStats(name){
+TradeFunc_GetUniqueStats(name){
 	items := TradeGlobals.Get("VariableUniqueData")
 	For i, uitem in items {
 		If (name = uitem.name) {
@@ -820,7 +815,7 @@ FunctionGetUniqueStats(name){
 }
 
 ; copied from PoE-ItemInfo because there it'll only be called if the option "ShowMaxSockets" is enabled
-FunctionSetItemSockets() {
+TradeFunc_SetItemSockets() {
 	Global Item
 	
 	If (Item.IsWeapon or Item.IsArmour)
@@ -861,7 +856,7 @@ FunctionSetItemSockets() {
 	}
 }
 
-CheckIfItemIsCraftingBase(type){
+TradeFunc_CheckIfItemIsCraftingBase(type){
 	bases := TradeGlobals.Get("CraftingData")
 	For i, base in bases {
 		If (type = base) {
@@ -871,7 +866,7 @@ CheckIfItemIsCraftingBase(type){
 	return false
 }
 
-CheckIfItemHasHighestCraftingLevel(subtype, iLvl){
+TradeFunc_CheckIfItemHasHighestCraftingLevel(subtype, iLvl){
 	If (RegExMatch(subtype, "i)Helmet|Gloves|Boots|Body Armour|Shield|Quiver")) {
 		return (iLvl >= 84) ? 84 : false
 	}
@@ -884,7 +879,7 @@ CheckIfItemHasHighestCraftingLevel(subtype, iLvl){
 	return false
 }
 
-DoParseClipboardFunction()
+TradeFunc_DoParseClipboard()
 {
 	CBContents := GetClipboardContents()
 	CBContents := PreProcessContents(CBContents)
@@ -895,11 +890,11 @@ DoParseClipboardFunction()
 	ParsedData := ParseItemData(CBContents)
 }
 
-FunctionDoPostRequest(payload, openSearchInBrowser = false)
+TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
 {	
 	ComObjError(0)
 	Encoding := "utf-8"
-    ; Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
+    ;Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	if (openSearchInBrowser) {
 		HttpObj.Option(6) := False
@@ -935,18 +930,13 @@ FunctionDoPostRequest(payload, openSearchInBrowser = false)
 	
 	if A_LastError
 		MsgBox % A_LastError	
-	
-    ;MsgBox % HttpObj.StatusText . HttpObj.GetAllResponseHeaders()
-    ;MsgBox % HttpObj.ResponseText
-    ; Dear GGG, it would be nice if you can provide an API like http://pathofexile.com/trade/search?name=Veil+of+the+night&links=4
-    ; Pete's indexer is open sourced here - https://github.com/trackpete/exiletools-indexer you can use this to provide this api
-	
+
 	Return, HttpObj.ResponseText
 }
 
 ; Get currency.poe.trade html
 ; Either at script start to parse the currency IDs or when searching to get currency listings
-FunctionDoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init = false){
+TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init = false){
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	if (openSearchInBrowser) {
 		HttpObj.Option(6) := False ;
@@ -968,7 +958,7 @@ FunctionDoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init =
 	html := HttpObj.ResponseText
 	
 	if (init) {
-		FunctionParseCurrencyIDs(html)
+		TradeFunc_ParseCurrencyIDs(html)
 		Return
 	}
 	
@@ -976,10 +966,10 @@ FunctionDoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init =
 }
 
 ; Open given Url with default Browser
-FunctionOpenUrlInBrowser(Url){
+TradeFunc_OpenUrlInBrowser(Url){
 	Global TradeOpts
 	
-	if (CheckBrowserPath(TradeOpts.BrowserPath, false)) {
+	if (TradeFunc_CheckBrowserPath(TradeOpts.BrowserPath, false)) {
 		openWith := TradeOpts.BrowserPath
 		Run, %openWith% -new-tab "%Url%"
 	}		
@@ -993,14 +983,14 @@ FunctionOpenUrlInBrowser(Url){
 }
 
 ; Parse currency.poe.trade to get all available currencies and their IDs
-FunctionParseCurrencyIDs(html){
+TradeFunc_ParseCurrencyIDs(html){
 	RegExMatch(html, "is)id=""currency-want"">(.*?)input", match)	
 	Currencies := {}
 	
 	Loop {
-		Div          := StrX( match1, "<div data-tooltip",  N, 0, "<img" , 1,4, N )
-		CurrencyName := StrX( Div,  "title=""",             1, 7, """"   , 1,1, T )
-		CurrencyID   := StrX( Div,  "data-id=""",           1, 9, """"   , 1,1    )			
+		Div          := TradeUtils.StrX( match1, "<div data-tooltip",  N, 0, "<img" , 1,4, N )
+		CurrencyName := TradeUtils.StrX( Div,  "title=""",             1, 7, """"   , 1,1, T )
+		CurrencyID   := TradeUtils.StrX( Div,  "data-id=""",           1, 9, """"   , 1,1    )			
 		CurrencyName := StrReplace(CurrencyName, "&#39;", "'")
 		
 		If (!CurrencyName) {			
@@ -1014,7 +1004,7 @@ FunctionParseCurrencyIDs(html){
 }
 
 ; Parse currency.poe.trade to display tooltip with first X listings
-FunctionParseCurrencyHtml(html, payload){
+TradeFunc_ParseCurrencyHtml(html, payload){
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
 	
@@ -1036,12 +1026,12 @@ FunctionParseCurrencyHtml(html, payload){
 	Title .= "`n"
 	
 	While A_Index < NoOfItemsToShow {
-		Offer       := StrX( html,   "data-username=""",     N, 0, "<a href"   , 1,1, N )
-		SellCurrency:= StrX( Offer,  "data-sellcurrency=""", 1,19, """"        , 1,1, T )
-		SellValue   := StrX( Offer,  "data-sellvalue=""",    1,16, """"        , 1,1, T )
-		BuyValue    := StrX( Offer,  "data-buyvalue=""",     1,15, """"        , 1,1, T )
-		BuyCurrency := StrX( Offer,  "data-buycurrency=""",  1,18, """"        , 1,1, T )
-		AccountName := StrX( Offer,  "data-ign=""",          1,10, """"        , 1,1    )
+		Offer       := TradeUtils.StrX( html,   "data-username=""",     N, 0, "<a href"   , 1,1, N )
+		SellCurrency:= TradeUtils.StrX( Offer,  "data-sellcurrency=""", 1,19, """"        , 1,1, T )
+		SellValue   := TradeUtils.StrX( Offer,  "data-sellvalue=""",    1,16, """"        , 1,1, T )
+		BuyValue    := TradeUtils.StrX( Offer,  "data-buyvalue=""",     1,15, """"        , 1,1, T )
+		BuyCurrency := TradeUtils.StrX( Offer,  "data-buycurrency=""",  1,18, """"        , 1,1, T )
+		AccountName := TradeUtils.StrX( Offer,  "data-ign=""",          1,10, """"        , 1,1    )
 		
 		RatioBuying := BuyValue / SellValue
 		RatioSelling  := SellValue / BuyValue
@@ -1050,7 +1040,7 @@ FunctionParseCurrencyHtml(html, payload){
 		P := ""
 		DisplayNames := []
 		Loop {
-			Column := StrX( Display1, "column", P, 0, "</div", 1,1, P )
+			Column := TradeUtils.StrX( Display1, "column", P, 0, "</div", 1,1, P )
 			RegExMatch(Column, ">(.*)<", Column)
 			Column := RegExReplace(Column1, "\t|\r|\n", "")
 			If (StrLen(Column) < 1) {
@@ -1059,31 +1049,19 @@ FunctionParseCurrencyHtml(html, payload){
 			DisplayNames.Push(Column)
 		}	
 		
-		subAcc := FunctionTrimNames(AccountName, 10, true)
+		subAcc := TradeFunc_TrimNames(AccountName, 10, true)
 		Title .= StrPad(subAcc,10) 
-		Title .= StrPad("| " . "1 <-- " . zerotrimmer(RatioBuying)            ,20)
-		Title .= StrPad("| " . StrPad(DisplayNames[1] . " " . StrPad(zerotrimmer(SellValue), 4, "left"), 17, "left") ,20)
-		Title .= StrPad("<= " . StrPad(zerotrimmer(BuyValue), 4) . " " . DisplayNames[3] ,20)		
+		Title .= StrPad("| " . "1 <-- " . TradeUtils.ZeroTrim(RatioBuying)            ,20)
+		Title .= StrPad("| " . StrPad(DisplayNames[1] . " " . StrPad(TradeUtils.ZeroTrim(SellValue), 4, "left"), 17, "left") ,20)
+		Title .= StrPad("<= " . StrPad(TradeUtils.ZeroTrim(BuyValue), 4) . " " . DisplayNames[3] ,20)		
 		Title .= "`n"		
 	}
 	
 	Return, Title
 }
 
-; Trim trailing zeros from numbers
-zerotrimmer(number) { 
-	RegExMatch(number, "(\d+)\.?(.+)?", match)
-	If (StrLen(match2) < 1) {
-		return number
-	} else {
-		trail := RegExReplace(match2, "0+$", "")
-		number := (StrLen(trail) > 0) ? match1 "." trail : match1
-		return number
-	}
-}
-
 ; Calculate average and median price of X listings
-FunctionGetMeanMedianPrice(html, payload){
+TradeFunc_GetMeanMedianPrice(html, payload){
 	itemCount := 1
 	prices := []
 	average := 0
@@ -1094,13 +1072,13 @@ FunctionGetMeanMedianPrice(html, payload){
 	NoOfItemsToCount := 99
 	NoOfItemsSkipped := 0
 	While A_Index <= NoOfItemsToCount {
-		TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N, 0, "</tbody>" , 1,23, N )
-		AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"       , 1,1,  T )
-		ChaosValue  := StrX( TBody,  "data-name=""price_in_chaos""",             T, 0, "currency" , 1,1     )	
+		TBody       := TradeUtils.StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N, 0, "</tbody>" , 1,23, N )
+		AccountName := TradeUtils.StrX( TBody,  "data-seller=""",                           1,13, """"       , 1,1,  T )
+		ChaosValue  := TradeUtils.StrX( TBody,  "data-name=""price_in_chaos""",             T, 0, "currency" , 1,1     )	
 		
 		; skip multiple results from the same account		
 		If (TradeOpts.RemoveMultipleListingsFromSameAccount) {
-			If (FunctionIsInArray(AccountName, accounts)) {
+			If (TradeUtils.IsInArray(AccountName, accounts)) {
 				NoOfItemsToShow := NoOfItemsToShow + 1
 				NoOfItemsSkipped := NoOfItemsSkipped + 1
 				continue
@@ -1162,7 +1140,7 @@ FunctionGetMeanMedianPrice(html, payload){
 }
 
 ; Parse poe.trade html to display the search result tooltip with X listings
-FunctionParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
+TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
 {	
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
@@ -1248,14 +1226,14 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
 	
 	; add average and median prices to title	
 	if (not isItemAgeRequest) {
-		Title .= FunctionGetMeanMedianPrice(html, payload)
+		Title .= TradeFunc_GetMeanMedianPrice(html, payload)
 	} else {
 		Title .= "`n"
 	}	
 	
 	NoOfItemsToShow := TradeOpts.ShowItemResults
 	; add table headers to tooltip
-	Title .= FunctionShowAcc(StrPad("Account",10), "|") 
+	Title .= TradeFunc_ShowAcc(StrPad("Account",10), "|") 
 	Title .= StrPad("IGN",20) 	
 	Title .= StrPad(StrPad("| Price ", 19, "right") . "|",20,"left")	
 	
@@ -1272,7 +1250,7 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
 	Title .= "`n"
 	
 	; add table head underline
-	Title .= FunctionShowAcc(StrPad("----------",10), "-") 
+	Title .= TradeFunc_ShowAcc(StrPad("----------",10), "-") 
 	Title .= StrPad("--------------------",20) 
 	Title .= StrPad("--------------------",19,"left")
 	if (Item.IsGem) {
@@ -1289,10 +1267,10 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
 	accounts := []
 	itemsListed := 0
 	While A_Index < NoOfItemsToShow {
-		TBody       := StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "</tbody>", 1,23, N )
-		AccountName := StrX( TBody,  "data-seller=""",                           1,13, """"  ,     1,1,  T )
-		Buyout      := StrX( TBody,  "data-buyout=""",                           T,13, """"  ,     1,1,  T )
-		IGN         := StrX( TBody,  "data-ign=""",                              T,10, """"  ,     1,1     )
+		TBody       := TradeUtils.StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "</tbody>", 1,23, N )
+		AccountName := TradeUtils.StrX( TBody,  "data-seller=""",                           1,13, """"  ,     1,1,  T )
+		Buyout      := TradeUtils.StrX( TBody,  "data-buyout=""",                           T,13, """"  ,     1,1,  T )
+		IGN         := TradeUtils.StrX( TBody,  "data-ign=""",                              T,10, """"  ,     1,1     )
 		
 		if(not AccountName){
 			continue
@@ -1303,7 +1281,7 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
 		
 		; skip multiple results from the same account
 		if (TradeOpts.RemoveMultipleListingsFromSameAccount and not isItemAgeRequest) {
-			if (FunctionIsInArray(AccountName, accounts)) {
+			if (TradeUtils.IsInArray(AccountName, accounts)) {
 				NoOfItemsToShow := NoOfItemsToShow + 1
 				continue
 			} else {
@@ -1325,10 +1303,10 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
 		}		
 		
 		; trim account and ign
-		subAcc := FunctionTrimNames(AccountName, 10, true)
-		subIGN := FunctionTrimNames(IGN, 20, true) 
+		subAcc := TradeFunc_TrimNames(AccountName, 10, true)
+		subIGN := TradeFunc_TrimNames(IGN, 20, true) 
 		
-		Title .= FunctionShowAcc(StrPad(subAcc,10), "|") 
+		Title .= TradeFunc_ShowAcc(StrPad(subAcc,10), "|") 
 		Title .= StrPad(subIGN,20) 
 		
 		RegExMatch(Buyout, "i)([-.0-9]+) (.*)", BuyoutText)
@@ -1355,7 +1333,7 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
 			Title .= "|"
 		}
 		; add item age
-		Title .= StrPad(FunctionFormatItemAge(Age1),10)
+		Title .= StrPad(TradeFunc_FormatItemAge(Age1),10)
 		Title .= "`n"		
 	}	
 	Title .= (itemsListed > 0) ? "" : "`nNo item found.`n"
@@ -1363,20 +1341,8 @@ FunctionParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
 	Return, Title
 }
 
-FunctionIsInArray(el, array) {
-	For i, element in array {
-		If (el = "") {
-			return false
-		}
-		If (element = el) {
-			return true
-		}
-	}
-	return false
-}
-
 ; Trim names/string and add dots at the end if they are longer than specified length
-FunctionTrimNames(name, length, addDots) {
+TradeFunc_TrimNames(name, length, addDots) {
 	s := SubStr(name, 1 , length)
 	if (StrLen(name) > length + 3 && addDots) {
 		StringTrimRight, s, s, 3
@@ -1386,7 +1352,7 @@ FunctionTrimNames(name, length, addDots) {
 }
 
 ; Add sellers accountname to string if that option is selected
-FunctionShowAcc(s, addString) {
+TradeFunc_ShowAcc(s, addString) {
 	if (TradeOpts.ShowAccountName = 1) {
 		s .= addString
 		return s	
@@ -1394,7 +1360,7 @@ FunctionShowAcc(s, addString) {
 }
 
 ; format item age to be shorter
-FunctionFormatItemAge(age) {
+TradeFunc_FormatItemAge(age) {
 	age := RegExReplace(age, "^a", "1")
 	RegExMatch(age, "\d+", value)
 	RegExMatch(age, "i)month|week|yesterday|hour|minute|second|day", unit)
@@ -1420,43 +1386,6 @@ FunctionFormatItemAge(age) {
 	
 	return s
 }
-
-; ------------------------------------------------------------------------------------------------------------------ ;
-; StrX function for parsing html, see simple example usage at https://gist.github.com/thirdy/9cac93ec7fd947971721c7bdde079f94
-; ------------------------------------------------------------------------------------------------------------------ ;
-
-; Cleanup StrX function and Google Example from https://autohotkey.com/board/topic/47368-strx-auto-parser-for-xml-html
-; By SKAN
-
-;1 ) H = HayStack. The "Source Text"
-;2 ) BS = BeginStr. Pass a String that will result at the left extreme of Resultant String
-;3 ) BO = BeginOffset. 
-; Number of Characters to omit from the left extreme of "Source Text" while searching for BeginStr
-; Pass a 0 to search in reverse ( from right-to-left ) in "Source Text"
-; If you intend to call StrX() from a Loop, pass the same variable used as 8th Parameter, which will simplify the parsing process.
-;4 ) BT = BeginTrim. 
-; Number of characters to trim on the left extreme of Resultant String
-; Pass the String length of BeginStr if you want to omit it from Resultant String
-; Pass a Negative value if you want to expand the left extreme of Resultant String
-;5 ) ES = EndStr. Pass a String that will result at the right extreme of Resultant String
-;6 ) EO = EndOffset. 
-; Can be only True or False. 
-; If False, EndStr will be searched from the end of Source Text. 
-; If True, search will be conducted from the search result offset of BeginStr or from offset 1 whichever is applicable.
-;7 ) ET = EndTrim. 
-; Number of characters to trim on the right extreme of Resultant String
-; Pass the String length of EndStr if you want to omit it from Resultant String
-; Pass a Negative value if you want to expand the right extreme of Resultant String
-;8 ) NextOffset : A name of ByRef Variable that will be updated by StrX() with the current offset, You may pass the same variable as Parameter 3, to simplify data parsing in a loop
-
-StrX(H,  BS="",BO=0,BT=1,   ES="",EO=0,ET=1,  ByRef N="" ) 
-{ 
-	Return SubStr(H,P:=(((Z:=StrLen(ES))+(X:=StrLen(H))+StrLen(BS)-Z-X)?((T:=InStr(H,BS,0,((BO
-            <0)?(1):(BO))))?(T+BT):(X+1)):(1)),(N:=P+((Z)?((T:=InStr(H,ES,0,((EO)?(P+1):(0))))?(T-P+Z
-	+(0-ET)):(X+P)):(X)))-P)
-}
-; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
-; | by Skan | 19-Nov-2009
 
 class RequestParams_ {
 	league 		:= ""
@@ -1574,7 +1503,7 @@ class _ParamMod {
 }
 
 ; Return unique item with its variable mods and mod ranges if it has any
-FunctionFindUniqueItemIfItHasVariableRolls(name)
+TradeFunc_FindUniqueItemIfItHasVariableRolls(name)
 {
 	data := TradeGlobals.Get("VariableUniqueData")
 	For index, uitem in data {		
@@ -1586,32 +1515,32 @@ FunctionFindUniqueItemIfItHasVariableRolls(name)
 }
 
 ; Add poetrades mod names to the items mods to use as POST parameter
-FunctionGetItemsPoeTradeMods(item) {
+TradeFunc_GetItemsPoeTradeMods(item) {
 	mods := TradeGlobals.Get("ModsData")
 	
 	; use this to control search order (which group is more important)
 	For k, imod in item.mods {	
-		item.mods[k]["param"] := FunctionFindInModGroup(mods["[total] mods"], item.mods[k])
+		item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], item.mods[k])
 		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := FunctionFindInModGroup(mods["[pseudo] mods"], item.mods[k])
+			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], item.mods[k])
 		}
 		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := FunctionFindInModGroup(mods["explicit"], item.mods[k])
+			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], item.mods[k])
 		}
 		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := FunctionFindInModGroup(mods["implicit"], item.mods[k])
+			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], item.mods[k])
 		}
 		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := FunctionFindInModGroup(mods["unique explicit"], item.mods[k])
+			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], item.mods[k])
 		}
 		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := FunctionFindInModGroup(mods["crafted"], item.mods[k])
+			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["crafted"], item.mods[k])
 		}
 		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := FunctionFindInModGroup(mods["enchantments"], item.mods[k])
+			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["enchantments"], item.mods[k])
 		}
 		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := FunctionFindInModGroup(mods["prophecies"], item.mods[k])
+			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["prophecies"], item.mods[k])
 		}
 	}
 	
@@ -1619,25 +1548,25 @@ FunctionGetItemsPoeTradeMods(item) {
 }
 
 ; Add poe.trades mod names to the items mods to use as POST parameter
-FunctionGetItemsPoeTradeUniqueMods(item) {
+TradeFunc_GetItemsPoeTradeUniqueMods(item) {
 	mods := TradeGlobals.Get("ModsData")
 	For k, imod in item.mods {	
-		item.mods[k]["param"] := FunctionFindInModGroup(mods["unique explicit"], item.mods[k])
+		item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], item.mods[k])
 		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := FunctionFindInModGroup(mods["explicit"], item.mods[k])
+			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], item.mods[k])
 		}
 		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := FunctionFindInModGroup(mods["[total] mods"], item.mods[k])
+			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], item.mods[k])
 		}
 		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := FunctionFindInModGroup(mods["[pseudo] mods"], item.mods[k])
+			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], item.mods[k])
 		}
 	}
 	return item
 }
 
 ; find mod in modgroup and return its name
-FunctionFindInModGroup(modgroup, needle) {
+TradeFunc_FindInModGroup(modgroup, needle) {
 	For j, mod in modgroup {
 		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
 		s  := RegExReplace(s, "# ?to ? #", "#")
@@ -1652,7 +1581,7 @@ FunctionFindInModGroup(modgroup, needle) {
 	return ""
 }
 
-FunctionGetCorruption(item) {
+TradeFunc_GetCorruption(item) {
 	mods     := TradeGlobals.Get("ModsData")	
 	corrMods := TradeGlobals.Get("CorruptedModsData")
 	RegExMatch(item.Implicit, "i)([-.0-9]+)", value)
@@ -1689,7 +1618,7 @@ FunctionGetCorruption(item) {
 	}
 }
 
-FunctionGetEnchantment(item, type) {
+TradeFunc_GetEnchantment(item, type) {
 	mods     := TradeGlobals.Get("ModsData")	
 	enchants := TradeGlobals.Get("EnchantmentData")	
 	
@@ -1746,7 +1675,7 @@ FunctionGetEnchantment(item, type) {
 	}
 }
 
-FunctionGetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
+TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 	Loop, Parse, itemModifiers, `n, `r
 	{
 		If StrLen(A_LoopField) = 0
@@ -1790,7 +1719,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	Global 
 	
-	FunctionResetGUI()
+	TradeFunc_ResetGUI()
 	;TradeGlobals.Set("AdvancedPriceCheckItem", advItem)
 	ValueRange := TradeOpts.AdvancedSearchModValueRange
 	
@@ -1823,11 +1752,6 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	statCount := (ChangedImplicit) ? statCount + 1 : statCount
 	
 	boxRows := modCount * 3 + statCount * 3 
-	;Gui, SelectModsGui:Add, Groupbox, x10 y+10 w%modGroupBox% r%boxRows%, Mods
-	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, min
-	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, current
-	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w80 r%boxRows%, max
-	;Gui, SelectModsGui:Add, Groupbox, x+10 yp+0 w45 r%boxRows%, Select
 	
 	Gui, SelectModsGui:Add, Text, x14 y+10 w%modGroupBox%, Mods
 	Gui, SelectModsGui:Add, Text, x+10 yp+0 w80, min
@@ -2008,7 +1932,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		
 		SetFormat, FloatFast, 5.2
 		
-		modValues := FunctionGetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)
+		modValues := TradeFunc_GetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)
 		if (modValues.Length() > 1) {
 			modValue := (modValues[1] + modValues[2]) / 2
 		}
@@ -2025,21 +1949,21 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		modValueMax := (modValueMax > 2) ? Floor(modValueMax) : modValueMax
 		
 		; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
-		modValueMin := zerotrimmer((modValueMin < theoreticalMinValue and not staticValue) ? theoreticalMinValue : modValueMin)
-		modValueMax := zerotrimmer((modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax)
+		modValueMin := TradeUtils.ZeroTrim((modValueMin < theoreticalMinValue and not staticValue) ? theoreticalMinValue : modValueMin)
+		modValueMax := TradeUtils.ZeroTrim((modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax)
 		
 		; create Labels to show unique items min/max rolls		
 		if (advItem.mods[A_Index].ranges[2][1]) {
-			minLabelFirst := "(" zerotrimmer((advItem.mods[A_Index].ranges[1][1] + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
-			maxLabelFirst := "(" zerotrimmer((advItem.mods[A_Index].ranges[2][1] + advItem.mods[A_Index].ranges[2][2]) / 2) ")"
+			minLabelFirst := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[1][1] + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
+			maxLabelFirst := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[2][1] + advItem.mods[A_Index].ranges[2][2]) / 2) ")"
 		}
 		else if (staticValue) {
-			minLabelFirst := "(" zerotrimmer((staticValue + advItem.mods[A_Index].ranges[1][1]) / 2) ")"
-			maxLabelFirst := "(" zerotrimmer((staticValue + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
+			minLabelFirst := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][1]) / 2) ")"
+			maxLabelFirst := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
 		}
 		else {
-			minLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][1]) ")"
-			maxLabelFirst := "(" zerotrimmer(advItem.mods[A_Index].ranges[1][2]) ")"
+			minLabelFirst := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][1]) ")"
+			maxLabelFirst := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][2]) ")"
 		}
 		
 		if (not TradeOpts.PrefillMinValue) {
@@ -2056,7 +1980,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%                                   , % displayName
 		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedModMin%index% r1   , % modValueMin
 		Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % minLabelFirst
-		Gui, SelectModsGui:Add, Text, x+20 yp-22      w70 r1                               , % zerotrimmer(modValue)
+		Gui, SelectModsGui:Add, Text, x+20 yp-22      w70 r1                               , % TradeUtils.ZeroTrim(modValue)
 		Gui, SelectModsGui:Add, Edit, x+20 yp-3       w70 vTradeAdvancedModMax%index% r1   , % modValueMax
 		Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % maxLabelFirst
 		Gui, SelectModsGui:Add, CheckBox, x+30 yp-21      vTradeAdvancedSelected%index%
@@ -2097,21 +2021,21 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 }
 
 AdvancedPriceCheckSearch:	
-FunctionHandleGuiSubmit()
-TradeMacroMainFunction(false, false, true)
+	TradeFunc_HandleGuiSubmit()
+	TradeFunc_Main(false, false, true)
 return
 
 AdvancedOpenSearchOnPoeTrade:	
-FunctionHandleGuiSubmit()
-TradeMacroMainFunction(true, false, true)
+	TradeFunc_HandleGuiSubmit()
+	TradeFunc_Main(true, false, true)
 return
 
-FunctionResetGUI(){
+TradeFunc_ResetGUI(){
 	Global 
 	Loop {
 		If (TradeAdvancedModMin%A_Index%) {
-			TradeAdvancedParam%A_Index%		:=
-			TradeAdvancedSelected%A_Index%	:=
+			TradeAdvancedParam%A_Index%	:=
+			TradeAdvancedSelected%A_Index%:=
 			TradeAdvancedModMin%A_Index%	:=
 			TradeAdvancedModMax%A_Index%	:=
 		}
@@ -2123,7 +2047,7 @@ FunctionResetGUI(){
 	
 	Loop {
 		If (TradeAdvancedStatMin%A_Index%) {
-			TradeAdvancedStatParam%A_Index%		:=
+			TradeAdvancedStatParam%A_Index%	:=
 			TradeAdvancedStatSelected%A_Index%	:=
 			TradeAdvancedStatMin%A_Index%		:=
 			TradeAdvancedStatMax%A_Index%		:=
@@ -2133,11 +2057,9 @@ FunctionResetGUI(){
 			break
 		}
 	}
-	;resetItem := {}
-	;TradeGlobals.Set("AdvancedPriceCheckItem", resetItem)	
 }
 
-FunctionHandleGuiSubmit(){
+TradeFunc_HandleGuiSubmit(){
 	Global 
 	
 	Gui, SelectModsGui:Submit
@@ -2192,14 +2114,83 @@ FunctionHandleGuiSubmit(){
 	Gui, SelectModsGui:Destroy
 }
 
+class TradeUtils {
+	; also see https://github.com/ahkscript/awesome-AutoHotkey
+	; and https://autohotkey.com/boards/viewtopic.php?f=6&t=53
+	IsArray(obj) {
+		return !!obj.MaxIndex()
+	}
+	
+	; Trim trailing zeros from numbers
+	ZeroTrim(number) { 
+		RegExMatch(number, "(\d+)\.?(.+)?", match)
+		If (StrLen(match2) < 1) {
+			return number
+		} else {
+			trail := RegExReplace(match2, "0+$", "")
+			number := (StrLen(trail) > 0) ? match1 "." trail : match1
+			return number
+		}
+	}
+	
+	IsInArray(el, array) {
+		For i, element in array {
+			If (el = "") {
+				return false
+			}
+			If (element = el) {
+				return true
+			}
+		}
+		return false
+	}
+	
+	; ------------------------------------------------------------------------------------------------------------------ ;
+	; TradeUtils.StrX Function for parsing html, see simple example usage at https://gist.github.com/thirdy/9cac93ec7fd947971721c7bdde079f94
+	; ------------------------------------------------------------------------------------------------------------------ ;
+	
+	; Cleanup TradeUtils.StrX Function and Google Example from https://autohotkey.com/board/topic/47368-TradeUtils.StrX-auto-parser-for-xml-html
+	; By SKAN
+	
+	;1 ) H = HayStack. The "Source Text"
+	;2 ) BS = BeginStr. Pass a String that will result at the left extreme of Resultant String
+	;3 ) BO = BeginOffset. 
+	; Number of Characters to omit from the left extreme of "Source Text" while searching for BeginStr
+	; Pass a 0 to search in reverse ( from right-to-left ) in "Source Text"
+	; If you intend to call TradeUtils.StrX() from a Loop, pass the same variable used as 8th Parameter, which will simplify the parsing process.
+	;4 ) BT = BeginTrim. 
+	; Number of characters to trim on the left extreme of Resultant String
+	; Pass the String length of BeginStr if you want to omit it from Resultant String
+	; Pass a Negative value if you want to expand the left extreme of Resultant String
+	;5 ) ES = EndStr. Pass a String that will result at the right extreme of Resultant String
+	;6 ) EO = EndOffset. 
+	; Can be only True or False. 
+	; If False, EndStr will be searched from the end of Source Text. 
+	; If True, search will be conducted from the search result offset of BeginStr or from offset 1 whichever is applicable.
+	;7 ) ET = EndTrim. 
+	; Number of characters to trim on the right extreme of Resultant String
+	; Pass the String length of EndStr if you want to omit it from Resultant String
+	; Pass a Negative value if you want to expand the right extreme of Resultant String
+	;8 ) NextOffset : A name of ByRef Variable that will be updated by TradeUtils.StrX() with the current offset, You may pass the same variable as Parameter 3, to simplify data parsing in a loop
+	
+	StrX(H,  BS="",BO=0,BT=1,   ES="",EO=0,ET=1,  ByRef N="" ) 
+	{ 
+		Return SubStr(H,P:=(((Z:=StrLen(ES))+(X:=StrLen(H))+StrLen(BS)-Z-X)?((T:=InStr(H,BS,0,((BO
+            <0)?(1):(BO))))?(T+BT):(X+1)):(1)),(N:=P+((Z)?((T:=InStr(H,ES,0,((EO)?(P+1):(0))))?(T-P+Z
+		+(0-ET)):(X+P)):(X)))-P)
+	}
+	; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
+	; | by Skan | 19-Nov-2009
+}
+
 CloseUpdateWindow:
-	Gui, Cancel
+Gui, Cancel
 return
 
 OverwriteSettingsWidthTimer:
-	o := Globals.Get("SettingsUIWidth")
+o := Globals.Get("SettingsUIWidth")
 
-	If (o) {
+If (o) {
 		Globals.Set("SettingsUIWidth", 1085)
 		SetTimer, OverwriteSettingsWidthTimer, Off
 	}	
@@ -2259,79 +2250,3 @@ TradeSettingsUI_ChkCorruptedOverride:
 		GuiControl, Enable, Corrupted
 	}
 return
-
-
-DebugParseObject(obj, key=""){
-	n := "`n"
-	tab := "    "
-	output :=
-	
-	If (IsObject(obj)) {
-		If (IsArray(obj)) {		
-			For key, val in obj {
-				If (val) {
-					output .= n
-					output .= tab
-					If(isObject(val)){
-						output .= key ": "
-					}
-					output .= DebugParseObject(val, key)	
-				}
-			}	
-		}
-		Else {
-			For key, val in obj {
-				If (val) {
-					i++
-					output .= n
-					;output .= tab
-					If(isObject(val)){
-						output .= key ": "
-					}				
-					output .= DebugParseObject(val, key)	
-				}
-			}
-		}
-	}
-	Else if (obj) {
-		RegExMatch(key, "[a-zA-Z]", match)
-		If (match and key) {
-			output .= tab . key ": "
-		}
-		Else If (key) {
-			output .= tab . "[" key "] "
-		}
-		output .= obj ? obj : obj
-	}
-	
-	return output
-}
-
-DebugOutputObject(obj, writeToConsole = true){
-	output := "" DebugParseObject(obj) ""
-	
-	; https://autohotkey.com/board/topic/18574-how-to-print-to-stdout-from-a-script/
-	; to dumb too output all the text in cmd, so using powershell
-	If(writeToConsole) {		
-		TempFile = %A_Temp%\TempDat.ps1
-		
-		; don't add any spaces/tabs in front of the file contents
-		FileAppend, 	
-		(	
-$x = @" %output%
-"@
-$x
-cmd /c pause
-		), %TempFile%		
-		RunWait, powershell.exe "%TempFile%"		
-		FileDelete %TempFile%
-	}	
-	Else {
-		MsgBox % output
-	}
-}
-
-IsArray(obj) {
-	return	!!obj.MaxIndex()
-}
-
