@@ -2193,71 +2193,71 @@ FunctionHandleGuiSubmit(){
 }
 
 CloseUpdateWindow:
-Gui, UpdateNotification:Destroy
+	Gui, Cancel
 return
 
 OverwriteSettingsWidthTimer:
-o := Globals.Get("SettingsUIWidth")
+	o := Globals.Get("SettingsUIWidth")
 
-If (o) {
-	Globals.Set("SettingsUIWidth", 1085)
-	SetTimer, OverwriteSettingsWidthTimer, Off
-}	
+	If (o) {
+		Globals.Set("SettingsUIWidth", 1085)
+		SetTimer, OverwriteSettingsWidthTimer, Off
+	}	
 return
 
 OverwriteSettingsNameTimer:
-o := Globals.Get("SettingsUITitle")
+	o := Globals.Get("SettingsUITitle")
 
-If (o) {
-	RelVer := TradeGlobals.Get("ReleaseVersion")
-	Menu, Tray, Tip, Path of Exile TradeMacro %RelVer%
-	OldMenuTrayName := Globals.Get("SettingsUITitle")
-	NewMenuTrayName := TradeGlobals.Get("SettingsUITitle")
-	Menu, Tray, UseErrorLevel
-	Menu, Tray, Rename, % OldMenuTrayName, % NewMenuTrayName
-	if (ErrorLevel = 0) {		
-		Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico		
-		SetTimer, OverwriteSettingsNameTimer, Off
-	}
-	Menu, Tray, UseErrorLevel, off		
-}	
+	If (o) {
+		RelVer := TradeGlobals.Get("ReleaseVersion")
+		Menu, Tray, Tip, Path of Exile TradeMacro %RelVer%
+		OldMenuTrayName := Globals.Get("SettingsUITitle")
+		NewMenuTrayName := TradeGlobals.Get("SettingsUITitle")
+		Menu, Tray, UseErrorLevel
+		Menu, Tray, Rename, % OldMenuTrayName, % NewMenuTrayName
+		if (ErrorLevel = 0) {		
+			Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico		
+			SetTimer, OverwriteSettingsNameTimer, Off
+		}
+		Menu, Tray, UseErrorLevel, off		
+	}	
 return
 
 TradeSettingsUI_BtnOK:
-Global TradeOpts
-Gui, Submit
-SavedTradeSettings := true
-Sleep, 50
-WriteTradeConfig()
-UpdateTradeSettingsUI()
+	Global TradeOpts
+	Gui, Submit
+	SavedTradeSettings := true
+	Sleep, 50
+	WriteTradeConfig()
+	UpdateTradeSettingsUI()
 return
 
 TradeSettingsUI_BtnCancel:
-Gui, Cancel
+	
 return
 
 TradeSettingsUI_BtnDefaults:
-Gui, Cancel
-RemoveTradeConfig()
-Sleep, 75
-CopyDefaultTradeConfig()
-Sleep, 75
-ReadTradeConfig()
-Sleep, 75
-UpdateTradeSettingsUI()
-ShowSettingsUI()
+	Gui, Cancel
+	RemoveTradeConfig()
+	Sleep, 75
+	CopyDefaultTradeConfig()
+	Sleep, 75
+	ReadTradeConfig()
+	Sleep, 75
+	UpdateTradeSettingsUI()
+	ShowSettingsUI()
 return
 
 TradeSettingsUI_ChkCorruptedOverride:
-GuiControlGet, IsChecked,, CorruptedOverride
-If (Not IsChecked)
-{
-	GuiControl, Disable, Corrupted
-}
-Else
-{
-	GuiControl, Enable, Corrupted
-}
+	GuiControlGet, IsChecked,, CorruptedOverride
+	If (Not IsChecked)
+	{
+		GuiControl, Disable, Corrupted
+	}
+	Else
+	{
+		GuiControl, Enable, Corrupted
+	}
 return
 
 

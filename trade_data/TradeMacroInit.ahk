@@ -619,10 +619,12 @@ FunctionGetLatestRelease() {
 		
 		If (latestVersion > currentVersion) {
 			Gui, UpdateNotification:Add, Text, cGreen, Update available!
-			Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>, the lastest version is <%latestVersion%>.
+			Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>.`nThe lastest version is <%latestVersion%>.
 			Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
 			Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
-			Gui, UpdateNotification:Show, w350 , Update 
+			yPos := A_ScreenHeight / 2 + 40
+			Gui, UpdateNotification:Show, w350 Y%yPos%, Update 
+			WinWaitClose, Update
 		}
 	} catch e {
 		MsgBox % "Update-Check failed, Github is probably down."
