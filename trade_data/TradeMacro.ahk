@@ -915,6 +915,7 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
     ;HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")	
 	HttpObj.Send(payload)
 	HttpObj.WaitForResponse()
+	html := HttpObj.ResponseText
 	
 	If Encoding {
 		oADO          := ComObjCreate("adodb.stream")
@@ -925,18 +926,21 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
 		oADO.Position := 0
 		oADO.Type     := 2
 		oADO.Charset  := Encoding
-		return oADO.ReadText(), oADO.Close()
+		html := oADO.ReadText() 
+		oADO.Close()
 	}
 	
 	if A_LastError
 		MsgBox % A_LastError	
-
-	Return, HttpObj.ResponseText
+	
+	Return, html
 }
 
 ; Get currency.poe.trade html
 ; Either at script start to parse the currency IDs or when searching to get currency listings
 TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init = false){
+	ComObjError(0)
+	Encoding := "utf-8"
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	if (openSearchInBrowser) {
 		HttpObj.Option(6) := False ;
@@ -956,6 +960,22 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	HttpObj.Send()
 	HttpObj.WaitForResponse()
 	html := HttpObj.ResponseText
+	
+	If Encoding {
+		oADO          := ComObjCreate("adodb.stream")
+		oADO.Type     := 1
+		oADO.Mode     := 3
+		oADO.Open()
+		oADO.Write( HttpObj.ResponseBody )
+		oADO.Position := 0
+		oADO.Type     := 2
+		oADO.Charset  := Encoding
+		html := oADO.ReadText()
+		oADO.Close()
+	}
+	
+	if A_LastError
+		MsgBox % A_LastError	
 	
 	if (init) {
 		TradeFunc_ParseCurrencyIDs(html)
@@ -1388,70 +1408,70 @@ TradeFunc_FormatItemAge(age) {
 }
 
 class RequestParams_ {
-	league 		:= ""
-	xtype 		:= ""
-	xbase 		:= ""
-	name 		:= ""
-	dmg_min 	:= ""
-	dmg_max 	:= ""
-	aps_min 	:= ""
-	aps_max 	:= ""
-	crit_min 	:= ""
-	crit_max 	:= ""
-	dps_min 	:= ""
+	league		:= ""
+	xtype		:= ""
+	xbase		:= ""
+	name			:= ""
+	dmg_min 		:= ""
+	dmg_max 		:= ""
+	aps_min 		:= ""
+	aps_max 		:= ""
+	crit_min 		:= ""
+	crit_max 		:= ""
+	dps_min 		:= ""
 	dps_max		:= ""
-	edps_min	:= ""
-	edps_max	:= ""
-	pdps_min 	:= ""
-	pdps_max 	:= ""
-	armour_min 	:= ""
-	armour_max 	:= ""
-	evasion_min := ""
-	evasion_max := ""
+	edps_min		:= ""
+	edps_max		:= ""
+	pdps_min 		:= ""
+	pdps_max 		:= ""
+	armour_min	:= ""
+	armour_max	:= ""
+	evasion_min	:= ""
+	evasion_max 	:= ""
 	shield_min 	:= ""
 	shield_max 	:= ""
-	block_min	:= ""
+	block_min		:= ""
 	block_max 	:= ""
-	sockets_min := ""
-	sockets_max := ""
-	link_min 	:= ""
-	link_max 	:= ""
+	sockets_min 	:= ""
+	sockets_max 	:= ""
+	link_min 		:= ""
+	link_max 		:= ""
 	sockets_r 	:= ""
 	sockets_g 	:= ""
 	sockets_b 	:= ""
 	sockets_w 	:= ""
-	linked_r 	:= ""
-	linked_g 	:= ""
-	linked_b 	:= ""
-	linked_w 	:= ""
+	linked_r 		:= ""
+	linked_g 		:= ""
+	linked_b 		:= ""
+	linked_w 		:= ""
 	rlevel_min 	:= ""
 	rlevel_max 	:= ""
-	rstr_min 	:= ""
-	rstr_max 	:= ""
-	rdex_min 	:= ""
-	rdex_max 	:= ""
-	rint_min 	:= ""
-	rint_max 	:= ""
+	rstr_min 		:= ""
+	rstr_max 		:= ""
+	rdex_min 		:= ""
+	rdex_max 		:= ""
+	rint_min 		:= ""
+	rint_max 		:= ""
 	; For future development, change this to array to provide multi mod groups
 	modGroup 	:= new _ParamModGroup()
 	q_min 		:= ""
 	q_max 		:= ""
 	level_min 	:= ""
 	level_max 	:= ""
-	ilvl_min 	:= ""
-	ilvl_max	:= ""
+	ilvl_min 		:= ""
+	ilvl_max		:= ""
 	rarity 		:= ""
 	seller 		:= ""
-	xthread 	:= ""
+	xthread 		:= ""
 	identified 	:= ""
-	corrupted	:= "0"
+	corrupted		:= "0"
 	online 		:= (TradeOpts.OnlineOnly == 0) ? "" : "x"
 	buyout 		:= ""
 	altart 		:= ""
 	capquality 	:= "x"
 	buyout_min 	:= ""
 	buyout_max 	:= ""
-	buyout_currency := ""
+	buyout_currency:= ""
 	crafted		:= ""
 	enchanted 	:= ""
 	
@@ -2184,13 +2204,13 @@ class TradeUtils {
 }
 
 CloseUpdateWindow:
-Gui, Cancel
+	Gui, Cancel
 return
 
 OverwriteSettingsWidthTimer:
-o := Globals.Get("SettingsUIWidth")
+	o := Globals.Get("SettingsUIWidth")
 
-If (o) {
+	If (o) {
 		Globals.Set("SettingsUIWidth", 1085)
 		SetTimer, OverwriteSettingsWidthTimer, Off
 	}	
