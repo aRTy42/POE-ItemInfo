@@ -484,7 +484,15 @@ TradeMacroMainFunction(openSearchInBrowser = false, isAdvancedPriceCheck = false
 		ShowToolTip(ParsedData)
 	}
 	else {
-		Item.UsedInSearch.SearchType := isItemAgeRequest ? "Item Age Search" : "Default" 
+		If (isItemAgeRequest) {
+			Item.UsedInSearch.SearchType := "Item Age Search"
+		}
+		Else If (isAdvancedPriceCheckRedirect) {
+			Item.UsedInSearch.SearchType := "Advanced" 
+		}
+		Else {
+			Item.UsedInSearch.SearchType := "Default" 
+		}
 		ParsedData := FunctionParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
 		
 		SetClipboardContents(ParsedData)
