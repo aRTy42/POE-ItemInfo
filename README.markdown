@@ -34,6 +34,7 @@ Never completely trust any price checking tool. Inform yourself about what this 
 | ctrl+i      | Opens a text input where you can type an item name to search for.
 | ctrl+w      | Open the items wiki page. 
 | ctrl+q      | Open the item search on poe.trade instead of showing a tooltip with results.
+| ctrl+a      | Show item age (own listed items).
 
 ####Additional Macros####
 
