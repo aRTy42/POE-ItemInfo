@@ -1,4 +1,12 @@
 ; This script merges TradeMacroInit, PoE-ItemInfo and TradeMacro into one script and executes it.
+#Include, %A_ScriptDir%/trade_data/Version.txt
+TradeMsgWrongAHKVersion := "AutoHotkey v" . TradeAHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
+If (A_AhkVersion < TradeAHKVersionRequired)
+{
+    MsgBox, 16, Wrong AutoHotkey Version, % TradeMsgWrongAHKVersion
+    ExitApp
+}
+
 RunAsAdmin()
 StartSplashScreen()
 

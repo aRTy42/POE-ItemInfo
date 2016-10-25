@@ -1,6 +1,20 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.4.04
+================================
+from aRTy42
+Minor fix for map matching (Ivory Temple Map and Vaal Temple Map were detected as Temple Map)
+
+2.4.03
+================================
+from aRTy42 and Eruyome
+Updated Maps. Added shaped maps and included information from the wiki where possible.
+Corrected the data for the "Cast Speed" affix, which is higher for staves since PoE v2.4
+Fixed item type detection for magic items (by Eruyome)
+Added or changed several functions and data storing methods so that the "PoE-TradeMacro" can build
+	on top of this script (by Eruyome)
+
 2.4.02
 ================================
 from aRTy42
