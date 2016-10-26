@@ -162,7 +162,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		preparedItem := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Enchantment, Corruption)
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
-
+		
 		if (isAdvancedPriceCheck) {
 			UniqueStats := TradeFunc_GetUniqueStats(Name)
 			if (Enchantment) {
@@ -369,7 +369,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}	
 	
 	; handle corruption
-	if (Item.IsCorrupted and TradeOpts.CorruptedOverride) {
+	if (Item.IsCorrupted and TradeOpts.CorruptedOverride and not Item.IsDivinationCard) {
 		if (TradeOpts.Corrupted = "Either") {
 			RequestParams.corrupted := "x"
 			Item.UsedInSearch.Corruption := "Either"
@@ -383,7 +383,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Item.UsedInSearch.Corruption := "No"
 		}	
 	}
-	else if (Item.IsCorrupted) {
+	else if (Item.IsCorrupted and not Item.IsDivinationCard) {
 		RequestParams.corrupted := "1"
 		Item.UsedInSearch.Corruption := "Yes"
 	}
@@ -396,7 +396,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		; add Item.subtype to make sure to only find maps
 		RequestParams.xbase := Item.SubType
 		RequestParams.xtype := ""
-		RequestParams.name := ""
+		If (!Item.IsUnique) {
+			RequestParams.name := ""	
+		}		
 		
 		; Ivory Temple fix, not sure why it's not recognized and if there are more cases like it
 		if (InStr(Name, "Ivory Temple")){
