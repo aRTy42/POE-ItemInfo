@@ -158,13 +158,33 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, Item)	
 	}
 	
+	if (!Item.IsUnique) {		
+		preparedItem := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Enchantment, Corruption)
+		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
+		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
+
+		if (isAdvancedPriceCheck) {
+			UniqueStats := TradeFunc_GetUniqueStats(Name)
+			if (Enchantment) {
+				AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, "", Enchantment)
+			}
+			else if (Corruption) {
+				AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, "", Corruption)
+			} 
+			else {
+				AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links)
+			}				
+			return
+		}
+	}
+	
 	if (Item.IsUnique) {		
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
 		uniqueWithVariableMods :=
 		uniqueWithVariableMods := TradeFunc_FindUniqueItemIfItHasVariableRolls(Name)
 		
 		; return if the advanced search was used but the checked item doesn't have variable mods
-		if(!uniqueWithVariableMods and isAdvancedPriceCheck) {
+		if(!uniqueWithVariableMods and isAdvancedPriceCheck and not Enchantment and not Corruption) {
 			ShowToolTip("Advanced search not available for this item (no variable mods).")
 			return
 		}
@@ -173,21 +193,22 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		if (uniqueWithVariableMods) {
 			Gui, SelectModsGui:Destroy
 			
-			s :=
-			s := TradeFunc_GetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
-			Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, s)
-			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, s)	
+			preparedItem :=
+			preparedItem := TradeFunc_GetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
+			Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
+			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
 			
 			; open AdvancedPriceCheckGui to select mods and their min/max values
 			if (isAdvancedPriceCheck) {
 				UniqueStats := TradeFunc_GetUniqueStats(Name)
 				if (Enchantment) {
-					AdvancedPriceCheckGui(s, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Enchantment)
+					AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Enchantment)
 				}
 				else if (Corruption) {
-					AdvancedPriceCheckGui(s, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Corruption)
-				} else {
-					AdvancedPriceCheckGui(s, Stats, ItemData.Sockets, ItemData.Links, UniqueStats)
+					AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Corruption)
+				} 
+				else {
+					AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats)
 				}				
 				return
 			}		
@@ -711,8 +732,8 @@ TradeFunc_ParseItemOffenseStats(Stats, mods){
 			
 			If ( affix = name ){
 				match :=
-				; ignore mods like " ... per X dexterity"
-				If (RegExMatch(affix, "i) per ")) {
+				; ignore mods like " ... per X dexterity" and "damage to spells"
+				If (RegExMatch(affix, "i) per | to spells")) {
 					continue
 				}
 				If (RegExMatch(affix, "i)Adds.*#.*(Physical|Fire|Cold|Chaos) Damage", dmgType)) {
@@ -1528,61 +1549,138 @@ TradeFunc_FindUniqueItemIfItHasVariableRolls(name)
 	data := TradeGlobals.Get("VariableUniqueData")
 	For index, uitem in data {		
 		If (uitem.name = name ) {
+			uitem.IsUnique := true
 			return uitem
 		}
 	}  
 	return false
 }
 
+; return items mods and ranges
+TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Enchantment = false, Corruption = false) {
+	Affixes := StrSplit(Affixes, "`n")
+	mods := []
+	
+	If (Implicit and not Enchantment and not Corruption) {
+		temp := {}
+		StringReplace, Implicit, Implicit, `r,, All
+		StringReplace, Implicit, Implicit, `n,, All
+		RegExMatch(Implicit, "i)([.0-9]+)(%? to ([.0-9]+))?", values)
+		temp.name_orig := Implicit
+		s			:= RegExReplace(Implicit, "i)([-.0-9]+)", "#") 
+		temp.name 	:= RegExReplace(s, "i)# ?to ? #", "#")		
+		temp.isVariable:= false
+		temp.type		:= "implicit"
+		temp.values 	:= []
+		
+		Loop {
+			If (values%A_Index%) {
+				temp.values.push(values%A_Index%)	
+			}
+			Else {
+				break
+			}			
+		}
+		
+		mods.push(temp)
+	}
+	
+	For key, val in Affixes {
+		If (!val) {
+			continue
+		}
+		temp := {}
+		StringReplace, val, val, `r,, All
+		StringReplace, val, val, `n,, All
+		RegExMatch(val, "i)([.0-9]+)(%? to ([.0-9]+))?", values)
+		temp.name_orig := val
+		s			:= RegExReplace(val, "i)([-.0-9]+)", "#") 
+		temp.name 	:= RegExReplace(s, "i)# ?to ? #", "#")		
+		temp.isVariable:= false
+		temp.type		:= "explicit"
+		temp.values 	:= []		
+		
+		Loop {
+			If (values%A_Index%) {
+				temp.values.push(values%A_Index%)	
+			}
+			Else {
+				break
+			}			
+		}		
+		
+		; combine implicit with explicit if they are the same mods, overwriting the implicit
+		If (mods[1].type == "implicit" and mods[1].name = temp.name) {
+			mods[1].type := "explicit"			
+			length := mods[1].values.MaxIndex()
+			Loop, %length% {				
+				mods[1].values[A_Index] := mods[1].values[A_Index] + temp.values[A_Index]	
+			}
+		}
+		Else {
+			mods.push(temp)	
+		}
+	}	
+	
+	mods := TradeFunc_GetItemsPoeTradeMods(mods)
+	tempItem := {}
+	tempItem.mods := mods
+	tempItem.IsUnique := false
+	
+	return tempItem
+}
+
 ; Add poetrades mod names to the items mods to use as POST parameter
-TradeFunc_GetItemsPoeTradeMods(item) {
+TradeFunc_GetItemsPoeTradeMods(_item) {
 	mods := TradeGlobals.Get("ModsData")
 	
 	; use this to control search order (which group is more important)
-	For k, imod in item.mods {	
-		item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], item.mods[k])
-		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], item.mods[k])
+	For k, imod in _item.mods {	
+		_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])
+		if (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], _item.mods[k])
 		}
-		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], item.mods[k])
+		if (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], _item.mods[k])
 		}
-		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], item.mods[k])
+		if (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
 		}
-		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], item.mods[k])
+		if (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
 		}
-		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["crafted"], item.mods[k])
+		if (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["crafted"], _item.mods[k])
 		}
-		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["enchantments"], item.mods[k])
+		if (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["enchantments"], _item.mods[k])
 		}
-		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["prophecies"], item.mods[k])
+		if (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["prophecies"], _item.mods[k])
 		}
 	}
 	
-	return item
+	return _item
 }
 
 ; Add poe.trades mod names to the items mods to use as POST parameter
-TradeFunc_GetItemsPoeTradeUniqueMods(item) {
+TradeFunc_GetItemsPoeTradeUniqueMods(_item) {	
 	mods := TradeGlobals.Get("ModsData")
-	For k, imod in item.mods {	
-		item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], item.mods[k])
-		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], item.mods[k])
+	
+	For k, imod in _item.mods {	
+		_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
+		if (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], _item.mods[k])
 		}
-		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], item.mods[k])
+		if (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])
 		}
-		if (StrLen(item.mods[k]["param"]) < 1) {
-			item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], item.mods[k])
+		if (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], _item.mods[k])
 		}
 	}
-	return item
+	
+	return _item
 }
 
 ; find mod in modgroup and return its name
@@ -1590,9 +1688,11 @@ TradeFunc_FindInModGroup(modgroup, needle) {
 	For j, mod in modgroup {
 		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
 		s  := RegExReplace(s, "# ?to ? #", "#")
-		ss := Trim(needle.name)	
+		StringReplace, ss, ss, `r,, All
+		StringReplace, ss, ss, `n,, All
+		ss := Trim(needle.name)
 		;matches "1 to" in for example "adds 1 to (20-40) lightning damage"
-		ss := RegExReplace(ss, "\d+ ?to ?#", "#")	
+		ss := RegExReplace(ss, "\d+ ?to ?#", "#")		
 		
 		If (s = ss) {
 			return mod
@@ -1601,11 +1701,11 @@ TradeFunc_FindInModGroup(modgroup, needle) {
 	return ""
 }
 
-TradeFunc_GetCorruption(item) {
+TradeFunc_GetCorruption(_item) {
 	mods     := TradeGlobals.Get("ModsData")	
 	corrMods := TradeGlobals.Get("CorruptedModsData")
-	RegExMatch(item.Implicit, "i)([-.0-9]+)", value)
-	imp      := RegExReplace(item.Implicit, "i)([-.0-9]+)", "#")
+	RegExMatch(_item.Implicit, "i)([-.0-9]+)", value)
+	imp      := RegExReplace(_item.Implicit, "i)([-.0-9]+)", "#")
 	
 	corrMod  := {}
 	For i, corr in corrMods {	
@@ -1614,7 +1714,7 @@ TradeFunc_GetCorruption(item) {
 				match := Trim(RegExReplace(mod, "i)\(implicit\)", ""))					
 				If (match = corr) {
 					corrMod.param := mod
-					corrMod.name  := item.implicit
+					corrMod.name  := _item.implicit
 				}
 			}
 		}
@@ -1638,7 +1738,7 @@ TradeFunc_GetCorruption(item) {
 	}
 }
 
-TradeFunc_GetEnchantment(item, type) {
+TradeFunc_GetEnchantment(_item, type) {
 	mods     := TradeGlobals.Get("ModsData")	
 	enchants := TradeGlobals.Get("EnchantmentData")	
 	
@@ -1652,8 +1752,8 @@ TradeFunc_GetEnchantment(item, type) {
 		group := enchants.helmet
 	} 
 	
-	RegExMatch(item.implicit, "i)([.0-9]+)(%? to ([.0-9]+))?", values)
-	imp      := RegExReplace(item.implicit, "i)([.0-9]+)", "#")
+	RegExMatch(_item.implicit, "i)([.0-9]+)(%? to ([.0-9]+))?", values)
+	imp      := RegExReplace(_item.implicit, "i)([.0-9]+)", "#")
 	
 	enchantment := {}	
 	
@@ -1664,7 +1764,7 @@ TradeFunc_GetEnchantment(item, type) {
 					match := Trim(RegExReplace(mod, "i)\(enchant\)", ""))					
 					If (match = enchant) {
 						enchantment.param := mod
-						enchantment.name  := item.implicit
+						enchantment.name  := _item.implicit
 					}
 				}
 			}
@@ -1740,8 +1840,8 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	Global 
 	
 	TradeFunc_ResetGUI()
-	;TradeGlobals.Set("AdvancedPriceCheckItem", advItem)
-	ValueRange := TradeOpts.AdvancedSearchModValueRange
+	ValueRange := advItem.IsUnique ? TradeOpts.AdvancedSearchModValueRange : TradeOpts.AdvancedSearchModValueRange / 4
+	;DebugPrintArray(advItem)
 	
 	Gui, SelectModsGui:Destroy    
 	Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
@@ -1751,7 +1851,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	ValueRange := ValueRange / 100 	
 	
 	Loop % advItem.mods.Length() {	
-		if (!advItem.mods[A_Index].isVariable) {
+		if (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
 		}
 		tempValue := StrLen(advItem.mods[A_Index].name)
@@ -1919,7 +2019,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	;add mods	
 	l := 1
 	Loop % advItem.mods.Length() {
-		if (!advItem.mods[A_Index].isVariable) {
+		if (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
 		}
 		xPosMin := modGroupBox + 25			

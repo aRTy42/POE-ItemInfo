@@ -5,7 +5,7 @@
 #Include, %A_ScriptDir%/lib/JSON.ahk
 ; Console https://autohotkey.com/boards/viewtopic.php?f=6&t=2116
 #Include, %A_ScriptDir%/lib/Class_Console.ahk
-#Include, %A_ScriptDir%/lib/PrintArray.ahk
+#Include, %A_ScriptDir%/lib/DebugPrintArray.ahk
 #Include, %A_ScriptDir%/lib/AssociatedProgram.ahk
 #Include, %A_ScriptDir%/trade_data/uniqueData.ahk
 #Include, %A_ScriptDir%/trade_data/Version.txt

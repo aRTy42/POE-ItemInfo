@@ -57,3 +57,4 @@ temp
 trade_data/leagues.json
 trade_data/backup/*
 backup/*
+backup/
