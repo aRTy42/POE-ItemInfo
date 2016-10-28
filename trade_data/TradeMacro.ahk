@@ -2349,6 +2349,9 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Op&en on poe.trade
 	Gui, SelectModsGui:Add, Text, x+20 yp+5 cGray, (Pro-Tip: Use Alt + S/E to submit a button)
 	
+	Gui, SelectModsGui:Add, Text, x10 y+10 cRed, Advanced search for normal/magic/rare items is not finished.
+	Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/78">See what's planned.</a>    	
+	
 	windowWidth := modGroupBox + 80 + 10 + 10 + 80 + 80 + 10 + 60 + 20
 	windowWidth := (windowWidth > 250) ? windowWidth : 250
 	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search
