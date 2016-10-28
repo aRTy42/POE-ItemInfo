@@ -461,10 +461,10 @@ TradeFunc_GetLeagues(){
 	leagues := []
 	Loop, Parse, JSONFile, `n, `r
 	{	
-		If RegExMatch(A_LoopField,"iOm)id *: *""\(|\)""",leagueNames) {
+		If RegExMatch(A_LoopField,"im)id *: *""\(|\)""",leagueNames) {
 			continue
 		}
-		If RegExMatch(A_LoopField,"iOm)id *: *""(.*)""",leagueNames) {
+		Else If RegExMatch(A_LoopField,"iOm)id *: *""(.*)""",leagueNames) {
 			If (RegExMatch(leagueNames[1], "i)^Standard$")) {
 				leagues["standard"] := leagueNames[1]
 			}
@@ -602,11 +602,25 @@ TradeFunc_GetLatestRelease() {
 	
     ;https://api.github.com/repos/thirdy/POE-TradeMacro/releases/latest 
 	Try  {
+		Encoding := "utf-8"
 		HttpObj.Open("GET",url)
 		HttpObj.SetRequestHeader("Content-type","application/html")
 		HttpObj.Send("")
 		HttpObj.WaitForResponse()   
 		html := HttpObj.ResponseText
+		
+		If Encoding {
+			oADO          := ComObjCreate("adodb.stream")
+			oADO.Type     := 1
+			oADO.Mode     := 3
+			oADO.Open()
+			oADO.Write( HttpObj.ResponseBody )
+			oADO.Position := 0
+			oADO.Type     := 2
+			oADO.Charset  := Encoding
+			html := oADO.ReadText()
+			oADO.Close()
+		}
 		
 		RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)
 		RegExMatch(html, "i)""name"":""(.*?)""", vName)

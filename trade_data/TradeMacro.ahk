@@ -1068,17 +1068,19 @@ TradeFunc_ParseCurrencyHtml(html, payload){
 	Title .= StrPad("IGN" ,10) 	
 	Title .= StrPad("| Ratio",20)	
 	Title .= "| " . StrPad("Buy  ",20, "Left")	
-	Title .= StrPad("Pay",20)	
+	Title .= StrPad("Pay",18)	
+	Title .= StrPad("| Stock",8)	
 	Title .= "`n"
 	
 	Title .= StrPad("----------" ,10) 	
 	Title .= StrPad("--------------------",20)	
 	Title .= StrPad("--------------------",20)	
-	Title .= StrPad("--------------------",20)		
+	Title .= StrPad("--------------------",18)		
+	Title .= StrPad("--------",8)		
 	Title .= "`n"
 	
 	While A_Index < NoOfItemsToShow {
-		Offer       := TradeUtils.StrX( html,   "data-username=""",     N, 0, "<a href"   , 1,1, N )
+		Offer       := TradeUtils.StrX( html,   "data-username=""",     N, 0, "Contact Seller"   , 1,1, N )
 		SellCurrency:= TradeUtils.StrX( Offer,  "data-sellcurrency=""", 1,19, """"        , 1,1, T )
 		SellValue   := TradeUtils.StrX( Offer,  "data-sellvalue=""",    1,16, """"        , 1,1, T )
 		BuyValue    := TradeUtils.StrX( Offer,  "data-buyvalue=""",     1,15, """"        , 1,1, T )
@@ -1088,6 +1090,15 @@ TradeFunc_ParseCurrencyHtml(html, payload){
 		RatioBuying := BuyValue / SellValue
 		RatioSelling  := SellValue / BuyValue
 		
+		Pos   := RegExMatch(Offer, "si)displayoffer-bottom(.*)", StockMatch)
+		Loop, Parse, StockMatch, `n, `r 
+		{
+			RegExMatch(TradeUtils.CleanUp(A_LoopField), "i)Stock:? ?(\d+) ", StockMatch)
+			If (StockMatch) {
+				Stock := StockMatch1
+			}
+		}
+
 		Pos := RegExMatch(Offer, "si)displayoffer-primary(.*)<.*displayoffer-centered", Display)
 		P := ""
 		DisplayNames := []
@@ -1106,6 +1117,7 @@ TradeFunc_ParseCurrencyHtml(html, payload){
 		Title .= StrPad("| " . "1 <-- " . TradeUtils.ZeroTrim(RatioBuying)            ,20)
 		Title .= StrPad("| " . StrPad(DisplayNames[1] . " " . StrPad(TradeUtils.ZeroTrim(SellValue), 4, "left"), 17, "left") ,20)
 		Title .= StrPad("<= " . StrPad(TradeUtils.ZeroTrim(BuyValue), 4) . " " . DisplayNames[3] ,20)		
+		Title .= StrPad("| " . Stock,8) 
 		Title .= "`n"		
 	}
 	
@@ -2360,13 +2372,13 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 }
 
 AdvancedPriceCheckSearch:	
-TradeFunc_HandleGuiSubmit()
-TradeFunc_Main(false, false, true)
+	TradeFunc_HandleGuiSubmit()
+	TradeFunc_Main(false, false, true)
 return
 
 AdvancedOpenSearchOnPoeTrade:	
-TradeFunc_HandleGuiSubmit()
-TradeFunc_Main(true, false, true)
+	TradeFunc_HandleGuiSubmit()
+	TradeFunc_Main(true, false, true)
 return
 
 TradeFunc_ResetGUI(){
