@@ -461,10 +461,10 @@ TradeFunc_GetLeagues(){
 	leagues := []
 	Loop, Parse, JSONFile, `n, `r
 	{	
-		If RegExMatch(A_LoopField,"im)id *: *""\(|\)""",leagueNames) {
+		If RegExMatch(A_LoopField,"iOm)id *: *""\(|\)""",leagueNames) {
 			continue
 		}
-		Else If RegExMatch(A_LoopField,"iOm)id *: *""(.*)""",leagueNames) {
+		If RegExMatch(A_LoopField,"iOm)id *: *""(.*)""",leagueNames) {
 			If (RegExMatch(leagueNames[1], "i)^Standard$")) {
 				leagues["standard"] := leagueNames[1]
 			}

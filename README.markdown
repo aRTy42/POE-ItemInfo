@@ -9,6 +9,10 @@ This builds on top of [PoE-ItemInfo](https://github.com/aRTy42/POE-ItemInfo) whi
 With TradeMacro, price checking is added via **ctrl+d**, **ctrl+alt+d** or **ctrl+i**. You can also open the items wiki page via **ctrl+w** or open the item search on poe.trade instead via **ctrl+q**.   
 TradeMacro will be updated to always have the latest PoE-ItemInfo code, you don't have to run their script since it's included here.
 
+#### Warning   
+
+Never completely trust any price checking tool. Inform yourself about what this tool can do and what not (FAQ for example). Use the tools average and median prices to quickly judge if the first results could be accurate or totally wrong. When in doubt ask other people or do some manual checks.
+
 ####Usage / Instructions####
 
 1. Install AHK (http://ahkscript.org)
@@ -30,6 +34,7 @@ TradeMacro will be updated to always have the latest PoE-ItemInfo code, you don'
 | ctrl+i      | Opens a text input where you can type an item name to search for.
 | ctrl+w      | Open the items wiki page. 
 | ctrl+q      | Open the item search on poe.trade instead of showing a tooltip with results.
+| ctrl+a      | Show item age (own listed items).
 
 ####Additional Macros####
 
