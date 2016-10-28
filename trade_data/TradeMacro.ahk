@@ -140,7 +140,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	RequestParams.buyout := "1"
 	
 	; ignore item name in certain cases
-	if (!Item.IsJewel and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask) {
+	if (!Item.IsJewel and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask or (Item.IsJewel and isAdvancedPriceCheckRedirect)) {
 		IgnoreName := true
 	}
 	if (Item.RarityLevel > 0 and Item.RarityLevel < 4 and (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet)) {
@@ -158,13 +158,13 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, Item)	
 	}
 	
-	if (Item.IsWeapon or Item.IsArmour or (Item.IsFlask and Item.RarityLevel > 1) or Item.IsJewel or (Item.IsMap and Item.RarityLevel > 1)) 
+	if (Item.IsWeapon or Item.IsArmour or (Item.IsFlask and Item.RarityLevel > 1) or Item.IsJewel or (Item.IsMap and Item.RarityLevel > 1) of Item.IsBelt or Item.IsRing or Item.IsAmulet) 
 	{
 		hasAdvancedSearch := true
 	}
 	
 	if (!Item.IsUnique) {		
-		preparedItem := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption)
+		preparedItem := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
 		
@@ -438,8 +438,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 	
-	; handle divination cards
-	if (Item.IsDivinationCard) {
+	; handle divination cards and jewels
+	if (Item.IsDivinationCard or Item.IsJewel) {
 		RequestParams.xtype := Item.BaseType
 	}
 	
@@ -1680,10 +1680,10 @@ TradeFunc_PrepareNonUniqueItemModsOld(Affixes, Implicit, Enchantment = false, Co
 }
 */
 
-TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = false, Corruption = false) {
+TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = false, Corruption = false, isMap = false) {
 	Affixes := StrSplit(Affixes, "`n")
 	mods := []
-	
+
 	If (Implicit and not Enchantment and not Corruption) {
 		temp := {}
 		StringReplace, Implicit, Implicit, `r,, All
@@ -1703,56 +1703,56 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 		mods.push(temp)
 	}
 	
-	;If ((Implicit and not Enchantment) or not Implicit) {	
-		For key, val in Affixes {
-			If (!val or RegExMatch(val, "i)---") or (Enchantment or Corruption and Rarity = 1)) {
-				continue
-			}
-			temp := {}
-			StringReplace, val, val, `r,, All
-			StringReplace, val, val, `n,, All
-			temp.name_orig := val
-			temp.values 	:= []
-			Pos := 0
-			While Pos := RegExMatch(val, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
-				temp.values.push(value)
-			}
-			
-			s			:= RegExReplace(val, "i)([.0-9]+)", "#")
-			temp.name 	:= RegExReplace(s, "i)# ?to ? #", "#", isRange)	
-			temp.isVariable:= false
-			temp.type		:= "explicit"
-			
-			;combine implicit with explicit if they are the same mods, overwriting the implicit
-			If (mods[1].type == "implicit" and mods[1].name = temp.name) {
-				mods[1].type := "explicit"
-				
-				Loop % mods[1].values.MaxIndex() {				
-					mods[1].values[A_Index] := mods[1].values[A_Index] + temp.values[A_Index]
-				}		
-				
-				tempStr  := RegExReplace(mods[1].name_orig, "i)([.0-9]+)", "#")
-				
-				Pos := 1
-				tempArr := []
-				While Pos := RegExMatch(temp.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
-					tempArr.push(value)
-				}		
-				
-				Pos := 1
-				Index := 1
-				While Pos := RegExMatch(mods[1].name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
-					tempStr := StrReplace(tempStr, "#", value + tempArr[Index],, 1)
-					Index++			
-				}
-				mods[1].name_orig := tempStr
-				
-			}
-			Else If (temp.name) {
-				mods.push(temp)	
-			}
+
+	For key, val in Affixes {
+		If (!val or RegExMatch(val, "i)---") or (Enchantment or Corruption and Rarity = 1)) {
+			continue
 		}
-	;}
+		temp := {}
+		StringReplace, val, val, `r,, All
+		StringReplace, val, val, `n,, All
+		temp.name_orig := val
+		temp.values 	:= []
+		Pos := 0
+		While Pos := RegExMatch(val, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
+			temp.values.push(value)
+		}
+		
+		s			:= RegExReplace(val, "i)([.0-9]+)", "#")
+		temp.name 	:= RegExReplace(s, "i)# ?to ? #", "#", isRange)	
+		temp.isVariable:= false
+		temp.type		:= "explicit"
+		
+		;combine implicit with explicit if they are the same mods, overwriting the implicit
+		If (mods[1].type == "implicit" and mods[1].name = temp.name) {
+			mods[1].type := "explicit"
+			
+			Loop % mods[1].values.MaxIndex() {				
+				mods[1].values[A_Index] := mods[1].values[A_Index] + temp.values[A_Index]
+			}		
+			
+			tempStr  := RegExReplace(mods[1].name_orig, "i)([.0-9]+)", "#")
+			
+			Pos := 1
+			tempArr := []
+			While Pos := RegExMatch(temp.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
+				tempArr.push(value)
+			}		
+			
+			Pos := 1
+			Index := 1
+			While Pos := RegExMatch(mods[1].name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
+				tempStr := StrReplace(tempStr, "#", value + tempArr[Index],, 1)
+				Index++			
+			}
+			mods[1].name_orig := tempStr
+			
+		}
+		Else If (temp.name) {
+			mods.push(temp)	
+		}
+	}
+
 	
 	tempItem := {}
 	tempItem.mods := []
