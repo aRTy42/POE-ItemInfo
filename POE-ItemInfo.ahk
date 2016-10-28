@@ -6799,7 +6799,7 @@ ExtractRareItemTypeName(ItemName)
 }
 
 ; Show tooltip, with fixed width font
-ShowToolTip(String, Centered = true)
+ShowToolTip(String, Centered = false)
 {
     Global X, Y, ToolTipTimeout, Opts
 
@@ -6822,9 +6822,11 @@ ShowToolTip(String, Centered = true)
         }
         Else 
         {
-            ToolTip, %String%, X - 135, Y + 35
+            XCoord := (X - 135 >= 0) ? X - 135 : 0
+            YCoord := (Y +  35 >= 0) ? Y +  35 : 0
+            ToolTip, %String%, XCoord, YCoord
             Fonts.SetFixedFont()
-            ToolTip, %String%, X - 135, Y + 35
+            ToolTip, %String%, XCoord, YCoord
         }
     }
     Else
