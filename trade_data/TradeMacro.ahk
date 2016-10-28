@@ -475,7 +475,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RequestParams.ilvl_max := Item.Level
 		}		
 	}
-	
+
 	If (TradeOpts.Debug) {
 		console.log(RequestParams)
 		console.show()	
@@ -484,7 +484,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	
 	ShowToolTip("Running search...")
 	
-	if (Item.isCurrency and !Item.IsEssence) {		
+	if (Item.IsCurrency and !Item.IsEssence) {		
 		Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser)
 	}
 	else {
