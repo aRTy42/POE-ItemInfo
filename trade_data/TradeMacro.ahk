@@ -23,7 +23,7 @@ IfWinActive, Path of Exile ahk_class Direct3DWindowClass
 	Send ^c
 	Sleep 250
 	TradeFunc_Main(false, true)
-	SuspendPOEItemScript = 0(())(()) ; Allow Item info to handle clipboard change event
+	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 }
 return
 
