@@ -6799,7 +6799,7 @@ ExtractRareItemTypeName(ItemName)
 }
 
 ; Show tooltip, with fixed width font
-ShowToolTip(String)
+ShowToolTip(String, Centered = true)
 {
     Global X, Y, ToolTipTimeout, Opts
 
@@ -6808,9 +6808,24 @@ ShowToolTip(String)
 
     If (Not Opts.DisplayToolTipAtFixedCoords)
     {
-        ToolTip, %String%, X - 135, Y + 35
-    Fonts.SetFixedFont()
-    ToolTip, %String%, X - 135, Y + 35
+        If (Centered) 
+        {
+            ScreenOffsetY := A_ScreenHeight / 2
+            ScreenOffsetX := A_ScreenWidth / 2
+
+            XCoord := 0 + ScreenOffsetX
+            YCoord := 0 + ScreenOffsetY
+
+            ToolTip, %String%, XCoord, YCoord
+            Fonts.SetFixedFont()
+            ToolTip, %String%, XCoord, YCoord
+        }
+        Else 
+        {
+            ToolTip, %String%, X - 135, Y + 35
+            Fonts.SetFixedFont()
+            ToolTip, %String%, X - 135, Y + 35
+        }
     }
     Else
     {
@@ -6828,8 +6843,8 @@ ShowToolTip(String)
         YCoord := 0 + ScreenOffsetY
 
         ToolTip, %String%, XCoord, YCoord
-    Fonts.SetFixedFont()
-    ToolTip, %String%, XCoord, YCoord
+        Fonts.SetFixedFont()
+        ToolTip, %String%, XCoord, YCoord
     }
     ;Fonts.SetFixedFont()
 
