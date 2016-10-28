@@ -6439,7 +6439,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsMap := (Item.BaseType == "Map")
     Item.IsJewel := (Item.BaseType == "Jewel")
     Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
-    Item.IsEssence := Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of ")
+    Item.IsEssence := Item.IsCurrency and (RegExMatch(Item.Name, "i)Essence of ") or RegExMatch(Item.Name, "i)Remnant of"))
     Item.Note := Globals.Get("ItemNote")
 
     TempStr := ItemData.PartsLast
