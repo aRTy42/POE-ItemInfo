@@ -2,128 +2,135 @@
 ; IGN: Eruyome
 
 PriceCheck:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global TradeOpts, Item
-	Item := {}
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^c
-	Sleep 250
-	TradeFunc_Main()
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-}
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global TradeOpts, Item
+		Item := {}
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeFunc_Main()
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
 return
 
 AdvancedPriceCheck:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global TradeOpts, Item
-	Item := {}
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^c
-	Sleep 250
-	TradeFunc_Main(false, true)
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-}
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global TradeOpts, Item
+		Item := {}
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeFunc_Main(false, true)
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
 return
 
 ShowItemAge:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global TradeOpts, Item
-	If (!TradeOpts.AccountName) {
-		ShowTooltip("No Account Name specified in settings menu.")
-		return
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global TradeOpts, Item
+		If (!TradeOpts.AccountName) {
+			ShowTooltip("No Account Name specified in settings menu.")
+			return
+		}
+		Item := {}
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeFunc_Main(false, false, false, true)
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
-	Item := {}
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^c
-	Sleep 250
-	TradeFunc_Main(false, false, false, true)
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-}
 return
 
 OpenWiki:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global Item
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		Global Item
+		Item := {}
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^c
+		Sleep 250
+		TradeFunc_DoParseClipboard()
+		If (!Item.Name and TradeOpts.OpenUrlsOnEmptyItem) {
+			TradeFunc_OpenUrlInBrowser("http://pathofexile.gamepedia.com/")
+			return
+		}
+		
+		If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
+			UrlAffix := Item.Name
+		} Else If (Item.IsFlask or Item.IsMap) {
+			UrlAffix := Item.SubType
+		} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key")) {
+			UrlAffix := Item.Name
+		} Else {
+			UrlAffix := Item.BaseType
+		}
+		
+		UrlAffix := StrReplace(UrlAffix," ","_")
+		WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
+		TradeFunc_OpenUrlInBrowser(WikiUrl)
+		
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
+return
+
+CustomInputSearch:
+	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	{
+		ScreenOffsetY := A_ScreenHeight / 2 - 50
+		ScreenOffsetX := A_ScreenWidth / 2 - 125
+		
+		InputBox,ItemName,Price Check,Item Name,,250,100,%ScreenOffsetX%,%ScreenOffsetY%,,30,
+		If ItemName {
+			RequestParams := new RequestParams_()
+			LeagueName := TradeGlobals.Get("LeagueName")
+			RequestParams.name   := ItemName
+			RequestParams.league := LeagueName
+			Item.Name := ItemName
+			Payload := RequestParams.ToPayload()
+			Html := TradeFunc_DoPostRequest(Payload)
+			ParsedData := TradeFunc_ParseHtml(Html, Payload)
+			SetClipboardContents(ParsedData)
+			ShowToolTip("")
+			ShowToolTip(ParsedData, true)
+		}
+	}
+return
+
+OpenSearchOnPoeTrade:
+	Global TradeOpts, Item
 	Item := {}
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^c
 	Sleep 250
-	TradeFunc_DoParseClipboard()
-	
-	if (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
-		UrlAffix := Item.Name
-	} else if (Item.IsFlask or Item.IsMap) {
-		UrlAffix := Item.SubType
-	} else if (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key")) {
-		UrlAffix := Item.Name
-	} else {
-		UrlAffix := Item.BaseType
-	}
-	
-	UrlAffix := StrReplace(UrlAffix," ","_")
-	WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
-	TradeFunc_OpenUrlInBrowser(WikiUrl)
-	
+	TradeFunc_Main(true)
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-}
-return
-
-CustomInputSearch:
-IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
-{
-	Global X
-	Global Y
-	MouseGetPos, X, Y	
-	InputBox,ItemName,Price Check,Item Name,,250,100,X-160,Y - 250,,30,
-	if ItemName {
-		RequestParams := new RequestParams_()
-		LeagueName := TradeGlobals.Get("LeagueName")
-		RequestParams.name   := ItemName
-		RequestParams.league := LeagueName
-		Item.Name := ItemName
-		Payload := RequestParams.ToPayload()
-		Html := TradeFunc_DoPostRequest(Payload)
-		ParsedData := TradeFunc_ParseHtml(Html, Payload)
-		SetClipboardContents(ParsedData)
-		ShowToolTip("")
-		ShowToolTip(ParsedData)
-	}
-}
-return
-
-OpenSearchOnPoeTrade:
-Global TradeOpts, Item
-Item := {}
-SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-Send ^c
-Sleep 250
-TradeFunc_Main(true)
-SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 return
 
 ; Prepare Reqeust Parametes and send Post Request
 ; openSearchInBrowser : set to true to open the search on poe.trade instead of showing the tooltip
-; isAdvancedPriceCheck : set to true if the GUI to select mods should be openend
-; isAdvancedPriceCheckRedirect : set to true if the search is triggered from the GUI
+; isAdvancedPriceCheck : set to true If the GUI to select mods should be openend
+; isAdvancedPriceCheckRedirect : set to true If the search is triggered from the GUI
 ; isItemAgeRequest : set to true to check own listed items age
 TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdvancedPriceCheckRedirect = false, isItemAgeRequest = false)
 {	
 	LeagueName := TradeGlobals.Get("LeagueName")
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList, Opts
-	
+
 	TradeFunc_DoParseClipboard()
 	iLvl     := Item.Level
 	
-	; cancel search if Item is empty
-	if (!Item.name) {
+	; cancel search If Item is empty
+	If (!Item.name) {
+		If (TradeOpts.OpenUrlsOnEmptyItem) {
+			TradeFunc_OpenUrlInBrowser("https://poe.trade")
+		}
 		return
 	}
 	
-	if (Opts.ShowMaxSockets != 1) {
+	If (Opts.ShowMaxSockets != 1) {
 		TradeFunc_SetItemSockets()
 	}
 	
@@ -140,65 +147,65 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	RequestParams.buyout := "1"
 	
 	; ignore item name in certain cases
-	if (!Item.IsJewel and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask or (Item.IsJewel and isAdvancedPriceCheckRedirect)) {
+	If (!Item.IsJewel and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask or (Item.IsJewel and isAdvancedPriceCheckRedirect)) {
 		IgnoreName := true
 	}
-	if (Item.RarityLevel > 0 and Item.RarityLevel < 4 and (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet)) {
+	If (Item.RarityLevel > 0 and Item.RarityLevel < 4 and (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet)) {
 		IgnoreName := true
 	}
 	
-	; check if the item implicit mod is an enchantment or corrupted. retrieve this mods data.
-	if (Item.hasImplicit) {
+	; check If the item implicit mod is an enchantment or corrupted. retrieve this mods data.
+	If (Item.hasImplicit) {
 		Enchantment := TradeFunc_GetEnchantment(Item, Item.SubType)
 		Corruption  := Item.IsCorrupted ? TradeFunc_GetCorruption(Item) : false
 	}	
 
-	if (Item.IsWeapon or Item.IsArmour and not Item.IsUnique) {
+	If (Item.IsWeapon or Item.IsArmour and not Item.IsUnique) {
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, Item)
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, Item)	
 	}
 	
-	if (Item.IsWeapon or Item.IsArmour or (Item.IsFlask and Item.RarityLevel > 1) or Item.IsJewel or (Item.IsMap and Item.RarityLevel > 1) of Item.IsBelt or Item.IsRing or Item.IsAmulet) 
+	If (Item.IsWeapon or Item.IsArmour or (Item.IsFlask and Item.RarityLevel > 1) or Item.IsJewel or (Item.IsMap and Item.RarityLevel > 1) of Item.IsBelt or Item.IsRing or Item.IsAmulet) 
 	{
 		hasAdvancedSearch := true
 	}
 	
-	if (!Item.IsUnique) {		
+	If (!Item.IsUnique) {		
 		preparedItem := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
 		
-		if (isAdvancedPriceCheck and hasAdvancedSearch) {
-			if (Enchantment) {
+		If (isAdvancedPriceCheck and hasAdvancedSearch) {
+			If (Enchantment) {
 				AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, "", Enchantment)
 			}
-			else if (Corruption) {
+			Else If (Corruption) {
 				AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, "", Corruption)
 			} 
-			else {
+			Else {
 				AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links)
 			}				
 			return
 		}	
-		else if (isAdvancedPriceCheck and not hasAdvancedSearch) {
+		Else If (isAdvancedPriceCheck and not hasAdvancedSearch) {
 			ShowToolTip("Advanced search not available for this item.")
 			return
 		}
 	}
 	
-	if (Item.IsUnique) {		
-		; returns mods with their ranges of the searched item if it is unique and has variable mods
+	If (Item.IsUnique) {		
+		; returns mods with their ranges of the searched item If it is unique and has variable mods
 		uniqueWithVariableMods :=
 		uniqueWithVariableMods := TradeFunc_FindUniqueItemIfItHasVariableRolls(Name)
 		
-		; return if the advanced search was used but the checked item doesn't have variable mods
+		; Return If the advanced search was used but the checked item doesn't have variable mods
 		if(!uniqueWithVariableMods and isAdvancedPriceCheck and not Enchantment and not Corruption) {
 			ShowToolTip("Advanced search not available for this item (no variable mods).")
 			return
 		}
 		
 		UniqueStats := TradeFunc_GetUniqueStats(Name)
-		if (uniqueWithVariableMods) {
+		If (uniqueWithVariableMods) {
 			Gui, SelectModsGui:Destroy
 			
 			preparedItem :=
@@ -207,53 +214,64 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
 			
 			; open AdvancedPriceCheckGui to select mods and their min/max values
-			if (isAdvancedPriceCheck) {
+			If (isAdvancedPriceCheck) {
 				UniqueStats := TradeFunc_GetUniqueStats(Name)
-				if (Enchantment) {
+				If (Enchantment) {
 					AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Enchantment)
 				}
-				else if (Corruption) {
+				Else If (Corruption) {
 					AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Corruption)
 				} 
-				else {
+				Else {
 					AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats)
 				}				
 				return
 			}
 		}
-		else {
+		Else {
 			RequestParams.name   := Trim(StrReplace(Name, "Superior", ""))		
 			Item.UsedInSearch.FullName := true
 		}	
 		
 		; only find items that can have the same amount of sockets
-		if (Item.MaxSockets = 6) {
+		If (Item.MaxSockets = 6) {
 			RequestParams.ilevel_min  := 50
 			Item.UsedInSearch.iLvl.min:= 50
 		} 
-		else if (Item.MaxSockets = 5) {
+		Else If (Item.MaxSockets = 5) {
 			RequestParams.ilevel_min := 35
 			RequestParams.ilevel_max := 49
 			Item.UsedInSearch.iLvl.min := 35
 			Item.UsedInSearch.iLvl.max := 49
 		} 
-		else if (Item.MaxSockets = 5) {
+		Else If (Item.MaxSockets = 5) {
 			RequestParams.ilevel_min := 35
 			Item.UsedInSearch.iLvl.min := 35
 		}
 		; is (no 1-hand or shield or unset ring or helmet or glove or boots) but is weapon or armor
-		else if ((not Item.IsFourSocket and not Item.IsThreeSocket and not Item.IsSingleSocket) and (Item.IsWeapon or Item.IsArmour) and Item.Level < 35) {		
+		Else If ((not Item.IsFourSocket and not Item.IsThreeSocket and not Item.IsSingleSocket) and (Item.IsWeapon or Item.IsArmour) and Item.Level < 35) {		
 			RequestParams.ilevel_max := 34
 			Item.UsedInSearch.iLvl.max := 34
-		}		
+		}	
+
+		; set links to max for corrupted items with 3/4 max sockets if the own item is fully linked
+		If (Item.IsCorrupted and TradeOpts.ForceMaxLinks) {
+			If (Item.MaxSockets = 4 and ItemData.Links = 4) {
+				RequestParams.link_min := 4
+			}
+			Else If (Item.MaxSockets = 3 and ItemData.Links = 3) {
+				RequestParams.link_min := 3
+			}
+		}
 	}
 	
 	; ignore mod rolls unless the AdvancedPriceCheckGui is used to search
-	if (isAdvancedPriceCheckRedirect) {
+	AdvancedPriceCheckItem := TradeGlobals.Get("AdvancedPriceCheckItem")
+	If (isAdvancedPriceCheckRedirect) {
 		; submitting the AdvancedPriceCheck Gui sets TradeOpts.Set("AdvancedPriceCheckItem") with the edited item (selected mods and their min/max values)
 		s := TradeGlobals.Get("AdvancedPriceCheckItem")
 		Loop % s.mods.Length() {
-			if (s.mods[A_Index].selected > 0) {
+			If (s.mods[A_Index].selected > 0) {
 				modParam := new _ParamMod()
 				modParam.mod_name := s.mods[A_Index].param
 				modParam.mod_min := s.mods[A_Index].min
@@ -262,146 +280,154 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			}	
 		}
 		Loop % s.stats.Length() {
-			if (s.stats[A_Index].selected > 0) {
-					; defense
-				if (InStr(s.stats[A_Index].Param, "Armour")) {
+			If (s.stats[A_Index].selected > 0) {
+				; defense
+				If (InStr(s.stats[A_Index].Param, "Armour")) {
 					RequestParams.armour_min  := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
 					RequestParams.armour_max  := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
 				} 
-				else if (InStr(s.stats[A_Index].Param, "Evasion")) {
+				Else If (InStr(s.stats[A_Index].Param, "Evasion")) {
 					RequestParams.evasion_min := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
 					RequestParams.evasion_max := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
 				}
-				else if (InStr(s.stats[A_Index].Param, "Energy")) {
+				Else If (InStr(s.stats[A_Index].Param, "Energy")) {
 					RequestParams.shield_min  := (s.stats[A_Index].min > 0) ? s.stats[A_Index].min : ""
 					RequestParams.shield_max  := (s.stats[A_Index].max > 0) ? s.stats[A_Index].max : ""
 				}
-				else if (InStr(s.stats[A_Index].Param, "Block")) {
+				Else If (InStr(s.stats[A_Index].Param, "Block")) {
 					RequestParams.block_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
 					RequestParams.block_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
 				}
 				
-					; offense
-				else if (InStr(s.stats[A_Index].Param, "Physical")) {
+				; offense
+				Else If (InStr(s.stats[A_Index].Param, "Physical")) {
 					RequestParams.pdps_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
 					RequestParams.pdps_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
 				}
-				else if (InStr(s.stats[A_Index].Param, "Elemental")) {
+				Else If (InStr(s.stats[A_Index].Param, "Elemental")) {
 					RequestParams.edps_min  := (s.stats[A_Index].min > 0)  ? s.stats[A_Index].min : ""
 					RequestParams.edps_max  := (s.stats[A_Index].max > 0)  ? s.stats[A_Index].max : ""
 				}						
 			}	
 		}
 		
-			; handle item sockets
+		; handle item sockets
 		If (s.UseSockets) {
 			RequestParams.sockets_min := ItemData.Sockets
 			Item.UsedInSearch.Sockets := ItemData.Sockets
 		}	
-			; handle item links
+		; handle item links
 		If (s.UseLinks) {
 			RequestParams.link_min := ItemData.Links
 			Item.UsedInSearch.Links := ItemData.Links
 		}					
 		
-		If(s.UsedInSearch) {
+		If (s.UsedInSearch) {
 			Item.UsedInSearch.Enchantment := s.UsedInSearch.Enchantment
 			Item.UsedInSearch.CorruptedMod:= s.UsedInSearch.Corruption
+		}
+		
+		If (s.useIlvl) {			
+			RequestParams.ilvl_min := s.minIlvl
+			Item.UsedInSearch.iLvl.min := true
 		}
 	}
 	
 	; prepend the item.subtype to match the options used on poe.trade
-	if (RegExMatch(Item.SubType, "i)Mace|Axe|Sword")) {
-		if (Item.IsThreeSocket) {
+	If (RegExMatch(Item.SubType, "i)Mace|Axe|Sword")) {
+		If (Item.IsThreeSocket) {
 			Item.xtype := "One Hand " . Item.SubType
 		}
-		else {
+		Else {
 			Item.xtype := "Two Hand " . Item.SubType
 		}
 	}
 	
 	; remove "Superior" from item name to exclude it from name search
-	if (!IgnoreName) {
+	If (!IgnoreName) {
 		RequestParams.name   := Trim(StrReplace(Name, "Superior", ""))		
 		Item.UsedInSearch.FullName := true
-	} else if (!Item.isUnique) {
+	} Else If (!Item.isUnique and AdvancedPriceCheckItem.mods.length() <= 0) {
 		isCraftingBase         := TradeFunc_CheckIfItemIsCraftingBase(Item.TypeName)
 		hasHighestCraftingILvl := TradeFunc_CheckIfItemHasHighestCraftingLevel(Item.SubType, iLvl)
 		; xtype = Item.SubType (Helmet)
 		; xbase = Item.TypeName (Eternal Burgonet)
 		
-		;if desired crafting base
-		if (isCraftingBase and not Enchantment and not Corruption) {			
+		;If desired crafting base
+		If (isCraftingBase and not Enchantment and not Corruption) {			
 			RequestParams.xbase := Item.TypeName
 			Item.UsedInSearch.ItemBase := Item.TypeName
-			; if highest item level needed for crafting
-			if (hasHighestCraftingILvl) {
+			; If highest item level needed for crafting
+			If (hasHighestCraftingILvl) {
 				RequestParams.ilvl_min := hasHighestCraftingILvl
 				Item.UsedInSearch.iLvl.min := hasHighestCraftingILvl
 			}			
-		} else if (Enchantment) {			
+		} Else If (Enchantment) {			
 			modParam := new _ParamMod()
 			modParam.mod_name := Enchantment.param
 			modParam.mod_min  := Enchantment.min
 			modParam.mod_max  := Enchantment.max
 			RequestParams.modGroup.AddMod(modParam)	
 			Item.UsedInSearch.Enchantment := true
-		} else if (Corruption) {			
+		} Else If (Corruption) {			
 			modParam := new _ParamMod()
 			modParam.mod_name := Corruption.param
 			modParam.mod_min  := (Corruption.min) ? Corruption.min : ""
 			RequestParams.modGroup.AddMod(modParam)	
 			Item.UsedInSearch.CorruptedMod := true
-		} else {
+		} Else {
 			RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
 			Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType
 		}		
+	} Else {
+		RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
+		Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType
 	}			
 	
 	; don't overwrite advancedItemPriceChecks decision to inlucde/exclude sockets/links
-	if (not isAdvancedPriceCheckRedirect) {
+	If (not isAdvancedPriceCheckRedirect) {
 		; handle item sockets
 		; maybe don't use this for unique-items as default
-		if (ItemData.Sockets >= 5 and not Item.IsUnique) {
+		If (ItemData.Sockets >= 5 and not Item.IsUnique) {
 			RequestParams.sockets_min := ItemData.Sockets
 			Item.UsedInSearch.Sockets := ItemData.Sockets
 		}	
-		if (ItemData.Sockets >= 6) {
+		If (ItemData.Sockets >= 6) {
 			RequestParams.sockets_min := ItemData.Sockets
 			Item.UsedInSearch.Sockets := ItemData.Sockets
 		}
 		; handle item links
-		if (ItemData.Links >= 5) {
+		If (ItemData.Links >= 5) {
 			RequestParams.link_min := ItemData.Links
 			Item.UsedInSearch.Links := ItemData.Links
 		}
 	}	
 	
 	; handle corruption
-	if (Item.IsCorrupted and TradeOpts.CorruptedOverride and not Item.IsDivinationCard) {
-		if (TradeOpts.Corrupted = "Either") {
+	If (Item.IsCorrupted and TradeOpts.CorruptedOverride and not Item.IsDivinationCard) {
+		If (TradeOpts.Corrupted = "Either") {
 			RequestParams.corrupted := "x"
 			Item.UsedInSearch.Corruption := "Either"
 		}
-		else if (TradeOpts.Corrupted = "Yes") {
+		Else If (TradeOpts.Corrupted = "Yes") {
 			RequestParams.corrupted := "1"
 			Item.UsedInSearch.Corruption := "Yes"
 		}
-		else if (TradeOpts.Corrupted = "No") {
+		Else If (TradeOpts.Corrupted = "No") {
 			RequestParams.corrupted := "0"
 			Item.UsedInSearch.Corruption := "No"
 		}	
 	}
-	else if (Item.IsCorrupted and not Item.IsDivinationCard) {
+	Else If (Item.IsCorrupted and not Item.IsDivinationCard) {
 		RequestParams.corrupted := "1"
 		Item.UsedInSearch.Corruption := "Yes"
 	}
-	else {
+	Else {
 		RequestParams.corrupted := "0"
 		Item.UsedInSearch.Corruption := "No"
 	}
 	
-	if (Item.IsMap) {	
+	If (Item.IsMap) {	
 		; add Item.subtype to make sure to only find maps
 		RequestParams.xbase := Item.SubType
 		RequestParams.xtype := ""
@@ -409,42 +435,42 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RequestParams.name := ""	
 		}		
 		
-		; Ivory Temple fix, not sure why it's not recognized and if there are more cases like it
-		if (InStr(Name, "Ivory Temple")){
+		; Ivory Temple fix, not sure why it's not recognized and If there are more cases like it
+		If (InStr(Name, "Ivory Temple")){
 			RequestParams.xbase  := "Ivory Temple Map"
 		}
 	}
 	
 	; handle gems
-	if (Item.IsGem) {
-		if (TradeOpts.GemQualityRange > 0) {
+	If (Item.IsGem) {
+		If (TradeOpts.GemQualityRange > 0) {
 			RequestParams.q_min := Item.Quality - TradeOpts.GemQualityRange
 			RequestParams.q_max := Item.Quality + TradeOpts.GemQualityRange
 		}
-		else {
+		Else {
 			RequestParams.q_min := Item.Quality
 		}
-		; match exact gem level if enhance, empower or enlighten
-		if (InStr(Name, "Empower") or InStr(Name, "Enlighten") or InStr(Name, "Enhance")) {
+		; match exact gem level If enhance, empower or enlighten
+		If (InStr(Name, "Empower") or InStr(Name, "Enlighten") or InStr(Name, "Enhance")) {
 			RequestParams.level_min := Item.Level
 			RequestParams.level_max := Item.Level
 		}
-		else if (TradeOpts.GemLevelRange > 0 and Item.Level >= TradeOpts.GemLevel) {
+		Else If (TradeOpts.GemLevelRange > 0 and Item.Level >= TradeOpts.GemLevel) {
 			RequestParams.level_min := Item.Level - TradeOpts.GemLevelRange
 			RequestParams.level_max := Item.Level + TradeOpts.GemLevelRange
 		}
-		else if (Item.Level >= TradeOpts.GemLevel) {
+		Else If (Item.Level >= TradeOpts.GemLevel) {
 			RequestParams.level_min := Item.Level
 		}
 	}
 	
 	; handle divination cards and jewels
-	if (Item.IsDivinationCard or Item.IsJewel) {
+	If (Item.IsDivinationCard or Item.IsJewel) {
 		RequestParams.xtype := Item.BaseType
 	}
 	
 	; show item age
-	if (isItemAgeRequest) {
+	If (isItemAgeRequest) {
 		RequestParams.name        := Item.Name
 		RequestParams.buyout      := ""
 		RequestParams.seller      := TradeOpts.AccountName
@@ -470,47 +496,52 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RequestParams.level_min := Item.Level
 			RequestParams.level_max := Item.Level
 		}
-		else if (Item.Level and not Item.IsDivinationCard and not Item.IsCurrency) {
+		Else If (Item.Level and not Item.IsDivinationCard and not Item.IsCurrency) {
 			RequestParams.ilvl_min := Item.Level
 			RequestParams.ilvl_max := Item.Level
 		}		
 	}
-
+	
+	If (openSearchInBrowser) {
+		If (!TradeOpts.BuyoutOnly) {
+			RequestParams.buyout := ""
+		} 	
+	}
 	If (TradeOpts.Debug) {
 		console.log(RequestParams)
 		console.show()	
-	}	
+	}
 	Payload := RequestParams.ToPayload()
 	
 	ShowToolTip("Running search...")
 	
-	if (Item.IsCurrency and !Item.IsEssence) {		
+	If (Item.IsCurrency and !Item.IsEssence) {		
 		Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser)
 	}
-	else {
+	Else {
 		Html := TradeFunc_DoPostRequest(Payload, openSearchInBrowser)	
 	}
 	
 	if(openSearchInBrowser) {
 		; redirect was prevented to get the url and open the search on poe.trade instead
-		if (Item.isCurrency and !Item.IsEssence) {
+		If (Item.isCurrency and !Item.IsEssence) {
 			IDs := TradeGlobals.Get("CurrencyIDs")
 			Have:= TradeOpts.CurrencySearchHave
 			ParsedUrl1 := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[Name] . "&have=" . IDs[Have]
 		}
-		else {
+		Else {
 			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
 		}		
 		TradeFunc_OpenUrlInBrowser(ParsedUrl1)
 	}
-	else if (Item.isCurrency and !Item.IsEssence) {
+	Else If (Item.isCurrency and !Item.IsEssence) {
 		ParsedData := TradeFunc_ParseCurrencyHtml(Html, Payload)
 		
 		SetClipboardContents(ParsedData)
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}
-	else {
+	Else {
 		If (isItemAgeRequest) {
 			Item.UsedInSearch.SearchType := "Item Age Search"
 		}
@@ -576,7 +607,7 @@ TradeFunc_ParseItemDefenseStats(stats, mods){
 				If (RegExMatch(affix, "i) per ")) {
 					continue
 				}
-				if (RegExMatch(affix, "i)#.*to maximum.*?Energy Shield"  , affixFlatES)) {
+				If (RegExMatch(affix, "i)#.*to maximum.*?Energy Shield"  , affixFlatES)) {
 					If (not mod.isVariable) {
 						min_affixFlatES    := mod.values[1] 
 						max_affixFlatES    := mod.values[1]
@@ -587,7 +618,7 @@ TradeFunc_ParseItemDefenseStats(stats, mods){
 					}
 					debugOutput .= affix "`nmax es : " min_affixFlatES " - " max_affixFlatES "`n`n"
 				}
-				if (RegExMatch(affix, "i)#.*to maximum.*?Armour"         , affixFlatAR)) {
+				If (RegExMatch(affix, "i)#.*to maximum.*?Armour"         , affixFlatAR)) {
 					If (not mod.isVariable) {
 						min_affixFlatAR    := mod.values[1]
 						max_affixFlatAR    := mod.values[1]
@@ -598,7 +629,7 @@ TradeFunc_ParseItemDefenseStats(stats, mods){
 					}
 					debugOutput .= affix "`nmax ar : " min_affixFlatAR " - " max_affixFlatAR "`n`n"
 				}
-				if (RegExMatch(affix, "i)#.*to maximum.*?Evasion"        , affixFlatEV)) {
+				If (RegExMatch(affix, "i)#.*to maximum.*?Evasion"        , affixFlatEV)) {
 					If (not mod.isVariable) {
 						min_affixFlatEV    := mod.values[1]
 						max_affixFlatEV    := mod.values[1]
@@ -609,7 +640,7 @@ TradeFunc_ParseItemDefenseStats(stats, mods){
 					}
 					debugOutput .= affix "`nmax ev : " min_affixFlatEV " - " max_affixFlatEV "`n`n"
 				}
-				if (RegExMatch(affix, "i)#.*increased.*?Energy Shield"   , affixPercentES)) {
+				If (RegExMatch(affix, "i)#.*increased.*?Energy Shield"   , affixPercentES)) {
 					If (not mod.isVariable) {
 						min_affixPercentES := mod.values[1]
 						max_affixPercentES := mod.values[1]
@@ -620,7 +651,7 @@ TradeFunc_ParseItemDefenseStats(stats, mods){
 					}
 					debugOutput .= affix "`ninc es : " min_affixPercentES " - " max_affixPercentES "`n`n"
 				}
-				if (RegExMatch(affix, "i)#.*increased.*?Evasion"         , affixPercentEV)) {
+				If (RegExMatch(affix, "i)#.*increased.*?Evasion"         , affixPercentEV)) {
 					If (not mod.isVariable) {
 						min_affixPercentEV := mod.values[1]
 						max_affixPercentEV := mod.values[1]
@@ -631,7 +662,7 @@ TradeFunc_ParseItemDefenseStats(stats, mods){
 					}
 					debugOutput .= affix "`ninc ev : " min_affixPercentEV " - " max_affixPercentEV "`n`n"
 				}
-				if (RegExMatch(affix, "i)#.*increased.*?Armour"          , affixPercentAR)) {
+				If (RegExMatch(affix, "i)#.*increased.*?Armour"          , affixPercentAR)) {
 					If (not mod.isVariable) {
 						min_affixPercentAR := mod.values[1]
 						max_affixPercentAR := mod.values[1]
@@ -680,7 +711,7 @@ TradeFunc_ParseItemDefenseStats(stats, mods){
 		console.log(output)
 	}
 	
-	return iStats
+	Return iStats
 }
 
 TradeFunc_CalculateBase(total, affixPercent, qualityPercent, affixFlat){
@@ -690,7 +721,7 @@ TradeFunc_CalculateBase(total, affixPercent, qualityPercent, affixFlat){
 		affixFlat     := (affixFlat) ? affixFlat : 0
 		qualityPercent:= (qualityPercent) ? (qualityPercent / 100) : 0
 		base := Round((total / (1 + affixPercent + qualityPercent)) - affixFlat)
-		return base
+		Return base
 	}
 	return
 }
@@ -700,7 +731,7 @@ TradeFunc_CalculateQ20(base, affixFlat, affixPercent){
 		affixPercent  := (affixPercent) ? (affixPercent / 100) : 0
 		affixFlat     := (affixFlat) ? affixFlat : 0
 		total := (base + affixFlat) * (1 + affixPercent + (20 / 100))
-		return total
+		Return total
 	}
 	return
 }
@@ -834,19 +865,19 @@ TradeFunc_ParseItemOffenseStats(Stats, mods){
 		;console.log(debugOutput)
 	}
 	
-	return iStats
+	Return iStats
 }
 
 TradeFunc_GetUniqueStats(name){
 	items := TradeGlobals.Get("VariableUniqueData")
 	For i, uitem in items {
 		If (name = uitem.name) {
-			return uitem.stats
+			Return uitem.stats
 		}
 	}
 }
 
-; copied from PoE-ItemInfo because there it'll only be called if the option "ShowMaxSockets" is enabled
+; copied from PoE-ItemInfo because there it'll only be called If the option "ShowMaxSockets" is enabled
 TradeFunc_SetItemSockets() {
 	Global Item
 	
@@ -892,23 +923,23 @@ TradeFunc_CheckIfItemIsCraftingBase(type){
 	bases := TradeGlobals.Get("CraftingData")
 	For i, base in bases {
 		If (type = base) {
-			return true
+			Return true
 		}
 	}
-	return false
+	Return false
 }
 
 TradeFunc_CheckIfItemHasHighestCraftingLevel(subtype, iLvl){
 	If (RegExMatch(subtype, "i)Helmet|Gloves|Boots|Body Armour|Shield|Quiver")) {
-		return (iLvl >= 84) ? 84 : false
+		Return (iLvl >= 84) ? 84 : false
 	}
 	Else If (RegExMatch(subtype, "i)Weapon")) {
-		return (iLvl >= 83) ? 83 : false
+		Return (iLvl >= 83) ? 83 : false
 	}	
 	Else If (RegExMatch(subtype, "i)Belt|Amulet|Ring")) {
-		return (iLvl >= 83) ? 83 : false
+		Return (iLvl >= 83) ? 83 : false
 	}
-	return false
+	Return false
 }
 
 TradeFunc_DoParseClipboard()
@@ -928,7 +959,7 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
 	Encoding := "utf-8"
     ;Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	if (openSearchInBrowser) {
+	If (openSearchInBrowser) {
 		HttpObj.Option(6) := False
 	}    
 	HttpObj.Open("POST","http://poe.trade/search")
@@ -962,7 +993,7 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
 		oADO.Close()
 	}
 	
-	if A_LastError
+	If A_LastError
 		MsgBox % A_LastError	
 	
 	Return, html
@@ -974,14 +1005,14 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	ComObjError(0)
 	Encoding := "utf-8"
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	if (openSearchInBrowser) {
+	If (openSearchInBrowser) {
 		HttpObj.Option(6) := False ;
 	} 
 	
-	if (init) {
+	If (init) {
 		Url := "http://currency.poe.trade/"
 	}
-	else {
+	Else {
 		LeagueName := TradeGlobals.Get("LeagueName")
 		IDs := TradeGlobals.Get("CurrencyIDs")
 		Have:= TradeOpts.CurrencySearchHave
@@ -1006,10 +1037,10 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 		oADO.Close()
 	}
 	
-	if A_LastError
+	If A_LastError
 		MsgBox % A_LastError	
 	
-	if (init) {
+	If (init) {
 		TradeFunc_ParseCurrencyIDs(html)
 		Return
 	}
@@ -1021,15 +1052,15 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 TradeFunc_OpenUrlInBrowser(Url){
 	Global TradeOpts
 	
-	if (TradeFunc_CheckBrowserPath(TradeOpts.BrowserPath, false)) {
+	If (TradeFunc_CheckBrowserPath(TradeOpts.BrowserPath, false)) {
 		openWith := TradeOpts.BrowserPath
 		Run, %openWith% -new-tab "%Url%"
 	}		
-	else if (TradeOpts.OpenWithDefaultWin10Fix) {
+	Else If (TradeOpts.OpenWithDefaultWin10Fix) {
 		openWith := AssociatedProgram("html") 
 		Run, %openWith% -new-tab "%Url%"
 	}
-	else {		
+	Else {		
 		Run %Url%
 	}		
 }
@@ -1131,7 +1162,7 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 	average := 0
 	Title := ""
 	
-	; loop over the first 99 results if possible, otherwise over as many as are available
+	; loop over the first 99 results If possible, otherwise over as many as are available
 	accounts := []
 	NoOfItemsToCount := 99
 	NoOfItemsSkipped := 0
@@ -1178,7 +1209,7 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 			index1 := Floor(prices.MaxIndex()/2)
 			index2 := Ceil(prices.MaxIndex()/2)
 			median := (prices[index1] + prices[index2]) / 2
-			if (median > 2) {
+			If (median > 2) {
 				median := Round(median, 2)
 			}
 		}
@@ -1186,7 +1217,7 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 			; results count is even
 			index := Floor(prices.MaxIndex()/2)
 			median := prices[index]		
-			if (median > 2) {
+			If (median > 2) {
 				median := Round(median, 2)
 			}
 		} 
@@ -1200,7 +1231,7 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed by Account Filter" : ""		
 		Title .= ") `n`n"
 	}  
-	return Title
+	Return Title
 }
 
 ; Parse poe.trade html to display the search result tooltip with X listings
@@ -1212,19 +1243,19 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	; Target HTML Looks like the ff:
     ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
 	
-	if (not Item.IsGem and not Item.IsDivinationCard and not Item.IsJewel and not Item.IsCurrency and not Item.IsMap) {
+	If (not Item.IsGem and not Item.IsDivinationCard and not Item.IsJewel and not Item.IsCurrency and not Item.IsMap) {
 		showItemLevel := true
 	}
 	
 	Name := (Item.IsRare and not Item.IsMap) ? Item.Name " " Item.TypeName : Item.Name
 	Title := Trim(StrReplace(Name, "Superior", ""))
 	
-	if (Item.IsMap && !Item.isUnique) {
+	If (Item.IsMap && !Item.isUnique) {
 		; map fix (wrong Item.name on magic/rare maps)
 		Title := 
 		newName := Trim(StrReplace(Item.Name, "Superior", ""))
 		; prevent duplicate name on white and magic maps
-		if (newName != Item.SubType) {
+		If (newName != Item.SubType) {
 			s := Trim(RegExReplace(Item.Name, "Superior", "")) 
 			s := Trim(StrReplace(s, Item.SubType, "")) 
 			Title .= "(" RegExReplace(s, " +", " ") ") "
@@ -1233,22 +1264,22 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	}
 	
 	; add corrupted tag
-	if (Item.IsCorrupted) {
+	If (Item.IsCorrupted) {
 		Title .= " [Corrupted] "
 	}
 	
 	; add gem quality and level
-	if (Item.IsGem) {
+	If (Item.IsGem) {
 		Title := Item.Name ", Q" Item.Quality "%"
-		if (Item.Level >= 16) {
+		If (Item.Level >= 16) {
 			Title := Item.Name ", " Item.Level "`/" Item.Quality "%"
 		}
 	}
 	; add item sockets and links
-	if (ItemData.Sockets >= 5) {
+	If (ItemData.Sockets >= 5) {
 		Title := Name " " ItemData.Sockets "s" ItemData.Links "l"
 	}
-	if (showItemLevel) {
+	If (showItemLevel) {
 		Title .= ", iLvl: " iLvl
 	}
 	
@@ -1261,20 +1292,20 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		ShowFullNameNote := true
 	}
 	
-	if (Item.UsedInSearch) {
-		if (isItemAgeRequest) {
+	If (Item.UsedInSearch) {
+		If (isItemAgeRequest) {
 			Title .= Item.UsedInSearch.SearchType
 		}		
-		else {
+		Else {
 			Title .= "Used in " . Item.UsedInSearch.SearchType . " Search: "
 			Title .= (Item.UsedInSearch.Enchantment)  ? "Enchantment " : "" 	
 			Title .= (Item.UsedInSearch.CorruptedMod) ? "Corr. Implicit " : "" 	
 			Title .= (Item.UsedInSearch.Sockets)      ? "| " . Item.UsedInSearch.Sockets . "S " : ""
 			Title .= (Item.UsedInSearch.Links)        ? "| " . Item.UsedInSearch.Links   . "L " : ""
-			if (Item.UsedInSearch.iLvl.min and Item.UsedInSearch.iLvl.max) {
+			If (Item.UsedInSearch.iLvl.min and Item.UsedInSearch.iLvl.max) {
 				Title .= "| iLvl (" . Item.UsedInSearch.iLvl.min . "-" . Item.UsedInSearch.iLvl.max . ")"
 			}
-			else {
+			Else {
 				Title .= (Item.UsedInSearch.iLvl.min) ? "| iLvl (>=" . Item.UsedInSearch.iLvl.min . ") " : ""
 				Title .= (Item.UsedInSearch.iLvl.max) ? "| iLvl (<=" . Item.UsedInSearch.iLvl.max . ") " : ""
 			}		
@@ -1289,9 +1320,9 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	}
 	
 	; add average and median prices to title	
-	if (not isItemAgeRequest) {
+	If (not isItemAgeRequest) {
 		Title .= TradeFunc_GetMeanMedianPrice(html, payload)
-	} else {
+	} Else {
 		Title .= "`n"
 	}	
 	
@@ -1301,12 +1332,12 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	Title .= StrPad("IGN",20) 	
 	Title .= StrPad(StrPad("| Price ", 19, "right") . "|",20,"left")	
 	
-	if (Item.IsGem) {
+	If (Item.IsGem) {
 		; add gem headers
 		Title .= StrPad("Q. |",6,"left")
 		Title .= StrPad("Lvl |",6,"left")
 	}
-	if (showItemLevel) {
+	If (showItemLevel) {
 		; add ilvl
 		Title .= StrPad("iLvl |",7,"left")
 	}
@@ -1317,11 +1348,11 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	Title .= TradeFunc_ShowAcc(StrPad("----------",10), "-") 
 	Title .= StrPad("--------------------",20) 
 	Title .= StrPad("--------------------",19,"left")
-	if (Item.IsGem) {
+	If (Item.IsGem) {
 		Title .= StrPad("------",6,"left")
 		Title .= StrPad("------",6,"left")
 	}	
-	if (showItemLevel) {
+	If (showItemLevel) {
 		Title .= StrPad("-------",8,"left")
 	}
 	Title .= StrPad("----------",8,"left")	
@@ -1339,16 +1370,16 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		if(not AccountName){
 			continue
 		}
-		else {
+		Else {
 			itemsListed++
 		}
 		
 		; skip multiple results from the same account
-		if (TradeOpts.RemoveMultipleListingsFromSameAccount and not isItemAgeRequest) {
-			if (TradeUtils.IsInArray(AccountName, accounts)) {
+		If (TradeOpts.RemoveMultipleListingsFromSameAccount and not isItemAgeRequest) {
+			If (TradeUtils.IsInArray(AccountName, accounts)) {
 				NoOfItemsToShow := NoOfItemsToShow + 1
 				continue
-			} else {
+			} Else {
 				accounts.Push(AccountName)
 			}
 		}		
@@ -1356,11 +1387,11 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		; get item age
 		Pos := RegExMatch(TBody, "i)class=""found-time-ago"">(.*?)<", Age)
 		
-		if (showItemLevel) {
+		If (showItemLevel) {
 			; get item level
 			Pos := RegExMatch(TBody, "i)data-name=""ilvl"">.*: ?(\d+?)<", iLvl, Pos)
 		}		
-		if (Item.IsGem) {
+		If (Item.IsGem) {
 			; get gem quality and level
 			Pos := RegExMatch(TBody, "i)data-name=""q"".*?data-value=""(.*?)""", Q, Pos)
 			Pos := RegExMatch(TBody, "i)data-name=""level"".*?data-value=""(.*?)""", LVL, Pos)
@@ -1380,20 +1411,20 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		BuyoutText := StrPad(BuyoutPrice, 5, "left") . " " BuyoutCurrency
 		Title .= StrPad("| " . BuyoutText . "",19,"right")
 		
-		if (Item.IsGem) {
+		If (Item.IsGem) {
 			; add gem info
-			if (Q1 > 0) {
+			If (Q1 > 0) {
 				Title .= StrPad("| " . StrPad(Q1,2,"left") . "% ",6,"right")
-			} else {
+			} Else {
 				Title .= StrPad("|  -  ",6,"right")
 			}
 			Title .= StrPad("| " . StrPad(LVL1,3,"left") . " " ,6,"right")
 		}
-		if (showItemLevel) {
+		If (showItemLevel) {
 			; add item level
 			Title .= StrPad("| " . StrPad(iLvl1,3,"left") . "  |" ,8,"right")
 		}	
-		else {
+		Else {
 			Title .= "|"
 		}
 		; add item age
@@ -1405,21 +1436,21 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	Return, Title
 }
 
-; Trim names/string and add dots at the end if they are longer than specified length
+; Trim names/string and add dots at the end If they are longer than specified length
 TradeFunc_TrimNames(name, length, addDots) {
 	s := SubStr(name, 1 , length)
-	if (StrLen(name) > length + 3 && addDots) {
+	If (StrLen(name) > length + 3 && addDots) {
 		StringTrimRight, s, s, 3
 		s .= "..."
 	}
-	return s
+	Return s
 }
 
-; Add sellers accountname to string if that option is selected
+; Add sellers accountname to string If that option is selected
 TradeFunc_ShowAcc(s, addString) {
-	if (TradeOpts.ShowAccountName = 1) {
+	If (TradeOpts.ShowAccountName = 1) {
 		s .= addString
-		return s	
+		Return s	
 	}	
 }
 
@@ -1429,26 +1460,26 @@ TradeFunc_FormatItemAge(age) {
 	RegExMatch(age, "\d+", value)
 	RegExMatch(age, "i)month|week|yesterday|hour|minute|second|day", unit)
 	
-	if (unit = "month") {
+	If (unit = "month") {
 		unit := " mo"
-	} else if (unit = "week") {
+	} Else If (unit = "week") {
 		unit := " week"
-	} else if (unit = "day") {
+	} Else If (unit = "day") {
 		unit := " day"
-	} else if (unit = "yesterday") {
+	} Else If (unit = "yesterday") {
 		unit := " day"
 		value := "1"
-	} else if (unit = "hour") {
+	} Else If (unit = "hour") {
 		unit := " h"
-	} else if (unit = "minute") {
+	} Else If (unit = "minute") {
 		unit := " min"
-	} else if (unit = "second") {
+	} Else If (unit = "second") {
 		unit := " sec"
 	} 		
 	
 	s := " " StrPad(value, 3, left) unit
 	
-	return s
+	Return s
 }
 
 class RequestParams_ {
@@ -1524,7 +1555,7 @@ class RequestParams_ {
 		modGroupStr := this.modGroup.ToPayload()
 		
 		p := "league=" this.league "&type=" this.xtype "&base=" this.xbase "&name=" this.name "&dmg_min=" this.dmg_min "&dmg_max=" this.dmg_max "&aps_min=" this.aps_min "&aps_max=" this.aps_max "&crit_min=" this.crit_min "&crit_max=" this.crit_max "&dps_min=" this.dps_min "&dps_max=" this.dps_max "&edps_min=" this.edps_min "&edps_max=" this.edps_max "&pdps_min=" this.pdps_min "&pdps_max=" this.pdps_max "&armour_min=" this.armour_min "&armour_max=" this.armour_max "&evasion_min=" this.evasion_min "&evasion_max=" this.evasion_max "&shield_min=" this.shield_min "&shield_max=" this.shield_max "&block_min=" this.block_min "&block_max=" this.block_max "&sockets_min=" this.sockets_min "&sockets_max=" this.sockets_max "&link_min=" this.link_min "&link_max=" this.link_max "&sockets_r=" this.sockets_r "&sockets_g=" this.sockets_g "&sockets_b=" this.sockets_b "&sockets_w=" this.sockets_w "&linked_r=" this.linked_r "&linked_g=" this.linked_g "&linked_b=" this.linked_b "&linked_w=" this.linked_w "&rlevel_min=" this.rlevel_min "&rlevel_max=" this.rlevel_max "&rstr_min=" this.rstr_min "&rstr_max=" this.rstr_max "&rdex_min=" this.rdex_min "&rdex_max=" this.rdex_max "&rint_min=" this.rint_min "&rint_max=" this.rint_max modGroupStr "&q_min=" this.q_min "&q_max=" this.q_max "&level_min=" this.level_min "&level_max=" this.level_max "&ilvl_min=" this.ilvl_min "&ilvl_max=" this.ilvl_max "&rarity=" this.rarity "&seller=" this.seller "&thread=" this.xthread "&identified=" this.identified "&corrupted=" this.corrupted "&online=" this.online "&buyout=" this.buyout "&altart=" this.altart "&capquality=" this.capquality "&buyout_min=" this.buyout_min "&buyout_max=" this.buyout_max "&buyout_currency=" this.buyout_currency "&crafted=" this.crafted "&enchanted=" this.enchanted
-		return p
+		Return p
 	}
 }
 
@@ -1539,14 +1570,14 @@ class _ParamModGroup {
 	{
 		p := ""
 		
-		if (this.ModArray.Length() = 0) {
+		If (this.ModArray.Length() = 0) {
 			this.AddMod(new _ParamMod())
 		}
 		this.group_count := this.ModArray.Length()
 		Loop % this.ModArray.Length()
 			p .= this.ModArray[A_Index].ToPayload()
 		p .= "&group_type=" this.group_type "&group_min=" this.group_min "&group_max=" this.group_max "&group_count=" this.group_count
-		return p
+		Return p
 	}
 	AddMod(paraModObj) {
 		this.ModArray.Push(paraModObj)
@@ -1562,24 +1593,24 @@ class _ParamMod {
 		; for some reason '+' is not encoded properly, this affects mods like '+#% to all Elemental Resistances'
 		this.mod_name := StrReplace(this.mod_name, "+", "%2B")
 		p := "&mod_name=" this.mod_name "&mod_min=" this.mod_min "&mod_max=" this.mod_max
-		return p
+		Return p
 	}
 }
 
-; Return unique item with its variable mods and mod ranges if it has any
+; Return unique item with its variable mods and mod ranges If it has any
 TradeFunc_FindUniqueItemIfItHasVariableRolls(name)
 {
 	data := TradeGlobals.Get("VariableUniqueData")
 	For index, uitem in data {		
 		If (uitem.name = name ) {
 			uitem.IsUnique := true
-			return uitem
+			Return uitem
 		}
 	}  
-	return false
+	Return false
 }
 
-; return items mods and ranges
+; Return items mods and ranges
 /*
 TradeFunc_PrepareNonUniqueItemModsOld(Affixes, Implicit, Enchantment = false, Corruption = false) {
 	Affixes := StrSplit(Affixes, "`n")
@@ -1650,7 +1681,7 @@ TradeFunc_PrepareNonUniqueItemModsOld(Affixes, Implicit, Enchantment = false, Co
 			temp.values.push(RangeAverage)
 		}
 		
-		;combine implicit with explicit if they are the same mods, overwriting the implicit
+		;combine implicit with explicit If they are the same mods, overwriting the implicit
 		If (mods[1].type == "implicit" and mods[1].name = temp.name) {
 			mods[1].type := "explicit"
 			
@@ -1688,92 +1719,390 @@ TradeFunc_PrepareNonUniqueItemModsOld(Affixes, Implicit, Enchantment = false, Co
 	tempItem.mods := temp.mods
 	tempItem.IsUnique := false
 
-	return tempItem
+	Return tempItem
 }
 */
 
 TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = false, Corruption = false, isMap = false) {
 	Affixes := StrSplit(Affixes, "`n")
 	mods := []
-
-	If (Implicit and not Enchantment and not Corruption) {
-		temp := {}
-		StringReplace, Implicit, Implicit, `r,, All
-		StringReplace, Implicit, Implicit, `n,, All
-		temp.name_orig := Implicit
-		temp.values 	:= []
-		Pos := 0
-		While Pos := RegExMatch(Implicit, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
-			temp.values.push(value)
-		}
-
-		s			:= RegExReplace(Implicit, "i)([.0-9]+)", "#")
-		temp.name 	:= RegExReplace(s, "i)# ?to ? #", "#", isRange)		
-		temp.isVariable:= false
-		temp.type		:= "implicit"
-
-		mods.push(temp)
-	}
+	i := 0
 	
+	If (Implicit and not Enchantment and not Corruption) {
+		temp := TradeFunc_NonUniqueModStringToObject(Implicit, true)
+		For key, val in temp {
+			mods.push(val)
+			i++
+		}		
+	}	
 
 	For key, val in Affixes {
-		If (!val or RegExMatch(val, "i)---") or (Enchantment or Corruption and Rarity = 1)) {
+		If (!val or RegExMatch(val, "i)---") or (i >= 1 and ((Enchantment or Corruption) or (i <= 1 and Implicit and Rarity = 1)))) {
 			continue
 		}
-		temp := {}
-		StringReplace, val, val, `r,, All
-		StringReplace, val, val, `n,, All
-		temp.name_orig := val
-		temp.values 	:= []
-		Pos := 0
-		While Pos := RegExMatch(val, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
-			temp.values.push(value)
+
+		temp := TradeFunc_NonUniqueModStringToObject(val, false)
+		;combine mods if they have the same name and add their values
+		For tempkey, tempmod in temp {			
+			found := false
+			For key, mod in mods {	
+				If (tempmod.name = mod.name) {	
+					Loop % mod.values.MaxIndex() {
+						mod.values[A_Index] := mod.values[A_Index] + tempmod.values[A_Index]
+					}
+					
+					tempStr  := RegExReplace(mod.name_orig, "i)([.0-9]+)", "#")
+					
+					Pos		:= 1
+					tempArr	:= []
+					While Pos := RegExMatch(tempmod.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
+						tempArr.push(value)
+					}
+					
+					Pos		:= 1
+					Index	:= 1
+					While Pos := RegExMatch(mod.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
+						tempStr := StrReplace(tempStr, "#", value + tempArr[Index],, 1)
+						Index++			
+					}
+					mod.name_orig := tempStr	
+					found := true
+				}				
+			} 
+			If (tempmod.name and !found) {
+				mods.push(tempmod)	
+			}
 		}
-		
-		s			:= RegExReplace(val, "i)([.0-9]+)", "#")
+	}
+	
+	mods := TradeFunc_CreatePseudoMods(mods)
+	
+	tempItem		:= {}
+	tempItem.mods	:= []
+	tempItem.mods	:= mods
+	temp			:= TradeFunc_GetItemsPoeTradeMods(tempItem)
+	tempItem.mods	:= temp.mods
+	tempItem.IsUnique := false
+	
+	Return tempItem
+}
+
+TradeFunc_NonUniqueModStringToObject(string, isImplicit) {
+	StringReplace, val, string, `r,, All
+	StringReplace, val, val, `n,, All
+	values 	:= []
+	
+	; Collect all numeric values in the mod-string
+	Pos		:= 0
+	While Pos := RegExMatch(val, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
+		values.push(value)
+	}
+
+	; Collect all resists/attributes that are combined in one mod
+	Matches	:= []
+	Pos		:= 0
+	While Pos := RegExMatch(val, "i) ?(Dexterity) ?| ?(Intelligence) ?| ?(Strength) ?", match, Pos + (StrLen(match) ? StrLen(match) : 1)) {
+		Matches.push(Trim(match))
+	}
+	
+	; Matching "x% fire and cold resistance" etc is easier this way.
+	If (RegExMatch(val, "i)Resistance")) {
+		If (RegExMatch(val, "i)fire")) {
+			Matches.push("Fire")
+		}
+		If (RegExMatch(val, "i)cold")) {
+			Matches.push("Cold")
+		}
+		If (RegExMatch(val, "i)lightning")) {
+			Matches.push("Lightning")
+		}
+	}
+	
+	; Create single mod from every collected resist/attribute
+	Loop % Matches.Length() {
+		RegExMatch(val, "i)(Resistance)", match)
+		Matches[A_Index] := match1 ? "+#% to " . Matches[A_Index] . " " . match1 : "+# to " . Matches[A_Index]		
+	}
+	
+	; Handle "all attributes"/"all resist"
+	If (RegExMatch(val, "i)all attributes|all elemental (Resistances)", match)) {
+		resist := match1 ? true : false
+		Matches[1] := resist ? "+#% to Fire Resistance"      : "+# to Strength"
+		Matches[2] := resist ? "+#% to Lightning Resistance" : "+# to Intelligence"
+		Matches[3] := resist ? "+#% to Cold Resistance"      : "+# to Dexterity"		
+	}
+	; Use original mod-string if no combination is found
+	Matches[1] := Matches.Length() > 0 ? Matches[1] : val
+
+	; 
+	arr := []
+	Loop % (Matches.Length() ? Matches.Length() : 1) {
+		temp := {}
+		temp.name_orig := Matches[A_Index]
+		Loop {
+			temp.name_orig := RegExReplace(temp.name_orig, "#", values[A_Index], Count, 1)
+			If (!Count) {
+				break
+			}
+		}
+
+		temp.values 	:= values
+		s			:= RegExReplace(Matches[A_Index], "i)([.0-9]+)", "#")
 		temp.name 	:= RegExReplace(s, "i)# ?to ? #", "#", isRange)	
 		temp.isVariable:= false
-		temp.type		:= "explicit"
-		
-		;combine implicit with explicit if they are the same mods, overwriting the implicit
-		If (mods[1].type == "implicit" and mods[1].name = temp.name) {
-			mods[1].type := "explicit"
-			
-			Loop % mods[1].values.MaxIndex() {				
-				mods[1].values[A_Index] := mods[1].values[A_Index] + temp.values[A_Index]
-			}		
-			
-			tempStr  := RegExReplace(mods[1].name_orig, "i)([.0-9]+)", "#")
-			
-			Pos := 1
-			tempArr := []
-			While Pos := RegExMatch(temp.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
-				tempArr.push(value)
-			}		
-			
-			Pos := 1
-			Index := 1
-			While Pos := RegExMatch(mods[1].name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
-				tempStr := StrReplace(tempStr, "#", value + tempArr[Index],, 1)
-				Index++			
-			}
-			mods[1].name_orig := tempStr
-			
+		temp.type		:= (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"	
+		arr.push(temp)		
+	}	
+	
+	Return arr
+}
+
+TradeFunc_CreatePseudoMods(mods) {
+	tempMods := []
+	resist := 0
+	eleResist := 0
+	life := 0
+	attributes := 0
+
+	eleDmg_Percent := 0
+	eleDmg_AttacksFlatLow := 0
+	eleDmg_AttacksFlatHi := 0
+	eleDmg_AttacksPercent := 0
+	eleDmg_SpellsPercent := 0
+	eleDmg_SpellsFlatLow := 0
+	eleDmg_SpellsFlatHi := 0
+	
+	spellDmg_Percent := 0	
+	weaponEleDmg_Percent := 0
+	
+	fireDmg_Percent := 0
+	fireDmg_AttacksPercent := 0
+	fireDmg_SpellsPercent := 0
+	fireDmg_AttacksFlatLow := 0
+	fireDmg_SpellsFlatLow := 0
+	fireDmg_AttacksFlatHi := 0
+	fireDmg_SpellsFlatHi := 0
+	
+	coldDmg_Percent := 0
+	coldDmg_AttacksPercent := 0
+	coldDmg_SpellsPercent := 0
+	coldDmg_AttacksFlatLow := 0
+	coldDmg_AttacksFlatHi := 0
+	coldDmg_SpellsFlatLow := 0
+	coldDmg_SpellsFlatHi := 0
+	
+	lightningDmg_Percent := 0
+	lightningDmg_AttacksPercent := 0
+	lightningDmg_SpellsPercent := 0
+	lightningDmg_AttacksFlatLow := 0
+	lightningDmg_AttacksFlatHi := 0
+	lightningDmg_SpellsFlatLow := 0
+	lightningDmg_SpellsFlatHi := 0
+	
+	hasChaosRes := false
+	
+	For key, val in mods {
+		If (RegExMatch(val.name, "i)maximum life$")) {
+			life := life + val.values[1]
 		}
-		Else If (temp.name) {
-			mods.push(temp)	
+		If (RegExMatch(val.name, "i)to intelligence$|to dexterity$|to (strength)$", match)) {
+			attributes := attributes + val.values[1]
+			If (match1 = "strength") {
+				life := life + (Floor(val.values[1] / 2))
+			}
+		}
+		If (RegExMatch(val.name, "i)to cold resistance|to fire resistance|to lightning resistance")) {
+			resist := resist + val.values[1]
+			eleResist := eleResist + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)to Chaos Resistance")) {
+			hasChaos := true
+			resist := resist + val.values[1]
+		}
+		
+		If (RegExMatch(val.name, "i)increased (cold) damage$", element)) {
+			%element1%Dmg_Percent := %element1%Dmg_Percent + val.values[1]
+			eleDmg_Percent := eleDmg_Percent + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)increased (fire) damage$", element)) {
+			%element1%Dmg_Percent := %element1%Dmg_Percent + val.values[1]
+			eleDmg_Percent := eleDmg_Percent + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)increased (lightning) damage$", element)) {
+			%element1%Dmg_Percent := %element1%Dmg_Percent + val.values[1]
+			eleDmg_Percent := eleDmg_Percent + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)increased elemental damage$", element)) {
+			eleDmg_Percent := eleDmg_Percent + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)(cold) damage to (attacks|spells)$", element)) {
+			%element1%Dmg_%element2%FlatLow := %element1%Dmg_%element2%FlatLow + val.values[1]
+			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi + val.values[2]
+			eleDmg_%element2%FlatLow := eleDmg_%element2%FlatLow + val.values[1]			
+			eleDmg_%element2%FlatHi  := eleDmg_%element2%FlatHi  + val.values[2]
+		}
+		If (RegExMatch(val.name, "i)(fire) damage to (attacks|spells)$", element)) {
+			%element1%Dmg_%element2%FlatLow := %element1%Dmg_%element2%FlatLow + val.values[1]
+			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi + val.values[2]
+			eleDmg_%element2%FlatLow := eleDmg_%element2%FlatLow + val.values[1]			
+			eleDmg_%element2%FlatHi  := eleDmg_%element2%FlatHi  + val.values[2]
+		}
+		If (RegExMatch(val.name, "i)(lightning) damage to (attacks|spells)$", element)) {			
+			%element1%Dmg_%element2%FlatLow := %element1%Dmg_%element2%FlatLow + val.values[1]
+			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi + val.values[2]
+			eleDmg_%element2%FlatLow := eleDmg_%element2%FlatLow + val.values[1]			
+			eleDmg_%element2%FlatHi  := eleDmg_%element2%FlatHi  + val.values[2]
+		}
+		If (RegExMatch(val.name, "i)elemental damage with weapons")) {
+			weaponEleDmg_Percent := weaponEleDmg_Percent + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)spell", element)) {
+			spellDmg_Percent := spellDmg_Percent + val.values[1]
+		}
+	}
+	
+	If (eleDmg_Percent > 0) {
+		If (weaponEleDmg_Percent) {
+			eleDmg_AttacksPercent 	   := eleDmg_Percent ? eleDmg_AttacksPercent + weaponEleDmg_Percent : 0
+			fireDmg_AttacksPercent 	   := fireDmg_Percent ? fireDmg_AttacksPercent + weaponEleDmg_Percent : 0
+			coldDmg_AttacksPercent	   := coldDmg_Percent ? coldDmg_AttacksPercent + weaponEleDmg_Percent : 0
+			lightningDmg_AttacksPercent := lightningDmg_Percent ? lightningDmg_AttacksPercent + weaponEleDmg_Percent : 0
+		}
+		If (spellDmg_Percent) {
+			fireDmg_SpellsPercent 	   := fireDmg_Percent ? fireDmg_SpellsPercent + spellDmg_Percent : 0
+			coldDmg_SpellsPercent	   := coldDmg_Percent ? coldDmg_SpellsPercent + spellDmg_Percent : 0
+			lightningDmg_SpellsPercent  := lightningDmg_Percent ? lightningDmg_SpellsPercent + spellDmg_Percent : 0
 		}
 	}
 
+	If (life > 0) {
+		temp := {}
+		temp.values := [life]
+		temp.name_orig := "+" . life . " to maximum Life"
+		temp.name 	:= "+# to maximum Life"
+		tempMods.push(temp)
+	}
+	If (resist > 0) {
+		temp := {}
+		temp.values := [resist]
+		temp.name_orig := "+" . resist . "% total Resistance"
+		temp.name 	:= "+#% total Resistance"		
+		tempMods.push(temp)
+	}
+	If (eleResist > 0) {
+		temp := {}
+		temp.values := [eleResist]
+		temp.name_orig := "+" . eleResist . "% total Elemental Resistance"
+		temp.name 	:= "+#% total Elemental Resistance"		
+		tempMods.push(temp)
+	}
 	
-	tempItem := {}
-	tempItem.mods := []
-	tempItem.mods := mods
-	temp := TradeFunc_GetItemsPoeTradeMods(tempItem)
-	tempItem.mods := temp.mods
-	tempItem.IsUnique := false
-	
-	return tempItem
+	Loop, 3 {
+		elements := ["Fire", "Cold", "Lightning"]
+		element  := elements[A_Index]
+		
+		Loop,  3 {
+			types := ["", "Attacks",  "Spells"]
+			type  := types[A_Index]
+			
+			If (%element%Dmg_%type%Percent > 0) {
+				modSuffix := 				
+				If (type = "") {
+					modSuffix := " Damage"
+				}
+				If (type = "Attacks") {
+					modSuffix := " Damage with Weapons"
+					%element%Dmg_Percent := %element%Dmg_Percent + weaponEleDmg_Percent
+					eleDmg_Percent := eleDmg_Percent + weaponEleDmg_Percent
+				}
+				If (type = "Spells") {
+					modSuffix := " Spell Damage"
+					%element%Dmg_Percent := %element%Dmg_Percent + spellDmg_Percent
+					eleDmg_Percent := eleDmg_Percent + spellDmg_Percent
+				}				
+				temp := {}
+				temp.values := [%element%Dmg_Percent]
+				temp.name_orig := %element%Dmg_Percent "% increased " element . modSuffix
+				temp.name 	:= "#% increased " element . modSuffix	
+				tempMods.push(temp)
+				
+				If(!TradeFunc_CheckIfTempModExists("Elemental" . modSuffix, tempMods) and type != "Spells") {		
+					temp := {}
+					temp.values := [eleDmg_Percent]
+					temp.name_orig := eleDmg_Percent "% increased Elemental" . modSuffix
+					temp.name 	:= "#% increased Elemental" . modSuffix
+					tempMods.push(temp)	
+				}
+			}
+		}
+		Loop,  2 {
+			types := ["Attacks",  "Spells"]
+			type  := types[A_Index]
+
+			If (%element%Dmg_%type%FlatLow > 0) {
+				modSuffix := (type = "Attacks") ? " to Attacks" : " to Spells"
+				temp := {}
+				temp.values := [(%element%Dmg_%type%FlatLow + %element%Dmg_%type%FlatHi) /2]
+				temp.name_orig := "Adds " %element%Dmg_%type%FlatLow " to " %element%Dmg_%type%FlatHi " " element " Damage" modSuffix
+				temp.name 	:= "Adds # " element " Damage" modSuffix	
+				tempMods.push(temp)
+				
+				If(!TradeFunc_CheckIfTempModExists("Elemental Damage" modSuffix, tempMods)) {		
+					temp := {}
+					temp.values := [(eleDmg_%type%FlatLow + eleDmg_%type%FlatHi) / 2]
+					temp.name_orig := "Adds " eleDmg_%type%FlatLow " to " eleDmg_%type%FlatHi " Elemental Damage" modSuffix	
+					temp.name 	:= "Adds # Elemental Damage" modSuffix			
+					tempMods.push(temp)	
+				}			
+			}
+		}			
+	}
+
+	For tkey, tval in tempMods {
+		higher := true
+		; Don't show pseudo mods if their value is not higher than the normal mods value
+		For key, mod in mods {
+			name := tval.name = mod.name
+			eleDmg := RegExMatch(tval.name, "i)increased Elemental Damage$") and RegExMatch(mod.name, "i)increased (Fire|Cold|Lightning) Damage")
+			totalRes := RegExMatch(tval.name, "i)total Resistance$") and RegExMatch(mod.name, "i)Chaos Resistance$")
+			
+			If (name or eleDmg or totalRes) {
+				If (mod.values[2]) {
+					mv := (mod.values[1] + mod.values[2]) / 2
+					tv := (tval.values[1] + tval.values[2]) / 2
+					If (tv <= mv) {
+						higher := false
+					}
+				}
+				Else {
+					If (tval.values[1] <= mod.values[1]) {
+						higher := false
+					}
+				}
+			}
+		}
+
+		hasTotalRes := RegExMatch(tval.name, "i)total Resistance$")
+		If (hasTotalRes and not hasChaos) {
+			continue
+		}
+		Else If (higher) {
+			tval.isVariable:= false
+			tval.type := "pseudo"
+			mods.push(tval)	
+		}		
+	} 
+
+	return mods
+}
+
+TradeFunc_CheckIfTempModExists(needle, mods) {
+	For key, val in mods {
+		If (RegExMatch(val.name, "i)" needle "")) {
+			Return true
+		}
+	}
+	Return false
 }
 
 ; Add poetrades mod names to the items mods to use as POST parameter
@@ -1782,37 +2111,37 @@ TradeFunc_GetItemsPoeTradeMods(_item) {
 	
 	; use this to control search order (which group is more important)
 	For k, imod in _item.mods {
-		; check implicits first if mod is implicit, otherwise check later
-		if (_item.mods[k].type == "implicit") {
+		; check implicits first If mod is implicit, otherwise check later
+		If (_item.mods[k].type == "implicit") {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
 		}
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])
 		}		
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], _item.mods[k])
 		}
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], _item.mods[k])
 		}
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
 		}
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
 		}
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["crafted"], _item.mods[k])
 		}
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["enchantments"], _item.mods[k])
 		}
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["prophecies"], _item.mods[k])
 		}
 	}
 	
-	return _item
+	Return _item
 }
 
 ; Add poe.trades mod names to the items mods to use as POST parameter
@@ -1821,21 +2150,21 @@ TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
 	
 	For k, imod in _item.mods {	
 		_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], _item.mods[k])
 		}
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])
 		}
-		if (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], _item.mods[k])
 		}
 	}
 	
-	return _item
+	Return _item
 }
 
-; find mod in modgroup and return its name
+; find mod in modgroup and Return its name
 TradeFunc_FindInModGroup(modgroup, needle) {	
 	For j, mod in modgroup {
 		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
@@ -1847,10 +2176,10 @@ TradeFunc_FindInModGroup(modgroup, needle) {
 		ss := RegExReplace(ss, "\d+ ?to ?#", "#")		
 		
 		If (s = ss) {
-			return mod
+			Return mod
 		}
 	}
-	return ""
+	Return ""
 }
 
 TradeFunc_GetCorruption(_item) {
@@ -1883,10 +2212,10 @@ TradeFunc_GetCorruption(_item) {
 		If (valueCount = 1) {
 			corrMod.min := value1
 		}
-		return corrMod
+		Return corrMod
 	}
 	Else {
-		return false
+		Return false
 	}
 }
 
@@ -1939,10 +2268,10 @@ TradeFunc_GetEnchantment(_item, type) {
 			enchantment.min := values1
 			enchantment.max := values3
 		}
-		return enchantment
+		Return enchantment
 	}
 	Else {
-		return false
+		Return false
 	}
 }
 
@@ -1957,18 +2286,18 @@ TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 		CurrValues := []
 		CurrValue := GetActualValue(A_LoopField)
 		
-		if (CurrValue ~= "\d+") {
+		If (CurrValue ~= "\d+") {
 			
 			; handle value range
 			RegExMatch(CurrValue, "(\d+) ?(-|to) ?(\d+)", values)			
-			if (values3) {
+			If (values3) {
 				CurrValues.Push(values1)
 				CurrValues.Push(values3)
 				CurrValue := values1 " to " values3
 				ModStr := StrReplace(A_LoopField, CurrValue, "# to #")		
 			}
 			; handle single value
-			else {
+			Else {
 				CurrValues.Push(CurrValue)
 				ModStr := StrReplace(A_LoopField, CurrValue, "#")		
 			}			
@@ -1980,44 +2309,41 @@ TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 			
 			IfInString, poeTradeMod, % ModStr
 			{			
-				return CurrValues
+				Return CurrValues
 			}
 		}
 	}
 }
 
-TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
-	Loop % itemModifiers.Length()
-	{		
-		CurrValue := ""
-		CurrValues := []
-		CurrValue := GetActualValue(itemModifiers[A_Index].name_orig)
-		if (CurrValue ~= "\d+") {
-			
-			; handle value range
-			RegExMatch(CurrValue, "(\d+) ?(-|to) ?(\d+)", values)	
-			
-			if (values3) {
-				CurrValues.Push(values1)
-				CurrValues.Push(values3)
-				CurrValue := values1 " to " values3
-				ModStr := StrReplace(itemModifiers[A_Index].name_orig, CurrValue, "#")	
-			}
-			; handle single value
-			else {
-				CurrValues.Push(CurrValue)
-				ModStr := StrReplace(itemModifiers[A_Index].name_orig, CurrValue, "#")		
-			}
-			
-			ModStr := StrReplace(ModStr, "+")
-			; replace multi spaces with a single one
-			ModStr := RegExReplace(ModStr, " +", " ")
-			poeTradeMod := RegExReplace(poeTradeMod, "# ?to ? #", "#")
+TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {		
+	CurrValue := ""
+	CurrValues := []
+	CurrValue := GetActualValue(itemModifiers.name_orig)
+	If (CurrValue ~= "\d+") {
+		
+		; handle value range
+		RegExMatch(CurrValue, "(\d+) ?(-|to) ?(\d+)", values)	
+		
+		If (values3) {
+			CurrValues.Push(values1)
+			CurrValues.Push(values3)
+			CurrValue := values1 " to " values3
+			ModStr := StrReplace(itemModifiers.name_orig, CurrValue, "#")	
+		}
+		; handle single value
+		Else {
+			CurrValues.Push(CurrValue)
+			ModStr := StrReplace(itemModifiers.name_orig, CurrValue, "#")		
+		}
+		
+		ModStr := StrReplace(ModStr, "+")
+		; replace multi spaces with a single one
+		ModStr := RegExReplace(ModStr, " +", " ")
+		poeTradeMod := RegExReplace(poeTradeMod, "# ?to ? #", "#")
 
-			IfInString, poeTradeMod, % ModStr
-			{			
-				return CurrValues
-			}
+		IfInString, poeTradeMod, % ModStr
+		{			
+			Return CurrValues
 		}
 	}
 }
@@ -2032,22 +2358,22 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		ShowTooltip("Advanced search not available for this item.")
 		return
 	}
-	
+
 	TradeFunc_ResetGUI()
-	ValueRange := advItem.IsUnique ? TradeOpts.AdvancedSearchModValueRange : TradeOpts.AdvancedSearchModValueRange / 4
+	ValueRange := advItem.IsUnique ? TradeOpts.AdvancedSearchModValueRange : TradeOpts.AdvancedSearchModValueRange / 2
 	
 	Gui, SelectModsGui:Destroy    
 	Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
-	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRange "`%" 
-	Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the items mods difference between their min and max value as 100`%.			
+	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRange "`%" (lowered for non-unique items)
+	Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the (unique) item's mods difference between their min and max value as 100`%.			
 	
 	ValueRange := ValueRange / 100 	
 	
 	Loop % advItem.mods.Length() {
-		if (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
+		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
 		}
-		tempValue := StrLen(advItem.mods[A_Index].name)
+		tempValue := StrLen(advItem.mods[A_Index].param)
 		if(modLengthMax < tempValue ) {
 			modLengthMax := tempValue
 			modGroupBox := modLengthMax * 6
@@ -2055,7 +2381,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	}
 	If (!advItem.mods.Length() and ChangedImplicit) {
 		modGroupBox := StrLen(ChangedImplicit.name) * 6
-	}
+	}		
 	modCount := advItem.mods.Length()
 	
 	statCount := 0
@@ -2070,10 +2396,10 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	boxRows := modCount * 3 + statCount * 3
 	
 	Gui, SelectModsGui:Add, Text, x14 y+10 w%modGroupBox%, Mods
-	Gui, SelectModsGui:Add, Text, x+10 yp+0 w80, min
-	Gui, SelectModsGui:Add, Text, x+10 yp+0 w80, current
-	Gui, SelectModsGui:Add, Text, x+10 yp+0 w80, max
-	Gui, SelectModsGui:Add, Text, x+10 yp+0 w45, Select
+	Gui, SelectModsGui:Add, Text, x+10 yp+0 w90, min
+	Gui, SelectModsGui:Add, Text, x+10 yp+0 w45, current
+	Gui, SelectModsGui:Add, Text, x+10 yp+0 w90, max
+	Gui, SelectModsGui:Add, Text, x+10 yp+0 w30, Select
 	
 	line :=
 	Loop, 500 {
@@ -2087,53 +2413,53 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	For i, stat in Stats.Defense {
 		If (stat.value) {			
 			xPosMin := modGroupBox + 25
-			yPosFirst := ( j = 1 ) ? 30 : 45		
+			yPosFirst := ( j = 1 ) ? 20 : 25		
 			
 			If (!stat.min or !stat.max or (stat.min = stat.max) and advItem.IsUnique) {
 				continue
 			}
 			
-			if (stat.Name != "Block Chance") {
+			If (stat.Name != "Block Chance") {
 				stat.value   := Round(stat.value * 100 / (100 + Stats.Quality)) 
 				statValueQ20 := Round(stat.value * ((100 + 20) / 100))
 			}
 			
 			; calculate values to prefill min/max fields		
 			; assume the difference between the theoretical max and min value as 100%
-			if (advItem.IsUnique) {
+			If (advItem.IsUnique) {
 				statValueMin := Round(statValueQ20 - ((stat.max - stat.min) * valueRange))
 				statValueMax := Round(statValueQ20 + ((stat.max - stat.min) * valueRange))
 			}
-			else {
+			Else {
 				statValueMin := Round(statValueQ20 - (statValueQ20 * valueRange))
 				statValueMax := Round(statValueQ20 + (statValueQ20 * valueRange))	
 			}			
 			
 			; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
-			if (advItem.IsUnique) {
+			If (advItem.IsUnique) {
 				statValueMin := Floor((statValueMin < stat.min) ? stat.min : statValueMin)
 				statValueMax := Floor((statValueMax > stat.max) ? stat.max : statValueMax)
 			}
 			
-			if (not TradeOpts.PrefillMinValue) {
+			If (not TradeOpts.PrefillMinValue) {
 				statValueMin := 
 			}
-			if (not TradeOpts.PrefillMaxValue) {
+			If (not TradeOpts.PrefillMaxValue) {
 				statValueMax := 
 			}
 			
-			minLabelFirst := "(" Floor(statValueMin)
-			minLabelSecond := ")" 
-			maxLabelFirst := "(" Floor(statValueMax)
-			maxLabelSecond := ")"
+			minLabelFirst  := advItem.isUnique ? "(" Floor(statValueMin) : ""
+			minLabelSecond := advItem.isUnique ? ")" : ""
+			maxLabelFirst  := advItem.isUnique ? "(" Floor(statValueMax) : ""
+			maxLabelSecond := advItem.isUnique ? ")" : ""
 			
-			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							 , % "(Total Q20) " stat.name
-			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedStatMin%j% r1, % statValueMin
-			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % minLabelFirst minLabelSecond
-			Gui, SelectModsGui:Add, Text, x+20 yp-22 w70 r1								 , % Floor(statValueQ20)
-			Gui, SelectModsGui:Add, Edit, x+20 yp-3 w70 vTradeAdvancedStatMax%j% r1	     , % statValueMax
-			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % maxLabelFirst maxLabelSecond
-			Gui, SelectModsGui:Add, CheckBox, x+30 yp-20 vTradeAdvancedStatSelected%j%
+			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							, % "(Total Q20) " stat.name
+			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w40 vTradeAdvancedStatMin%j% r1	, % statValueMin
+			Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen					, % minLabelFirst minLabelSecond
+			Gui, SelectModsGui:Add, Text, x+10 yp+0       w45 r1						, % Floor(statValueQ20)
+			Gui, SelectModsGui:Add, Edit, x+10 yp-3       w40 vTradeAdvancedStatMax%j% r1	, % statValueMax
+			Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen					, % maxLabelFirst maxLabelSecond
+			Gui, SelectModsGui:Add, CheckBox, x+10 yp+1       vTradeAdvancedStatSelected%j%
 			
 			TradeAdvancedStatParam%j% := stat.name			
 			j++
@@ -2141,7 +2467,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	}	
 	
 	If (j > 1) {
-		Gui, SelectModsGui:Add, Text, x0 w700 yp+33 cc9cacd, %line% 
+		Gui, SelectModsGui:Add, Text, x0 w700 yp+18 cc9cacd, %line% 
 	}	
 	
 	k := 1
@@ -2149,7 +2475,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	For i, stat in Stats.Offense {
 		If (stat.value) {			
 			xPosMin := modGroupBox + 25
-			yPosFirst := ( j = 1 ) ? 20 : 45			
+			yPosFirst := ( j = 1 ) ? 20 : 25			
 			
 			If (!stat.min or !stat.max or (stat.min == stat.max) and advItem.IsUnique) {
 				continue
@@ -2157,40 +2483,40 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			
 			; calculate values to prefill min/max fields		
 			; assume the difference between the theoretical max and min value as 100%
-			if (advItem.IsUnique) {
+			If (advItem.IsUnique) {
 				statValueMin := Round(stat.value - ((stat.max - stat.min) * valueRange))
 				statValueMax := Round(stat.value + ((stat.max - stat.min) * valueRange))			
 			}
-			else {
+			Else {
 				statValueMin := Round(stat.value - (stat.value * valueRange))
 				statValueMax := Round(stat.value + (stat.value * valueRange))			
 			}
 			
 			; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
-			if (advItem.IsUnique) {
+			If (advItem.IsUnique) {
 				statValueMin := Floor((statValueMin < stat.min) ? stat.min : statValueMin)
 				statValueMax := Floor((statValueMax > stat.max) ? stat.max : statValueMax)
 			}
 			
-			if (not TradeOpts.PrefillMinValue) {
+			If (not TradeOpts.PrefillMinValue) {
 				statValueMin := 
 			}
-			if (not TradeOpts.PrefillMaxValue) {
+			If (not TradeOpts.PrefillMaxValue) {
 				statValueMax := 
 			}
 			
-			minLabelFirst := "(" Floor(stat.min)
-			minLabelSecond := ")" 
-			maxLabelFirst := "(" Floor(stat.max)
-			maxLabelSecond := ")"
+			minLabelFirst  := advItem.isUnique ? "(" Floor(stat.min) : ""
+			minLabelSecond := advItem.isUnique ? ")" : ""
+			maxLabelFirst  := advItem.isUnique ? "(" Floor(stat.max) : ""
+			maxLabelSecond := advItem.isUnique ? ")" : ""
 			
-			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%							 , % stat.name
-			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedStatMin%j% r1, % statValueMin
-			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % minLabelFirst minLabelSecond
-			Gui, SelectModsGui:Add, Text, x+20 yp-22 w70 r1								 , % Floor(stat.value)
-			Gui, SelectModsGui:Add, Edit, x+20 yp-3 w70 vTradeAdvancedStatMax%j% r1	     , % statValueMax
-			Gui, SelectModsGui:Add, Text, xp+5 yp+25 w65 cGreen                          , % maxLabelFirst maxLabelSecond
-			Gui, SelectModsGui:Add, CheckBox, x+30 yp-20 vTradeAdvancedStatSelected%j%
+			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%						  , % stat.name
+			Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w40 vTradeAdvancedStatMin%j% r1, % statValueMin
+			Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen				  , % minLabelFirst minLabelSecond
+			Gui, SelectModsGui:Add, Text, x+10 yp+0       w45 r1					  , % Floor(stat.value)
+			Gui, SelectModsGui:Add, Edit, x+10 yp-3       w40 vTradeAdvancedStatMax%j% r1, % statValueMax
+			Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen				  , % maxLabelFirst maxLabelSecond
+			Gui, SelectModsGui:Add, CheckBox, x+10 yp+1       vTradeAdvancedStatSelected%j%
 			
 			TradeAdvancedStatParam%j% := stat.name			
 			j++
@@ -2200,7 +2526,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	}
 	
 	If (k > 1) {
-		Gui, SelectModsGui:Add, Text, x0 w700 yp+33 cc9cacd, %line% 
+		Gui, SelectModsGui:Add, Text, x0 w700 yp+18 cc9cacd, %line% 
 	}	
 	
 	e := 0
@@ -2214,7 +2540,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		modValueMax := ChangedImplicit.max
 		displayName := ChangedImplicit.name
 		
-		xPosMin := xPosMin + 70 + 70 + 70 + 70
+		xPosMin := xPosMin + 40 + 5 + 45 + 10 + 45 + 10 +40 + 5 + 45 + 10 ; edit/text field widths and offsets
 		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%  , % displayName
 		Gui, SelectModsGui:Add, CheckBox, x%xPosMin% yp+1 vTradeAdvancedSelected%e%
 		
@@ -2230,33 +2556,34 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	
 	;add mods	
 	l := 1
+	p := 1
 	Loop % advItem.mods.Length() {
-		if (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
+		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
 		}
 		xPosMin := modGroupBox + 25			
 		
 		; matches "1 to #" in for example "adds 1 to # lightning damage"
-		if (RegExMatch(advItem.mods[A_Index].name, "i)Adds (\d+(.\d+)?) to #.*Damage", match)) {
+		If (RegExMatch(advItem.mods[A_Index].name, "i)Adds (\d+(.\d+)?) to #.*Damage", match)) {
 			displayName := RegExReplace(advItem.mods[A_Index].name, "\d+(.\d+)? to #", "#")
 			staticValue := match1
 		}
-		else {
+		Else {
 			displayName := advItem.mods[A_Index].name			
 			staticValue := 	
 		}
 		
-		if (advItem.mods[A_Index].ranges.Length() > 1) {
+		If (advItem.mods[A_Index].ranges.Length() > 1) {
 			theoreticalMinValue := advItem.mods[A_Index].ranges[1][1]
 			theoreticalMaxValue := advItem.mods[A_Index].ranges[2][2]
 		}
-		else {
+		Else {
 			; use staticValue to create 2 ranges; for example (1 to 50) to (1 to 70) instead of having only (50 to 70)  
-			if (staticValue) {
+			If (staticValue) {
 				theoreticalMinValue := staticValue
 				theoreticalMaxValue := advItem.mods[A_Index].ranges[1][2]
 			}
-			else {
+			Else {
 				theoreticalMinValue := advItem.mods[A_Index].ranges[1][1] ? advItem.mods[A_Index].ranges[1][1] : 0
 				theoreticalMaxValue := advItem.mods[A_Index].ranges[1][2] ? advItem.mods[A_Index].ranges[1][2] : 0
 			}
@@ -2264,110 +2591,131 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		
 		SetFormat, FloatFast, 5.2
 		
-		if (advItem.IsUnique) {
+		If (advItem.IsUnique) {
 			modValues := TradeFunc_GetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)	
 		}
-		else {
-			modValues := TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(advItem.mods, advItem.mods[A_Index].param)	
+		Else {
+			modValues := TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(advItem.mods[A_Index], advItem.mods[A_Index].param)	
 		}
 		
-		if (modValues.Length() > 1) {
+		If (modValues.Length() > 1) {
 			modValue := (modValues[1] + modValues[2]) / 2			
 		}
-		else {
+		Else {
 			modValue := modValues[1]			
 		}	
 		
 		; calculate values to prefill min/max fields		
 		; assume the difference between the theoretical max and min value as 100%
-		if (advItem.mods[A_Index].ranges[1]) {
+		If (advItem.mods[A_Index].ranges[1]) {
 			modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRange)
 			modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRange)	
 		}
-		else {
+		Else {
 			modValueMin := modValue - (modValue * valueRange)
 			modValueMax := modValue + (modValue * valueRange)
 		}		
-		; floor values only if greater than 2, in case of leech/regen mods
+		; floor values only If greater than 2, in case of leech/regen mods
 		modValueMin := (modValueMin > 2) ? Floor(modValueMin) : modValueMin
 		modValueMax := (modValueMax > 2) ? Floor(modValueMax) : modValueMax
 		
 		; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
-		if (advItem.mods[A_Index].ranges[1]) {
+		If (advItem.mods[A_Index].ranges[1]) {
 			modValueMin := TradeUtils.ZeroTrim((modValueMin < theoreticalMinValue and not staticValue) ? theoreticalMinValue : modValueMin)
 			modValueMax := TradeUtils.ZeroTrim((modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax)
 		}
 		
 		; create Labels to show unique items min/max rolls		
-		if (advItem.mods[A_Index].ranges[2][1]) {
+		If (advItem.mods[A_Index].ranges[2][1]) {
 			minLabelFirst := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[1][1] + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
 			maxLabelFirst := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[2][1] + advItem.mods[A_Index].ranges[2][2]) / 2) ")"
 		}
-		else if (staticValue) {
+		Else If (staticValue) {
 			minLabelFirst := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][1]) / 2) ")"
 			maxLabelFirst := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
 		}
-		else {
+		Else {
 			minLabelFirst := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][1]) ")"
 			maxLabelFirst := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][2]) ")"
 		}
 		
-		if (not TradeOpts.PrefillMinValue) {
+		If (not TradeOpts.PrefillMinValue) {
 			modValueMin := 
 		}
-		if (not TradeOpts.PrefillMaxValue) {
+		If (not TradeOpts.PrefillMaxValue) {
 			modValueMax := 
 		}
 		
-		yPosFirst := ( l > 1 ) ? 45 : 20
-		; increment index if the item has an enchantment
+		yPosFirst := ( l > 1 ) ? 25 : 20
+		; increment index If the item has an enchantment
 		index := A_Index + e
 		
-		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%                                   , % displayName
-		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w70 vTradeAdvancedModMin%index% r1   , % modValueMin
-		Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % (advItem.mods[A_Index].ranges[1]) ? minLabelFirst : ""
-		Gui, SelectModsGui:Add, Text, x+20 yp-22      w70 r1                               , % TradeUtils.ZeroTrim(modValue)
-		Gui, SelectModsGui:Add, Edit, x+20 yp-3       w70 vTradeAdvancedModMax%index% r1   , % modValueMax
-		Gui, SelectModsGui:Add, Text, xp+5 yp+25      w65 cGreen                           , % (advItem.mods[A_Index].ranges[1]) ? maxLabelFirst : ""
-		Gui, SelectModsGui:Add, CheckBox, x+30 yp-21      vTradeAdvancedSelected%index%
+		isPseudo := advItem.mods[A_Index].type = "pseudo" ? true : false		
+		If (isPseudo) {
+			If (p = 1) {
+				;add line if first pseudo mod
+				Gui, SelectModsGui:Add, Text, x0 w700 y+5 cc9cacd, %line%
+				yPosFirst := 20
+			}						
+			p++
+			;change color if pseudo mod
+			color := "cGray"
+		}	
+
+		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%                                 %color% 	, % isPseudo ? "(pseudo) " . displayName : displayName
+		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w40 vTradeAdvancedModMin%index% r1 		, % modValueMin
+		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen                  				, % (advItem.mods[A_Index].ranges[1]) ? minLabelFirst : ""
+		Gui, SelectModsGui:Add, Text, x+10 yp+0       w45 r1                             		, % TradeUtils.ZeroTrim(modValue)
+		Gui, SelectModsGui:Add, Edit, x+10 yp-3       w40 vTradeAdvancedModMax%index% r1 		, % modValueMax
+		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen                        		, % (advItem.mods[A_Index].ranges[1]) ? maxLabelFirst : ""
+		Gui, SelectModsGui:Add, CheckBox, x+10 yp+1       vTradeAdvancedSelected%index%
+		
+		color := "cBlack"
 		
 		TradeAdvancedParam%index% := advItem.mods[A_Index].param
 		l++
 		TradeAdvancedModsCount := l
 	}
 	
-	m := 1
-	if (Sockets >= 5 or Links >= 5) {
-		Gui, SelectModsGui:Add, Text, x0 w700 y+10 cc9cacd, %line% 
-		
-		if (Sockets >= 5) {
+	m := 1	
+	;If (Sockets >= 5 or Links >= 5) {
+	If (true) {
+		Gui, SelectModsGui:Add, Text, x0 w700 y+5 cc9cacd, %line% 
+				
+		If (Sockets >= 5) {
 			m++
 			text := "Sockets: " . Trim(Sockets)
 			Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets     , % text
 		}
-		if (Links >= 5) {
+		If (Links >= 5) {
 			offset := (m > 1 ) ? "+15" : "15"
+			m++
 			text := "Links:  " . Trim(Links)
 			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks Checked, % text
 		}
+		
+		offsetX := (m = 1)  ? "15" : "+15"
+		offsetY := (m = 1) ? "20" : "+0"
+		Gui, SelectModsGui:Add, CheckBox, x%offsetX% yp%offsetY% vTradeAdvancedSelectedILvl , % "Item Level (min)"
+		Gui, SelectModsGui:Add, Edit    , x+5 yp-3 w30 vTradeAdvancedMinILvl , % ""
 	}
 	
 	Item.UsedInSearch.SearchType := "Advanced"
 	; closes this window and starts the search
-	offset := (m > 1) ? "+20" : "+50"
+	offset := (m > 1) ? "+20" : "+10"
 	Gui, SelectModsGui:Add, Button, x10 y%offset% gAdvancedPriceCheckSearch, &Search
 	
 	; open search on poe.trade instead
 	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Op&en on poe.trade
 	Gui, SelectModsGui:Add, Text, x+20 yp+5 cGray, (Pro-Tip: Use Alt + S/E to submit a button)
 	
-	if (!advItem.IsUnique) {
+	If (!advItem.IsUnique) {
 		Gui, SelectModsGui:Add, Text, x10 y+10 cRed, Advanced search for normal/magic/rare items is not finished.
 		Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/78">See what's planned.</a>    		
 	}	
-	
-	windowWidth := modGroupBox + 80 + 10 + 10 + 80 + 80 + 10 + 60 + 20
-	windowWidth := (windowWidth > 250) ? windowWidth : 250
+
+	windowWidth := modGroupBox + 40 + 5 + 45 + 10 + 45 + 10 +40 + 5 + 45 + 10 + 65
+	windowWidth := (windowWidth > 360) ? windowWidth : 360
 	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search
 }
 
@@ -2408,6 +2756,12 @@ TradeFunc_ResetGUI(){
 			break
 		}
 	}
+	newItem.mods       	:= 
+	newItem.stats      	:= 
+	newItem.useSockets	:= 
+	newItem.useLinks	:= 
+	newItem.useIlvl	:= 
+	newItem.minIlvl	:= 
 }
 
 TradeFunc_HandleGuiSubmit(){
@@ -2426,11 +2780,11 @@ TradeFunc_HandleGuiSubmit(){
 			mod.min      := TradeAdvancedModMin%A_Index%
 			mod.max      := TradeAdvancedModMax%A_Index%
 			; has Enchantment
-			If (RegExMatch(TradeAdvancedParam%A_Index%, "i)enchant")) {
+			If (RegExMatch(TradeAdvancedParam%A_Index%, "i)enchant") and mod.selected) {
 				newItem.UsedInSearch.Enchantment := true
 			}
 			; has Corrupted Implicit
-			Else If (TradeAdvancedIsImplicit%A_Index%) {
+			Else If (TradeAdvancedIsImplicit%A_Index% and mod.selected) {
 				newItem.UsedInSearch.CorruptedMod := true
 			}
 			
@@ -2456,11 +2810,13 @@ TradeFunc_HandleGuiSubmit(){
 		}
 	}
 	
-	newItem.mods       := mods
-	newItem.stats      := stats
-	newItem.useSockets := TradeAdvancedUseSockets
-	newItem.useLinks   := TradeAdvancedUseLinks
-	
+	newItem.mods       	:= mods
+	newItem.stats      	:= stats
+	newItem.useSockets	:= TradeAdvancedUseSockets
+	newItem.useLinks	:= TradeAdvancedUseLinks
+	newItem.useIlvl	:= TradeAdvancedSelectedILvl
+	newItem.minIlvl	:= TradeAdvancedMinILvl
+
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)	
 	Gui, SelectModsGui:Destroy
 }
@@ -2469,37 +2825,37 @@ class TradeUtils {
 	; also see https://github.com/ahkscript/awesome-AutoHotkey
 	; and https://autohotkey.com/boards/viewtopic.php?f=6&t=53
 	IsArray(obj) {
-		return !!obj.MaxIndex()
+		Return !!obj.MaxIndex()
 	}
 	
 	; Trim trailing zeros from numbers
 	ZeroTrim(number) { 
 		RegExMatch(number, "(\d+)\.?(.+)?", match)
 		If (StrLen(match2) < 1) {
-			return number
-		} else {
+			Return number
+		} Else {
 			trail := RegExReplace(match2, "0+$", "")
 			number := (StrLen(trail) > 0) ? match1 "." trail : match1
-			return number
+			Return number
 		}
 	}
 	
 	IsInArray(el, array) {
 		For i, element in array {
 			If (el = "") {
-				return false
+				Return false
 			}
 			If (element = el) {
-				return true
+				Return true
 			}
 		}
-		return false
+		Return false
 	}
 	
 	CleanUp(in) {
 		StringReplace, in, in, `n,, All
 		StringReplace, in, in, `r,, All
-		return Trim(in)
+		Return Trim(in)
 	}
 	
 	; ------------------------------------------------------------------------------------------------------------------ ;
@@ -2517,8 +2873,8 @@ class TradeUtils {
 	; If you intend to call TradeUtils.StrX() from a Loop, pass the same variable used as 8th Parameter, which will simplify the parsing process.
 	;4 ) BT = BeginTrim. 
 	; Number of characters to trim on the left extreme of Resultant String
-	; Pass the String length of BeginStr if you want to omit it from Resultant String
-	; Pass a Negative value if you want to expand the left extreme of Resultant String
+	; Pass the String length of BeginStr If you want to omit it from Resultant String
+	; Pass a Negative value If you want to expand the left extreme of Resultant String
 	;5 ) ES = EndStr. Pass a String that will result at the right extreme of Resultant String
 	;6 ) EO = EndOffset. 
 	; Can be only True or False. 
@@ -2526,8 +2882,8 @@ class TradeUtils {
 	; If True, search will be conducted from the search result offset of BeginStr or from offset 1 whichever is applicable.
 	;7 ) ET = EndTrim. 
 	; Number of characters to trim on the right extreme of Resultant String
-	; Pass the String length of EndStr if you want to omit it from Resultant String
-	; Pass a Negative value if you want to expand the right extreme of Resultant String
+	; Pass the String length of EndStr If you want to omit it from Resultant String
+	; Pass a Negative value If you want to expand the right extreme of Resultant String
 	;8 ) NextOffset : A name of ByRef Variable that will be updated by TradeUtils.StrX() with the current offset, You may pass the same variable as Parameter 3, to simplify data parsing in a loop
 	
 	StrX(H,  BS="",BO=0,BT=1,   ES="",EO=0,ET=1,  ByRef N="" ) 
@@ -2542,7 +2898,7 @@ class TradeUtils {
 
 CloseUpdateWindow:
 	Gui, Cancel
-return
+Return
 
 OverwriteSettingsWidthTimer:
 	o := Globals.Get("SettingsUIWidth")
@@ -2551,7 +2907,7 @@ OverwriteSettingsWidthTimer:
 		Globals.Set("SettingsUIWidth", 1085)
 		SetTimer, OverwriteSettingsWidthTimer, Off
 	}	
-return
+Return
 
 OverwriteSettingsNameTimer:
 	o := Globals.Get("SettingsUITitle")
@@ -2563,13 +2919,13 @@ OverwriteSettingsNameTimer:
 		NewMenuTrayName := TradeGlobals.Get("SettingsUITitle")
 		Menu, Tray, UseErrorLevel
 		Menu, Tray, Rename, % OldMenuTrayName, % NewMenuTrayName
-		if (ErrorLevel = 0) {		
+		If (ErrorLevel = 0) {		
 			Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico		
 			SetTimer, OverwriteSettingsNameTimer, Off
 		}
 		Menu, Tray, UseErrorLevel, off		
 	}	
-return
+Return
 
 TradeSettingsUI_BtnOK:
 	Global TradeOpts
@@ -2578,11 +2934,11 @@ TradeSettingsUI_BtnOK:
 	Sleep, 50
 	WriteTradeConfig()
 	UpdateTradeSettingsUI()
-return
+Return
 
 TradeSettingsUI_BtnCancel:
 	Gui, Cancel
-return
+Return
 
 TradeSettingsUI_BtnDefaults:
 	Gui, Cancel
@@ -2594,16 +2950,14 @@ TradeSettingsUI_BtnDefaults:
 	Sleep, 75
 	UpdateTradeSettingsUI()
 	ShowSettingsUI()
-return
+Return
 
 TradeSettingsUI_ChkCorruptedOverride:
 	GuiControlGet, IsChecked,, CorruptedOverride
-	If (Not IsChecked)
-	{
-			GuiControl, Disable, Corrupted
-		}
-		Else
-		{
-			GuiControl, Enable, Corrupted
-		}
-return
+	If (Not IsChecked) {
+		GuiControl, Disable, Corrupted
+	}
+	Else	{
+		GuiControl, Enable, Corrupted
+	}
+Return

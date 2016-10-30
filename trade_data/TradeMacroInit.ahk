@@ -34,7 +34,7 @@ class TradeGlobals {
 		If (result == "") {
 			result := value_default
 		}
-		return result
+		Return result
 	}
 }
 
@@ -47,20 +47,21 @@ FileRemoveDir, %TradeTempDir%, 1
 FileCreateDir, %TradeTempDir%
 
 class TradeUserOptions {
-	ShowItemResults := 15		    	; Number of Items shown as search result; defaults to 15 if not set.
+	ShowItemResults := 15		    	; Number of Items shown as search result; defaults to 15 If not set.
 	ShowUpdateNotifications := 1		; 1 = show, 0 = don't show
 	OpenWithDefaultWin10Fix := 0    	; If your PC asks you what programm to use to open the wiki-link, set this to 1 
 	ShowAccountName := 1            	; Show also sellers account name in the results window
 	BrowserPath :=                  	; Show also sellers account name in the results window
+	OpenUrlsOnEmptyItem := 0			; Open wiki/poe.trade also when no item was checked
 	
 	Debug := 0      				; 
 	
 	PriceCheckHotKey := ^d        	; 
-	AdvancedPriceCheckHotKey := ^!s ; 
-	OpenWikiHotKey := ^w            ; 
-	CustomInputSearch := ^i         ;     
-	OpenSearchOnPoeTrade := ^q      ;     
-	ShowItemAge := ^a               ;     
+	AdvancedPriceCheckHotKey := ^!s	; 
+	OpenWikiHotKey := ^w            	; 
+	CustomInputSearch := ^i         	;     
+	OpenSearchOnPoeTrade := ^q      	;     
+	ShowItemAge := ^a               	;     
 	
 	PriceCheckEnabled :=1
 	AdvancedPriceCheckEnabled :=1
@@ -69,26 +70,28 @@ class TradeUserOptions {
 	OpenSearchOnPoeTradeEnabled :=1
 	ShowItemAgeEnabled :=1
 	
-	AccountName := ""               ; 
-	SearchLeague := "tmpstandard"   ; Defaults to "standard" or "tmpstandard" if there is an active Temp-League at the time of script execution.
+	AccountName := ""               	; 
+	SearchLeague := "tmpstandard"   	; Defaults to "standard" or "tmpstandard" If there is an active Temp-League at the time of script execution.
 									; Possible values: 
 									; 	"tmpstandard" (current SC Temp-League) 
 									;	"tmphardcore" (current HC Temp-League) 
 									;	"standard", 
 									;   "hardcore"
-	GemLevel := 16                  ; Gem level is ignored in the search unless it's equal or higher than this value
-	GemLevelRange := 0              ; Gem level is ignored in the search unless it's equal or higher than this value
-	GemQualityRange := 0            ; Use this to set a range to quality gems searches
-	OnlineOnly := 1                 ; 1 = search online only; 0 = search offline, too.
-	Corrupted := "Either"           ; 1 = yes; 0 = no; 2 = either, This setting gets ignored when you use the search on corrupted items.
-	CorruptedOverride := 0          ;
-	AdvancedSearchModValueRange := 20 ; 
+	GemLevel := 16                  	; Gem level is ignored in the search unless it's equal or higher than this value
+	GemLevelRange := 0              	; Gem level is ignored in the search unless it's equal or higher than this value
+	GemQualityRange := 0            	; Use this to set a range to quality gems searches
+	OnlineOnly := 1                 	; 1 = search online only; 0 = search offline, too.
+	Corrupted := "Either"           	; 1 = yes; 0 = no; 2 = either, This setting gets ignored when you use the search on corrupted items.
+	CorruptedOverride := 0          	;
+	AdvancedSearchModValueRange := 20 	; 
 	RemoveMultipleListingsFromSameAccount := 0 ;
-	PrefillMinValue := 1            ;
-	PrefillMaxValue := 1            ;
-	CurrencySearchHave := "Chaos Orb" ;
+	PrefillMinValue := 1            	;
+	PrefillMaxValue := 1            	;
+	CurrencySearchHave := "Chaos Orb" 	;
+	BuyoutOnly := 1				;
+	ForceMaxLinks := 1				;
 	
-	Expire := 3						; cache expire min
+	Expire := 3					; cache expire min
 }
 TradeOpts := new TradeUserOptions()
 
@@ -102,7 +105,7 @@ IfNotExist, %A_ScriptDir%\trade_config.ini
 	CopyDefaultTradeConfig()
 }
 
-; Check if Temp-Leagues are active and set defaultLeague accordingly
+; Check If Temp-Leagues are active and set defaultLeague accordingly
 TradeGlobals.Set("TempLeagueIsRunning", TradeFunc_FunctionCheckIfTempLeagueIsRunning())
 TradeGlobals.Set("DefaultLeague", (tempLeagueIsRunning > 0) ? "tmpstandard" : "standard")
 TradeGlobals.Set("GithubUser", "POE-TradeMacro")
@@ -140,8 +143,9 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.ShowUpdateNotifications := TradeFunc_ReadIniValue(TradeConfigPath, "General", "ShowUpdateNotifications", TradeOpts.ShowUpdateNotifications)
 		TradeOpts.OpenWithDefaultWin10Fix := TradeFunc_ReadIniValue(TradeConfigPath, "General", "OpenWithDefaultWin10Fix", TradeOpts.OpenWithDefaultWin10Fix)
 		TradeOpts.ShowAccountName := TradeFunc_ReadIniValue(TradeConfigPath, "General", "ShowAccountName", TradeOpts.ShowAccountName)
+		TradeOpts.OpenUrlsOnEmptyItem := TradeFunc_ReadIniValue(TradeConfigPath, "General", "OpenUrlsOnEmptyItem", TradeOpts.OpenUrlsOnEmptyItem)
 		
-        ; Check if browser path is valid, delete ini-entry if not
+        ; Check If browser path is valid, delete ini-entry If not
 		BrowserPath := TradeFunc_ReadIniValue(TradeConfigPath, "General", "BrowserPath", TradeOpts.BrowserPath)
 		If (TradeFunc_CheckBrowserPath(BrowserPath, false)) {
 			TradeOpts.BrowserPath := BrowserPath
@@ -194,6 +198,8 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.PrefillMinValue := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "PrefillMinValue", TradeOpts.PrefillMinValue)	
 		TradeOpts.PrefillMaxValue := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "PrefillMaxValue", TradeOpts.PrefillMaxValue)	
 		TradeOpts.CurrencySearchHave := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "CurrencySearchHave", TradeOpts.CurrencySearchHave)	
+		TradeOpts.BuyoutOnly := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "BuyoutOnly", TradeOpts.BuyoutOnly)	
+		TradeOpts.ForceMaxLinks := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "ForceMaxLinks", TradeOpts.ForceMaxLinks)	
 		
         ; Cache        
 		TradeOpts.Expire := TradeFunc_ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
@@ -257,9 +263,10 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.ShowUpdateNotifications := ShowUpdateNotifications
 		TradeOpts.OpenWithDefaultWin10Fix := OpenWithDefaultWin10Fix
 		TradeOpts.ShowAccountName := ShowAccountName
+		TradeOpts.OpenUrlsOnEmptyItem := OpenUrlsOnEmptyItem
 		TradeOpts.Debug := Debug
 		
-		If(ValidBrowserPath) {
+		If (ValidBrowserPath) {
 			TradeOpts.BrowserPath := BrowserPath            
 		}
 		Else {
@@ -298,6 +305,8 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.PrefillMinValue := PrefillMinValue
 		TradeOpts.PrefillMaxValue := PrefillMaxValue
 		TradeOpts.CurrencySearchHave := CurrencySearchHave
+		TradeOpts.BuyoutOnly := BuyoutOnly
+		TradeOpts.ForceMaxLinks := ForceMaxLinks
 	}        
 	SavedTradeSettings := false
 	
@@ -306,8 +315,9 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	TradeFunc_WriteIniValue(TradeOpts.ShowUpdateNotifications, TradeConfigPath, "General", "ShowUpdateNotifications")
 	TradeFunc_WriteIniValue(TradeOpts.OpenWithDefaultWin10Fix, TradeConfigPath, "General", "OpenWithDefaultWin10Fix")
 	TradeFunc_WriteIniValue(TradeOpts.ShowAccountName, TradeConfigPath, "General", "ShowAccountName")   
+	TradeFunc_WriteIniValue(TradeOpts.OpenUrlsOnEmptyItem, TradeConfigPath, "General", "OpenUrlsOnEmptyItem")   
 	
-	If(ValidBrowserPath) {
+	If (ValidBrowserPath) {
 		TradeFunc_WriteIniValue(TradeOpts.BrowserPath, TradeConfigPath, "General", "BrowserPath")           
 	}
 	Else {
@@ -346,6 +356,8 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	TradeFunc_WriteIniValue(TradeOpts.PrefillMinValue, TradeConfigPath, "Search", "PrefillMinValue")
 	TradeFunc_WriteIniValue(TradeOpts.PrefillMaxValue, TradeConfigPath, "Search", "PrefillMaxValue")
 	TradeFunc_WriteIniValue(TradeOpts.CurrencySearchHave, TradeConfigPath, "Search", "CurrencySearchHave")
+	TradeFunc_WriteIniValue(TradeOpts.BuyoutOnly, TradeConfigPath, "Search", "BuyoutOnly")
+	TradeFunc_WriteIniValue(TradeOpts.ForceMaxLinks, TradeConfigPath, "Search", "ForceMaxLinks")
 	
 	; Cache	
 	TradeFunc_WriteIniValue(TradeOpts.Expire, TradeConfigPath, "Cache", "Expire")
@@ -369,7 +381,7 @@ CreateDefaultTradeConfig()
 
 TradeFunc_SetLeagueIfSelectedIsInactive() 
 {	
-	; Check if league from Ini is set to an inactive league and change it to the corresponding active one, for example tmpstandard to standard	
+	; Check If league from Ini is set to an inactive league and change it to the corresponding active one, for example tmpstandard to standard	
 	If (InStr(TradeOpts.SearchLeague, "tmp") && TradeGlobals.Get("TempLeagueIsRunning") = 0) {
 		If (InStr(TradeOpts.SearchLeague, "standard")) {
 			TradeOpts.SearchLeague := "standard"
@@ -397,7 +409,7 @@ TradeFunc_ReadIniValue(iniFilePath, Section = "General", IniKey="", DefaultValue
 			l := StrLen(IniKey)
 			NewStr := SubStr(Trim(line), 1 , l)
 			RegExMatch(line, "i)\[(.*)\]", match)
-			If(not InStr(line, ";") and match) {
+			If (not InStr(line, ";") and match) {
 				lastSection := match1
 			}
 			
@@ -424,26 +436,26 @@ TradeFunc_WriteIniValue(Val, TradeConfigPath, Section_, Key)
 ; ------------------ ASSIGN HOTKEY AND HANDLE ERRORS ------------------ 
 TradeFunc_AssignHotkey(Key, Label){
 	Hotkey, %Key%, %Label%, UseErrorLevel
-	if (ErrorLevel)	{
-		if (errorlevel = 1)
+	If (ErrorLevel)	{
+		If (errorlevel = 1)
 			str := str . "`nASCII " . Key . " - 1) The Label parameter specifies a nonexistent label name."
-		else if (errorlevel = 2)
+		Else If (errorlevel = 2)
 			str := str . "`nASCII " . Key . " - 2) The KeyName parameter specifies one or more keys that are either not recognized or not supported by the current keyboard layout/language."
-		else if (errorlevel = 3)
+		Else If (errorlevel = 3)
 			str := str . "`nASCII " . Key . " - 3) Unsupported prefix key. For example, using the mouse wheel as a prefix in a hotkey such as WheelDown & Enter is not supported."
-		else if (errorlevel = 4)
+		Else If (errorlevel = 4)
 			str := str . "`nASCII " . Key . " - 4) The KeyName parameter is not suitable for use with the AltTab or ShiftAltTab actions. A combination of two keys is required. For example: RControl & RShift::AltTab."
-		else if (errorlevel = 5)
+		Else If (errorlevel = 5)
 			str := str . "`nASCII " . Key . " - 5) The command attempted to modify a nonexistent hotkey."
-		else if (errorlevel = 6)
+		Else If (errorlevel = 6)
 			str := str . "`nASCII " . Key . " - 6) The command attempted to modify a nonexistent variant of an existing hotkey. To solve this, use Hotkey IfWin to set the criteria to match those of the hotkey to be modified."
-		else if (errorlevel = 50)
+		Else If (errorlevel = 50)
 			str := str . "`nASCII " . Key . " - 50) Windows 95/98/Me: The command completed successfully but the operating system refused to activate the hotkey. This is usually caused by the hotkey being "" ASCII " . int . " - in use"" by some other script or application (or the OS itself). This occurs only on Windows 95/98/Me because on other operating systems, the program will resort to the keyboard hook to override the refusal."
-		else if (errorlevel = 51)
+		Else If (errorlevel = 51)
 			str := str . "`nASCII " . Key . " - 51) Windows 95/98/Me: The command completed successfully but the hotkey is not supported on Windows 95/98/Me. For example, mouse hotkeys and prefix hotkeys such as a & b are not supported."
-		else if (errorlevel = 98)
+		Else If (errorlevel = 98)
 			str := str . "`nASCII " . Key . " - 98) Creating this hotkey would exceed the 1000-hotkey-per-script limit (however, each hotkey can have an unlimited number of variants, and there is no limit to the number of hotstrings)."
-		else if (errorlevel = 99)
+		Else If (errorlevel = 99)
 			str := str . "`nASCII " . Key . " - 99) Out of memory. This is very rare and usually happens only when the operating system has become unstable."
 		
 		MsgBox, %str%
@@ -483,6 +495,7 @@ TradeFunc_GetLeagues(){
 }
 
 TradeFunc_GetLeaguesJSON(){
+	;UrlDownloadToFile, http://api.pathofexile.com/leagues?type=main&compact=1 , %A_ScriptDir%\temp\test.json
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	HttpObj.Open("GET","http://api.pathofexile.com/leagues?type=main&compact=1")
 	HttpObj.SetRequestHeader("Content-type","application/json")
@@ -633,21 +646,28 @@ TradeFunc_GetLatestRelease() {
 		RegExReplace(tag, "^v", tag)
         ; works only in x.x.x format
 		RegExMatch(tag, "(\d+).(\d+).(\d+)(.*)", latestVersion)
-		RegExMatch(TradeGlobals.Get("ReleaseVersion"), "(\d+).(\d+).(\d+)(.*)", currentVersion)    
+		RegExMatch(TradeGlobals.Get("ReleaseVersion"), "(\d+).(\d+).(\d+)(.*)", currentVersion)
+		RegExMatch(html,  "i)""body"":""(.*?)""", description)
+		StringReplace, description, description1, \r\n, ~, All 
 		
 		If (latestVersion > currentVersion) {
 			Gui, UpdateNotification:Add, Text, cGreen, Update available!
 			Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>.`nThe lastest version is <%latestVersion%>.
 			Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
+			
+			Loop, Parse, description, ~
+				Gui, UpdateNotification:Add, Text, w320, % "- " A_LoopField
+			
 			Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
 			yPos := A_ScreenHeight / 2 + 40
 			Gui, UpdateNotification:Show, w350 Y%yPos%, Update 
+			ControlFocus, Close, Update
 			WinWaitClose, Update
 		}
-	} catch e {
+	} Catch e {
 		MsgBox % "Update-Check failed, Github is probably down."
 	}
-	return
+	Return
 }
 
 ;----------------------- Trade Settings UI (added onto ItemInfos Settings UI) ---------------------------------------
@@ -660,9 +680,9 @@ CreateTradeSettingsUI()
 	
     ; General 
 	
-	GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h216")
+	GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h246")
 	
-    ; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
+    ; Note: window handles (hwnd) are only needed If a UI tooltip should be attached.
 	
 	GuiAddText("Show Items:", "x557 yp+28 w160 h20 0x0100", "LblShowItemResults", "LblShowItemResultsH")
 	AddToolTip(LblShowItemResultsH, "Number of items displayed in search results.")
@@ -680,6 +700,9 @@ CreateTradeSettingsUI()
 	GuiAddText("Browser Path:", "x557 yp+38 w70 h20 0x0100", "LblBrowserPath", "LblBrowserPathH")
 	AddToolTip(LblBrowserPathH, "Optional: Set the path to the browser (.exe) to open Urls with.")
 	GuiAddEdit(TradeOpts.BrowserPath, "x+10 yp-2 w150 h20", "BrowserPath", "BrowserPathH")
+	
+	GuiAddCheckbox("Enable ""Url shortcuts"" without item hover.", "x557 yp+30 w250 h30", TradeOpts.OpenUrlsOnEmptyItem, "OpenUrlsOnEmptyItem", "OpenUrlsOnEmptyItemH")
+	AddToolTip(OpenUrlsOnEmptyItemH, "This enables the ctrl+q and ctrl+w shortcuts`neven without hovering over an item.`nBe careful!")
 	
 	GuiAddCheckbox("Debug Output", "x557 yp+30 w100 h30 cRed", TradeOpts.Debug, "Debug", "DebugH")
 	AddToolTip(DebugH, "Don't use this unless you're developing!")
@@ -737,7 +760,7 @@ CreateTradeSettingsUI()
 	GuiAddGroupBox("[TradeMacro] Search", "x817 y15 w260 h555")
 	
 	GuiAddText("League:", "x827 yp+28 w100 h20 0x0100", "LblSearchLeague", "LblSearchLeagueH")
-	AddToolTip(LblSearchLeagueH, "Defaults to ""standard"" or ""tmpstandard"" if there is a`nTemp-League active at the time of script execution.`n`n""tmpstandard"" and ""tmphardcore"" are automatically replaced`nwith their permanent counterparts if no Temp-League is active.")
+	AddToolTip(LblSearchLeagueH, "Defaults to ""standard"" or ""tmpstandard"" If there is a`nTemp-League active at the time of script execution.`n`n""tmpstandard"" and ""tmphardcore"" are automatically replaced`nwith their permanent counterparts If no Temp-League is active.")
 	GuiAddDropDownList("tmpstandard|tmphardcore|standard|hardcore", "x+10 yp-2", TradeOpts.SearchLeague, "SearchLeague", "SearchLeagueH")
 	
 	GuiAddText("Account Name:", "x827 yp+32 w100 h20 0x0100", "LblAccountName", "LblAccountNameH")
@@ -765,7 +788,7 @@ CreateTradeSettingsUI()
 	GuiAddDropDownList("Either|Yes|No", "x+10 yp-2 w52", TradeOpts.Corrupted, "Corrupted", "CorruptedH")
 	GuiAddCheckbox("Override", "x+10 yp+2 0x0100", TradeOpts.CorruptedOverride, "CorruptedOverride", "CorruptedOverrideH", "TradeSettingsUI_ChkCorruptedOverride")
 	
-	gosub, TradeSettingsUI_ChkCorruptedOverride
+	GoSub, TradeSettingsUI_ChkCorruptedOverride
 	
 	CurrencyList := ""
 	CurrencyTemp := TradeGlobals.Get("CurrencyIDs")	
@@ -778,6 +801,9 @@ CreateTradeSettingsUI()
 	
 	GuiAddCheckbox("Online only", "x827 yp+22 w210 h35 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
 	
+	GuiAddCheckbox("Buyout only (Search on poe.trade)", "x827 yp+30 w210 h35 0x0100", TradeOpts.BuyoutOnly, "BuyoutOnly", "BuyoutOnlyH")
+	AddToolTip(BuyoutOnlyH, "This option only takes affect when opening the search on poe.trade.")
+	
 	GuiAddCheckbox("Remove multiple Listings from same Account", "x827 yp+28 w230 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
 	AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
 	
@@ -785,6 +811,9 @@ CreateTradeSettingsUI()
 	AddToolTip(PrefillMinValueH, "Automatically fill the min-values in the advanced search GUI.")
 	GuiAddCheckbox("Pre-Fill Max-Values", "x827 yp+30 w230 h40", TradeOpts.PrefillMinValue, "PrefillMaxValue", "PrefillMaxValueH")
 	AddToolTip(PrefillMaxValueH, "Automatically fill the max-values in the advanced search GUI.")
+	
+	GuiAddCheckbox("Force max links (certain corrupted items)", "x827 yp+30 w230 h40", TradeOpts.ForceMaxLinks, "ForceMaxLinks", "ForceMaxLinksH")
+	AddToolTip(ForceMaxLinksH, "Corrupted 3/4 max-socket unique items always use`nmax links if your item is fully linked.")
 	
 	Gui, Add, Link, x827 yp+43 w230 cBlue, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
 	
@@ -832,11 +861,11 @@ UpdateTradeSettingsUI()
 
 TradeFunc_ReadCraftingBases(){
 	bases := []
-	Loop, read, %A_ScriptDir%\trade_data\crafting_bases.txt
+	Loop, Read, %A_ScriptDir%\trade_data\crafting_bases.txt
 	{
 		bases.push(A_LoopReadLine)
 	}
-	return bases    
+	Return bases    
 }
 
 TradeFunc_ReadEnchantments(){
@@ -845,25 +874,25 @@ TradeFunc_ReadEnchantments(){
 	enchantments.helmet  := []
 	enchantments.gloves  := []
 	
-	Loop, read, %A_ScriptDir%\trade_data\boot_enchantment_mods.txt
+	Loop, Read, %A_ScriptDir%\trade_data\boot_enchantment_mods.txt
 	{
 		If (StrLen(Trim(A_LoopReadLine)) > 0) {        
 			enchantments.boots.push(A_LoopReadLine)            
 		}
 	}
-	Loop, read, %A_ScriptDir%\trade_data\helmet_enchantment_mods.txt
+	Loop, Read, %A_ScriptDir%\trade_data\helmet_enchantment_mods.txt
 	{
 		If (StrLen(Trim(A_LoopReadLine)) > 0) {
 			enchantments.helmet.push(A_LoopReadLine)
 		}
 	}
-	Loop, read, %A_ScriptDir%\trade_data\glove_enchantment_mods.txt
+	Loop, Read, %A_ScriptDir%\trade_data\glove_enchantment_mods.txt
 	{
 		If (StrLen(Trim(A_LoopReadLine)) > 0) {
 			enchantments.gloves.push(A_LoopReadLine)
 		}
 	}
-	return enchantments    
+	Return enchantments    
 }
 
 TradeFunc_ReadCorruptions(){
@@ -875,7 +904,7 @@ TradeFunc_ReadCorruptions(){
 			mods.push(A_LoopReadLine)            
 		}
 	}
-	return mods
+	Return mods
 }
 
 TradeFunc_CheckBrowserPath(path, showMsg){
@@ -886,10 +915,10 @@ TradeFunc_CheckBrowserPath(path, showMsg){
 			If (showMsg) {
 				MsgBox % "Invalid FilePath."
 			}            
-			return false
+			Return false
 		}
 		Else {
-			return AttributeString
+			Return AttributeString
 		}
 	}    
 }

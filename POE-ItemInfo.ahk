@@ -6439,7 +6439,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.IsMap := (Item.BaseType == "Map")
     Item.IsJewel := (Item.BaseType == "Jewel")
     Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
-    Item.IsEssence := Item.IsCurrency and (RegExMatch(Item.Name, "i)Essence of ") or RegExMatch(Item.Name, "i)Remnant of"))
+    Item.IsEssence := Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
     Item.Note := Globals.Get("ItemNote")
 
     TempStr := ItemData.PartsLast
@@ -6799,7 +6799,7 @@ ExtractRareItemTypeName(ItemName)
 }
 
 ; Show tooltip, with fixed width font
-ShowToolTip(String)
+ShowToolTip(String, Centered = false)
 {
     Global X, Y, ToolTipTimeout, Opts
 
@@ -6808,9 +6808,26 @@ ShowToolTip(String)
 
     If (Not Opts.DisplayToolTipAtFixedCoords)
     {
-        ToolTip, %String%, X - 135, Y + 35
-    Fonts.SetFixedFont()
-    ToolTip, %String%, X - 135, Y + 35
+        If (Centered) 
+        {
+            ScreenOffsetY := A_ScreenHeight / 2
+            ScreenOffsetX := A_ScreenWidth / 2
+
+            XCoord := 0 + ScreenOffsetX
+            YCoord := 0 + ScreenOffsetY
+
+            ToolTip, %String%, XCoord, YCoord
+            Fonts.SetFixedFont()
+            ToolTip, %String%, XCoord, YCoord
+        }
+        Else 
+        {
+            XCoord := (X - 135 >= 0) ? X - 135 : 0
+            YCoord := (Y +  35 >= 0) ? Y +  35 : 0
+            ToolTip, %String%, XCoord, YCoord
+            Fonts.SetFixedFont()
+            ToolTip, %String%, XCoord, YCoord
+        }
     }
     Else
     {
@@ -6828,8 +6845,8 @@ ShowToolTip(String)
         YCoord := 0 + ScreenOffsetY
 
         ToolTip, %String%, XCoord, YCoord
-    Fonts.SetFixedFont()
-    ToolTip, %String%, XCoord, YCoord
+        Fonts.SetFixedFont()
+        ToolTip, %String%, XCoord, YCoord
     }
     ;Fonts.SetFixedFont()
 
