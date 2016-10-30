@@ -492,7 +492,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		RequestParams.shield_min  := Stats.Defense.TotalEnergyShield.Value - 2
 		RequestParams.shield_max  := Stats.Defense.TotalEnergyShield.Value + 2
 		
-		if(Item.IsGem) {
+		If (Item.IsGem) {
 			RequestParams.level_min := Item.Level
 			RequestParams.level_max := Item.Level
 		}
@@ -522,7 +522,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Html := TradeFunc_DoPostRequest(Payload, openSearchInBrowser)	
 	}
 	
-	if(openSearchInBrowser) {
+	If (openSearchInBrowser) {
 		; redirect was prevented to get the url and open the search on poe.trade instead
 		If (Item.isCurrency and !Item.IsEssence) {
 			IDs := TradeGlobals.Get("CurrencyIDs")

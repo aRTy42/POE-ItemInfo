@@ -12,3 +12,8 @@ global TradeUniqueData := parsedJSON.uniques
 FileRead, JSONFile, %A_ScriptDir%/trade_data/mods.json
 parsedJSON 	:= JSON.Load(JSONFile)
 global TradeModsData := parsedJSON.mods
+
+UrlDownloadToFile, http://api.pathofexile.com/leagues?type=main , %A_ScriptDir%\temp\currentLeagues.json
+FileRead, JSONFile, %A_ScriptDir%/temp/currentLeagues.json
+parsedJSON 	:= JSON.Load(JSONFile)	
+global LeaguesData := parsedJSON

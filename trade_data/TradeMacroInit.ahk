@@ -7,7 +7,7 @@
 #Include, %A_ScriptDir%/lib/Class_Console.ahk
 #Include, %A_ScriptDir%/lib/DebugPrintArray.ahk
 #Include, %A_ScriptDir%/lib/AssociatedProgram.ahk
-#Include, %A_ScriptDir%/trade_data/uniqueData.ahk
+#Include, %A_ScriptDir%/trade_data/jsonData.ahk
 #Include, %A_ScriptDir%/trade_data/Version.txt
 
 TradeMsgWrongAHKVersion := "AutoHotkey v" . TradeAHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
@@ -131,7 +131,6 @@ TradeFunc_DoCurrencyRequest("", false, true)
 
 CreateTradeSettingsUI()
 TradeFunc_StopSplashScreen()
-
 
 ReadTradeConfig(TradeConfigPath="trade_config.ini")
 {
@@ -463,61 +462,26 @@ TradeFunc_AssignHotkey(Key, Label){
 }
 
 ; ------------------ GET LEAGUES ------------------ 
-TradeFunc_GetLeagues(){
-	JSON := TradeFunc_GetLeaguesJSON()   	
-	FileRead, JSONFile, %TradeTempDir%\leagues.json  
-    ; too dumb to parse the file to JSON Object, skipping this step
-    ;parsedJSON 	:= JSON.Load(JSONFile)	
-	
-    ; Loop over league info and get league names    
+TradeFunc_GetLeagues(){	
+     ;Loop over league info and get league names    
 	leagues := []
-	Loop, Parse, JSONFile, `n, `r
-	{	
-		If RegExMatch(A_LoopField,"im)id *: *""\(|\)""",leagueNames) {
-			continue
-		}
-		Else If RegExMatch(A_LoopField,"iOm)id *: *""(.*)""",leagueNames) {
-			If (RegExMatch(leagueNames[1], "i)^Standard$")) {
-				leagues["standard"] := leagueNames[1]
+	For key, val in LeaguesData {
+		If (!val.event)  {
+			If (val.id = "Standard") {
+				leagues["standard"] := val.id			
 			}
-			Else If (RegExMatch(leagueNames[1], "i)^Hardcore$")) {
-				leagues["hardcore"] := leagueNames[1]
+			Else If (val.id = "Hardcore") {
+				leagues["hardcore"] := val.id			
 			}
-			Else If InStr(leagueNames[1], "Hardcore", false) {
-				leagues["tmphardcore"] := leagueNames[1]
+			Else If (InStr(val.id, "Hardcore")) {
+				leagues["tmphardcore"] := val.id			
 			}
 			Else {
-				leagues["tmpstandard"] := leagueNames[1]
+				leagues["tmpstandard"] := val.id			
 			}
-		}        
+		}
 	}
 	Return leagues
-}
-
-TradeFunc_GetLeaguesJSON(){
-	;UrlDownloadToFile, http://api.pathofexile.com/leagues?type=main&compact=1 , %A_ScriptDir%\temp\test.json
-	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	HttpObj.Open("GET","http://api.pathofexile.com/leagues?type=main&compact=1")
-	HttpObj.SetRequestHeader("Content-type","application/json")
-	HttpObj.Send("")
-	HttpObj.WaitForResponse()
-	
-    ; Trying to format the string as JSON
-	json := "{""results"":" . HttpObj.ResponseText . "}"    
-	json := RegExReplace(HttpObj.ResponseText, ",", ",`r`n`" A_Tab) 
-	json := RegExReplace(json, "{", "{`r`n`" A_Tab)
-	json := RegExReplace(json, "}", "`r`n`}")    
-	json := RegExReplace(json, "},", A_Tab "},")
-	json := RegExReplace(json, "\[", "[`r`n`" A_Tab)
-	json := RegExReplace(json, "\]", "`r`n`]")
-	json := RegExReplace(json, "m)}$", A_Tab "}")
-	json := RegExReplace(json, """(.*)"":", A_Tab "$1 : ")
-	
-    ;MsgBox % json
-	FileDelete, %TradeTempDir%\leagues.json
-	FileAppend, %json%, %TradeTempDir%\leagues.json
-	
-	Return, json
 }
 
 ; ------------------ CHECK IF A TEMP-LEAGUE IS ACTIVE ------------------ 
@@ -542,7 +506,8 @@ TradeFunc_FunctionCheckIfTempLeagueIsRunning() {
 	}
 }
 
-TradeFunc_GetTimestampUTC() { ; http://msdn.microsoft.com/en-us/library/ms724390
+TradeFunc_GetTimestampUTC() { 
+	; http://msdn.microsoft.com/en-us/library/ms724390
 	VarSetCapacity(ST, 16, 0) ; SYSTEMTIME structure
 	DllCall("Kernel32.dll\GetSystemTime", "Ptr", &ST)
 	Return NumGet(ST, 0, "UShort")                        ; year   : 4 digits until 10000
@@ -560,46 +525,13 @@ TradeFunc_DateParse(str) {
 }
 
 TradeFunc_GetTempLeagueDates(){
-	JSON := TradeFunc_GetLeaguesJSON()    
-	FileRead, JSONFile, %TradeTempDir%\leagues.json  
-    ; too dumb to parse the file to JSON Object, skipping this step
-    ;parsedJSON 	:= JSON.Load(JSONFile)	
-     
-    ; complicated way to find start and end dates of temp leagues since JSON.load is not working 
-	foundStart := 
-	foundEnd := 
-	lastOpenBracket := 0
-	lastCloseBracket := 0
 	tempLeagueDates := []
-	
-	Loop, Parse, JSONFile, `n, `r
-	{			
-		If (InStr(A_LoopField, "{", false)) {
-			lastOpenBracket := A_Index
-		}
-		Else If (InStr(A_LoopField, "}", false)) {
-			lastCloseBracket := A_Index
-		}        
-		
-        ; Find startAt and remember line number
-		If RegExMatch(A_LoopField,"iOm)startAt *: *""(.*)""",dates) {
-			If (StrLen(dates[1]) > 0)  {
-				foundStart := A_index
-				start := dates[1]
-			}
-		}            
-		Else If RegExMatch(A_LoopField,"iOm)endAt *: *""(.*)""",dates) {
-			If (!RegExMatch(dates[1], "i)null")) {
-				foundEnd := A_Index
-				end := dates[1]
-			}       
-		}
-		
-		If (foundStart > lastCloseBracket && foundEnd > lastCloseBracket) {
-			tempLeagueDates["start"] := start
-			tempLeagueDates["end"] := end
+	For key, val in LeaguesData {
+		If (val.endAt and val.startAt and not val.event) {
+			tempLeagueDates["start"] := val.startAt
+			tempLeagueDates["end"] := val.endAt
 			Return tempLeagueDates
-		}          
+		}
 	}
 }
 
