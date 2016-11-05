@@ -90,6 +90,7 @@ class TradeUserOptions {
 	CurrencySearchHave := "Chaos Orb" 	;
 	BuyoutOnly := 1				;
 	ForceMaxLinks := 1				;
+	AlternativeCurrencySearch := 0	;
 	
 	Expire := 3					; cache expire min
 }
@@ -119,6 +120,9 @@ Sleep, 100
 
 TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
 TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
+If (TradeOpts.AlternativeCurrencySearch) {
+	GoSub, ReadPoeNinjaCurrencyData
+}
 TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
 TradeGlobals.Set("ModsData", TradeModsData)
 TradeGlobals.Set("CraftingData", TradeFunc_ReadCraftingBases())
@@ -199,6 +203,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.CurrencySearchHave := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "CurrencySearchHave", TradeOpts.CurrencySearchHave)	
 		TradeOpts.BuyoutOnly := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "BuyoutOnly", TradeOpts.BuyoutOnly)	
 		TradeOpts.ForceMaxLinks := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "ForceMaxLinks", TradeOpts.ForceMaxLinks)	
+		TradeOpts.AlternativeCurrencySearch := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AlternativeCurrencySearch", TradeOpts.AlternativeCurrencySearch)	
 		
         ; Cache        
 		TradeOpts.Expire := TradeFunc_ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
@@ -289,9 +294,19 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeFunc_AssignAllHotkeys()
 		
 		TradeOpts.AccountName := AccountName
+		tempOldLeague := TradeOpts.SearchLeague
 		TradeOpts.SearchLeague := SearchLeague
+		
 		TradeFunc_SetLeagueIfSelectedIsInactive()        
-		TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
+		TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])		
+		
+		tempOldAltCurrencySearch := TradeOpts.AlternativeCurrencySearch
+		TradeOpts.AlternativeCurrencySearch := AlternativeCurrencySearch
+		
+		; Get currency data only if league was changed while alternate search is active or alternate search was changed from disabled to enabled
+		If ((TradeOpts.SearchLeague != tempOldLeague and AlternativeCurrencySearch) or (AlternativeCurrencySearch and tempOldAltCurrencySearch != AlternativeCurrencySearch)) {			
+			GoSub, ReadPoeNinjaCurrencyData	
+		}
 		
 		TradeOpts.GemLevel := GemLevel
 		TradeOpts.GemLevelRange := GemLevelRange
@@ -357,6 +372,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	TradeFunc_WriteIniValue(TradeOpts.CurrencySearchHave, TradeConfigPath, "Search", "CurrencySearchHave")
 	TradeFunc_WriteIniValue(TradeOpts.BuyoutOnly, TradeConfigPath, "Search", "BuyoutOnly")
 	TradeFunc_WriteIniValue(TradeOpts.ForceMaxLinks, TradeConfigPath, "Search", "ForceMaxLinks")
+	TradeFunc_WriteIniValue(TradeOpts.AlternativeCurrencySearch, TradeConfigPath, "Search", "AlternativeCurrencySearch")
 	
 	; Cache	
 	TradeFunc_WriteIniValue(TradeOpts.Expire, TradeConfigPath, "Cache", "Expire")
@@ -746,6 +762,9 @@ CreateTradeSettingsUI()
 	
 	GuiAddCheckbox("Force max links (certain corrupted items)", "x827 yp+30 w230 h40", TradeOpts.ForceMaxLinks, "ForceMaxLinks", "ForceMaxLinksH")
 	AddToolTip(ForceMaxLinksH, "Corrupted 3/4 max-socket unique items always use`nmax links if your item is fully linked.")
+	
+	GuiAddCheckbox("Alternative currency search", "x827 yp+30 w230 h40", TradeOpts.AlternativeCurrencySearch, "AlternativeCurrencySearch", "AlternativeCurrencySearchH")
+	AddToolTip(AlternativeCurrencySearchH, "Shows historical data of the searched currency.")
 	
 	Gui, Add, Link, x827 yp+43 w230 cBlue, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
 	

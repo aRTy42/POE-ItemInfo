@@ -515,8 +515,19 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	
 	ShowToolTip("Running search...")
 	
-	If (Item.IsCurrency and !Item.IsEssence) {		
-		Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser)
+	If (Item.IsCurrency and !Item.IsEssence) {
+		If (!TradeOpts.AlternativeCurrencySearch) {
+			Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser)	
+		}
+		Else {
+			; Update currency data if last update is older than 30min
+			last := TradeGlobals.Get("LastAltCurrencyUpdate")
+			now  := A_NowUTC
+			diff := now - last
+			If (diff > 1800) {
+				GoSub, ReadPoeNinjaCurrencyData
+			}
+		}
 	}
 	Else {
 		Html := TradeFunc_DoPostRequest(Payload, openSearchInBrowser)	
@@ -535,13 +546,21 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		TradeFunc_OpenUrlInBrowser(ParsedUrl1)
 	}
 	Else If (Item.isCurrency and !Item.IsEssence) {
-		ParsedData := TradeFunc_ParseCurrencyHtml(Html, Payload)
+		; Default currency search
+		If (!TradeOpts.AlternativeCurrencySearch) {
+			ParsedData := TradeFunc_ParseCurrencyHtml(Html, Payload)
+		}
+		; Alternative currency search (poeninja)
+		Else {
+			ParsedData := TradeFunc_ParseAlternativeCurrencySearch(Item.Name, Payload)
+		}
 		
-		SetClipboardContents(ParsedData)
+		;SetClipboardContents(ParsedData)
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}
 	Else {
+		; Check item age
 		If (isItemAgeRequest) {
 			Item.UsedInSearch.SearchType := "Item Age Search"
 		}
@@ -553,7 +572,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
 		
-		SetClipboardContents(ParsedData)
+		;SetClipboardContents(ParsedData)
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}    
@@ -1155,6 +1174,88 @@ TradeFunc_ParseCurrencyHtml(html, payload){
 	Return, Title
 }
 
+TradeFunc_ParseAlternativeCurrencySearch(name, payload) {
+	Global Item, ItemData, TradeOpts
+	LeagueName := TradeGlobals.Get("LeagueName")
+	shortName := Trim(RegExReplace(name,  "Orb|of",  ""))	
+	
+	Title := StrPad(Item.Name " (" LeagueName ")", 30)
+	Title .= StrPad("data provided by poe.ninja", 38, "left")
+	Title .= "`n--------------------------------------------------------------------`n"
+	
+	Title .= StrPad("" ,10) 	
+	Title .= StrPad("|| Buy (" shortName ")" ,28)
+	Title .= StrPad("|| Sell (" shortName ")",28)
+	Title .= "`n"
+	Title .= StrPad("==========||==========================||============================",40)
+	Title .= "`n"
+
+	Title .= StrPad("Days ago" ,10) 	
+	Title .= StrPad("|| Pay (Chaos)",20)
+	Title .= StrPad("|  Get",8)
+	
+	Title .= StrPad("|| Pay",9)
+	Title .= StrPad("|  Get (Chaos)",20)
+	
+	Title .= "`n"
+	Title .= StrPad("----------||------------------|-------||-------|--------------------",40)
+	Title .= "`n"
+	
+	currencyData := 
+	For key, val in CurrencyHistoryData {
+		If (val.currencyTypeName = name) {
+			currencyData := val
+			break
+		}
+	}
+	
+	buyPay := currencyData.receive.percentile10
+	buyGet := buyPay < 1 ? 1 / buyPay : 1
+	buyPay := buyPay > 1 ? Round(buyPay, 2) : 1
+	
+	sellPay := currencyData.pay.percentile10
+	sellGet := sellPay < 1 ? 1 / sellPay : 1
+	sellPay := sellPay > 1 ? Round(sellPay, 2) : 1
+		
+	Title .= StrPad("Currently",  10)
+	Title .= StrPad("|| " buyPay, 20)
+	Title .= StrPad("| "  buyGet, 8)
+	
+	Title .= StrPad("|| " sellPay, 9)
+	Title .= "|"
+	Title .= StrPad(sellGet, 19, "left")
+	
+	length := currencyData.payCurrencyGraphData.Length()
+	i := 0
+	Loop % currencyData.payCurrencyGraphData.Length() {
+		date := currencyData.receiveCurrencyGraphData[length - i].daysAgo
+		date := date ? date : "Last day" 
+		
+		buyPay := currencyData.receiveCurrencyGraphData[length - i].value
+		buyGet := buyPay < 1 ? 1 / buyPay : 1
+		buyPay := buyPay > 1 ? Round(buyPay, 2) : 1
+		
+		sellPay := currencyData.payCurrencyGraphData[length - i].value
+		sellGet := sellPay < 1 ? 1 / sellPay : 1
+		sellPay := sellPay > 1 ? Round(sellPay, 2) : 1
+		
+		Title .= "`n"
+		Title .= StrPad(date, 10)
+		Title .= StrPad("|| " buyPay, 20) 
+		Title .= StrPad("| "  buyGet, 8)
+		
+		Title .= StrPad("|| " sellPay, 9)
+		Title .= "|"
+		Title .= StrPad(sellGet, 19, "left")
+		
+		If (A_Index > 10) {
+			break
+		}
+		i++
+	}
+	Return Title
+}
+
 ; Calculate average and median price of X listings
 TradeFunc_GetMeanMedianPrice(html, payload){
 	itemCount := 1
@@ -1611,118 +1712,6 @@ TradeFunc_FindUniqueItemIfItHasVariableRolls(name)
 }
 
 ; Return items mods and ranges
-/*
-TradeFunc_PrepareNonUniqueItemModsOld(Affixes, Implicit, Enchantment = false, Corruption = false) {
-	Affixes := StrSplit(Affixes, "`n")
-	mods := []
-	
-	If (Implicit and not Enchantment and not Corruption) {
-		temp := {}
-		StringReplace, Implicit, Implicit, `r,, All
-		StringReplace, Implicit, Implicit, `n,, All
-		temp.name_orig := Implicit
-		temp.values 	:= []
-		Pos := 0
-		While Pos := RegExMatch(Implicit, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
-			temp.values.push(value)
-		}
-		
-		s			:= RegExReplace(Implicit, "i)([.0-9]+)", "#")
-		temp.name 	:= RegExReplace(s, "i)# ?to ? #", "#", isRange)		
-		temp.isVariable:= false
-		temp.type		:= "implicit"
-		
-		;Calculate average in case of mods like "Adds 1 to 4 Physical Damage"
-		RangeValue := 0
-		If (isRange) {	
-			Loop % temp.values.Length() {			
-				RangeValue := RangeValue + temp.values[A_Index]	
-			}
-		}	
-		RangeAverage := RangeValue / temp.values.Length()
-		
-		If (RangeAverage) {
-			temp.values := []
-			temp.values.push(RangeAverage)
-		}
-		mods.push(temp)
-	}
-	
-	For key, val in Affixes {
-		If (!val or RegExMatch(val, "i)---")) {
-			continue
-		}
-		temp := {}
-		StringReplace, val, val, `r,, All
-		StringReplace, val, val, `n,, All
-		temp.name_orig := val
-		temp.values 	:= []
-		Pos := 0
-		While Pos := RegExMatch(val, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
-			temp.values.push(value)
-		}
-		
-		s			:= RegExReplace(val, "i)([.0-9]+)", "#")
-		temp.name 	:= RegExReplace(s, "i)# ?to ? #", "#", isRange)		
-		temp.isVariable:= false
-		temp.type		:= "explicit"
-		
-		;Calculate average in case of mods like "Adds 1 to 4 Physical Damage"
-		RangeValue := 0
-		If (isRange) {	
-			Loop % temp.values.Length() {		
-				RangeValue := RangeValue + temp.values[A_Index]	
-			}
-		}
-		RangeAverage := RangeValue / temp.values.Length()
-		
-		If (RangeAverage) {
-			temp.values := []
-			temp.values.push(RangeAverage)
-		}
-		
-		;combine implicit with explicit If they are the same mods, overwriting the implicit
-		If (mods[1].type == "implicit" and mods[1].name = temp.name) {
-			mods[1].type := "explicit"
-			
-			Loop % mods[1].values.MaxIndex() {				
-				mods[1].values[A_Index] := mods[1].values[A_Index] + temp.values[A_Index]
-			}		
-			
-			tempStr  := RegExReplace(mods[1].name_orig, "i)([.0-9]+)", "#")
-			;RegExMatch(temp.name_orig, "i)([.0-9]+)", tempValues)
-			
-			Pos := 1
-			tempArr := []
-			While Pos := RegExMatch(temp.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
-				tempArr.push(value)
-			}		
-			
-			Pos := 1
-			Index := 1
-			While Pos := RegExMatch(mods[1].name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
-				tempStr := StrReplace(tempStr, "#", value + tempArr[Index],, 1)
-				Index++			
-			}
-			mods[1].name_orig := tempStr
-			
-		}
-		Else If (temp.name) {
-			mods.push(temp)	
-		}
-	}
-	
-	tempItem := {}
-	tempItem.mods := []
-	tempItem.mods := mods
-	temp := TradeFunc_GetItemsPoeTradeMods(tempItem)
-	tempItem.mods := temp.mods
-	tempItem.IsUnique := false
-
-	Return tempItem
-}
-*/
-
 TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = false, Corruption = false, isMap = false) {
 	Affixes := StrSplit(Affixes, "`n")
 	mods := []
@@ -1780,7 +1769,7 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 	tempItem		:= {}
 	tempItem.mods	:= []
 	tempItem.mods	:= mods
-	temp			:= TradeFunc_GetItemsPoeTradeMods(tempItem)
+	temp			:= TradeFunc_GetItemsPoeTradeMods(tempItem, isMap)
 	tempItem.mods	:= temp.mods
 	tempItem.IsUnique := false
 	
@@ -2106,37 +2095,40 @@ TradeFunc_CheckIfTempModExists(needle, mods) {
 }
 
 ; Add poetrades mod names to the items mods to use as POST parameter
-TradeFunc_GetItemsPoeTradeMods(_item) {
+TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 	mods := TradeGlobals.Get("ModsData")
-	
+
 	; use this to control search order (which group is more important)
 	For k, imod in _item.mods {
 		; check implicits first If mod is implicit, otherwise check later
-		If (_item.mods[k].type == "implicit") {
+		If (_item.mods[k].type == "implicit" and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
 		}
-		If (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])
 		}		
-		If (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], _item.mods[k])
 		}
-		If (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], _item.mods[k])
 		}
-		If (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
 		}
-		If (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
 		}
-		If (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["crafted"], _item.mods[k])
 		}
-		If (StrLen(_item.mods[k]["param"]) < 1) {
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["enchantments"], _item.mods[k])
 		}
 		If (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["map mods"], _item.mods[k])
+		}
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["prophecies"], _item.mods[k])
 		}
 	}
@@ -2159,6 +2151,9 @@ TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
 		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], _item.mods[k])
 		}
+		If (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["map mods"], _item.mods[k])
+		}
 	}
 	
 	Return _item
@@ -2169,11 +2164,12 @@ TradeFunc_FindInModGroup(modgroup, needle) {
 	For j, mod in modgroup {
 		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
 		s  := RegExReplace(s, "# ?to ? #", "#")
-		StringReplace, ss, ss, `r,, All
-		StringReplace, ss, ss, `n,, All
+		ss := TradeUtils.CleanUp(ss)
+		s  := TradeUtils.CleanUp(s)
 		ss := Trim(needle.name)
 		;matches "1 to" in for example "adds 1 to (20-40) lightning damage"
 		ss := RegExReplace(ss, "\d+ ?to ?#", "#")		
+		ss := RegExReplace(ss, "Monsters' skills Chain # additional times", "Monsters' skills Chain 2 additional times")
 		
 		If (s = ss) {
 			Return mod
@@ -2420,8 +2416,8 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			}
 			
 			If (stat.Name != "Block Chance") {
-				stat.value   := Round(stat.value * 100 / (100 + Stats.Quality)) 
-				statValueQ20 := Round(stat.value * ((100 + 20) / 100))
+				stat.value   := Round(stat.value) 
+				statValueQ20 := Round(stat.value)
 			}
 			
 			; calculate values to prefill min/max fields		
@@ -2661,13 +2657,15 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			;change color if pseudo mod
 			color := "cGray"
 		}	
-
-		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%                                 %color% 	, % isPseudo ? "(pseudo) " . displayName : displayName
-		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w40 vTradeAdvancedModMin%index% r1 		, % modValueMin
-		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen                  				, % (advItem.mods[A_Index].ranges[1]) ? minLabelFirst : ""
-		Gui, SelectModsGui:Add, Text, x+10 yp+0       w45 r1                             		, % TradeUtils.ZeroTrim(modValue)
-		Gui, SelectModsGui:Add, Edit, x+10 yp-3       w40 vTradeAdvancedModMax%index% r1 		, % modValueMax
-		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen                        		, % (advItem.mods[A_Index].ranges[1]) ? maxLabelFirst : ""
+		
+		state := modValue ? 0 : 1	
+		
+		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%  %color%									, % isPseudo ? "(pseudo) " . displayName : displayName
+		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w40 vTradeAdvancedModMin%index% r1 Disabled%state% 	, % modValueMin
+		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen                  		 				, % (advItem.mods[A_Index].ranges[1]) ? minLabelFirst : ""
+		Gui, SelectModsGui:Add, Text, x+10 yp+0       w45 r1     		                         		, % TradeUtils.ZeroTrim(modValue)
+		Gui, SelectModsGui:Add, Edit, x+10 yp-3       w40 vTradeAdvancedModMax%index% r1 Disabled%state% 	, % modValueMax
+		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen 			                       		, % (advItem.mods[A_Index].ranges[1]) ? maxLabelFirst : ""
 		Gui, SelectModsGui:Add, CheckBox, x+10 yp+1       vTradeAdvancedSelected%index%
 		
 		color := "cBlack"
@@ -2774,7 +2772,7 @@ TradeFunc_HandleGuiSubmit(){
 	
 	Loop {
 		mod := {param:"",selected:"",min:"",max:""}
-		If (TradeAdvancedModMin%A_Index%) {
+		If (TradeAdvancedSelected%A_Index%) {
 			mod.param    := TradeAdvancedParam%A_Index%
 			mod.selected := TradeAdvancedSelected%A_Index%
 			mod.min      := TradeAdvancedModMin%A_Index%
@@ -2894,6 +2892,51 @@ class TradeUtils {
 	}
 	; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
 	; | by Skan | 19-Nov-2009
+	
+	UriEncode(Uri, Enc = "UTF-8")
+	{
+		TradeUtils.StrPutVar(Uri, Var, Enc)
+		f := A_FormatInteger
+		SetFormat, IntegerFast, H
+		Loop
+		{
+			Code := NumGet(Var, A_Index - 1, "UChar")
+			If (!Code)
+				Break
+			If (Code >= 0x30 && Code <= 0x39 ; 0-9
+				|| Code >= 0x41 && Code <= 0x5A ; A-Z
+				|| Code >= 0x61 && Code <= 0x7A) ; a-z
+				Res .= Chr(Code)
+			Else
+				Res .= "%" . SubStr(Code + 0x100, -1)
+		}
+		SetFormat, IntegerFast, %f%
+		Return, Res
+	}
+
+	UriDecode(Uri, Enc = "UTF-8")
+	{
+		Pos := 1
+		Loop
+		{
+			Pos := RegExMatch(Uri, "i)(?:%[\da-f]{2})+", Code, Pos++)
+			If (Pos = 0)
+				Break
+			VarSetCapacity(Var, StrLen(Code) // 3, 0)
+			StringTrimLeft, Code, Code, 1
+			Loop, Parse, Code, `%
+				NumPut("0x" . A_LoopField, Var, A_Index - 1, "UChar")
+			StringReplace, Uri, Uri, `%%Code%, % StrGet(&Var, Enc), All
+		}
+		Return, Uri
+	}
+
+	StrPutVar(Str, ByRef Var, Enc = "")
+	{
+		Len := StrPut(Str, Enc) * (Enc = "UTF-16" || Enc = "CP1200" ? 2 : 1)
+		VarSetCapacity(Var, Len, 0)
+		Return, StrPut(Str, &Var, Enc)
+	}
 }
 
 CloseUpdateWindow:
@@ -2960,4 +3003,16 @@ TradeSettingsUI_ChkCorruptedOverride:
 	Else	{
 		GuiControl, Enable, Corrupted
 	}
+Return
+
+ReadPoeNinjaCurrencyData:
+	league := TradeUtils.UriEncode(TradeGlobals.Get("LeagueName"))
+	url := "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . league	
+	UrlDownloadToFile, %url% , %A_ScriptDir%\temp\currencyData.json
+	FileRead, JSONFile, %A_ScriptDir%/temp/currencyData.json
+	parsedJSON 	:= JSON.Load(JSONFile)	
+	global CurrencyHistoryData := parsedJSON.lines
+	
+	TradeGlobals.Set("LastAltCurrencyUpdate", A_NowUTC)
+	;DebugPrintArray(CurrencyHistoryData[1])
 Return
