@@ -118,7 +118,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 {	
 	LeagueName := TradeGlobals.Get("LeagueName")
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList, Opts
-
+		
 	TradeFunc_DoParseClipboard()
 	iLvl     := Item.Level
 	
@@ -467,6 +467,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	; handle divination cards and jewels
 	If (Item.IsDivinationCard or Item.IsJewel) {
 		RequestParams.xtype := Item.BaseType
+		If (Item.IsJewel and Item.IsUnique) {
+			RequestParams.xbase := Item.SubType
+		}
 	}
 	
 	; show item age
@@ -508,8 +511,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		} 	
 	}
 	If (TradeOpts.Debug) {
-		console.log(RequestParams)
-		console.show()	
+		;console.log(RequestParams)
+		console.log(LeagueName)
+		console.show()
 	}
 	Payload := RequestParams.ToPayload()
 	
@@ -1071,17 +1075,27 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 TradeFunc_OpenUrlInBrowser(Url){
 	Global TradeOpts
 	
+	openWith := 
+	used := 
 	If (TradeFunc_CheckBrowserPath(TradeOpts.BrowserPath, false)) {
 		openWith := TradeOpts.BrowserPath
 		Run, %openWith% -new-tab "%Url%"
+		used := "1"
 	}		
 	Else If (TradeOpts.OpenWithDefaultWin10Fix) {
 		openWith := AssociatedProgram("html") 
 		Run, %openWith% -new-tab "%Url%"
+		used := "2"
 	}
 	Else {		
 		Run %Url%
+		used := "3"
 	}		
+	If (TradeOpts.Debug) {
+		console.log(used)
+		console.log(openWith)
+		console.show()
+	}
 }
 
 ; Parse currency.poe.trade to get all available currencies and their IDs
@@ -2710,7 +2724,9 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	If (!advItem.IsUnique) {
 		Gui, SelectModsGui:Add, Text, x10 y+10 cRed, Advanced search for normal/magic/rare items is not finished.
 		Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/78">See what's planned.</a>    		
-	}	
+	}
+	Gui, SelectModsGui:Add, Text, x10 y+10 cGreen, Please support poe.trade by visiting without adblocker
+	Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://poe.trade">visit</a>    		
 
 	windowWidth := modGroupBox + 40 + 5 + 45 + 10 + 45 + 10 +40 + 5 + 45 + 10 + 65
 	windowWidth := (windowWidth > 360) ? windowWidth : 360

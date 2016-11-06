@@ -1,6 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
-1.1.5.2
+1.1.7
+==================================================================================================
+Added optional data file download on script start to be more up to date.
+Optimized unique jewel search.
+
+1.1.6
 ==================================================================================================
 Added alternative currency search to show historical currency data (powered by poe.ninja)
 Fixed some problems with the advanced search (maps)

@@ -53,6 +53,7 @@ class TradeUserOptions {
 	ShowAccountName := 1            	; Show also sellers account name in the results window
 	BrowserPath :=                  	; Show also sellers account name in the results window
 	OpenUrlsOnEmptyItem := 0			; Open wiki/poe.trade also when no item was checked
+	DownloadDataFiles := 0			; 
 	
 	Debug := 0      				; 
 	
@@ -132,6 +133,9 @@ TradeGlobals.Set("CurrencyIDs", object := {})
 
 ; get currency ids from currency.poe.trade
 TradeFunc_DoCurrencyRequest("", false, true)
+If (TradeOpts.DownloadDataFiles and not TradeOpts.Debug) {
+	TradeFunc_DownloadDataFiles()	
+}
 
 CreateTradeSettingsUI()
 TradeFunc_StopSplashScreen()
@@ -147,6 +151,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.OpenWithDefaultWin10Fix := TradeFunc_ReadIniValue(TradeConfigPath, "General", "OpenWithDefaultWin10Fix", TradeOpts.OpenWithDefaultWin10Fix)
 		TradeOpts.ShowAccountName := TradeFunc_ReadIniValue(TradeConfigPath, "General", "ShowAccountName", TradeOpts.ShowAccountName)
 		TradeOpts.OpenUrlsOnEmptyItem := TradeFunc_ReadIniValue(TradeConfigPath, "General", "OpenUrlsOnEmptyItem", TradeOpts.OpenUrlsOnEmptyItem)
+		TradeOpts.DownloadDataFiles := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DownloadDataFiles", TradeOpts.DownloadDataFiles)
 		
         ; Check If browser path is valid, delete ini-entry If not
 		BrowserPath := TradeFunc_ReadIniValue(TradeConfigPath, "General", "BrowserPath", TradeOpts.BrowserPath)
@@ -268,6 +273,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.OpenWithDefaultWin10Fix := OpenWithDefaultWin10Fix
 		TradeOpts.ShowAccountName := ShowAccountName
 		TradeOpts.OpenUrlsOnEmptyItem := OpenUrlsOnEmptyItem
+		TradeOpts.DownloadDataFiles := DownloadDataFiles
 		TradeOpts.Debug := Debug
 		
 		If (ValidBrowserPath) {
@@ -330,6 +336,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	TradeFunc_WriteIniValue(TradeOpts.OpenWithDefaultWin10Fix, TradeConfigPath, "General", "OpenWithDefaultWin10Fix")
 	TradeFunc_WriteIniValue(TradeOpts.ShowAccountName, TradeConfigPath, "General", "ShowAccountName")   
 	TradeFunc_WriteIniValue(TradeOpts.OpenUrlsOnEmptyItem, TradeConfigPath, "General", "OpenUrlsOnEmptyItem")   
+	TradeFunc_WriteIniValue(TradeOpts.DownloadDataFiles, TradeConfigPath, "General", "DownloadDataFiles")   
 	
 	If (ValidBrowserPath) {
 		TradeFunc_WriteIniValue(TradeOpts.BrowserPath, TradeConfigPath, "General", "BrowserPath")           
@@ -628,7 +635,7 @@ CreateTradeSettingsUI()
 	
     ; General 
 	
-	GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h246")
+	GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h276")
 	
     ; Note: window handles (hwnd) are only needed If a UI tooltip should be attached.
 	
@@ -654,6 +661,9 @@ CreateTradeSettingsUI()
 	
 	GuiAddCheckbox("Debug Output", "x557 yp+30 w100 h30 cRed", TradeOpts.Debug, "Debug", "DebugH")
 	AddToolTip(DebugH, "Don't use this unless you're developing!")
+	
+	GuiAddCheckbox("Download Data Files on start", "x557 yp+30 w200 h30", TradeOpts.DownloadDataFiles, "DownloadDataFiles", "DownloadDataFilesH")
+	AddToolTip(DownloadDataFilesH, "Downloads all data files (mods, enchantments etc) on every script start.`nBy disabling this, these files are only updated with new releases.`nDisabling is not recommended.")
 	
     ; Hotkeys
 	
@@ -859,7 +869,7 @@ TradeFunc_ReadCorruptions(){
 }
 
 TradeFunc_CheckBrowserPath(path, showMsg){
-	If (path) {
+	If (StrLen(path) > 1) {
 		path := RegExReplace(path, "i)\/", "\")
 		AttributeString := FileExist(path)
 		If (not AttributeString) {
@@ -871,7 +881,39 @@ TradeFunc_CheckBrowserPath(path, showMsg){
 		Else {
 			Return AttributeString
 		}
-	}    
+	}
+	Else {
+		Return false
+	}
+}
+
+TradeFunc_DownloadDataFiles() {
+	; disabled while using debug mode 
+	
+	owner := TradeGlobals.Get("GithubUser", "POE-TradeMacro")
+	repo  := TradeGlobals.Get("GithubRepo", "POE-TradeMacro")
+	url   := "https://raw.githubusercontent.com/" . owner . "/" . repo . "/master/trade_data/"
+	dir = %A_ScriptDir%\trade_data
+	bakDir = %A_ScriptDir%\trade_data\old_data_files
+	files := ["boot_enchantment_mods.txt","crafting_bases.txt","glove_enchantment_mods.txt","helmet_enchantment_mods.txt","item_corrupted_mods.txt","mods.json","uniques.json"]		
+	
+	; create .bak files and download (overwrite) data files
+	; if downlaoded file exist move .bak-file to backup folder, otherwise restore .bak-file 
+	Loop % files.Length() {
+		file := files[A_Index]
+		filePath = %dir%\%file%
+		FileCopy, %filePath%, %filePath%.bak
+		UrlDownloadToFile, %url%%file%, %filePath%
+		
+		Sleep,50
+		If (FileExist(filePath)) {
+			FileMove, %filePath%.bak, %bakDir%\%file%
+		}
+		Else {
+			FileMove, %dir%\%file%.bak, %dir%\%file%
+		}
+	}
+	FileDelete, %dir%\*.bak	
 }
 
 ;----------------------- SplashScreens ---------------------------------------

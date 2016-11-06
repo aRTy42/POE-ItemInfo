@@ -58,4 +58,5 @@ trade_data/leagues.json
 trade_data/backup/*
 backup/*
 backup/
+trade_data/old_data_files/
 test.ahk
