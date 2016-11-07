@@ -2,8 +2,9 @@ The following is a list of what has been updated, starting with 1.1.0
 
 1.1.7
 ==================================================================================================
-Added optional data file download on script start to be more up to date.
+Added data file download on script start to be more up to date. (No release necessary to update those files, this can be disabled though)
 Optimized unique jewel search.
+Fixed some problems with the web browser search.
 
 1.1.6
 ==================================================================================================

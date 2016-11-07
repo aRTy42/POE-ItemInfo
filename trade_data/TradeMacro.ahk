@@ -512,8 +512,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	If (TradeOpts.Debug) {
 		;console.log(RequestParams)
-		console.log(LeagueName)
-		console.show()
+		;console.show()
 	}
 	Payload := RequestParams.ToPayload()
 	
@@ -731,7 +730,7 @@ TradeFunc_ParseItemDefenseStats(stats, mods){
 	iStats.Quality				:= Quality1	
 	
 	If (TradeOpts.Debug) {
-		console.log(output)
+		;console.log(output)
 	}
 	
 	Return iStats
@@ -1076,25 +1075,16 @@ TradeFunc_OpenUrlInBrowser(Url){
 	Global TradeOpts
 	
 	openWith := 
-	used := 
 	If (TradeFunc_CheckBrowserPath(TradeOpts.BrowserPath, false)) {
 		openWith := TradeOpts.BrowserPath
 		Run, %openWith% -new-tab "%Url%"
-		used := "1"
 	}		
 	Else If (TradeOpts.OpenWithDefaultWin10Fix) {
 		openWith := AssociatedProgram("html") 
 		Run, %openWith% -new-tab "%Url%"
-		used := "2"
 	}
 	Else {		
 		Run %Url%
-		used := "3"
-	}		
-	If (TradeOpts.Debug) {
-		console.log(used)
-		console.log(openWith)
-		console.show()
 	}
 }
 

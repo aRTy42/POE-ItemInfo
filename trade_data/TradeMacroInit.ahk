@@ -906,12 +906,13 @@ TradeFunc_DownloadDataFiles() {
 		UrlDownloadToFile, %url%%file%, %filePath%
 		
 		Sleep,50
-		If (FileExist(filePath)) {
+		If (FileExist(filePath) and not ErrorLevel) {
 			FileMove, %filePath%.bak, %bakDir%\%file%
 		}
 		Else {
 			FileMove, %dir%\%file%.bak, %dir%\%file%
 		}
+		ErrorLevel := 0
 	}
 	FileDelete, %dir%\*.bak	
 }
@@ -924,7 +925,7 @@ TradeFunc_StopSplashScreen() {
 	SplashTextOff 
 	
 	If(TradeOpts.Debug) {
-		MsgBox % "Debug enabled! Disable in settings-menu unless you're developing!"
+		MsgBox % "Debug mode enabled! Disable in settings-menu unless you're developing!"
 		Class_Console("console",0,335,600,900,,,,9)
 	}    
 	
