@@ -43,9 +43,6 @@ global TradeDataDir := A_ScriptDir . "\trade_data"
 global SettingsWindowWidth := 845 
 global SavedTradeSettings := false
 
-FileRemoveDir, %TradeTempDir%, 1
-FileCreateDir, %TradeTempDir%
-
 class TradeUserOptions {
 	ShowItemResults := 15		    	; Number of Items shown as search result; defaults to 15 If not set.
 	ShowUpdateNotifications := 1		; 1 = show, 0 = don't show
