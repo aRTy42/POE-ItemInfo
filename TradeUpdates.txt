@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.1.7.2
+=================================================================================================
+Added error message/icon if a mod couldn't be found on poe.trade.
+
 1.1.7.1
 ==================================================================================================
 Fixed a problem with parsing the current league names that occured on the first macro start (fresh install) 
