@@ -155,6 +155,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	
 	; check If the item implicit mod is an enchantment or corrupted. retrieve this mods data.
+	Enchantment := false
+	Corruption  := false
 	If (Item.hasImplicit) {
 		Enchantment := TradeFunc_GetEnchantment(Item, Item.SubType)
 		Corruption  := Item.IsCorrupted ? TradeFunc_GetCorruption(Item) : false
@@ -1707,12 +1709,16 @@ TradeFunc_FindUniqueItemIfItHasVariableRolls(name)
 {
 	data := TradeGlobals.Get("VariableUniqueData")
 	For index, uitem in data {		
-		If (uitem.name = name ) {
-			uitem.IsUnique := true
-			Return uitem
+		If (uitem.name = name) {
+			Loop % uitem.mods.Length() {
+				If (uitem.mods[A_Index].isVariable) {
+					uitem.IsUnique := true
+					Return uitem
+				}
+			}			
 		}
 	}  
-	Return false
+	Return 0
 }
 
 ; Return items mods and ranges
@@ -2186,6 +2192,9 @@ TradeFunc_GetCorruption(_item) {
 	mods     := TradeGlobals.Get("ModsData")	
 	corrMods := TradeGlobals.Get("CorruptedModsData")
 	RegExMatch(_item.Implicit, "i)([-.0-9]+)", value)
+	If (RegExMatch(imp, "i)Limited to:")) {
+		;return false
+	}
 	imp      := RegExReplace(_item.Implicit, "i)([-.0-9]+)", "#")
 	
 	corrMod  := {}
@@ -2376,6 +2385,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	
 	ValueRange := ValueRange / 100 	
 	
+	modGroupBox := 0
 	Loop % advItem.mods.Length() {
 		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
@@ -2738,7 +2748,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://poe.trade">visit</a>    		
 
 	windowWidth := modGroupBox + 40 + 5 + 45 + 10 + 45 + 10 +40 + 5 + 45 + 10 + 65
-	windowWidth := (windowWidth > 380) ? windowWidth : 380
+	windowWidth := (windowWidth > 400) ? windowWidth : 400
 	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search
 }
 
