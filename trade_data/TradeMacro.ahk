@@ -2275,7 +2275,11 @@ TradeFunc_GetEnchantment(_item, type) {
 	}
 }
 
-TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
+TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {	
+	If (StrLen(poeTradeMod) < 1) {
+		ErrorMsg := "Mod not found on poe.trade!"
+		Return ErrorMsg
+	}
 	Loop, Parse, itemModifiers, `n, `r
 	{
 		If StrLen(A_LoopField) = 0
@@ -2287,9 +2291,8 @@ TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 		CurrValue := GetActualValue(A_LoopField)
 		
 		If (CurrValue ~= "\d+") {
-			
 			; handle value range
-			RegExMatch(CurrValue, "(\d+) ?(-|to) ?(\d+)", values)			
+			RegExMatch(CurrValue, "(\d+) ?(-|to) ?(\d+)", values)	
 			If (values3) {
 				CurrValues.Push(values1)
 				CurrValues.Push(values3)
@@ -2308,14 +2311,18 @@ TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 			;MsgBox % "Loop: " A_LoopField "`nCurr: " CurrValue "`nModStr: " ModStr "`ntradeMod: " poeTradeMod
 			
 			IfInString, poeTradeMod, % ModStr
-			{			
+			{
 				Return CurrValues
 			}
 		}
 	}
 }
 
-TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {		
+TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
+	If (StrLen(poeTradeMod) < 1) {
+		ErrorMsg := "Mod not found on poe.trade!"
+		Return ErrorMsg
+	}
 	CurrValue := ""
 	CurrValues := []
 	CurrValue := GetActualValue(itemModifiers.name_orig)
@@ -2382,6 +2389,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	If (!advItem.mods.Length() and ChangedImplicit) {
 		modGroupBox := StrLen(ChangedImplicit.name) * 6
 	}		
+	modGroupBox := modGroupBox + 10
 	modCount := advItem.mods.Length()
 	
 	statCount := 0
@@ -2557,6 +2565,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	;add mods	
 	l := 1
 	p := 1
+	ModNotFound := falss
 	Loop % advItem.mods.Length() {
 		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
@@ -2578,7 +2587,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			theoreticalMaxValue := advItem.mods[A_Index].ranges[2][2]
 		}
 		Else {
-			; use staticValue to create 2 ranges; for example (1 to 50) to (1 to 70) instead of having only (50 to 70)  
+			; use staticValue to create 2 ranges; for example (1 to 50) to (1 to 70) instead of having only 1 to (50 to 70)  
 			If (staticValue) {
 				theoreticalMinValue := staticValue
 				theoreticalMaxValue := advItem.mods[A_Index].ranges[1][2]
@@ -2588,20 +2597,24 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 				theoreticalMaxValue := advItem.mods[A_Index].ranges[1][2] ? advItem.mods[A_Index].ranges[1][2] : 0
 			}
 		}
-		
+
 		SetFormat, FloatFast, 5.2
-		
+		ErrorMsg := 
 		If (advItem.IsUnique) {
 			modValues := TradeFunc_GetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)	
 		}
 		Else {
 			modValues := TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(advItem.mods[A_Index], advItem.mods[A_Index].param)	
 		}
-		
 		If (modValues.Length() > 1) {
 			modValue := (modValues[1] + modValues[2]) / 2			
 		}
 		Else {
+			If (StrLen(modValues) > 10) {
+				; error msg
+				ErrorMsg := modValues
+				ModNotFound := true
+			}
 			modValue := modValues[1]			
 		}	
 		
@@ -2639,10 +2652,10 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 			maxLabelFirst := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][2]) ")"
 		}
 		
-		If (not TradeOpts.PrefillMinValue) {
+		If (not TradeOpts.PrefillMinValue or ErrorMsg) {
 			modValueMin := 
 		}
-		If (not TradeOpts.PrefillMaxValue) {
+		If (not TradeOpts.PrefillMaxValue or ErrorMsg) {
 			modValueMax := 
 		}
 		
@@ -2670,7 +2683,13 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		Gui, SelectModsGui:Add, Text, x+10 yp+0       w45 r1     		                         		, % TradeUtils.ZeroTrim(modValue)
 		Gui, SelectModsGui:Add, Edit, x+10 yp-3       w40 vTradeAdvancedModMax%index% r1 Disabled%state% 	, % modValueMax
 		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen 			                       		, % (advItem.mods[A_Index].ranges[1]) ? maxLabelFirst : ""
-		Gui, SelectModsGui:Add, CheckBox, x+10 yp+1       vTradeAdvancedSelected%index%
+		checkEnabled := ErrorMsg ? 0 : 1
+		If (checkEnabled) {
+			Gui, SelectModsGui:Add, CheckBox, x+10 yp+1       vTradeAdvancedSelected%index%	
+		}
+		Else {
+			GUI, SelectModsGui:Add, Picture, x+10 yp+1 hwndErrorPic 0x0100, %A_ScriptDir%\trade_data\error.png
+		}	
 		
 		color := "cBlack"
 		
@@ -2711,15 +2730,15 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Op&en on poe.trade
 	Gui, SelectModsGui:Add, Text, x+20 yp+5 cGray, (Pro-Tip: Use Alt + S/E to submit a button)
 	
-	If (!advItem.IsUnique) {
-		Gui, SelectModsGui:Add, Text, x10 y+10 cRed, Advanced search for normal/magic/rare items is not finished.
-		Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/78">See what's planned.</a>    		
+	If (ModNotFound) {
+		Gui, SelectModsGui:Add, Picture, x10 y+12, %A_ScriptDir%\trade_data\error.png
+		Gui, SelectModsGui:Add, Text, x+10 yp+2 cRed,One or more mods couldn't be found on poe.trade
 	}
 	Gui, SelectModsGui:Add, Text, x10 y+10 cGreen, Please support poe.trade by visiting without adblocker
 	Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://poe.trade">visit</a>    		
 
 	windowWidth := modGroupBox + 40 + 5 + 45 + 10 + 45 + 10 +40 + 5 + 45 + 10 + 65
-	windowWidth := (windowWidth > 360) ? windowWidth : 360
+	windowWidth := (windowWidth > 380) ? windowWidth : 380
 	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search
 }
 
