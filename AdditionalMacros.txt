@@ -8,8 +8,7 @@ setAfkMessage(){
 	
 	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
 	{
-		SendInput {Enter} ^{v} {Home}	
-		clipboard :=
+		SendInput {Enter} ^{v} {Home}
 		Pos := RegExMatch(clipboard, " X ")
 		If (Pos) {
 			Loop {
