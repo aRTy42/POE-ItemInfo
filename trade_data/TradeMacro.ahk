@@ -157,6 +157,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	; check If the item implicit mod is an enchantment or corrupted. retrieve this mods data.
 	Enchantment := false
 	Corruption  := false
+
 	If (Item.hasImplicit) {
 		Enchantment := TradeFunc_GetEnchantment(Item, Item.SubType)
 		Corruption  := Item.IsCorrupted ? TradeFunc_GetCorruption(Item) : false
@@ -171,9 +172,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	{
 		hasAdvancedSearch := true
 	}
-	
+
 	If (!Item.IsUnique) {		
-		preparedItem := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)
+		preparedItem  := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
 		
@@ -333,6 +334,11 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RequestParams.ilvl_min := s.minIlvl
 			Item.UsedInSearch.iLvl.min := true
 		}
+		
+		If (s.useBase) {
+			RequestParams.xbase := Item.TypeName
+			Item.UsedInSearch.ItemBase := Item.TypeName
+		}
 	}
 	
 	; prepend the item.subtype to match the options used on poe.trade
@@ -354,9 +360,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		hasHighestCraftingILvl := TradeFunc_CheckIfItemHasHighestCraftingLevel(Item.SubType, iLvl)
 		; xtype = Item.SubType (Helmet)
 		; xbase = Item.TypeName (Eternal Burgonet)
-		
-		;If desired crafting base
-		If (isCraftingBase and not Enchantment and not Corruption) {			
+
+		;If desired crafting base and not isAdvancedPriceCheckRedirect		
+		If (isCraftingBase and not Enchantment and not Corruption and not isAdvancedPriceCheckRedirect) {		
 			RequestParams.xbase := Item.TypeName
 			Item.UsedInSearch.ItemBase := Item.TypeName
 			; If highest item level needed for crafting
@@ -364,14 +370,14 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 				RequestParams.ilvl_min := hasHighestCraftingILvl
 				Item.UsedInSearch.iLvl.min := hasHighestCraftingILvl
 			}			
-		} Else If (Enchantment) {			
+		} Else If (Enchantment and not isAdvancedPriceCheckRedirect) {
 			modParam := new _ParamMod()
 			modParam.mod_name := Enchantment.param
 			modParam.mod_min  := Enchantment.min
 			modParam.mod_max  := Enchantment.max
 			RequestParams.modGroup.AddMod(modParam)	
 			Item.UsedInSearch.Enchantment := true
-		} Else If (Corruption) {			
+		} Else If (Corruption and not isAdvancedPriceCheckRedirect) {			
 			modParam := new _ParamMod()
 			modParam.mod_name := Corruption.param
 			modParam.mod_min  := (Corruption.min) ? Corruption.min : ""
@@ -1736,7 +1742,13 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 	}	
 
 	For key, val in Affixes {
-		If (!val or RegExMatch(val, "i)---") or (i >= 1 and ((Enchantment or Corruption) or (i <= 1 and Implicit and Rarity = 1)))) {
+		If (!val or RegExMatch(val, "i)---")) {
+			continue
+		}
+		If (i >= 1 and (Enchantment or Corruption)) {
+			continue
+		}
+		If (i <= 1 and Implicit and Rarity = 1) {
 			continue
 		}
 
@@ -2171,20 +2183,44 @@ TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
 
 ; find mod in modgroup and Return its name
 TradeFunc_FindInModGroup(modgroup, needle) {	
+	matches := []
+	editedNeedle := ""
+		
 	For j, mod in modgroup {
 		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
 		s  := RegExReplace(s, "# ?to ? #", "#")
+		s  := TradeUtils.CleanUp(s)		
 		ss := TradeUtils.CleanUp(ss)
-		s  := TradeUtils.CleanUp(s)
 		ss := Trim(needle.name)
 		;matches "1 to" in for example "adds 1 to (20-40) lightning damage"
 		ss := RegExReplace(ss, "\d+ ?to ?#", "#")		
 		ss := RegExReplace(ss, "Monsters' skills Chain # additional times", "Monsters' skills Chain 2 additional times")
+		editedNeedle := ss
 		
+		; push matches to array to find multiple matches (case sensitive variations)
 		If (s = ss) {
-			Return mod
+			temp := {}
+			temp.s := s
+			temp.mod := mod
+			matches.push(temp)
 		}
 	}
+	
+	If (matches.Length()) {
+		If (matches.Length() = 1) {
+			Return matches[1].mod
+		}
+		Else {
+			Loop % matches.Length() 
+			{
+				; use == instead of = to search case sensitive, there is at least on case where this matters (Life regenerated per second)
+				If (matches[A_Index].s == editedNeedle) {				
+					Return matches[A_Index].mod
+				}
+			}
+		}
+	}
+	
 	Return ""
 }
 
@@ -2232,6 +2268,7 @@ TradeFunc_GetEnchantment(_item, type) {
 	mods     := TradeGlobals.Get("ModsData")	
 	enchants := TradeGlobals.Get("EnchantmentData")	
 	
+	group := 
 	If (type = "Boots") {
 		group := enchants.boots
 	} 
@@ -2241,10 +2278,10 @@ TradeFunc_GetEnchantment(_item, type) {
 	Else If (type = "Helmet") {
 		group := enchants.helmet
 	} 
-	
+
 	RegExMatch(_item.implicit, "i)([.0-9]+)(%? to ([.0-9]+))?", values)
 	imp      := RegExReplace(_item.implicit, "i)([.0-9]+)", "#")
-	
+
 	enchantment := {}	
 	If (group.length()) {	
 		For i, enchant in group {
@@ -2259,7 +2296,7 @@ TradeFunc_GetEnchantment(_item, type) {
 			}
 		}
 	}	
-	
+
 	valueCount := 0
 	Loop {
 		If (!values%A_Index%) {
@@ -2280,7 +2317,7 @@ TradeFunc_GetEnchantment(_item, type) {
 		Return enchantment
 	}
 	Else {
-		Return false
+		Return 0
 	}
 }
 
@@ -2580,7 +2617,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	;add mods	
 	l := 1
 	p := 1
-	ModNotFound := falss
+	ModNotFound := false
 	Loop % advItem.mods.Length() {
 		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
@@ -2716,7 +2753,9 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	m := 1	
 	;If (Sockets >= 5 or Links >= 5) {
 	If (true) {
-		Gui, SelectModsGui:Add, Text, x0 w700 y+5 cc9cacd, %line% 
+		If (advItem.mods.Length()) {
+			Gui, SelectModsGui:Add, Text, x0 w700 y+5 cc9cacd, %line% 	
+		}		
 				
 		If (Sockets >= 5) {
 			m++
@@ -2734,6 +2773,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 		offsetY := (m = 1) ? "20" : "+0"
 		Gui, SelectModsGui:Add, CheckBox, x%offsetX% yp%offsetY% vTradeAdvancedSelectedILvl , % "Item Level (min)"
 		Gui, SelectModsGui:Add, Edit    , x+5 yp-3 w30 vTradeAdvancedMinILvl , % ""
+		Gui, SelectModsGui:Add, CheckBox, x+15 yp+3 vTradeAdvancedSelectedItemBase , % "Include Item Base"		
 	}
 	
 	Item.UsedInSearch.SearchType := "Advanced"
@@ -2800,6 +2840,7 @@ TradeFunc_ResetGUI(){
 	newItem.useLinks	:= 
 	newItem.useIlvl	:= 
 	newItem.minIlvl	:= 
+	newItem.useBase	:= 
 }
 
 TradeFunc_HandleGuiSubmit(){
@@ -2854,6 +2895,7 @@ TradeFunc_HandleGuiSubmit(){
 	newItem.useLinks	:= TradeAdvancedUseLinks
 	newItem.useIlvl	:= TradeAdvancedSelectedILvl
 	newItem.minIlvl	:= TradeAdvancedMinILvl
+	newItem.useBase	:= TradeAdvancedSelectedItemBase
 
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)	
 	Gui, SelectModsGui:Destroy

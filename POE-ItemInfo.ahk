@@ -5917,6 +5917,7 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = ""
             If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Normal"))
             {
                 ItemTypeName := Trim(RegExReplace(ItemName, "i)Superior", ""))
+                Return
             }
             ; Magic items don't have a third line.
             ; Sanitizing the item name is a bit more complicated but should work with the following assumptions:
@@ -5927,10 +5928,12 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = ""
                 If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Magic"))
                 {
                     ItemTypeName := Trim(RegExReplace(ItemName, "i) of .*", "", matchCount))
-                    If (matchCount and AffixCount > 1)
+                    If ((matchCount and AffixCount > 1) or (not matchCount and AffixCount = 1))
                     {
                         ; We replaced the suffix and have 2 affixes, therefore we must also have a prefix that we can replace.
+                        ; OR we didn't replace the suffix but have 1 mod, therefore we must have a prefix that we can replace.
                         ItemTypeName := Trim(RegExReplace(ItemTypeName, "iU)^.* ", ""))
+                        Return
                     }
                 }
             }
@@ -6487,6 +6490,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         ; Check that there is no ":" in the retrieved text = can only be an implicit mod
         If (!InStr(ItemDataParts%ItemDataIndexImplicit%, ":")) {
             Item.Implicit := ItemDataParts%ItemDataIndexImplicit%
+            tempImplicit := Item.Implicit
+            Loop, Parse, tempImplicit, `n, `r 
+            {
+                If(A_Index = 1) {
+                    Item.Implicit := A_LoopField	
+                }
+            }
             Item.hasImplicit := True
         }
     }
