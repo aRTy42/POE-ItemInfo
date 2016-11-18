@@ -142,6 +142,8 @@ SendMode Input ; Recommended for new scripts due to its superior speed and relia
 ;Define exe names for the regular and steam version, for later use at the very end of the script. This needs to be done early, in the "auto-execute section".
 GroupAdd, PoEexe, ahk_exe PathOfExile.exe
 GroupAdd, PoEexe, ahk_exe PathOfExileSteam.exe
+GroupAdd, PoEexe, ahk_exe PathOfExile_x64.exe
+GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 
 #Include %A_ScriptDir%\data\Version.txt
 
@@ -7632,7 +7634,7 @@ OnClipBoardChange:
         If (Opts.OnlyActiveIfPOEIsFront)
         {
             ; do nothing if Path of Exile isn't the foremost window
-            IfWinActive, Path of Exile ahk_class Direct3DWindowClass
+            IfWinActive, Path of Exile ahk_class POEWindowClass
             {
                 ParseClipBoardChanges()
             }
@@ -7865,7 +7867,7 @@ TogglePOEItemScript()
 }
 
 ; ############ ADD YOUR OWN MACROS HERE #############
-#IfWinActive Path of Exile ahk_class Direct3DWindowClass ahk_group PoEexe
+#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe
 
 Pause::TogglePOEItemScript()
 
