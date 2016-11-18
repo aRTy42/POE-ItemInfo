@@ -1,5 +1,12 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.1.9
+=================================================================================================
+Fixed more item parsing problems introduced with PoE 2.4.2 (ItemInfo)
+Fixed some problems regarding what mods/attributes are automatically included in searches.
+Added checkbox to advanced search to include the item base. 
+Fixed some problems with mod name parsing for the new item bases.  
+
 1.1.8
 =================================================================================================
 Fix for PoE Patch 2.4.2
