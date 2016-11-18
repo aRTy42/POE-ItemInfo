@@ -1753,6 +1753,7 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 		}
 
 		temp := TradeFunc_NonUniqueModStringToObject(val, false)
+		
 		;combine mods if they have the same name and add their values
 		For tempkey, tempmod in temp {			
 			found := false
@@ -1816,8 +1817,10 @@ TradeFunc_NonUniqueModStringToObject(string, isImplicit) {
 		Matches.push(Trim(match))
 	}
 	
+	type := ""
 	; Matching "x% fire and cold resistance" etc is easier this way.
 	If (RegExMatch(val, "i)Resistance")) {
+		type := "Resistance"
 		If (RegExMatch(val, "i)fire")) {
 			Matches.push("Fire")
 		}
@@ -1829,10 +1832,24 @@ TradeFunc_NonUniqueModStringToObject(string, isImplicit) {
 		}
 	}
 	
+	; Vanguard Belt implicit for example (flat AR + EV)
+	If (RegExMatch(val, "i)([.0-9]+) to (Armour|Evasion Rating|Energy Shield) and (Armour|Evasion Rating|Energy Shield)")) {
+		type := "Defense"
+		If (RegExMatch(val, "i)Armour")) {
+			Matches.push("Armour")
+		}
+		If (RegExMatch(val, "i)Evasion Rating")) {
+			Matches.push("Evasion Rating")
+		}
+		If (RegExMatch(val, "i)Energy Shield")) {
+			Matches.push("Energy Shield")
+		}
+	}	
+	
 	; Create single mod from every collected resist/attribute
 	Loop % Matches.Length() {
 		RegExMatch(val, "i)(Resistance)", match)
-		Matches[A_Index] := match1 ? "+#% to " . Matches[A_Index] . " " . match1 : "+# to " . Matches[A_Index]		
+		Matches[A_Index] := match1 ? "+#% to " . Matches[A_Index] . " " . match1 : "+# to " . Matches[A_Index]	
 	}
 	
 	; Handle "all attributes"/"all resist"
@@ -2185,7 +2202,7 @@ TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
 TradeFunc_FindInModGroup(modgroup, needle) {	
 	matches := []
 	editedNeedle := ""
-		
+
 	For j, mod in modgroup {
 		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)", ""))
 		s  := RegExReplace(s, "# ?to ? #", "#")
