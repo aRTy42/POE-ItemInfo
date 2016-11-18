@@ -6487,6 +6487,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         ; Check that there is no ":" in the retrieved text = can only be an implicit mod
         If (!InStr(ItemDataParts%ItemDataIndexImplicit%, ":")) {
             Item.Implicit := ItemDataParts%ItemDataIndexImplicit%
+            tempImplicit := Item.Implicit
+            Loop, Parse, tempImplicit, `n, `r 
+            {
+                If(A_Index = 1) {
+                    Item.Implicit := A_LoopField	
+                }
+            }
             Item.hasImplicit := True
         }
     }
