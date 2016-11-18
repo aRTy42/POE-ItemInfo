@@ -2385,6 +2385,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	
 	ValueRange := ValueRange / 100 	
 	
+	modLengthMax := 0
 	modGroupBox := 0
 	Loop % advItem.mods.Length() {
 		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
@@ -2412,6 +2413,10 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	statCount := (ChangedImplicit) ? statCount + 1 : statCount
 	
 	boxRows := modCount * 3 + statCount * 3
+	
+	;console.log(modLengthMax)
+	;console.log(modGroupBox)
+	;console.show()
 	
 	Gui, SelectModsGui:Add, Text, x14 y+10 w%modGroupBox%, Mods
 	Gui, SelectModsGui:Add, Text, x+10 yp+0 w90, min

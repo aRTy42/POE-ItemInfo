@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.1.8
+=================================================================================================
+Fix for PoE Patch 2.4.2
+
 1.1.7.2
 =================================================================================================
 Added error message/icon if a mod couldn't be found on poe.trade.
