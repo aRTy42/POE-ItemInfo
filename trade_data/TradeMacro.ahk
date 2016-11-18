@@ -2,7 +2,7 @@
 ; IGN: Eruyome
 
 PriceCheck:
-	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		Global TradeOpts, Item
 		Item := {}
@@ -15,7 +15,7 @@ PriceCheck:
 return
 
 AdvancedPriceCheck:
-	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		Global TradeOpts, Item
 		Item := {}
@@ -28,7 +28,7 @@ AdvancedPriceCheck:
 return
 
 ShowItemAge:
-	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		Global TradeOpts, Item
 		If (!TradeOpts.AccountName) {
@@ -45,7 +45,7 @@ ShowItemAge:
 return
 
 OpenWiki:
-	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		Global Item
 		Item := {}
@@ -77,7 +77,7 @@ OpenWiki:
 return
 
 CustomInputSearch:
-	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		ScreenOffsetY := A_ScreenHeight / 2 - 50
 		ScreenOffsetX := A_ScreenWidth / 2 - 125

@@ -6,7 +6,7 @@ setAfkMessage(){
 	FormatTime, currentTime, A_NowUTC, HH:mm
 	clipboard := "/afk AFK for about X minutes, since " currentTime " (" TZD "). Leave a message and I'll reply."
 	
-	IfWinActive, Path of Exile ahk_class Direct3DWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		SendInput {Enter} ^{v} {Home}
 		Pos := RegExMatch(clipboard, " X ")
