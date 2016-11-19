@@ -142,6 +142,8 @@ SendMode Input ; Recommended for new scripts due to its superior speed and relia
 ;Define exe names for the regular and steam version, for later use at the very end of the script. This needs to be done early, in the "auto-execute section".
 GroupAdd, PoEexe, ahk_exe PathOfExile.exe
 GroupAdd, PoEexe, ahk_exe PathOfExileSteam.exe
+GroupAdd, PoEexe, ahk_exe PathOfExile_x64.exe
+GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 
 #Include %A_ScriptDir%\data\Version.txt
 
@@ -5915,6 +5917,7 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = ""
             If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Normal"))
             {
                 ItemTypeName := Trim(RegExReplace(ItemName, "i)Superior", ""))
+                Return
             }
             ; Magic items don't have a third line.
             ; Sanitizing the item name is a bit more complicated but should work with the following assumptions:
@@ -5925,10 +5928,12 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = ""
                 If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Magic"))
                 {
                     ItemTypeName := Trim(RegExReplace(ItemName, "i) of .*", "", matchCount))
-                    If (matchCount and AffixCount > 1)
+                    If ((matchCount and AffixCount > 1) or (not matchCount and AffixCount = 1))
                     {
                         ; We replaced the suffix and have 2 affixes, therefore we must also have a prefix that we can replace.
+                        ; OR we didn't replace the suffix but have 1 mod, therefore we must have a prefix that we can replace.
                         ItemTypeName := Trim(RegExReplace(ItemTypeName, "iU)^.* ", ""))
+                        Return
                     }
                 }
             }
@@ -6485,6 +6490,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         ; Check that there is no ":" in the retrieved text = can only be an implicit mod
         If (!InStr(ItemDataParts%ItemDataIndexImplicit%, ":")) {
             Item.Implicit := ItemDataParts%ItemDataIndexImplicit%
+            tempImplicit := Item.Implicit
+            Loop, Parse, tempImplicit, `n, `r 
+            {
+                If(A_Index = 1) {
+                    Item.Implicit := A_LoopField	
+                }
+            }
             Item.hasImplicit := True
         }
     }
@@ -7632,7 +7644,7 @@ OnClipBoardChange:
         If (Opts.OnlyActiveIfPOEIsFront)
         {
             ; do nothing if Path of Exile isn't the foremost window
-            IfWinActive, Path of Exile ahk_class Direct3DWindowClass
+            IfWinActive, Path of Exile ahk_class POEWindowClass
             {
                 ParseClipBoardChanges()
             }
@@ -7865,7 +7877,7 @@ TogglePOEItemScript()
 }
 
 ; ############ ADD YOUR OWN MACROS HERE #############
-#IfWinActive Path of Exile ahk_class Direct3DWindowClass ahk_group PoEexe
+#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe
 
 Pause::TogglePOEItemScript()
 
