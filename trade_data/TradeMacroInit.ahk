@@ -602,7 +602,18 @@ TradeFunc_GetLatestRelease() {
 		RegExMatch(html,  "i)""body"":""(.*?)""", description)
 		StringReplace, description, description1, \r\n, ~, All 
 		
-		If (latestVersion > currentVersion) {
+		newRelease := false
+		Loop {			
+			If (not latestVersion%A_Index% and not currentVersion%A_Index%) {
+				break
+			}
+			Else If (latestVersion%A_Index% > currentVersion%A_Index%) {
+				;MsgBox % latestVersion%A_Index% "`n" currentVersion%A_Index%
+				newRelease := true
+			}			
+		}
+		
+		If (newRelease) {
 			Gui, UpdateNotification:Add, Text, cGreen, Update available!
 			Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>.`nThe lastest version is <%latestVersion%>.
 			Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        

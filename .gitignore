@@ -49,6 +49,7 @@ Temporary Items
 .idea/workspace.xml
 POE-ItemInfo.ahk.bak
 .idea/
+backup/
 
 *.bak
 main.ahk
@@ -60,3 +61,5 @@ backup/*
 backup/
 trade_data/old_data_files/
 test.ahk
+backup/
+

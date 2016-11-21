@@ -1,6 +1,14 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.4.05
+================================
+from aRTy42, Eruyome, Arkaf
+Changed Direct3DWindowClass to POEWindowClass and the relevant .exe names, so that the script works again.
+	It should support both standalone and steam version and both 32 and 64 bit.
+Currency stacks of 1000+ in the currency tab should now read correctly for the currency conversion function.
+	(thanks to Arkaf and iulianov who commented on this)
+
 2.4.04
 ================================
 from aRTy42
