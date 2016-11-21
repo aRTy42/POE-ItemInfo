@@ -1753,14 +1753,16 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 		}
 
 		temp := TradeFunc_NonUniqueModStringToObject(val, false)
-		
 		;combine mods if they have the same name and add their values
 		For tempkey, tempmod in temp {			
 			found := false
+
 			For key, mod in mods {	
-				If (tempmod.name = mod.name) {	
+				If (tempmod.name = mod.name) {
+					Index := 1
 					Loop % mod.values.MaxIndex() {
-						mod.values[A_Index] := mod.values[A_Index] + tempmod.values[A_Index]
+						mod.values[Index] := mod.values[Index] + tempmod.values[Index]
+						Index++
 					}
 					
 					tempStr  := RegExReplace(mod.name_orig, "i)([.0-9]+)", "#")
@@ -1782,8 +1784,20 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 				}				
 			} 
 			If (tempmod.name and !found) {
-				mods.push(tempmod)	
+				mods.push(tempmod)
 			}
+		}
+	}
+
+	; adding the values (value array) fails in the above loop, so far I have no idea why,
+	; as a workaround we take the values from the mod description (where it works and use them)
+	For key, mod in mods {
+		mod.values := []
+		Pos		:= 1
+		Index	:= 1
+		While Pos := RegExMatch(mod.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
+			mod.values.push(value)		
+			Index++			
 		}
 	}
 	
@@ -1928,7 +1942,7 @@ TradeFunc_CreatePseudoMods(mods) {
 	lightningDmg_SpellsFlatHi := 0
 	
 	hasChaosRes := false
-	
+
 	For key, val in mods {
 		If (RegExMatch(val.name, "i)maximum life$")) {
 			life := life + val.values[1]
