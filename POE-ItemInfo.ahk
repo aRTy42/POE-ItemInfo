@@ -6044,7 +6044,7 @@ ConvertCurrency(ItemName, ItemStats)
     Else
     {
         SetFormat, FloatFast, 5.2
-        StackSize := StackSizeParts1
+        StackSize := RegExReplace(StackSizeParts1, "i)[^0-9a-z]")
     }
     ValueInChaos := 0
     Loop, Read, %A_ScriptDir%\data\CurrencyRates.txt
