@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.2.1
+=================================================================================================
+Fixed a league parsing problem occuring between temp-leagues.
+
 1.2.0
 =================================================================================================
 Updated ItemInfo.
