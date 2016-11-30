@@ -74,7 +74,7 @@ class TradeUserOptions {
 									; 	"tmpstandard" (current SC Temp-League) 
 									;	"tmphardcore" (current HC Temp-League) 
 									;	"standard", 
-									;   "hardcore"
+									;    "hardcore"
 	GemLevel := 16                  	; Gem level is ignored in the search unless it's equal or higher than this value
 	GemLevelRange := 0              	; Gem level is ignored in the search unless it's equal or higher than this value
 	GemQualityRange := 0            	; Use this to set a range to quality gems searches
@@ -105,7 +105,7 @@ IfNotExist, %A_ScriptDir%\trade_config.ini
 }
 
 ; Check If Temp-Leagues are active and set defaultLeague accordingly
-TradeGlobals.Set("TempLeagueIsRunning", TradeFunc_FunctionCheckIfTempLeagueIsRunning())
+TradeGlobals.Set("TempLeagueIsRunning", TradeFunc_CheckIfTempLeagueIsRunning())
 TradeGlobals.Set("DefaultLeague", (tempLeagueIsRunning > 0) ? "tmpstandard" : "standard")
 TradeGlobals.Set("GithubUser", "POE-TradeMacro")
 TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
@@ -117,7 +117,9 @@ ReadTradeConfig()
 Sleep, 100
 
 TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
-TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
+SearchLeague := TradeOpts.SearchLeague ? TradeGlobals.Get("DefaultLeague") : TradeOpts.SearchLeague
+TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[SearchLeague])
+
 If (TradeOpts.AlternativeCurrencySearch) {
 	GoSub, ReadPoeNinjaCurrencyData
 }
@@ -505,15 +507,20 @@ TradeFunc_GetLeagues(){
 }
 
 ; ------------------ CHECK IF A TEMP-LEAGUE IS ACTIVE ------------------ 
-TradeFunc_FunctionCheckIfTempLeagueIsRunning() {
+TradeFunc_CheckIfTempLeagueIsRunning() {
 	tempLeagueDates := TradeFunc_GetTempLeagueDates()
+	
+	If (!tempLeagueDates) {
+		defaultLeague := "standard"
+		Return 0
+	}
 	
 	UTCTimestamp := TradeFunc_GetTimestampUTC()
 	UTCFormatStr := "yyyy-MM-dd'T'HH:mm:ss'Z'"
 	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr%
 	
 	timeDiffStart := TradeFunc_DateParse(TimeStr) - TradeFunc_DateParse(tempLeagueDates["start"])
-	timeDiffEnd := TradeFunc_DateParse(TimeStr) - TradeFunc_DateParse(tempLeagueDates["end"])
+	timeDiffEnd   := TradeFunc_DateParse(TimeStr) - TradeFunc_DateParse(tempLeagueDates["end"])
 	
 	If (timeDiffStart > 0 && timeDiffEnd < 0) {
         ; Current datetime is between temp league start and end date
@@ -553,6 +560,7 @@ TradeFunc_GetTempLeagueDates(){
 			Return tempLeagueDates
 		}
 	}
+	Return 0
 }
 
 ;----------------------- Check if newer Release is available ---------------------------------------

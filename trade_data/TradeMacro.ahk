@@ -203,7 +203,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		
 		; Return If the advanced search was used but the checked item doesn't have variable mods
 		if(!uniqueWithVariableMods and isAdvancedPriceCheck and not Enchantment and not Corruption) {
-			ShowToolTip("Advanced search not available for this item (no variable mods).")
+			ShowToolTip("Advanced search not available for this item (no variable mods)`nor item is new and the necessary data is not yet available/updated.")
 			return
 		}
 		
