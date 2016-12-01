@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.2.2
+=================================================================================================
+Fixed some advanced search gui options not resetting properly after searching.
+
 1.2.1
 =================================================================================================
 Fixed a league parsing problem occuring between temp-leagues.

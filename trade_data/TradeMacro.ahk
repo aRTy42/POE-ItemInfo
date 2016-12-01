@@ -320,6 +320,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Item.UsedInSearch.Sockets := ItemData.Sockets
 		}	
 		; handle item links
+
 		If (s.UseLinks) {
 			RequestParams.link_min := ItemData.Links
 			Item.UsedInSearch.Links := ItemData.Links
@@ -2865,18 +2866,17 @@ TradeFunc_ResetGUI(){
 			break
 		}
 	}
-	newItem.mods       	:= 
-	newItem.stats      	:= 
-	newItem.useSockets	:= 
-	newItem.useLinks	:= 
-	newItem.useIlvl	:= 
-	newItem.minIlvl	:= 
-	newItem.useBase	:= 
+
+	TradeAdvancedUseSockets		:=
+	TradeAdvancedUseLinks		:=
+	TradeAdvancedSelectedILvl	:=
+	TradeAdvancedMinILvl		:=
+	TradeAdvancedSelectedItemBase	:=
 }
 
 TradeFunc_HandleGuiSubmit(){
 	Global 
-	
+
 	Gui, SelectModsGui:Submit
 	newItem := {mods:[], stats:[], UsedInSearch : {}}
 	mods  := []	
