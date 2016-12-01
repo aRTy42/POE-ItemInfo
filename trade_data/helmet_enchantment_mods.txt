@@ -42,6 +42,9 @@ Arc has +#% chance to Shock
 Blast Rain has a #% chance for an additional blast
 #% increased Blast Rain Damage
 #% increased Blast Rain Radius
+#% increased Blight Damage
+#% increased Blight Radius
+#% increased Secondary Blight Effect Duration
 Blink Arrow and Blink Arrow Clones have #% increased Attack Speed
 #% increased Blink Arrow Cooldown Recovery Speed
 Blink Arrow and Blink Arrow Clones have #% increased Damage
@@ -57,6 +60,9 @@ Burning Arrow has +#% chance to Ignite
 #% increased Caustic Arrow Radius
 +#% to Chaos Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Chaos Golems
+#% increased Blade Flurry Damage
+#% chance to Dodge Attacks at Maximum Blade Flurry stages
+#% increased Blade Flurry Radius
 #% reduced Clarity Mana Reservation
 #% increased Cleave Attack Speed
 #% increased Cleave Damage
@@ -120,6 +126,9 @@ Elemental Hit has +#% chance to Freeze, Shock and Ignite
 #% increased Explosive Arrow Attack Speed
 #% increased Explosive Arrow Damage
 #% increased Explosive Arrow Radius
+#% increased Scorching Ray Cast Speed
+#% increased Scorching Ray Damage
+#% increased Scorching Ray beam length
 #% increased Fire Nova Cast Speed
 #% increased Fire Nova Mine Damage
 Fire Nova Mine repeats an additional # times
