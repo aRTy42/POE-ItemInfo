@@ -511,7 +511,12 @@ TradeFunc_CheckIfTempLeagueIsRunning() {
 	tempLeagueDates := TradeFunc_GetTempLeagueDates()
 	
 	If (!tempLeagueDates) {
-		defaultLeague := "standard"
+		If (InStr(TradeOpts.SearchLeague, "standard")) {
+			defaultLeague := "standard"
+		}
+		Else {
+			defaultLeague := "hardcore"
+		}
 		Return 0
 	}
 	

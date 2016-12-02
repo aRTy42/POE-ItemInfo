@@ -89,10 +89,14 @@ CustomInputSearch:
 			RequestParams.name   := ItemName
 			RequestParams.league := LeagueName
 			Item.Name := ItemName
+			
+			ShowToolTip("Running search...")
+			
 			Payload := RequestParams.ToPayload()
 			Html := TradeFunc_DoPostRequest(Payload)
 			ParsedData := TradeFunc_ParseHtml(Html, Payload)
 			SetClipboardContents(ParsedData)
+			
 			ShowToolTip("")
 			ShowToolTip(ParsedData, true)
 		}
