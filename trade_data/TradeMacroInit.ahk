@@ -117,7 +117,7 @@ ReadTradeConfig()
 Sleep, 100
 
 TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
-SearchLeague := TradeOpts.SearchLeague ? TradeGlobals.Get("DefaultLeague") : TradeOpts.SearchLeague
+SearchLeague := (StrLen(TradeOpts.SearchLeague) > 0) ? TradeOpts.SearchLeague : TradeGlobals.Get("DefaultLeague")
 TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[SearchLeague])
 
 If (TradeOpts.AlternativeCurrencySearch) {
@@ -519,7 +519,7 @@ TradeFunc_CheckIfTempLeagueIsRunning() {
 		}
 		Return 0
 	}
-	
+
 	UTCTimestamp := TradeFunc_GetTimestampUTC()
 	UTCFormatStr := "yyyy-MM-dd'T'HH:mm:ss'Z'"
 	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr%

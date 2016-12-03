@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.2.4
+=================================================================================================
+Hotfix for temp leagues not working.
+
 1.2.3
 =================================================================================================
 Finally fixed league parsing (default between temp-leagues).
