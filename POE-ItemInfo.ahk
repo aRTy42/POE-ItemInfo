@@ -6520,6 +6520,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     ParseItemName(ItemData.NamePlate, ItemName, ItemTypeName, TotalAffixes)
     Item.TypeName := ItemTypeName
 
+	pseudoMods := PreparePseudoModCreation(ItemData.Affixes, Item.Implicit, RarityLevel, Item.isMap)
+    
     ; Start assembling the text for the tooltip
     TT := Item.Name
     If (Item.TypeName && (Item.TypeName != Item.Name))
@@ -6736,6 +6738,16 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
             TT = %TT%`n--------%AffixDetails%
         }
     }
+    
+    If (pseudoMods.Length()) 
+    {
+        TT = %TT%`n--------
+        For key, val in pseudoMods 
+        {
+            pseudoMod := "(pseudo) " val.name_orig
+            TT = %TT%`n%pseudoMod%
+        }
+    }
 
     If (Item.IsUnidentified and (Item.Name != "Scroll of Wisdom") and Not Item.IsMap)
     {
@@ -6801,6 +6813,420 @@ GetNegativeAffixOffset(Item)
         NegativeAffixOffset := NegativeAffixOffset + 1
     }
     return NegativeAffixOffset
+}
+
+; Prepare item affixes to create pseudo mods, taken from PoE-TradeMacro
+PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
+	Affixes := StrSplit(Affixes, "`n")
+	mods := []
+	i := 0
+
+	If (Implicit) {
+		temp := ModStringToObject(Implicit, true)        
+		For key, val in temp {
+			mods.push(val)
+			i++
+		}		
+	}	
+
+	For key, val in Affixes {
+		If (!val or RegExMatch(val, "i)---")) {
+			continue
+		}
+		If (i <= 1 and Implicit and Rarity = 1) {
+			continue
+		}
+
+		temp := ModStringToObject(val, false)
+		;combine mods if they have the same name and add their values
+		For tempkey, tempmod in temp {			
+			found := false
+
+			For key, mod in mods {	
+				If (tempmod.name = mod.name) {
+					Index := 1
+					Loop % mod.values.MaxIndex() {
+						mod.values[Index] := mod.values[Index] + tempmod.values[Index]
+						Index++
+					}
+					
+					tempStr  := RegExReplace(mod.name_orig, "i)([.0-9]+)", "#")
+					
+					Pos		:= 1
+					tempArr	:= []
+					While Pos := RegExMatch(tempmod.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
+						tempArr.push(value)
+					}
+					
+					Pos		:= 1
+					Index	:= 1
+					While Pos := RegExMatch(mod.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
+						tempStr := StrReplace(tempStr, "#", value + tempArr[Index],, 1)
+						Index++			
+					}
+					mod.name_orig := tempStr	
+					found := true
+				}				
+			} 
+			If (tempmod.name and !found) {
+				mods.push(tempmod)
+			}
+		}
+	}
+
+	; adding the values (value array) fails in the above loop, so far I have no idea why,
+	; as a workaround we take the values from the mod description (where it works and use them)
+
+	For key, mod in mods {
+		mod.values := []
+		Pos		:= 1
+		Index	:= 1
+		While Pos := RegExMatch(mod.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {		
+			mod.values.push(value)		
+			Index++			
+		}
+	}
+
+	; return only pseudoMods, this is changed from PoE-TradeMacro where all mods are returned.
+	mods := CreatePseudoMods(mods)
+
+	Return mods
+}
+
+; Convert mod strings to objects while seperating combined mods like "+#% to Fire and Lightning Resitances"
+ModStringToObject(string, isImplicit) {
+	StringReplace, val, string, `r,, All
+	StringReplace, val, val, `n,, All
+	values 	:= []
+	
+	; Collect all numeric values in the mod-string
+	Pos		:= 0
+	While Pos := RegExMatch(val, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
+		values.push(value)
+	}
+
+	; Collect all resists/attributes that are combined in one mod
+	Matches	:= []
+	Pos		:= 0
+	While Pos := RegExMatch(val, "i) ?(Dexterity) ?| ?(Intelligence) ?| ?(Strength) ?", match, Pos + (StrLen(match) ? StrLen(match) : 1)) {
+		Matches.push(Trim(match))
+	}
+	
+	type := ""
+	; Matching "x% fire and cold resistance" etc is easier this way.
+	If (RegExMatch(val, "i)Resistance")) {
+		type := "Resistance"
+		If (RegExMatch(val, "i)fire")) {
+			Matches.push("Fire")
+		}
+		If (RegExMatch(val, "i)cold")) {
+			Matches.push("Cold")
+		}
+		If (RegExMatch(val, "i)lightning")) {
+			Matches.push("Lightning")
+		}
+	}
+	
+	; Vanguard Belt implicit for example (flat AR + EV)
+	If (RegExMatch(val, "i)([.0-9]+) to (Armour|Evasion Rating|Energy Shield) and (Armour|Evasion Rating|Energy Shield)")) {
+		type := "Defense"
+		If (RegExMatch(val, "i)Armour")) {
+			Matches.push("Armour")
+		}
+		If (RegExMatch(val, "i)Evasion Rating")) {
+			Matches.push("Evasion Rating")
+		}
+		If (RegExMatch(val, "i)Energy Shield")) {
+			Matches.push("Energy Shield")
+		}
+	}	
+	
+	; Create single mod from every collected resist/attribute
+	Loop % Matches.Length() {
+		RegExMatch(val, "i)(Resistance)", match)
+		Matches[A_Index] := match1 ? "+#% to " . Matches[A_Index] . " " . match1 : "+# to " . Matches[A_Index]	
+	}
+	
+	; Handle "all attributes"/"all resist"
+	If (RegExMatch(val, "i)all attributes|all elemental (Resistances)", match)) {
+		resist := match1 ? true : false
+		Matches[1] := resist ? "+#% to Fire Resistance"      : "+# to Strength"
+		Matches[2] := resist ? "+#% to Lightning Resistance" : "+# to Intelligence"
+		Matches[3] := resist ? "+#% to Cold Resistance"      : "+# to Dexterity"		
+	}
+	; Use original mod-string if no combination is found
+	Matches[1] := Matches.Length() > 0 ? Matches[1] : val
+
+	; 
+	arr := []
+	Loop % (Matches.Length() ? Matches.Length() : 1) {
+		temp := {}
+		temp.name_orig := Matches[A_Index]
+		Loop {
+			temp.name_orig := RegExReplace(temp.name_orig, "#", values[A_Index], Count, 1)
+			If (!Count) {
+				break
+			}
+		}
+
+		temp.values 	:= values
+		s			:= RegExReplace(Matches[A_Index], "i)([.0-9]+)", "#")
+		temp.name 	:= RegExReplace(s, "i)# ?to ? #", "#", isRange)	
+		temp.isVariable:= false
+		temp.type		:= (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"	
+		arr.push(temp)		
+	}	
+	
+	Return arr
+}
+
+CreatePseudoMods(mods) {
+	tempMods := []
+	resist := 0
+	eleResist := 0
+	life := 0
+	attributes := 0
+
+	eleDmg_Percent := 0
+	eleDmg_AttacksFlatLow := 0
+	eleDmg_AttacksFlatHi := 0
+	eleDmg_AttacksPercent := 0
+	eleDmg_SpellsPercent := 0
+	eleDmg_SpellsFlatLow := 0
+	eleDmg_SpellsFlatHi := 0
+	
+	spellDmg_Percent := 0	
+	weaponEleDmg_Percent := 0
+	
+	fireDmg_Percent := 0
+	fireDmg_AttacksPercent := 0
+	fireDmg_SpellsPercent := 0
+	fireDmg_AttacksFlatLow := 0
+	fireDmg_SpellsFlatLow := 0
+	fireDmg_AttacksFlatHi := 0
+	fireDmg_SpellsFlatHi := 0
+	
+	coldDmg_Percent := 0
+	coldDmg_AttacksPercent := 0
+	coldDmg_SpellsPercent := 0
+	coldDmg_AttacksFlatLow := 0
+	coldDmg_AttacksFlatHi := 0
+	coldDmg_SpellsFlatLow := 0
+	coldDmg_SpellsFlatHi := 0
+	
+	lightningDmg_Percent := 0
+	lightningDmg_AttacksPercent := 0
+	lightningDmg_SpellsPercent := 0
+	lightningDmg_AttacksFlatLow := 0
+	lightningDmg_AttacksFlatHi := 0
+	lightningDmg_SpellsFlatLow := 0
+	lightningDmg_SpellsFlatHi := 0
+	
+	hasChaosRes := false
+
+	For key, val in mods {
+		If (RegExMatch(val.name, "i)maximum life$")) {
+			life := life + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)to intelligence$|to dexterity$|to (strength)$", match)) {
+			attributes := attributes + val.values[1]
+			If (match1 = "strength") {
+				life := life + (Floor(val.values[1] / 2))
+			}
+		}
+		If (RegExMatch(val.name, "i)to cold resistance|to fire resistance|to lightning resistance")) {
+			resist := resist + val.values[1]
+			eleResist := eleResist + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)to Chaos Resistance")) {
+			hasChaos := true
+			resist := resist + val.values[1]
+		}
+		
+		If (RegExMatch(val.name, "i)increased (cold) damage$", element)) {
+			%element1%Dmg_Percent := %element1%Dmg_Percent + val.values[1]
+			eleDmg_Percent := eleDmg_Percent + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)increased (fire) damage$", element)) {
+			%element1%Dmg_Percent := %element1%Dmg_Percent + val.values[1]
+			eleDmg_Percent := eleDmg_Percent + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)increased (lightning) damage$", element)) {
+			%element1%Dmg_Percent := %element1%Dmg_Percent + val.values[1]
+			eleDmg_Percent := eleDmg_Percent + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)increased elemental damage$", element)) {
+			eleDmg_Percent := eleDmg_Percent + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)(cold) damage to (attacks|spells)$", element)) {
+			%element1%Dmg_%element2%FlatLow := %element1%Dmg_%element2%FlatLow + val.values[1]
+			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi + val.values[2]
+			eleDmg_%element2%FlatLow := eleDmg_%element2%FlatLow + val.values[1]			
+			eleDmg_%element2%FlatHi  := eleDmg_%element2%FlatHi  + val.values[2]
+		}
+		If (RegExMatch(val.name, "i)(fire) damage to (attacks|spells)$", element)) {
+			%element1%Dmg_%element2%FlatLow := %element1%Dmg_%element2%FlatLow + val.values[1]
+			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi + val.values[2]
+			eleDmg_%element2%FlatLow := eleDmg_%element2%FlatLow + val.values[1]			
+			eleDmg_%element2%FlatHi  := eleDmg_%element2%FlatHi  + val.values[2]
+		}
+		If (RegExMatch(val.name, "i)(lightning) damage to (attacks|spells)$", element)) {			
+			%element1%Dmg_%element2%FlatLow := %element1%Dmg_%element2%FlatLow + val.values[1]
+			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi + val.values[2]
+			eleDmg_%element2%FlatLow := eleDmg_%element2%FlatLow + val.values[1]			
+			eleDmg_%element2%FlatHi  := eleDmg_%element2%FlatHi  + val.values[2]
+		}
+		If (RegExMatch(val.name, "i)elemental damage with weapons")) {
+			weaponEleDmg_Percent := weaponEleDmg_Percent + val.values[1]
+		}
+		If (RegExMatch(val.name, "i)spell", element)) {
+			spellDmg_Percent := spellDmg_Percent + val.values[1]
+		}
+	}
+	
+	If (eleDmg_Percent > 0) {
+		If (weaponEleDmg_Percent) {
+			eleDmg_AttacksPercent 	   := eleDmg_Percent ? eleDmg_AttacksPercent + weaponEleDmg_Percent : 0
+			fireDmg_AttacksPercent 	   := fireDmg_Percent ? fireDmg_AttacksPercent + weaponEleDmg_Percent : 0
+			coldDmg_AttacksPercent	   := coldDmg_Percent ? coldDmg_AttacksPercent + weaponEleDmg_Percent : 0
+			lightningDmg_AttacksPercent := lightningDmg_Percent ? lightningDmg_AttacksPercent + weaponEleDmg_Percent : 0
+		}
+		If (spellDmg_Percent) {
+			fireDmg_SpellsPercent 	   := fireDmg_Percent ? fireDmg_SpellsPercent + spellDmg_Percent : 0
+			coldDmg_SpellsPercent	   := coldDmg_Percent ? coldDmg_SpellsPercent + spellDmg_Percent : 0
+			lightningDmg_SpellsPercent  := lightningDmg_Percent ? lightningDmg_SpellsPercent + spellDmg_Percent : 0
+		}
+	}
+
+	If (life > 0) {
+		temp := {}
+		temp.values := [life]
+		temp.name_orig := "+" . life . " to maximum Life"
+		temp.name 	:= "+# to maximum Life"
+		tempMods.push(temp)
+	}
+	If (resist > 0) {
+		temp := {}
+		temp.values := [resist]
+		temp.name_orig := "+" . resist . "% total Resistance"
+		temp.name 	:= "+#% total Resistance"		
+		tempMods.push(temp)
+	}
+	If (eleResist > 0) {
+		temp := {}
+		temp.values := [eleResist]
+		temp.name_orig := "+" . eleResist . "% total Elemental Resistance"
+		temp.name 	:= "+#% total Elemental Resistance"		
+		tempMods.push(temp)
+	}
+	
+	Loop, 3 {
+		elements := ["Fire", "Cold", "Lightning"]
+		element  := elements[A_Index]
+		
+		Loop,  3 {
+			types := ["", "Attacks",  "Spells"]
+			type  := types[A_Index]
+			
+			If (%element%Dmg_%type%Percent > 0) {
+				modSuffix := 				
+				If (type = "") {
+					modSuffix := " Damage"
+				}
+				If (type = "Attacks") {
+					modSuffix := " Damage with Weapons"
+					%element%Dmg_Percent := %element%Dmg_Percent + weaponEleDmg_Percent
+					eleDmg_Percent := eleDmg_Percent + weaponEleDmg_Percent
+				}
+				If (type = "Spells") {
+					modSuffix := " Spell Damage"
+					%element%Dmg_Percent := %element%Dmg_Percent + spellDmg_Percent
+					eleDmg_Percent := eleDmg_Percent + spellDmg_Percent
+				}				
+				temp := {}
+				temp.values := [%element%Dmg_Percent]
+				temp.name_orig := %element%Dmg_Percent "% increased " element . modSuffix
+				temp.name 	:= "#% increased " element . modSuffix	
+				tempMods.push(temp)
+				
+				If(!CheckIfTempModExists("Elemental" . modSuffix, tempMods) and type != "Spells") {		
+					temp := {}
+					temp.values := [eleDmg_Percent]
+					temp.name_orig := eleDmg_Percent "% increased Elemental" . modSuffix
+					temp.name 	:= "#% increased Elemental" . modSuffix
+					tempMods.push(temp)	
+				}
+			}
+		}
+		Loop,  2 {
+			types := ["Attacks",  "Spells"]
+			type  := types[A_Index]
+
+			If (%element%Dmg_%type%FlatLow > 0) {
+				modSuffix := (type = "Attacks") ? " to Attacks" : " to Spells"
+				temp := {}
+				temp.values := [(%element%Dmg_%type%FlatLow + %element%Dmg_%type%FlatHi) /2]
+				temp.name_orig := "Adds " %element%Dmg_%type%FlatLow " to " %element%Dmg_%type%FlatHi " " element " Damage" modSuffix
+				temp.name 	:= "Adds # " element " Damage" modSuffix	
+				tempMods.push(temp)
+				
+				If(!CheckIfTempModExists("Elemental Damage" modSuffix, tempMods)) {		
+					temp := {}
+					temp.values := [(eleDmg_%type%FlatLow + eleDmg_%type%FlatHi) / 2]
+					temp.name_orig := "Adds " eleDmg_%type%FlatLow " to " eleDmg_%type%FlatHi " Elemental Damage" modSuffix	
+					temp.name 	:= "Adds # Elemental Damage" modSuffix			
+					tempMods.push(temp)	
+				}			
+			}
+		}			
+	}
+	
+	pseudoMods := []
+	For tkey, tval in tempMods {
+		higher := true
+		; Don't show pseudo mods if their value is not higher than the normal mods value
+		For key, mod in mods {
+			name := tval.name = mod.name
+			eleDmg := RegExMatch(tval.name, "i)increased Elemental Damage$") and RegExMatch(mod.name, "i)increased (Fire|Cold|Lightning) Damage")
+			totalRes := RegExMatch(tval.name, "i)total Resistance$") and RegExMatch(mod.name, "i)Chaos Resistance$")
+			
+			If (name or eleDmg or totalRes) {
+				If (mod.values[2]) {
+					mv := (mod.values[1] + mod.values[2]) / 2
+					tv := (tval.values[1] + tval.values[2]) / 2
+					If (tv <= mv) {
+						higher := false
+					}
+				}
+				Else {
+					If (tval.values[1] <= mod.values[1]) {
+						higher := false
+					}
+				}
+			}
+		}
+
+		hasTotalRes := RegExMatch(tval.name, "i)total Resistance$")
+		If (hasTotalRes and not hasChaos) {
+			continue
+		}
+		Else If (higher) {
+			tval.isVariable:= false
+			tval.type := "pseudo"
+			pseudoMods.push(tval)	
+		}		
+	} 
+
+	return pseudoMods
+}
+
+CheckIfTempModExists(needle, mods) {
+	For key, val in mods {
+		If (RegExMatch(val.name, "i)" needle "")) {
+			Return true
+		}
+	}
+	Return false
 }
 
 ; Don't use! Not working correctly yet!
