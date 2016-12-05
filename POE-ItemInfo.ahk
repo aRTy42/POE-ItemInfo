@@ -844,9 +844,14 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
             Loop % matchList.MaxIndex()
             {
                 Match := matchList[A_Index]
+                ; bandaid fix for map subtype parsing
+                ; the correct item.name (after 2. ParseItemName() call) should be used here
                 IfInString, LoopField, %Match%
                 {
-                    SubType = %Match%
+                    SubType := StrLen(Match) > StrLen(SubType) ? Match : SubType
+                }
+                If (A_index >= matchList.MaxIndex()) 
+                {                    
                     return
                 }
             }
@@ -861,7 +866,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
             SubType = Dry%A_Space%Peninsula
             return
         }
-
+    
         ; Jewels
         IfInString, LoopField, Cobalt%A_Space%Jewel
         {
