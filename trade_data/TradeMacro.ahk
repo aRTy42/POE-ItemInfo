@@ -1285,9 +1285,11 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 	NoOfItemsToCount := 99
 	NoOfItemsSkipped := 0
 	While A_Index <= NoOfItemsToCount {
-		TBody       := TradeUtils.StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N, 0, "</tbody>" , 1,23, N )
-		AccountName := TradeUtils.StrX( TBody,  "data-seller=""",                           1,13, """"       , 1,1,  T )
-		ChaosValue  := TradeUtils.StrX( TBody,  "data-name=""price_in_chaos""",             T, 0, "currency" , 1,1     )	
+		TBody         := TradeUtils.StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N, 0, "</tbody>" , 1,23, N )
+		AccountName   := TradeUtils.StrX( TBody,  "data-seller=""",                           1,13, """"       , 1,1,  T )
+		ChaosValue    := TradeUtils.StrX( TBody,  "data-name=""price_in_chaos""",             T, 0, "currency" , 1,1,  T )
+		Currency      := TradeUtils.StrX( TBody,  "currency-",                                T, 0, ">"        , 1,1, T  )
+		CurrencyV     := TradeUtils.StrX( TBody, ">",                                         T, 0, "<"        , 1,1, T  )
 		
 		; skip multiple results from the same account		
 		If (TradeOpts.RemoveMultipleListingsFromSameAccount) {
@@ -1306,13 +1308,37 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 			itemCount++
 		}
 		
+		; replace "
+		StringReplace, Currency, Currency, ", , All
+		StringReplace, Currency, Currency, currency-, , All
+		CurrencyName := TradeUtils.Cleanup(Currency)
+		
+		StringReplace, CurrencyV, CurrencyV, >, , All
+		StringReplace, CurrencyV, CurrencyV, ×, , All
+		CurrencyValue := TradeUtils.Cleanup(CurrencyV)
+		
 		; add chaos-equivalents (chaos prices) together and count results
 		RegExMatch(ChaosValue, "i)data-value=""-?(\d+.?\d+?)""", priceChaos)
-		If (StrLen(priceChaos1) > 0) {
-			SetFormat, float, 6.2            
-			StringReplace, FloatNumber, priceChaos1, ., `,, 1
-			average += priceChaos1
-			prices[itemCount-1] := priceChaos1
+		If (StrLen(priceChaos1) > 0 or StrLen(CurrencyValue) > 0) {
+			SetFormat, float, 6.2
+			chaosEquivalent := 0
+			
+			; if priceChaos is too big there's a chance that poe.trades chaos equiv is wrong
+			If (priceChaos1 > 2000) {
+				For key, val in ChaosEquivalents {
+					haystack := RegExReplace(key, "i)'", "")
+					If (InStr(haystack, CurrencyName)) {
+						chaosEquivalent := val * CurrencyValue
+					}
+				}	
+			}
+			Else {
+				chaosEquivalent := priceChaos1
+			}
+			
+			StringReplace, FloatNumber, chaosEquivalent, ., `,, 1
+			average += chaosEquivalent
+			prices[itemCount-1] := chaosEquivalent
 		}
 	}
 	
@@ -3131,5 +3157,10 @@ ReadPoeNinjaCurrencyData:
 	global CurrencyHistoryData := parsedJSON.lines
 	
 	TradeGlobals.Set("LastAltCurrencyUpdate", A_NowUTC)
-	;DebugPrintArray(CurrencyHistoryData[1])
+	
+	global ChaosEquivalents := {}
+	For key, val in CurrencyHistoryData {
+		ChaosEquivalents[val.currencyTypeName] := val.chaosEquivalent		
+	}
+	ChaosEquivalents["Chaos Orb"] := 1
 Return
