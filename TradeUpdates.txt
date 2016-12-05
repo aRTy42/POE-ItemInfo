@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.2.6 and 1.2.7
+================================================================================================
+Minor fixes.
+
 1.2.5
 ================================================================================================
 Added workaround for chaos equivalent values on poe.trade being wrong.

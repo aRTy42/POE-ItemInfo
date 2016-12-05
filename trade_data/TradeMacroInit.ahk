@@ -953,4 +953,6 @@ TradeFunc_StopSplashScreen() {
     ; Let timer run until SettingsUIWidth is set and overwrite some options.
 	SetTimer, OverwriteSettingsWidthTimer, 500
 	SetTimer, OverwriteSettingsNameTimer, 500
+	GoSub, ReadPoeNinjaCurrencyData
 }
+
