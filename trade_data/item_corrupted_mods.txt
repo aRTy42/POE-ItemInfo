@@ -31,7 +31,7 @@ Curse Enemies with level # Vulnerability on Hit
 #% of Physical Damage Converted to Cold Damage
 #% of Physical Damage Converted to Fire Damage
 #% of Physical Damage Converted to Lightning Damage
-# Physical Damage taken from Attacks
+-# Physical Damage taken from Attacks
 When Hit, #% of Damage is taken from Mana before Life
 #% increased Damage while Dead
 Grants level # Determination Skill
