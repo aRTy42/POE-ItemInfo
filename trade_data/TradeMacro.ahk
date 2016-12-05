@@ -606,7 +606,6 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	; reset Item and ItemData after search
 	Item := {}
 	ItemData := {}
-	Clipboard :=
 }
 
 ; parse items defense stats
