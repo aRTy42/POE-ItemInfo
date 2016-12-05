@@ -4,6 +4,7 @@ The following is a list of what has been updated, starting with 1.1.0
 ================================================================================================
 Added workaround for chaos equivalent values on poe.trade being wrong.
 Updated data files (uniques etc).
+Poe.trade shortcut (ctrl+q) now works without item hover (off by default).
 
 1.2.4
 =================================================================================================

@@ -47,12 +47,13 @@ return
 OpenWiki:
 	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
-		Global Item
+		Global TradeOpts, Item
 		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		Send ^c
 		Sleep 250
 		TradeFunc_DoParseClipboard()
+
 		If (!Item.Name and TradeOpts.OpenUrlsOnEmptyItem) {
 			TradeFunc_OpenUrlInBrowser("http://pathofexile.gamepedia.com/")
 			return
@@ -68,9 +69,11 @@ OpenWiki:
 			UrlAffix := Item.BaseType
 		}
 		
-		UrlAffix := StrReplace(UrlAffix," ","_")
-		WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
-		TradeFunc_OpenUrlInBrowser(WikiUrl)
+		If (StrLen(UrlAffix) > 0) {			
+			UrlAffix := StrReplace(UrlAffix," ","_")
+			WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
+			TradeFunc_OpenUrlInBrowser(WikiUrl)	
+		}
 		
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
@@ -109,6 +112,13 @@ OpenSearchOnPoeTrade:
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^c
 	Sleep 250
+	
+	TradeFunc_DoParseClipboard()
+	If (!Item.Name and TradeOpts.OpenUrlsOnEmptyItem) {
+		TradeFunc_OpenUrlInBrowser("http://poe.trade/")
+		return
+	}
+	
 	TradeFunc_Main(true)
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 return
@@ -596,6 +606,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	; reset Item and ItemData after search
 	Item := {}
 	ItemData := {}
+	Clipboard :=
 }
 
 ; parse items defense stats
