@@ -2194,9 +2194,12 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 
 	; use this to control search order (which group is more important)
 	For k, imod in _item.mods {
-		; check implicits first If mod is implicit, otherwise check later
+		; check total and then implicits first If mod is implicit, otherwise check later
 		If (_item.mods[k].type == "implicit" and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])			
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
+			}
 		}
 		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])
