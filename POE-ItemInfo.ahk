@@ -6395,7 +6395,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         RarityLevel := 0
         Item.Level := ParseGemLevel(ItemDataText, "Level:")
         ItemLevelWord := "Gem Level:"
-        Item.BaseType := "Jewelry"
+        Item.BaseType := "Gem"
     }
     Else
     {
