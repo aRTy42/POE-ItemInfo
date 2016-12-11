@@ -6303,6 +6303,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
     Item.HasImplicit := False
     Item.IsMapFragment := False
     Item.IsEssence := False
+    Item.SubType := ""
 
     ResetAffixDetailVars()
 
@@ -6667,11 +6668,6 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
         TT := TT . "`nQuality 20%:`n" . GemQualityDescription
     }
 
-    If (Item.hasImplicit and not Item.IsUnique) {
-        Implicit := Item.Implicit
-        TT = %TT%`n--------`n%Implicit%
-    }
-
     If (RarityLevel > 1 and RarityLevel < 4)
     {
         ; Append affix info if rarity is greater than normal (white)
@@ -6713,6 +6709,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
                 AffixStats = Affixes (%TotalAffixes%):%PrefixLine%%SuffixLine%
                 TT = %TT%`n--------`n%AffixStats%
             }
+        }
+	
+        If (Item.hasImplicit and not Item.IsUnique) {
+            Implicit := Item.Implicit
+            TT = %TT%`n--------`n%Implicit%
         }
 
         ; Detailed affix range infos
