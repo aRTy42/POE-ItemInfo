@@ -1,6 +1,16 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.5.00
+================================
+from aRTy42, Eruyome
+Updated Uniques for PoE v2.5.
+Uniques now only show those values on the right side that actually have a range to roll. This should simplify comparing your rolls.
+The method of pulling the unique data was changed, so a few errors might have slipped in. Please report any errors you find.
+Items now show pseudo mods below the affix details (by Eruyome)
+Included the name change of the "Armory Map" to "Armoury Map".
+Fixed a bug that caused item flavour text or usage hints to appear at the bottom line in some cases.
+
 2.4.05
 ================================
 from aRTy42, Eruyome, Arkaf
