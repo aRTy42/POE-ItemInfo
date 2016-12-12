@@ -919,7 +919,7 @@ TradeFunc_DownloadDataFiles() {
 	files := ["boot_enchantment_mods.txt","crafting_bases.txt","glove_enchantment_mods.txt","helmet_enchantment_mods.txt","item_corrupted_mods.txt","mods.json","uniques.json"]		
 	
 	; create .bak files and download (overwrite) data files
-	; if downlaoded file exist move .bak-file to backup folder, otherwise restore .bak-file 
+	; if downlaoded file exists move .bak-file to backup folder, otherwise restore .bak-file 
 	Loop % files.Length() {
 		file := files[A_Index]
 		filePath = %dir%\%file%
@@ -948,6 +948,7 @@ TradeFunc_StopSplashScreen() {
 	If(TradeOpts.Debug) {
 		MsgBox % "Debug mode enabled! Disable in settings-menu unless you're developing!"
 		Class_Console("console",0,335,600,900,,,,9)
+		console.show()
 	}    
 	
     ; Let timer run until SettingsUIWidth is set and overwrite some options.

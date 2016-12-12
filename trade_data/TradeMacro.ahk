@@ -1,4 +1,4 @@
-;TradeMacro Add-on to POE-ItemInfo
+ï»¿;TradeMacro Add-on to POE-ItemInfo
 ; IGN: Eruyome
 
 PriceCheck:
@@ -194,13 +194,13 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		
 		If (isAdvancedPriceCheck and hasAdvancedSearch) {
 			If (Enchantment) {
-				AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, "", Enchantment)
+				TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, "", Enchantment)
 			}
 			Else If (Corruption) {
-				AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, "", Corruption)
+				TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, "", Corruption)
 			} 
 			Else {
-				AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links)
+				TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links)
 			}				
 			return
 		}	
@@ -230,17 +230,17 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
 			
-			; open AdvancedPriceCheckGui to select mods and their min/max values
+			; open TradeFunc_AdvancedPriceCheckGui to select mods and their min/max values
 			If (isAdvancedPriceCheck) {
 				UniqueStats := TradeFunc_GetUniqueStats(Name)
 				If (Enchantment) {
-					AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Enchantment)
+					TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Enchantment)
 				}
 				Else If (Corruption) {
-					AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Corruption)
+					TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Corruption)
 				} 
 				Else {
-					AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats)
+					TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats)
 				}				
 				return
 			}
@@ -282,7 +282,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 	
-	; ignore mod rolls unless the AdvancedPriceCheckGui is used to search
+	; ignore mod rolls unless the TradeFunc_AdvancedPriceCheckGui is used to search
 	AdvancedPriceCheckItem := TradeGlobals.Get("AdvancedPriceCheckItem")
 	If (isAdvancedPriceCheckRedirect) {
 		; submitting the AdvancedPriceCheck Gui sets TradeOpts.Set("AdvancedPriceCheckItem") with the edited item (selected mods and their min/max values)
@@ -364,6 +364,11 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Else {
 			Item.xtype := "Two Hand " . Item.SubType
 		}
+	}
+	
+	; Fix Body Armour subtype
+	If (RegExMatch(Item.SubType, "i)BodyArmour")) {
+		Item.xtype := "Body Armour"
 	}
 	
 	; remove "Superior" from item name to exclude it from name search
@@ -1325,7 +1330,7 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 		CurrencyName := TradeUtils.Cleanup(Currency)
 		
 		StringReplace, CurrencyV, CurrencyV, >, , All
-		StringReplace, CurrencyV, CurrencyV, ×, , All
+		StringReplace, CurrencyV, CurrencyV, ï¿½, , All
 		CurrencyValue := TradeUtils.Cleanup(CurrencyV)
 		
 		; add chaos-equivalents (chaos prices) together and count results
@@ -2478,7 +2483,7 @@ TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 }
 
 ; Open Gui window to show the items variable mods, select the ones that should be used in the search and se their min/max values
-AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedImplicit = ""){	
+TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedImplicit = ""){	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	Global 
 	
@@ -2498,13 +2503,14 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	
 	ValueRange := ValueRange / 100 	
 	
+	; calculate length of first column
 	modLengthMax := 0
 	modGroupBox := 0
 	Loop % advItem.mods.Length() {
 		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
 		}
-		tempValue := StrLen(advItem.mods[A_Index].param)
+		tempValue := StrLen(advItem.mods[A_Index].name)
 		if(modLengthMax < tempValue ) {
 			modLengthMax := tempValue
 			modGroupBox := modLengthMax * 6
@@ -2516,6 +2522,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	modGroupBox := modGroupBox + 10
 	modCount := advItem.mods.Length()
 	
+	; calculate row count and mod box height
 	statCount := 0
 	For i, stat in Stats.Defense {
 		statCount := (stat.value) ? statCount + 1 : statCount
@@ -2526,10 +2533,6 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	statCount := (ChangedImplicit) ? statCount + 1 : statCount
 	
 	boxRows := modCount * 3 + statCount * 3
-	
-	;console.log(modLengthMax)
-	;console.log(modGroupBox)
-	;console.show()
 	
 	Gui, SelectModsGui:Add, Text, x14 y+10 w%modGroupBox%, Mods
 	Gui, SelectModsGui:Add, Text, x+10 yp+0 w90, min
@@ -2869,7 +2872,7 @@ AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedI
 	Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://poe.trade">visit</a>    		
 
 	windowWidth := modGroupBox + 40 + 5 + 45 + 10 + 45 + 10 +40 + 5 + 45 + 10 + 65
-	windowWidth := (windowWidth > 400) ? windowWidth : 400
+	windowWidth := (windowWidth > 420) ? windowWidth : 420
 	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search
 }
 
