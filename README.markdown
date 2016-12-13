@@ -4,17 +4,17 @@ Introduction
 **PoE Item Info** is a heavily extended version of the PoE Item Level and DPS Revealer script.
 
 The script has been added to substantially to enable the following features in addition to
-itemlevel and weapon DPS reveal:
+item level and weapon DPS reveal:
 
-- show total affix statistic for rare items
-- show possible min-max ranges for all affixes on rare items
-- reveal the combination of difficult compound affixes (you might be surprised what you find)
-- show affix ranges for uniques
-- show map info
-- show max sockets info
+- total affix statistic for rare items
+- possible min-max ranges for all affixes on rare items
+- affix ranges for uniques
+- maps: infos such as the 3->1 vendor recipe result, bosses, layout and possible divination cards
+- divination cards: drop locations
+- gems: display the quality effect
 - has the ability to convert currency items to chaos orbs (you can adjust the rates by editing
     `data\CurrencyRates.txt`)
-- optional macros for fast hideout travel (via chat command), faster stash tab selection and more.
+- optional macros for fast hideout travel (via chat command), faster stash tab selection and more
 - adds a system tray icon and proper system tray description tooltip
 
 All of these features are user-adjustable by using a "database" of text files which come
@@ -32,7 +32,7 @@ https://www.pathofexile.com/forum/view-thread/1678678
 Requirements
 ------------
 
-AutoHotkey v1.1.05 or newer. You can get AutoHotkey from https://autohotkey.com
+AutoHotkey v1.1.21 or newer. You can get AutoHotkey from https://autohotkey.com
 
 
 Known Issues
