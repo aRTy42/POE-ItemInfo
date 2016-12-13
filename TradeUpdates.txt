@@ -4,6 +4,7 @@ The following is a list of what has been updated, starting with 1.1.0
 ================================================================================================
 Fixed an issue where "Body Armour" wasn't properly used as a parameter in the poe.trade advanced search.
 Fixed some displaying issues (advanced search GUI width).
+Improved support for russian keyboards.
 
 1.2.9
 ================================================================================================
