@@ -7,7 +7,7 @@ PriceCheck:
 		Global TradeOpts, Item
 		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		Send ^c
+		Send ^{sc02E}
 		Sleep 250
 		TradeFunc_Main()
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
@@ -20,7 +20,7 @@ AdvancedPriceCheck:
 		Global TradeOpts, Item
 		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		Send ^c
+		Send ^{sc02E}
 		Sleep 250
 		TradeFunc_Main(false, true)
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
@@ -37,7 +37,7 @@ ShowItemAge:
 		}
 		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		Send ^c
+		Send ^{sc02E}
 		Sleep 250
 		TradeFunc_Main(false, false, false, true)
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
@@ -50,7 +50,7 @@ OpenWiki:
 		Global TradeOpts, Item
 		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		Send ^c
+		Send ^{sc02E}
 		Sleep 250
 		TradeFunc_DoParseClipboard()
 
@@ -110,7 +110,7 @@ OpenSearchOnPoeTrade:
 	Global TradeOpts, Item
 	Item := {}
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^c
+	Send ^{sc02E}
 	Sleep 250
 	
 	TradeFunc_DoParseClipboard()
@@ -152,7 +152,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	Stats.Quality := Item.Quality
 	DamageDetails := Item.DamageDetails
 	Name := Item.Name
-	
+
 	Item.UsedInSearch := {}
 	Item.UsedInSearch.iLvl := {}
 	
