@@ -1,5 +1,5 @@
 
-  Pause::TogglePOEItemScript()				;pause the script with the pause key. key bind enabled by default.
+  Pause::TogglePOEItemScript()				;pause item parsing with the pause key (other macros remain). key bind enabled by default.
 
 ;  F5::SendInput {Enter}/hideout{Enter}		;go to hideout with F5
 ;  ^WheelUp::SendInput {Left}				;ctrl+mouse wheel up toggles stash tabs left
