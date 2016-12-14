@@ -9,6 +9,7 @@ This builds on top of [PoE-ItemInfo](https://github.com/aRTy42/POE-ItemInfo) whi
 With TradeMacro, price checking is added via **ctrl+d**, **ctrl+alt+d** or **ctrl+i**. You can also open the items wiki page via **ctrl+w** or open the item search on poe.trade instead via **ctrl+q**.   
 TradeMacro will be updated to always have the latest PoE-ItemInfo code, you don't have to run their script since it's included here.
 
+
 #### Warning   
 
 Never completely trust any price checking tool. Inform yourself about what this tool can do and what not (FAQ for example). Use the tools average and median prices to quickly judge if the first results could be accurate or totally wrong. When in doubt ask other people or do some manual checks.
@@ -24,7 +25,9 @@ Never completely trust any price checking tool. Inform yourself about what this 
 
 > **Right-click the script icon in your system tray and select `PoE Item Info Settings` to open the settings window and to edit both `PoE-ItemInfos` and `PoE-TradeMacros` settings.**
 
+
 ####Shortcuts####
+
 
 |Shortcut|Description|
 |---	|---	|

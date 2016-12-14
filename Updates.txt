@@ -1,6 +1,26 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+=======
+2.5.01
+================================
+from aRTy42
+Updated maps and divination cards with wiki info.
+Added gem quality info to cast while channeling.
+Fixed a bug that sometimes caused item types of rares to be mismatched if their randomly assigned name contained a keyword
+	for that item type.
+Corrected the data for the unique "Prismatic Eclipse" that was missing two mods in the last release.
+
+2.5.00
+================================
+from aRTy42, Eruyome
+Updated Uniques for PoE v2.5.
+Uniques now only show those values on the right side that actually have a range to roll. This should simplify comparing your rolls.
+The method of pulling the unique data was changed, so a few errors might have slipped in. Please report any errors you find.
+Items now show pseudo mods below the affix details (by Eruyome). Update autohotkey if you get an error about a nonexisting function StrReplace (in that case your AHK installation is more than 1.5 years old).
+Included the name change of the "Armory Map" to "Armoury Map".
+Fixed a bug that caused item flavour text or usage hints to appear at the bottom line in some cases.
+
 2.4.05
 ================================
 from aRTy42, Eruyome, Arkaf
