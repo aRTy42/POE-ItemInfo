@@ -8243,12 +8243,12 @@ TogglePOEItemScript()
 	if SuspendPOEItemScript = 0
 	{
 		SuspendPOEItemScript = 1
-		ToolTip, POE ItemInfo Script is PAUSED!
+		ToolTip, Item parsing PAUSED
 	}
 	else
 	{
 		SuspendPOEItemScript = 0
-		ToolTip
+		ToolTip, Item parsing ENABLED
 	}
 }
 
