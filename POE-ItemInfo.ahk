@@ -8262,9 +8262,7 @@ F8::
 	return
 */
 
-; ############ ADD YOUR OWN MACROS HERE #############
+; ############ (user) macros #############
 #IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe
-
-Pause::TogglePOEItemScript()
 
 #Include %A_ScriptDir%/AdditionalMacros.txt
