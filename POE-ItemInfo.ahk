@@ -8243,12 +8243,12 @@ TogglePOEItemScript()
 	if SuspendPOEItemScript = 0
 	{
 		SuspendPOEItemScript = 1
-		ToolTip, Item parsing PAUSED
+		ShowToolTip("Item parsing PAUSED")
 	}
 	else
 	{
 		SuspendPOEItemScript = 0
-		ToolTip, Item parsing ENABLED
+		ShowToolTip("Item parsing ENABLED")
 	}
 }
 
