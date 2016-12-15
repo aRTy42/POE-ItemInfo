@@ -3099,10 +3099,6 @@ class TradeUtils {
 	}
 }
 
-CloseUpdateWindow:
-	Gui, Cancel
-Return
-
 OverwriteSettingsWidthTimer:
 	o := Globals.Get("SettingsUIWidth")
 
