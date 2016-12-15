@@ -177,6 +177,8 @@ Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
 Globals.Set("SettingsUIHeight", 710)
 Globals.Set("SettingsUITitle", "PoE Item Info Settings")
+Globals.Set("GithubRepo", "POE-ItemInfo")
+Globals.Set("GithubUser", "aRTy42")
 
 global SuspendPOEItemScript = 0
 
@@ -320,6 +322,18 @@ class UserOptions {
 	}
 }
 Opts := new UserOptions()
+
+; Under no circumstance set the variable "SkipItemInfoUpdateCall" in this script
+; This code block should only be called when ItemInfo runs by itself, not when it's included in other scripts like PoE-TradeMacro
+; "SkipItemInfoUpdateCall" should be set outside by other scripts
+If (!SkipItemInfoUpdateCall) {
+	; file "PoEScripts_Update.ahk" has to exist in "%A_ScriptDir%\Lib\"
+	repo := Globals.Get("GithubRepo")
+	user := Globals.Get("GithubUser")
+	ReleaseVersion := Globals.Get("ReleaseVersion")
+	ShowUpdateNotification := 1
+	PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification)
+}
 
 class Fonts {
 
