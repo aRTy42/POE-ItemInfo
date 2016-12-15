@@ -59,7 +59,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification) {
 
 		If (newRelease) {
 			Gui, UpdateNotification:Add, Text, cGreen, Update available!
-			Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>.`nThe lastest version is <%latestVersion%>.
+			Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>.`nThe latest version is <%latestVersion%>.
 			Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
 			
 			Loop, Parse, description, ~
