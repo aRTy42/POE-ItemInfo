@@ -60,7 +60,7 @@ class TradeUserOptions {
 	OpenWikiHotKey := ^w            	; 
 	CustomInputSearch := ^i         	;     
 	OpenSearchOnPoeTrade := ^q      	;     
-	ShowItemAge := ^a               	;     
+	ShowItemAge := ^e               	;     
 	
 	PriceCheckEnabled :=1
 	AdvancedPriceCheckEnabled :=1
@@ -82,7 +82,8 @@ class TradeUserOptions {
 	OnlineOnly := 1                 	; 1 = search online only; 0 = search offline, too.
 	Corrupted := "Either"           	; 1 = yes; 0 = no; 2 = either, This setting gets ignored when you use the search on corrupted items.
 	CorruptedOverride := 0          	;
-	AdvancedSearchModValueRange := 20 	; 
+	AdvancedSearchModValueRangeMin := 20 	; 
+	AdvancedSearchModValueRangeMax := 20 	; 
 	RemoveMultipleListingsFromSameAccount := 0 ;
 	PrefillMinValue := 1            	;
 	PrefillMaxValue := 1            	;
@@ -202,7 +203,8 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		StringUpper, temp, temp, T
 		TradeOpts.Corrupted := temp
 		
-		TradeOpts.AdvancedSearchModValueRange := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchModValueRange", TradeOpts.AdvancedSearchModValueRange)	
+		TradeOpts.AdvancedSearchModValueRangeMin := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchModValueRangeMin", TradeOpts.AdvancedSearchModValueRangeMin)	
+		TradeOpts.AdvancedSearchModValueRangeMax := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchModValueRangeMax", TradeOpts.AdvancedSearchModValueRangeMax)	
 		TradeOpts.RemoveMultipleListingsFromSameAccount := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount", TradeOpts.RemoveMultipleListingsFromSameAccount)	
 		TradeOpts.PrefillMinValue := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "PrefillMinValue", TradeOpts.PrefillMinValue)	
 		TradeOpts.PrefillMaxValue := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "PrefillMaxValue", TradeOpts.PrefillMaxValue)	
@@ -321,7 +323,8 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.OnlineOnly := OnlineOnly
 		TradeOpts.Corrupted := Corrupted
 		TradeOpts.CorruptedOverride := CorruptedOverride
-		TradeOpts.AdvancedSearchModValueRange := AdvancedSearchModValueRange
+		TradeOpts.AdvancedSearchModValueRangeMin := AdvancedSearchModValueRangeMin
+		TradeOpts.AdvancedSearchModValueRangeMax := AdvancedSearchModValueRangeMax
 		TradeOpts.RemoveMultipleListingsFromSameAccount := RemoveMultipleListingsFromSameAccount
 		TradeOpts.PrefillMinValue := PrefillMinValue
 		TradeOpts.PrefillMaxValue := PrefillMaxValue
@@ -373,7 +376,8 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	TradeFunc_WriteIniValue(TradeOpts.OnlineOnly, TradeConfigPath, "Search", "OnlineOnly")
 	TradeFunc_WriteIniValue(TradeOpts.CorruptedOverride, TradeConfigPath, "Search", "CorruptedOverride")
 	TradeFunc_WriteIniValue(TradeOpts.Corrupted, TradeConfigPath, "Search", "Corrupted")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchModValueRange, TradeConfigPath, "Search", "AdvancedSearchModValueRange")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchModValueRangeMin, TradeConfigPath, "Search", "AdvancedSearchModValueRangeMin")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchModValueRangeMax, TradeConfigPath, "Search", "AdvancedSearchModValueRangeMax")
 	TradeFunc_WriteIniValue(TradeOpts.RemoveMultipleListingsFromSameAccount, TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount")
 	TradeFunc_WriteIniValue(TradeOpts.PrefillMinValue, TradeConfigPath, "Search", "PrefillMinValue")
 	TradeFunc_WriteIniValue(TradeOpts.PrefillMaxValue, TradeConfigPath, "Search", "PrefillMaxValue")
@@ -611,7 +615,7 @@ CreateTradeSettingsUI()
 	AddToolTip(LblBrowserPathH, "Optional: Set the path to the browser (.exe) to open Urls with.")
 	GuiAddEdit(TradeOpts.BrowserPath, "x+10 yp-2 w150 h20", "BrowserPath", "BrowserPathH")
 	
-	GuiAddCheckbox("Enable ""Url shortcuts"" without item hover.", "x557 yp+30 w250 h30", TradeOpts.OpenUrlsOnEmptyItem, "OpenUrlsOnEmptyItem", "OpenUrlsOnEmptyItemH")
+	GuiAddCheckbox("Enable ""Url shortcuts"" without item hover.", "x557 yp+30 w220 h30", TradeOpts.OpenUrlsOnEmptyItem, "OpenUrlsOnEmptyItem", "OpenUrlsOnEmptyItemH")
 	AddToolTip(OpenUrlsOnEmptyItemH, "This enables the ctrl+q and ctrl+w shortcuts`neven without hovering over an item.`nBe careful!")
 	
 	GuiAddCheckbox("Debug Output", "x557 yp+30 w100 h30 cRed", TradeOpts.Debug, "Debug", "DebugH")
@@ -692,9 +696,11 @@ CreateTradeSettingsUI()
 	AddToolTip(LblGemQualityRangeH, "Use this to set a range to quality Gem searches. For example a range of 1`n searches 14% - 16% when you have a 15% Quality Gem.`nSetting it to 0 (default) uses your Gems quality as min_quality`nwithout max_quality in your search.")
 	GuiAddEdit(TradeOpts.GemQualityRange, "x+10 yp-2 w50 h20", "GemQualityRange", "GemQualityRangeH")
 	
-	GuiAddText("Mod Range Modifier (%):", "x827 yp+32 w170 h20 0x0100", "LblAdvancedSearchModValueRange", "LblAdvancedSearchModValueRangeH")
+	GuiAddText("Mod Range Modifier (%):", "x827 yp+32 w130 h20 0x0100", "LblAdvancedSearchModValueRange", "LblAdvancedSearchModValueRangeH")
 	AddToolTip(LblAdvancedSearchModValueRangeH, "Advanced search lets you select the items mods to include in your`nsearch and lets you set their min/max values.`n`nThese min/max values are pre-filled, to calculate them we look at`nthe difference between the mods theoretical max and min value and`ntreat it as 100%.`n`nWe then use this modifier as a percentage of this differences to`ncreate a range (min/max value) to search in. ")
-	GuiAddEdit(TradeOpts.AdvancedSearchModValueRange, "x+10 yp-2 w50 h20", "AdvancedSearchModValueRange", "AdvancedSearchModValueRangeH")
+	GuiAddEdit(TradeOpts.AdvancedSearchModValueRangeMin, "x+10 yp-2 w35 h20", "AdvancedSearchModValueRangeMin", "AdvancedSearchModValueRangeMinH")
+	GuiAddText(" -", "x+5 yp+2 w10 h20 0x0100", "LblAdvancedSearchModValueRangeSpacer", "LblAdvancedSearchModValueRangeSpacerH")
+	GuiAddEdit(TradeOpts.AdvancedSearchModValueRangeMax, "x+5 yp-2 w35 h20", "AdvancedSearchModValueRangeMax", "AdvancedSearchModValueRangeMaxH")
 	
 	GuiAddText("Corrupted:", "x827 yp+32 w100 h20 0x0100", "LblCorrupted", "LblCorruptedH")
 	AddToolTip(LblCorruptedH, "Default = search results have the same corrupted state as the checked item.`nUse this option to override that and always search as selected.")
@@ -766,7 +772,8 @@ UpdateTradeSettingsUI()
 	GuiControl,, AccountName, % TradeOpts.AccountName
 	GuiControl,, GemLevel, % TradeOpts.GemLevel
 	GuiControl,, GemQualityRange, % TradeOpts.GemQualityRange
-	GuiControl,, AdvancedSearchModValueRange, % TradeOpts.AdvancedSearchModValueRange
+	GuiControl,, AdvancedSearchModValueRangeMin, % TradeOpts.AdvancedSearchModValueRangeMin
+	GuiControl,, AdvancedSearchModValueRangeMax, % TradeOpts.AdvancedSearchModValueRangeMax
 	GuiControl,, CurrencySearchHave, % TradeOpts.CurrencySearchHave
 	GuiControl,, Corrupted, % TradeOpts.Corrupted
 	GuiControl,, OnlineOnly, % TradeOpts.OnlineOnly

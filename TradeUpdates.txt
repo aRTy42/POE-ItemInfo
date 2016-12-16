@@ -1,5 +1,13 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.2.12
+================================================================================================
+Changed default hotkey for "Show item age" to "ctrl + e" because "ctrl + a" is the default for "select all".
+Added a seperate low/high mod range modifier instead of a single value for both.
+Fixed elemental dps not being displayed on advanced search GUI.
+Added error handling for PoE API not being available to parse the current leagues.
+Laid some groundwork to implement an auto-updater/"installer" in the future.
+
 1.2.11
 ================================================================================================
 Updated ItemInfo script.

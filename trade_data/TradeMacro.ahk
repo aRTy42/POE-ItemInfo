@@ -907,16 +907,29 @@ TradeFunc_ParseItemOffenseStats(Stats, mods){
 	iStats.EleDps         := {}
 	iStats.EleDps.Name    := "Elemental Dps"
 	iStats.EleDps.Value   := Stats.EleDps
-	iStats.EleDps.Min     := ((min_affixFlatFireLow + min_affixFlatFireHi + min_affixFlatColdLow + min_affixFlatColdHi + min_affixFlatLightningLow + min_affixFlatLightningHi) / 2) * minAPS
-	iStats.EleDps.Max     := ((max_affixFlatFireLow + max_affixFlatFireHi + max_affixFlatColdLow + max_affixFlatColdHi + max_affixFlatLightningLow + max_affixFlatLightningHi) / 2) * maxAPS
+	iStats.EleDps.Min     := TradeFunc_CalculateEleDps(min_affixFlatFireLow, min_affixFlatFireHi, min_affixFlatColdLow, min_affixFlatColdHi, min_affixFlatLightningLow, min_affixFlatLightningHi, minAPS)
+	iStats.EleDps.Max     := TradeFunc_CalculateEleDps(max_affixFlatFireLow, max_affixFlatFireHi, max_affixFlatColdLow, max_affixFlatColdHi, max_affixFlatLightningLow, max_affixFlatLightningHi, maxAPS)
 	
 	debugOutput .= "Phys DPS: " iStats.PhysDps.Value "`n" "Phys Min: " iStats.PhysDps.Min "`n" "Phys Max: " iStats.PhysDps.Max "`n" "EleDps: " iStats.EleDps.Value "`n" "Ele Min: " iStats.EleDps.Min "`n" "Ele Max: "  iStats.EleDps.Max
 	
 	If (TradeOpts.Debug) {
 		;console.log(debugOutput)
 	}
-	
 	Return iStats
+}
+
+TradeFunc_CalculateEleDps(fireLo, fireHi, coldLo, coldHi, lightLo, lightHi, aps) {
+	dps := 0
+	fireLo  := fireLo  > 0 ? fireLo  : 0
+	fireHi  := fireHi  > 0 ? fireHi  : 0
+	coldLo  := coldLo  > 0 ? coldLo  : 0
+	coldHi  := coldHi  > 0 ? coldHi  : 0
+	lightLo := lightLo > 0 ? lightLo : 0
+	lightHi := lightHi > 0 ? lightHi : 0
+	
+	dps := ((fireLo + fireHi + coldLo + coldHi + lightLo + lightHi) / 2) * aps
+	
+	return dps
 }
 
 TradeFunc_GetUniqueStats(name){
@@ -2494,14 +2507,16 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	}
 
 	TradeFunc_ResetGUI()
-	ValueRange := advItem.IsUnique ? TradeOpts.AdvancedSearchModValueRange : TradeOpts.AdvancedSearchModValueRange / 2
+	ValueRangeMin := advItem.IsUnique ? TradeOpts.AdvancedSearchModValueRangeMin : TradeOpts.AdvancedSearchModValueRangeMin / 2
+	ValueRangeMax := advItem.IsUnique ? TradeOpts.AdvancedSearchModValueRangeMax : TradeOpts.AdvancedSearchModValueRangeMax / 2
 	
 	Gui, SelectModsGui:Destroy    
 	Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
-	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRange "`%" (lowered for non-unique items)
+	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRangeMin "`% / " ValueRangeMax "`%" (lowered for non-unique items)
 	Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the (unique) item's mods difference between their min and max value as 100`%.			
 	
-	ValueRange := ValueRange / 100 	
+	ValueRangeMin := ValueRangeMin / 100 	
+	ValueRangeMax := ValueRangeMax / 100 	
 	
 	; calculate length of first column
 	modLengthMax := 0
@@ -2566,12 +2581,12 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			; calculate values to prefill min/max fields		
 			; assume the difference between the theoretical max and min value as 100%
 			If (advItem.IsUnique) {
-				statValueMin := Round(statValueQ20 - ((stat.max - stat.min) * valueRange))
-				statValueMax := Round(statValueQ20 + ((stat.max - stat.min) * valueRange))
+				statValueMin := Round(statValueQ20 - ((stat.max - stat.min) * valueRangeMin))
+				statValueMax := Round(statValueQ20 + ((stat.max - stat.min) * valueRangeMax))
 			}
 			Else {
-				statValueMin := Round(statValueQ20 - (statValueQ20 * valueRange))
-				statValueMax := Round(statValueQ20 + (statValueQ20 * valueRange))	
+				statValueMin := Round(statValueQ20 - (statValueQ20 * valueRangeMin))
+				statValueMax := Round(statValueQ20 + (statValueQ20 * valueRangeMax))	
 			}			
 			
 			; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
@@ -2608,7 +2623,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	If (j > 1) {
 		Gui, SelectModsGui:Add, Text, x0 w700 yp+18 cc9cacd, %line% 
 	}	
-	
+
 	k := 1
 	;add dmg stats
 	For i, stat in Stats.Offense {
@@ -2623,12 +2638,12 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			; calculate values to prefill min/max fields		
 			; assume the difference between the theoretical max and min value as 100%
 			If (advItem.IsUnique) {
-				statValueMin := Round(stat.value - ((stat.max - stat.min) * valueRange))
-				statValueMax := Round(stat.value + ((stat.max - stat.min) * valueRange))			
+				statValueMin := Round(stat.value - ((stat.max - stat.min) * valueRangeMin))
+				statValueMax := Round(stat.value + ((stat.max - stat.min) * valueRangeMax))			
 			}
 			Else {
-				statValueMin := Round(stat.value - (stat.value * valueRange))
-				statValueMax := Round(stat.value + (stat.value * valueRange))			
+				statValueMin := Round(stat.value - (stat.value * valueRangeMin))
+				statValueMax := Round(stat.value + (stat.value * valueRangeMax))			
 			}
 			
 			; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
@@ -2752,12 +2767,12 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		; calculate values to prefill min/max fields		
 		; assume the difference between the theoretical max and min value as 100%
 		If (advItem.mods[A_Index].ranges[1]) {
-			modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRange)
-			modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRange)	
+			modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMin)
+			modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMax)	
 		}
 		Else {
-			modValueMin := modValue - (modValue * valueRange)
-			modValueMax := modValue + (modValue * valueRange)
+			modValueMin := modValue - (modValue * valueRangeMin)
+			modValueMax := modValue + (modValue * valueRangeMax)
 		}		
 		; floor values only If greater than 2, in case of leech/regen mods
 		modValueMin := (modValueMin > 2) ? Floor(modValueMin) : modValueMin
@@ -2872,7 +2887,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://poe.trade">visit</a>    		
 
 	windowWidth := modGroupBox + 40 + 5 + 45 + 10 + 45 + 10 +40 + 5 + 45 + 10 + 65
-	windowWidth := (windowWidth > 420) ? windowWidth : 420
+	windowWidth := (windowWidth > 450) ? windowWidth : 450
 	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search
 }
 
