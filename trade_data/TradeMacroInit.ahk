@@ -1,6 +1,7 @@
 ; TradeMacro Add-on to POE-ItemInfo
 ; IGN: Eruyome, ManicCompression
 
+FileRemoveDir, %A_ScriptDir%/temp, 1
 ;https://autohotkey.com/boards/viewtopic.php?f=6&t=53
 #Include, %A_ScriptDir%/lib/JSON.ahk
 ; Console https://autohotkey.com/boards/viewtopic.php?f=6&t=2116
