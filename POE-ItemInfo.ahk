@@ -4045,6 +4045,13 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				ValueRange := LookupAffixData("data\AddedColdDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
+			
+			Else If (ItemSubType == "Bow")
+			{
+				; Added ele damage for bows follows 1H tiers
+				ValueRange := LookupAffixData("data\AddedColdDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
+			
 			Else
 			{
 				ValueRange := LookupAffixData("data\AddedColdDamage_2H.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -4082,9 +4089,15 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				ValueRange := LookupAffixData("data\AddedFireDamage_Quivers.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
-			
+
 			Else If (ItemGripType == "1H") ; One handed weapons
 			{
+				ValueRange := LookupAffixData("data\AddedFireDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
+			
+			Else If (ItemSubType == "Bow")
+			{
+				; Added ele damage for bows follows 1H tiers
 				ValueRange := LookupAffixData("data\AddedFireDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
 			
@@ -4125,12 +4138,18 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				ValueRange := LookupAffixData("data\AddedLightningDamage_Quivers.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
-		
+			
 			Else If (ItemGripType == "1H") ; One handed weapons
 			{
 				ValueRange := LookupAffixData("data\AddedLightningDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
-		
+						
+			Else If (ItemSubType == "Bow")
+			{
+				; Added ele damage for bows follows 1H tiers
+				ValueRange := LookupAffixData("data\AddedLightningDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
+			
 			Else
 			{
 				ValueRange := LookupAffixData("data\AddedLightningDamage_2H.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -4147,6 +4166,13 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				ValueRange := LookupAffixData("data\AddedChaosDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
+											
+			Else If (ItemSubType == "Bow")
+			{
+				; Added ele damage for bows follows 1H tiers
+				ValueRange := LookupAffixData("data\AddedChaosDamage_1H.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
+			
 			Else If (ItemGripType == "2H")
 			{
 				ValueRange := LookupAffixData("data\AddedChaosDamage_2H.txt", ItemLevel, CurrValue, "", CurrTier)
