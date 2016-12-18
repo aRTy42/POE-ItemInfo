@@ -1,6 +1,12 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.5.02
+================================
+from aRTy42
+Fixed a bug with added elemental damage for bows that got introduced in 2.5.01.
+Moved the pause function key binding to the "AdditionalMacros" file so that people can change the key more easily.
+
 2.5.01
 ================================
 from aRTy42
