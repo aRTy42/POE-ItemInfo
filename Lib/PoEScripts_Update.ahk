@@ -1,15 +1,14 @@
-﻿PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification) {
-	GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification)
-	;MsgBox Hey, this LibFunction handles update checks and updates
+﻿PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScreenTitle = "") {
+	GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScreenTitle)
 }
 
-GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification) {
+GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScreenTitle = "") {
 	If (ShowUpdateNotification = 0) {
 		return
 	}
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	url := "https://api.github.com/repos/" . user . "/" . repo . "/releases/latest"
-
+	
 	Try  {
 		Encoding := "utf-8"
 		HttpObj.Open("GET",url)
@@ -23,7 +22,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification) {
 			oADO.Type     := 1
 			oADO.Mode     := 3
 			oADO.Open()
-			oADO.Write( HttpObj.ResponseBody)
+			oADO.Write(HttpObj.ResponseBody)
 			oADO.Position := 0
 			oADO.Type     := 2
 			oADO.Charset  := Encoding
@@ -40,11 +39,13 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification) {
 		url := url1    
 		
 		RegExReplace(tag, "^v", tag)
-          ; works only in x.x.x format
+          ; works only in x.x.x format (valid semantic versioning)
 		RegExMatch(tag, "(\d+).(\d+).(\d+)(.*)", latestVersion)
 		RegExMatch(ReleaseVersion, "(\d+).(\d+).(\d+)(.*)", currentVersion)
-		RegExMatch(html,  "i)""body"":""(.*?)""", description)
-		StringReplace, description, description1, \r\n, ~, All 
+		RegExMatch(html,  "iU)""body"":""(.*?)""", description)
+		
+		description := RegExReplace(description1, "iU)\\""", """")
+		StringReplace, description, description, \r\n, §, All 
 
 		newRelease := false
 		Loop {			
@@ -52,27 +53,28 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification) {
 				break
 			}
 			Else If (latestVersion%A_Index% > currentVersion%A_Index%) {
-				;MsgBox % latestVersion%A_Index% "`n" currentVersion%A_Index%
 				newRelease := true
 			}			
 		}
 
 		If (newRelease) {
+			If(SplashScreenTitle) {
+				WinSet, AlwaysOnTop, Off, %SplashScreenTitle%	
+			}
 			Gui, UpdateNotification:Add, Text, cGreen, Update available!
 			Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>.`nThe latest version is <%latestVersion%>.
 			Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
 			
-			Loop, Parse, description, ~
+			Loop, Parse, description, §
 				Gui, UpdateNotification:Add, Text, w320, % "- " A_LoopField
 			
 			Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
-			yPos := A_ScreenHeight / 2 + 40
-			Gui, UpdateNotification:Show, w400 Y%yPos%, Update 
+			Gui, UpdateNotification:Show, w400 xCenter yCenter, Update 
 			ControlFocus, Close, Update
 			WinWaitClose, Update
 		}
 	} Catch e {
-		MsgBox % "Update-Check failed, Github is probably down."
+		MsgBox % "Update-Check failed, Github is probably not available."
 	}
 	Return
 }
