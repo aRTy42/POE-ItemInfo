@@ -134,6 +134,8 @@ TradeGlobals.Set("CorruptedModsData", TradeFunc_ReadCorruptions())
 TradeGlobals.Set("CurrencyIDs", object := {})
 
 ; get currency ids from currency.poe.trade
+
+TradeFunc_ReadCookieData()
 TradeFunc_DoCurrencyRequest("", false, true)
 If (TradeOpts.DownloadDataFiles and not TradeOpts.Debug) {
 	TradeFunc_DownloadDataFiles()	
@@ -879,9 +881,61 @@ TradeFunc_DownloadDataFiles() {
 	FileDelete, %dir%\*.bak	
 }
 
+TradeFunc_ReadCookieData() {	
+	FileRead, cookieFile, %A_ScriptDir%\cookie_data.txt
+	Loop, parse, cookieFile, `n`r
+	{
+		RegExMatch(A_LoopField, "i)^,", match)
+		If (match) {
+			continue
+		}	
+		
+		RegExMatch(A_LoopField, "i)(.*)\s?=", key)
+		RegExMatch(A_LoopField, "i)=\s?(.*)", value)
+
+		If (InStr(key1, "useragent")) {
+			TradeGlobals.Set("UserAgent", Trim(value1))
+		}
+		Else If (InStr(key1, "cfduid")) {		   
+			TradeGlobals.Set("cfduid", Trim(value1))
+		} 
+		Else If (InStr(key1, "cfclearance")) {
+			TradeGlobals.Set("cfClearance", Trim(value1))
+		}		
+	}
+	
+	If (StrLen(TradeGlobals.Get("UserAgent")) < 1) {
+		ErrorLevel := 1
+	}
+	If (StrLen(TradeGlobals.Get("cfduid")) < 1) {
+		ErrorLevel := 1
+	}
+	If (StrLen(TradeGlobals.Get("cfClearance")) < 1) {
+		ErrorLevel := 1
+	}
+	
+	If (ErrorLevel) {
+		WinSet, AlwaysOnTop, Off, PoE-TradeMacro
+		Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
+		Gui, CookieWindow:Add, Text, , As a workaround for the recent poe.trade changes we need `nUserAgent and Cloudflare cookie information.
+		Gui, CookieWindow:Add, Text, , This is a temporary solution until we have a better fix.
+		
+		Gui, CookieWindow:Add, Text, , Please provide this information and copy it to file <cookie_data.txt>. `nThen restart the script.
+		Gui, CookieWindow:Add, Link, cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Step-by-Step Tutorial</a>        
+		Gui, CookieWindow:Add, Text, , If the script still doesn't work after this, please repeat the steps to get the `nneccessary information.
+		
+		Gui, CookieWindow:Add, Button, gCloseCookieWindow, Close
+		Gui, CookieWindow:Add, Button, gOpenCookieFile, Open cookie file
+		Gui, CookieWindow:Show, w400 xCenter yCenter, Notice
+		ControlFocus, Close, Notice
+		WinWaitClose, Notice
+	}
+	
+}
+
 ;----------------------- SplashScreens ---------------------------------------
 TradeFunc_StartSplashScreen() {
-	SplashTextOn, , , Initializing PoE-TradeMacro...
+	SplashTextOn, , 20, PoE-TradeMacro, Initializing script...
 }
 TradeFunc_StopSplashScreen() {
 	SplashTextOff 

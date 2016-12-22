@@ -45,5 +45,5 @@ CloseScript(Name)
 
 
 StartSplashScreen() {
-    SplashTextOn, , , Merging and starting Scripts...
+	SplashTextOn, , 20, PoE-TradeMacro, Merging and starting Scripts...
 }

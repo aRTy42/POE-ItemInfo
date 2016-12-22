@@ -1019,6 +1019,12 @@ TradeFunc_DoParseClipboard()
 
 TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
 {	
+	
+	UserAgent   := TradeGlobals.Get("UserAgent")
+	cfduid      := TradeGlobals.Get("cfduid")
+	cfClearance := TradeGlobals.Get("cfClearance")
+	;MsgBox % UserAgent "`n" cfduid "`n" cfClearance
+	
 	ComObjError(0)
 	Encoding := "utf-8"
     ;Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
@@ -1033,13 +1039,14 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
 	HttpObj.SetRequestHeader("Cache-Control","max-age=0")
 	HttpObj.SetRequestHeader("Origin","http://poe.trade")
 	HttpObj.SetRequestHeader("Upgrade-Insecure-Requests","1")
-	HttpObj.SetRequestHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36")
+	HttpObj.SetRequestHeader("User-Agent", UserAgent)
 	HttpObj.SetRequestHeader("Content-type","application/x-www-form-urlencoded")
 	HttpObj.SetRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
 	HttpObj.SetRequestHeader("Referer","http://poe.trade/")
     ;HttpObj.SetRequestHeader("Accept-Encoding","gzip;q=0,deflate;q=0") ; disables compression
     ;HttpObj.SetRequestHeader("Accept-Encoding","gzip, deflate")
     ;HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")	
+	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)	
 	HttpObj.Send(payload)
 	HttpObj.WaitForResponse()
 	html := HttpObj.ResponseText
@@ -1066,6 +1073,10 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
 ; Get currency.poe.trade html
 ; Either at script start to parse the currency IDs or when searching to get currency listings
 TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init = false){
+	UserAgent   := TradeGlobals.Get("UserAgent")
+	cfduid      := TradeGlobals.Get("cfduid")
+	cfClearance := TradeGlobals.Get("cfClearance")
+	
 	ComObjError(0)
 	Encoding := "utf-8"
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
@@ -1084,6 +1095,8 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	}
 	
 	HttpObj.Open("GET",Url)
+	HttpObj.SetRequestHeader("User-Agent", UserAgent)
+	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)	
 	HttpObj.Send()
 	HttpObj.WaitForResponse()
 	html := HttpObj.ResponseText
@@ -3191,4 +3204,12 @@ ReadPoeNinjaCurrencyData:
 		ChaosEquivalents[val.currencyTypeName] := val.chaosEquivalent		
 	}
 	ChaosEquivalents["Chaos Orb"] := 1
+Return
+
+CloseCookieWindow:
+	Gui, Cancel
+Return
+
+OpenCookieFile:
+	Run, %A_ScriptDir%\cookie_data.txt
 Return

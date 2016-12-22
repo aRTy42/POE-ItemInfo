@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.3.0
+================================================================================================
+Hotfix for poe.trade's CloudFlare DDOS protection.
+This is only a temporary solution until a more user friendly one is implemented.
+Just start the script and follow instructions.
+
 1.2.12
 ================================================================================================
 Changed default hotkey for "Show item age" to "ctrl + e" because "ctrl + a" is the default for "select all".
