@@ -888,7 +888,7 @@ TradeFunc_DownloadDataFiles() {
 }
 
 TradeFunc_ReadCookieData() {
-	SplashTextOn, 400, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`nup to 6s if your Internet Explorer doesn't have the cookies cached.
+	SplashTextOn, 450, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`nup to 6s if your Internet Explorer doesn't have the cookies cached.
 	; compile the c# script reading the user-agent and cookies
 	RegRead, DotNetFrameworkPath, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\.NETFramework, InstallRoot
 	If (!StrLen(DotNetFrameworkPath)) {
