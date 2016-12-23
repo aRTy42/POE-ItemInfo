@@ -1017,13 +1017,10 @@ TradeFunc_DoParseClipboard()
 	ParsedData := ParseItemData(CBContents)
 }
 
-TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
-{	
-	
+TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {	
 	UserAgent   := TradeGlobals.Get("UserAgent")
 	cfduid      := TradeGlobals.Get("cfduid")
 	cfClearance := TradeGlobals.Get("cfClearance")
-	;MsgBox % UserAgent "`n" cfduid "`n" cfClearance
 	
 	ComObjError(0)
 	Encoding := "utf-8"
@@ -1032,8 +1029,9 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
 	If (openSearchInBrowser) {
 		HttpObj.Option(6) := False
 	}    
+	
 	HttpObj.Open("POST","http://poe.trade/search")
-	HttpObj.SetRequestHeader("Host","poe.trade")
+	HttpObj.SetRequestHeader("Host","poe.trade")	
 	HttpObj.SetRequestHeader("Connection","keep-alive")
 	HttpObj.SetRequestHeader("Content-Length",StrLen(payload))
 	HttpObj.SetRequestHeader("Cache-Control","max-age=0")
@@ -1043,10 +1041,12 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
 	HttpObj.SetRequestHeader("Content-type","application/x-www-form-urlencoded")
 	HttpObj.SetRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
 	HttpObj.SetRequestHeader("Referer","http://poe.trade/")
+		
+	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
     ;HttpObj.SetRequestHeader("Accept-Encoding","gzip;q=0,deflate;q=0") ; disables compression
     ;HttpObj.SetRequestHeader("Accept-Encoding","gzip, deflate")
-    ;HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")	
-	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)	
+    ;HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")    
+	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
 	HttpObj.Send(payload)
 	HttpObj.WaitForResponse()
 	html := HttpObj.ResponseText
@@ -1072,7 +1072,7 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false)
 
 ; Get currency.poe.trade html
 ; Either at script start to parse the currency IDs or when searching to get currency listings
-TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init = false){
+TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init = false) {
 	UserAgent   := TradeGlobals.Get("UserAgent")
 	cfduid      := TradeGlobals.Get("cfduid")
 	cfClearance := TradeGlobals.Get("cfClearance")
@@ -1096,7 +1096,7 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	
 	HttpObj.Open("GET",Url)
 	HttpObj.SetRequestHeader("User-Agent", UserAgent)
-	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)	
+	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
 	HttpObj.Send()
 	HttpObj.WaitForResponse()
 	html := HttpObj.ResponseText
@@ -3211,5 +3211,5 @@ CloseCookieWindow:
 Return
 
 OpenCookieFile:
-	Run, %A_ScriptDir%\cookie_data.txt
+	Run, %A_ScriptDir%\temp\cookie_data.txt
 Return

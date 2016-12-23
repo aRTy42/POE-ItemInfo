@@ -181,6 +181,19 @@ Globals.Set("SettingsUITitle", "PoE Item Info Settings")
 Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
 
+; Set ProjectName to create user settings folder in A_MyDocuments.
+; Don't set variable "UseExternalProjectName" in this script.
+; Only set it in an external script when including ItemInfo (for example PoE-TradeMacro).
+If (UseExternalProjectName) {
+    Globals.Set("ProjectName", UseExternalProjectName)
+}
+Else {
+    Globals.Set("ProjectName", "PoE-ItemInfo")    
+}
+;FilesToCopyToUserFolder := [A_ScriptDir . "\data\defaults.ini", A_ScriptDir . "\data\AdditionalMacros.txt"]
+;PoEScripts_UserSettings(Globals.Get("ProjectName"), UseExternalProjectName, FilesToCopyToUserFolder)
+
+
 global SuspendPOEItemScript = 0
 
 class UserOptions {
@@ -557,6 +570,7 @@ ReadConfig()
 Sleep, 100
 CreateSettingsUI()
 
+Menu, TextFiles, Add, User Settings Folder, EditOpenUserSettings
 Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
 Menu, TextFiles, Add, Currency Rates, EditCurrencyRates
 
@@ -642,6 +656,19 @@ OpenMainDirFile(Filename)
 	}
 	return
 
+}
+
+OpenUserSettingsFolder(ProjectName, Dir = "")
+{	
+    If (!StrLen(Dir)) {
+        Dir := A_MyDocuments . "\" . ProjectName
+    }
+
+    If (!InStr(FileExist(Dir), "D")) {
+        FileCreateDir, %Dir%        
+    }
+    Run, Explorer %Dir%
+    return
 }
 
 ParseAddedDamage(String, DmgType, ByRef DmgLo, ByRef DmgHi)
@@ -8230,6 +8257,10 @@ VisitForumsThread:
 	DllCall("AnimateWindow", "Int", AbtWndID, "Int", 500, "Int", 0x00090010)
 	WinActivate, ahk_id %MainWndID%
 	return
+
+EditOpenUserSettings:
+    OpenUserSettingsFolder(Globals.Get("ProjectName"))
+    return
 
 EditAdditionalMacros:
 	OpenMainDirFile("AdditionalMacros.txt")

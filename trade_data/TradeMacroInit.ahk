@@ -112,6 +112,8 @@ TradeGlobals.Set("GithubUser", "POE-TradeMacro")
 TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
 TradeGlobals.Set("ReleaseVersion", TradeReleaseVersion)
 TradeGlobals.Set("SettingsUITitle", "PoE (Trade) Item Info Settings")
+; set this variable to skip setting the project-name to "PoE-ItemInfo"
+UseExternalProjectName := "PoE-TradeMacro"
 
 ReadTradeConfig()
 Sleep, 100
@@ -133,6 +135,7 @@ TradeGlobals.Set("EnchantmentData", TradeFunc_ReadEnchantments())
 TradeGlobals.Set("CorruptedModsData", TradeFunc_ReadCorruptions())
 TradeGlobals.Set("CurrencyIDs", object := {})
 
+TradeFunc_ReadCookieData()
 ; get currency ids from currency.poe.trade
 
 TradeFunc_ReadCookieData()
@@ -143,6 +146,8 @@ If (TradeOpts.DownloadDataFiles and not TradeOpts.Debug) {
 
 CreateTradeSettingsUI()
 TradeFunc_StopSplashScreen()
+
+TradeFunc_ReadCookieData()
 
 ReadTradeConfig(TradeConfigPath="trade_config.ini")
 {
@@ -469,7 +474,7 @@ TradeFunc_AssignHotkey(Key, Label){
 		If (errorlevel = 1)
 			str := str . "`nASCII " . Key . " - 1) The Label parameter specifies a nonexistent label name."
 		Else If (errorlevel = 2)
-			str := str . "`nASCII " . Key . " - 2) The KeyName parameter specifies one or more keys that are either not recognized or not supported by the current keyboard layout/language."
+			str := str . "`nASCII " . Key . " - 2) The KeyName parameter specifies one or more keys that are either not recognized or not supported by the current keyboard layout/language. Switching to the english layout should solve this for now."
 		Else If (errorlevel = 3)
 			str := str . "`nASCII " . Key . " - 3) Unsupported prefix key. For example, using the mouse wheel as a prefix in a hotkey such as WheelDown & Enter is not supported."
 		Else If (errorlevel = 4)
@@ -583,7 +588,8 @@ TradeFunc_ScriptUpdate() {
 	user := TradeGlobals.Get("GithubUser")
 	ReleaseVersion := TradeGlobals.Get("ReleaseVersion")
 	ShowUpdateNotification := TradeOpts.ShowUpdateNotifications
-	PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification)
+	SplashScreenTitle := "PoE-TradeMacro"
+	PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScreenTitle)
 }
 
 ;----------------------- Trade Settings UI (added onto ItemInfos Settings UI) ---------------------------------------
@@ -881,15 +887,34 @@ TradeFunc_DownloadDataFiles() {
 	FileDelete, %dir%\*.bak	
 }
 
-TradeFunc_ReadCookieData() {	
-	FileRead, cookieFile, %A_ScriptDir%\cookie_data.txt
+TradeFunc_ReadCookieData() {
+	SplashTextOn, 400, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`nup to 6s if your Internet Explorer doesn't have the cookies cached.
+	; compile the c# script reading the user-agent and cookies
+	RegRead, DotNetFrameworkPath, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\.NETFramework, InstallRoot
+	If (!StrLen(DotNetFrameworkPath)) {
+		DotNetFrameworkPath := "C:\Windows\Microsoft.NET\Framework\"
+	}
+	CompilerPath := "v4.0.30319\csc.exe"
+	
+	If (TradeOpts.Debug) {
+		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerPath%" "%A_ScriptDir%\Lib\getCookieData.cs""
+		FileMove, %A_ScriptDir%\getCookieData.exe, %A_ScriptDir%\temp, 1
+		If (!FileExist("%A_ScriptDir%\temp\getCookieData.exe")) {
+			MsgBox, 2,, getCookieData.exe doesn't exist!
+		}
+		RunWait %A_ScriptDir%\temp\getCookieData.exe
+	}
+	Else {
+		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerPath%" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide
+		FileMove, %A_ScriptDir%\getCookieData.exe, %A_ScriptDir%\temp, 1
+		RunWait %A_ScriptDir%\temp\getCookieData.exe, , Hide	
+	}	
+	
+	; read user-agent and cookies
+	ErrorLevel := 0
+	FileRead, cookieFile, %A_ScriptDir%\temp\cookie_data.txt
 	Loop, parse, cookieFile, `n`r
 	{
-		RegExMatch(A_LoopField, "i)^,", match)
-		If (match) {
-			continue
-		}	
-		
 		RegExMatch(A_LoopField, "i)(.*)\s?=", key)
 		RegExMatch(A_LoopField, "i)=\s?(.*)", value)
 
@@ -899,7 +924,7 @@ TradeFunc_ReadCookieData() {
 		Else If (InStr(key1, "cfduid")) {		   
 			TradeGlobals.Set("cfduid", Trim(value1))
 		} 
-		Else If (InStr(key1, "cfclearance")) {
+		Else If (InStr(key1, "cf_clearance")) {
 			TradeGlobals.Set("cfClearance", Trim(value1))
 		}		
 	}
@@ -913,24 +938,22 @@ TradeFunc_ReadCookieData() {
 	If (StrLen(TradeGlobals.Get("cfClearance")) < 1) {
 		ErrorLevel := 1
 	}
+	SplashTextOff
 	
 	If (ErrorLevel) {
 		WinSet, AlwaysOnTop, Off, PoE-TradeMacro
 		Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
-		Gui, CookieWindow:Add, Text, , As a workaround for the recent poe.trade changes we need `nUserAgent and Cloudflare cookie information.
-		Gui, CookieWindow:Add, Text, , This is a temporary solution until we have a better fix.
-		
-		Gui, CookieWindow:Add, Text, , Please provide this information and copy it to file <cookie_data.txt>. `nThen restart the script.
-		Gui, CookieWindow:Add, Link, cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Step-by-Step Tutorial</a>        
-		Gui, CookieWindow:Add, Text, , If the script still doesn't work after this, please repeat the steps to get the `nneccessary information.
-		
+		Gui, CookieWindow:Add, Text, , Please check if the file <ScriptDirectory\temp\cookie_data.txt> exists and isn't empty.
+		Gui, CookieWindow:Add, Text, , Include this information in your error report.
+		Gui, CookieWindow:Add, Link, cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Report on Github.</a> 
+		Gui, CookieWindow:Add, Link, cBlue, <a href="https://discord.gg/taKZqWw">Report on Discord.</a> 
+		Gui, CookieWindow:Add, Link, cBlue, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">Report on the forum.</a> 		
 		Gui, CookieWindow:Add, Button, gCloseCookieWindow, Close
 		Gui, CookieWindow:Add, Button, gOpenCookieFile, Open cookie file
 		Gui, CookieWindow:Show, w400 xCenter yCenter, Notice
 		ControlFocus, Close, Notice
 		WinWaitClose, Notice
-	}
-	
+	}	
 }
 
 ;----------------------- SplashScreens ---------------------------------------
