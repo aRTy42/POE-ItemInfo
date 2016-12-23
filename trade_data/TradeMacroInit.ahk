@@ -890,14 +890,12 @@ TradeFunc_DownloadDataFiles() {
 TradeFunc_ReadCookieData() {
 	SplashTextOn, 450, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`nup to 6s if your Internet Explorer doesn't have the cookies cached.
 	; compile the c# script reading the user-agent and cookies
-	RegRead, DotNetFrameworkPath, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\.NETFramework, InstallRoot
-	If (!StrLen(DotNetFrameworkPath)) {
-		DotNetFrameworkPath := "C:\Windows\Microsoft.NET\Framework\"
-	}
-	CompilerPath := "v4.0.30319\csc.exe"
-	
+	DotNetFrameworkInstallation := TradeFunc_GetLatestDotNetInstallation()
+	DotNetFrameworkPath := DotNetFrameworkInstallation.Path
+	CompilerExe := "csc.exe"
+
 	If (TradeOpts.Debug) {
-		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerPath%" "%A_ScriptDir%\Lib\getCookieData.cs""
+		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" "%A_ScriptDir%\Lib\getCookieData.cs""
 		FileMove, %A_ScriptDir%\getCookieData.exe, %A_ScriptDir%\temp, 1
 		If (!FileExist("%A_ScriptDir%\temp\getCookieData.exe")) {
 			MsgBox, 2,, getCookieData.exe doesn't exist!
@@ -905,7 +903,7 @@ TradeFunc_ReadCookieData() {
 		RunWait %A_ScriptDir%\temp\getCookieData.exe
 	}
 	Else {
-		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerPath%" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide
+		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide
 		FileMove, %A_ScriptDir%\getCookieData.exe, %A_ScriptDir%\temp, 1
 		RunWait %A_ScriptDir%\temp\getCookieData.exe, , Hide	
 	}	
@@ -954,6 +952,69 @@ TradeFunc_ReadCookieData() {
 		ControlFocus, Close, Notice
 		WinWaitClose, Notice
 	}	
+}
+
+TradeFunc_GetLatestDotNetInstallation() {
+	Versions := []
+	
+	; Collect all versions with an "InstallPath" key and value
+	SubKey := "Software\Microsoft\NET Framework Setup\NDP"
+	Loop, 2 
+	{
+		Loop HKEY_LOCAL_MACHINE, %SubKey%, 1, 1
+		{
+			Version := {}
+			If (A_LoopRegType <> "KEY")
+				RegRead Value
+			
+			RegExMatch(A_LoopRegSubKey, "i)\\v(\d+(\.\d+)?(\.\d+)?)", match)
+			If (match) {
+				If (A_LoopRegName = "InstallPath" and StrLen(Value)) {
+					foundVersion := false
+					Loop, % Versions.Length() {
+						If (Versions[A_Index].Number "" == match1 "") {
+							Versions[A_Index].Path   := Value
+							foundVersion := true
+						}
+					}
+					If (!foundVersion) {			
+						Version.Number := match1
+						Version.Path   := Value
+						Versions.push(Version)	
+					}	
+				}
+			}
+		    ;Msgbox % A_LoopRegKey " - " A_LoopRegSubKey "`n" A_LoopRegType " - " A_LoopRegName " - " Value
+		}
+		
+		; If an installation was found break the loop, else look through Wow6432Node to find 32bit versions installed in 64 bit systems
+		If (Versions.Length()) {
+			Break
+		}
+		Else {
+			SubKey := "Software\Wow6432Node\Microsoft\NET Framework Setup\NDP"
+		}
+	}	
+	
+	; Find the highest/latest version
+	LatestDotNetInstall := {}
+	Loop, % Versions.Length() {
+		If (!LatestDotNetInstall.Number) {
+			LatestDotNetInstall := Versions[A_Index]
+		}
+
+		RegExMatch(Versions[A_Index], "(\d+).(\d+).(\d+)(.*)", versioning)
+		RegExMatch(LatestDotNetInstall, "(\d+).(\d+).(\d+)(.*)", versioningLatest)
+				
+		If (not versioning%A_Index% and not versioningLatest%A_Index%) {
+			break
+		}
+		Else If (versioning%A_Index% > versioningLatest%A_Index%) {
+			LatestDotNetInstall := Versions[A_Index]
+		}			
+	}
+	
+	Return LatestDotNetInstall
 }
 
 ;----------------------- SplashScreens ---------------------------------------
