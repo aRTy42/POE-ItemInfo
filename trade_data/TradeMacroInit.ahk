@@ -943,6 +943,7 @@ TradeFunc_ReadCookieData() {
 		Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
 		Gui, CookieWindow:Add, Text, , Please check if the file <ScriptDirectory\temp\cookie_data.txt> exists and isn't empty.
 		Gui, CookieWindow:Add, Text, , Include this information in your error report.
+		Gui, CookieWindow:Add, Text, , You can also delete your Internet Explorers cookies and try again.		
 		Gui, CookieWindow:Add, Link, cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Report on Github.</a> 
 		Gui, CookieWindow:Add, Link, cBlue, <a href="https://discord.gg/taKZqWw">Report on Discord.</a> 
 		Gui, CookieWindow:Add, Link, cBlue, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">Report on the forum.</a> 		
