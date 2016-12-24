@@ -936,13 +936,27 @@ TradeFunc_ReadCookieData() {
 	If (StrLen(TradeGlobals.Get("cfClearance")) < 1) {
 		ErrorLevel := 1
 	}
-	SplashTextOff
 	
-	If (ErrorLevel) {
+	BypassFailed := 0	
+	If (!ErrorLevel) { 
+		If (!TradeFunc_TestCloudflareBypass("http://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"))) {
+			BypassFailed := 1
+		}
+	}
+	
+	SplashTextOff		
+	If (ErrorLevel or BypassFailed) {
 		WinSet, AlwaysOnTop, Off, PoE-TradeMacro
-		Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
-		Gui, CookieWindow:Add, Text, , Please check if the file <ScriptDirectory\temp\cookie_data.txt> exists and isn't empty.
-		Gui, CookieWindow:Add, Text, , Include this information in your error report.
+		If (!BypassFailed) {
+			Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
+			Gui, CookieWindow:Add, Text, , Please check if the file <ScriptDirectory\temp\cookie_data.txt> exists and isn't empty.
+		}
+		Else {
+			Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed!
+			Gui, CookieWindow:Add, Text, , Cookies and user-agent were retrieved.
+			Gui, CookieWindow:Add, Text, , Lowered/disabled Internet Explorer security settings can cause this to fail.
+		}
+		
 		Gui, CookieWindow:Add, Text, , You can also delete your Internet Explorers cookies and try again.		
 		Gui, CookieWindow:Add, Link, cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Report on Github.</a> 
 		Gui, CookieWindow:Add, Link, cBlue, <a href="https://discord.gg/taKZqWw">Report on Discord.</a> 
@@ -1016,6 +1030,42 @@ TradeFunc_GetLatestDotNetInstallation() {
 	}
 	
 	Return LatestDotNetInstall
+}
+
+TradeFunc_TestCloudflareBypass(Url, UserAgent, cfduid, cfClearance) {
+	ComObjError(0)
+	Encoding := "utf-8"
+	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	
+	HttpObj.Open("GET",Url)
+	HttpObj.SetRequestHeader("User-Agent", UserAgent)
+	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
+	HttpObj.Send()
+	HttpObj.WaitForResponse()
+	html := HttpObj.ResponseText
+	
+	If Encoding {
+		oADO          := ComObjCreate("adodb.stream")
+		oADO.Type     := 1
+		oADO.Mode     := 3
+		oADO.Open()
+		oADO.Write( HttpObj.ResponseBody )
+		oADO.Position := 0
+		oADO.Type     := 2
+		oADO.Charset  := Encoding
+		html := oADO.ReadText()
+		oADO.Close()
+	}
+	
+	If A_LastError
+		MsgBox % "Error while testing CloudFlare bypass.`n" A_LastError
+	
+	If (InStr(html, "Path of Exile")) {
+		Return 1
+	}
+	Else {
+		Return 0
+	}
 }
 
 ;----------------------- SplashScreens ---------------------------------------
