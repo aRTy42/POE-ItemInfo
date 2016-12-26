@@ -41,5 +41,5 @@ ElapsedTime := (A_TickCount - StartTime) / 1000
 FileDelete, %A_ScriptDir%\results.html
 FileAppend, %html%, %A_ScriptDir%\results.html
 wb.Quit
-MsgBox, The search url is %url% and the html is in %A_ScriptDir%\results.html `n`n %ElapsedTime% milliseconds have elapsed.
+MsgBox, The search url is %url% and the html is in %A_ScriptDir%\results.html `n`n %ElapsedTime% seconds have elapsed.
 Esc::ExitApp
