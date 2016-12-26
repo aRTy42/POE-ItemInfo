@@ -52,3 +52,5 @@
 *.pyc binary
 
 *.pdf binary
+
+*.exe binary

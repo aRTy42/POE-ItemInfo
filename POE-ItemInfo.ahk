@@ -6369,7 +6369,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 
 	; Divination Card detection = Normal rarity with stack size (100% valid??)
-	If (InStr(ItemData.Rarity, "Divination Card") and InStr(ItemDataText, "Stack Size:"))
+	; Cards like "The Void" don't have a stack size
+	If (InStr(ItemData.Rarity, "Divination Card"))
 	{
 		Item.IsDivinationCard := True
 		Item.BaseType := "Divination Card"
