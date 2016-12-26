@@ -951,43 +951,52 @@ TradeFunc_ReadCookieData() {
 			BypassFailed := 1
 		}
 	}
-	
+
 	SplashTextOff		
 	If (ErrorLevel or BypassFailed or CompiledExeNotFound) {
+		; collect debug information
+		CookieFile := (!CookieFileNotFound) ? "Cookie file found." : "Cookie file not found."
+		Cookies := (!ErrorLevel) ? "Retrieving cookies successful." : "Retrieving cookies failed."
+		OSInfo := TradeFunc_GetOSInfo()
+		Compilation := (!CompiledExeNotFound) ? "Compiling 'getCookieData' script successful." : "Compiling 'getCookieData' script failed."
+		NetFramework := "Net Framework used for compiling: v" DotNetFrameworkInstallation.Number 
+		RegRead, IEVersion, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\Internet Explorer, svcVersion
+		If (!IEVersion) {
+			RegRead, IEVersion, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\Internet Explorer\Version Vector, IE
+		}
+		IE := "Internet Explorer: v" IEVersion
+		
 		WinSet, AlwaysOnTop, Off, PoE-TradeMacro
 		
 		If (CompiledExeNotFound) {			
 			Gui, CookieWindow:Add, Text, cRed, <ScriptDirectory\temp\getCookieData.exe> not found!
-			Gui, CookieWindow:Add, Text, , It seems compiling and moving the .exe file failed.
+			Gui, CookieWindow:Add, Text, , - It seems compiling and moving the .exe file failed.
 			If (WrongNetFrameworkVersion) {
-				Gui, CookieWindow:Add, Text, , .Net Framework 4 is required (for now) but it seems you don't have it.
+				Gui, CookieWindow:Add, Text, , `n- Net Framework 4 is required (for now) but it seems you don't have it.
 				Gui, CookieWindow:Add, Link, cBlue, <a href="https://www.microsoft.com/en-us/download/details.aspx?id=17851">Download it here</a> 
 			}
 		}
 		Else If (BypassFailed) {
 			Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed!
-			Gui, CookieWindow:Add, Text, , Cookies and user-agent were retrieved.
-			Gui, CookieWindow:Add, Text, , Lowered/disabled Internet Explorer security settings can cause this to fail.
-			Gui, CookieWindow:Add, Text, , You could also delete your Internet Explorers cookies and try again`nor test the compiled script <ScriptDirectory\PoE-TradeMacro.exe>.	
-			Gui, CookieWindow:Add, Text, , Make sure that you're not using any proxy server.
+			Gui, CookieWindow:Add, Text, , - Cookies and user-agent were retrieved.`n- Lowered/disabled Internet Explorer security settings can cause this to fail.			
+			Gui, CookieWindow:Add, Text, , - You could also delete your Internet Explorers cookies and try again`n  or test the compiled script <ScriptDirectory\PoE-TradeMacro.exe>.`n- Make sure that you're not using any proxy server.				
 		}
 		Else {
 			Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
 			If (CookieFileNotFound) {
-				Gui, CookieWindow:Add, Text, , File <ScriptDirectory\temp\cookie_data.txt>	could not be found.
+				Gui, CookieWindow:Add, Text, , - File <ScriptDirectory\temp\cookie_data.txt>	could not be found.
 			}
 			Else {
-				Gui, CookieWindow:Add, Text, , The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete.
-				Gui, CookieWindow:Add, Text, , You could also delete your Internet Explorers cookies and try again`nor test the compiled script <ScriptDirectory\PoE-TradeMacro.exe>.	
+				Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. `n- You could also delete your Internet Explorers cookies and try again`n  or test the compiled script <ScriptDirectory\PoE-TradeMacro.exe>.	
 			}
 		}
 		
-		Gui, CookieWindow:Add, Text, , Please provide the entire error message in your report.		
-		Gui, CookieWindow:Add, Link, cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Report on Github.</a> 
-		Gui, CookieWindow:Add, Link, cBlue, <a href="https://discord.gg/taKZqWw">Report on Discord.</a> 
-		Gui, CookieWindow:Add, Link, cBlue, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">Report on the forum.</a> 		
-		Gui, CookieWindow:Add, Button, gCloseCookieWindow, Close
-		Gui, CookieWindow:Add, Button, gOpenCookieFile, Open cookie file
+		Gui, CookieWindow:Add, Link, cBlue, Report on <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Github</a>, <a href="https://discord.gg/taKZqWw">Discord</a>, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">the forum</a>.
+		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
+		Gui, CookieWindow:Add, Edit, r5 ReadOnly w430, %CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
+		
+		Gui, CookieWindow:Add, Button, y+10 gOpenCookieFile, Open cookie file
+		Gui, CookieWindow:Add, Button, yp+0 x+10 gCloseCookieWindow, Close
 		Gui, CookieWindow:Show, w450 xCenter yCenter, Notice
 		ControlFocus, Close, Notice
 		WinWaitClose, Notice
@@ -1095,6 +1104,37 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent, cfduid, cfClearance) {
 	Else {
 		Return 0
 	}
+}
+
+TradeFunc_GetOSInfo() {
+	objWMIService := ComObjGet("winmgmts:{impersonationLevel=impersonate}!\\" . A_ComputerName . "\root\cimv2")
+	colOS := objWMIService.ExecQuery("Select * from Win32_OperatingSystem")._NewEnum
+	Versions := []
+	Versions.Insert(e:=["5.1.2600","Windows XP, Service Pack 3"])
+	Versions.Insert(e:=["6.0.6000","Windows Vista"])
+	Versions.Insert(e:=["6.0.6002","Windows Vista, Service Pack 2"])
+	Versions.Insert(e:=["6.0.6001","Server 2008"])
+	Versions.Insert(e:=["6.1.7601","Windows 7"])
+	Versions.Insert(e:=["6.1.8400","Windows Home Server 2011"])
+	Versions.Insert(e:=["6.2.9200","Windows 8"])
+	Versions.Insert(e:=["6.3.9200","Windows 8.1"])
+	Versions.Insert(e:=["6.3.9600","Windows 8.1, Update 1"])
+	Versions.Insert(e:=["10.0.10240","Windows 10"])
+	
+	While colOS[objOS] { 	
+	;	MsgBox % "OS version: " . objOS.Version . " Service Pack " . objOS.ServicePackMajorVersion . " Build number " . objOS.BuildNumber
+	}
+	
+	For i, e in Versions {		
+		If (e[1] = objOS.Version) {
+			r := e[2] " (" A_OSVersion ")"
+		}
+		Else r := "Windows Version: " objOS.Version " (" A_OSVersion ")"
+	}	
+	If ((FileExist("C:\Program Files (x86)")) ? 1 : 0) 
+		r .= ", 64bit."
+	
+	Return r
 }
 
 ;----------------------- SplashScreens ---------------------------------------
