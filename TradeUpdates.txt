@@ -1,5 +1,12 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.4.1
+================================================================================================
+Added c# script to get user-agent and cookies automatically.
+Fixed an issue where divination cards without stack size were parsed incorrectly.
+Added more fallbacks/error handling for cloudflare bypass.
+Added a compiled version of the script.
+
 1.4.0
 ================================================================================================
 Added c# script to get user-agent and cookies automatically.
