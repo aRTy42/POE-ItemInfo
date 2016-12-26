@@ -884,56 +884,68 @@ TradeFunc_DownloadDataFiles() {
 }
 
 TradeFunc_ReadCookieData() {
-	SplashTextOn, 450, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`nup to 6s if your Internet Explorer doesn't have the cookies cached.
+	SplashTextOn, 450, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`nup a few seconds if your Internet Explorer doesn't have the cookies cached.
 	; compile the c# script reading the user-agent and cookies
 	DotNetFrameworkInstallation := TradeFunc_GetLatestDotNetInstallation()
 	DotNetFrameworkPath := DotNetFrameworkInstallation.Path
 	CompilerExe := "csc.exe"
-
+	
 	If (TradeOpts.Debug) {
-		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" "%A_ScriptDir%\Lib\getCookieData.cs""
-		FileMove, %A_ScriptDir%\getCookieData.exe, %A_ScriptDir%\temp, 1
-		If (!FileExist("%A_ScriptDir%\temp\getCookieData.exe")) {
-			MsgBox, 2,, getCookieData.exe doesn't exist!
-		}
-		RunWait %A_ScriptDir%\temp\getCookieData.exe
+		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" "%A_ScriptDir%\Lib\getCookieData.cs""		
 	}
 	Else {
-		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide
-		FileMove, %A_ScriptDir%\getCookieData.exe, %A_ScriptDir%\temp, 1
-		RunWait %A_ScriptDir%\temp\getCookieData.exe, , Hide	
-	}	
+		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide	
+	}
+	
+	Try {
+		FileMove, %A_ScriptDir%\getCookieData.exe, %A_ScriptDir%\temp, 1		
+		If (!FileExist(A_ScriptDir "\temp\getCookieData.exe")) {
+			CompiledExeNotFound := 1			
+			If (DotNetFrameworkInstallation.Major < 4) {
+				WrongNetFrameworkVersion := 1
+			}
+		}
+		Else {
+			RunWait %A_ScriptDir%\temp\getCookieData.exe, , Hide		
+		}
+	} Catch e {
+		CompiledExeNotFound := 1
+	}		
 	
 	; read user-agent and cookies
 	ErrorLevel := 0
-	FileRead, cookieFile, %A_ScriptDir%\temp\cookie_data.txt
-	Loop, parse, cookieFile, `n`r
-	{
-		RegExMatch(A_LoopField, "i)(.*)\s?=", key)
-		RegExMatch(A_LoopField, "i)=\s?(.*)", value)
+	If (FileExist(A_ScriptDir "\temp\cookie_data.txt")) {
+		FileRead, cookieFile, %A_ScriptDir%\temp\cookie_data.txt
+		Loop, parse, cookieFile, `n`r
+		{
+			RegExMatch(A_LoopField, "i)(.*)\s?=", key)
+			RegExMatch(A_LoopField, "i)=\s?(.*)", value)
 
-		If (InStr(key1, "useragent")) {
-			TradeGlobals.Set("UserAgent", Trim(value1))
+			If (InStr(key1, "useragent")) {
+				TradeGlobals.Set("UserAgent", Trim(value1))
+			}
+			Else If (InStr(key1, "cfduid")) {		   
+				TradeGlobals.Set("cfduid", Trim(value1))
+			} 
+			Else If (InStr(key1, "cf_clearance")) {
+				TradeGlobals.Set("cfClearance", Trim(value1))
+			}		
 		}
-		Else If (InStr(key1, "cfduid")) {		   
-			TradeGlobals.Set("cfduid", Trim(value1))
-		} 
-		Else If (InStr(key1, "cf_clearance")) {
-			TradeGlobals.Set("cfClearance", Trim(value1))
-		}		
+		
+		If (StrLen(TradeGlobals.Get("UserAgent")) < 1) {
+			ErrorLevel := 1
+		}
+		If (StrLen(TradeGlobals.Get("cfduid")) < 1) {
+			ErrorLevel := 1
+		}
+		If (StrLen(TradeGlobals.Get("cfClearance")) < 1) {
+			ErrorLevel := 1
+		}	
+	}
+	Else {
+		CookieFileNotFound := 1
 	}
 	
-	If (StrLen(TradeGlobals.Get("UserAgent")) < 1) {
-		ErrorLevel := 1
-	}
-	If (StrLen(TradeGlobals.Get("cfduid")) < 1) {
-		ErrorLevel := 1
-	}
-	If (StrLen(TradeGlobals.Get("cfClearance")) < 1) {
-		ErrorLevel := 1
-	}
-	
-	BypassFailed := 0	
 	If (!ErrorLevel) { 
 		If (!TradeFunc_TestCloudflareBypass("http://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"))) {
 			BypassFailed := 1
@@ -941,25 +953,41 @@ TradeFunc_ReadCookieData() {
 	}
 	
 	SplashTextOff		
-	If (ErrorLevel or BypassFailed) {
+	If (ErrorLevel or BypassFailed or CompiledExeNotFound) {
 		WinSet, AlwaysOnTop, Off, PoE-TradeMacro
-		If (!BypassFailed) {
-			Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
-			Gui, CookieWindow:Add, Text, , Please check if the file <ScriptDirectory\temp\cookie_data.txt> exists and isn't empty.
+		
+		If (CompiledExeNotFound) {			
+			Gui, CookieWindow:Add, Text, cRed, <ScriptDirectory\temp\getCookieData.exe> not found!
+			Gui, CookieWindow:Add, Text, , It seems compiling and moving the .exe file failed.
+			If (WrongNetFrameworkVersion) {
+				Gui, CookieWindow:Add, Text, , .Net Framework 4 is required (for now) but it seems you don't have it.
+				Gui, CookieWindow:Add, Link, cBlue, <a href="https://www.microsoft.com/en-us/download/details.aspx?id=17851">Download it here</a> 
+			}
 		}
-		Else {
+		Else If (BypassFailed) {
 			Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed!
 			Gui, CookieWindow:Add, Text, , Cookies and user-agent were retrieved.
 			Gui, CookieWindow:Add, Text, , Lowered/disabled Internet Explorer security settings can cause this to fail.
+			Gui, CookieWindow:Add, Text, , You can also delete your Internet Explorers cookies and try again.	
+		}
+		Else {
+			Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
+			If (CookieFileNotFound) {
+				Gui, CookieWindow:Add, Text, , File <ScriptDirectory\temp\cookie_data.txt>	could not be found.
+			}
+			Else {
+				Gui, CookieWindow:Add, Text, , The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete.
+				Gui, CookieWindow:Add, Text, , You could also delete your Internet Explorers cookies and try again`nor test the compiled script <ScriptDirectory\PoE-TradeMacro.exe>.	
+			}
 		}
 		
-		Gui, CookieWindow:Add, Text, , You can also delete your Internet Explorers cookies and try again.		
+		Gui, CookieWindow:Add, Text, , Please provide the entire error message in your report.		
 		Gui, CookieWindow:Add, Link, cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Report on Github.</a> 
 		Gui, CookieWindow:Add, Link, cBlue, <a href="https://discord.gg/taKZqWw">Report on Discord.</a> 
 		Gui, CookieWindow:Add, Link, cBlue, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">Report on the forum.</a> 		
 		Gui, CookieWindow:Add, Button, gCloseCookieWindow, Close
 		Gui, CookieWindow:Add, Button, gOpenCookieFile, Open cookie file
-		Gui, CookieWindow:Show, w400 xCenter yCenter, Notice
+		Gui, CookieWindow:Show, w450 xCenter yCenter, Notice
 		ControlFocus, Close, Notice
 		WinWaitClose, Notice
 	}	
@@ -977,7 +1005,7 @@ TradeFunc_GetLatestDotNetInstallation() {
 			Version := {}
 			If (A_LoopRegType <> "KEY")
 				RegRead Value
-			
+
 			RegExMatch(A_LoopRegSubKey, "i)\\v(\d+(\.\d+)?(\.\d+)?)", match)
 			If (match) {
 				If (A_LoopRegName = "InstallPath" and StrLen(Value)) {
@@ -990,6 +1018,10 @@ TradeFunc_GetLatestDotNetInstallation() {
 					}
 					If (!foundVersion) {			
 						Version.Number := match1
+						RegExMatch(Version.Number, "(\d+)(.\d+)?(.\d+)?", match)
+						Version.Major  := RegExReplace(match1, "i)\.", "")
+						Version.Minor  := RegExReplace(match2, "i)\.", "")
+						Version.Patch  := RegExReplace(match3, "i)\.", "")
 						Version.Path   := Value
 						Versions.push(Version)	
 					}	
