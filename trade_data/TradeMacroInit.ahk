@@ -968,7 +968,8 @@ TradeFunc_ReadCookieData() {
 			Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed!
 			Gui, CookieWindow:Add, Text, , Cookies and user-agent were retrieved.
 			Gui, CookieWindow:Add, Text, , Lowered/disabled Internet Explorer security settings can cause this to fail.
-			Gui, CookieWindow:Add, Text, , You can also delete your Internet Explorers cookies and try again.	
+			Gui, CookieWindow:Add, Text, , You could also delete your Internet Explorers cookies and try again`nor test the compiled script <ScriptDirectory\PoE-TradeMacro.exe>.	
+			Gui, CookieWindow:Add, Text, , Make sure that you're not using any proxy server.
 		}
 		Else {
 			Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
