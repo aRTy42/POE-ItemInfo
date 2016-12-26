@@ -52,6 +52,7 @@ class TradeUserOptions {
 	BrowserPath :=                  	; Show also sellers account name in the results window
 	OpenUrlsOnEmptyItem := 0			; Open wiki/poe.trade also when no item was checked
 	DownloadDataFiles := 0			; 
+	DeleteCookies := 1				; Delete Internet Explorer cookies on startup (only poe.trade)
 	
 	Debug := 0      				; 
 	
@@ -157,6 +158,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.ShowAccountName := TradeFunc_ReadIniValue(TradeConfigPath, "General", "ShowAccountName", TradeOpts.ShowAccountName)
 		TradeOpts.OpenUrlsOnEmptyItem := TradeFunc_ReadIniValue(TradeConfigPath, "General", "OpenUrlsOnEmptyItem", TradeOpts.OpenUrlsOnEmptyItem)
 		TradeOpts.DownloadDataFiles := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DownloadDataFiles", TradeOpts.DownloadDataFiles)
+		TradeOpts.DeleteCookies := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DeleteCookies", TradeOpts.DeleteCookies)
 		
         ; Check If browser path is valid, delete ini-entry If not
 		BrowserPath := TradeFunc_ReadIniValue(TradeConfigPath, "General", "BrowserPath", TradeOpts.BrowserPath)
@@ -280,6 +282,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.ShowAccountName := ShowAccountName
 		TradeOpts.OpenUrlsOnEmptyItem := OpenUrlsOnEmptyItem
 		TradeOpts.DownloadDataFiles := DownloadDataFiles
+		TradeOpts.DeleteCookies := DeleteCookies
 		TradeOpts.Debug := Debug
 		
 		If (ValidBrowserPath) {
@@ -344,6 +347,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	TradeFunc_WriteIniValue(TradeOpts.ShowAccountName, TradeConfigPath, "General", "ShowAccountName")   
 	TradeFunc_WriteIniValue(TradeOpts.OpenUrlsOnEmptyItem, TradeConfigPath, "General", "OpenUrlsOnEmptyItem")   
 	TradeFunc_WriteIniValue(TradeOpts.DownloadDataFiles, TradeConfigPath, "General", "DownloadDataFiles")   
+	TradeFunc_WriteIniValue(TradeOpts.DeleteCookies, TradeConfigPath, "General", "DeleteCookies")   
 	
 	If (ValidBrowserPath) {
 		TradeFunc_WriteIniValue(TradeOpts.BrowserPath, TradeConfigPath, "General", "BrowserPath")           
@@ -598,7 +602,7 @@ CreateTradeSettingsUI()
 	
     ; General 
 	
-	GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h276")
+	GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h306")
 	
     ; Note: window handles (hwnd) are only needed If a UI tooltip should be attached.
 	
@@ -627,6 +631,9 @@ CreateTradeSettingsUI()
 	
 	GuiAddCheckbox("Download Data Files on start", "x557 yp+30 w200 h30", TradeOpts.DownloadDataFiles, "DownloadDataFiles", "DownloadDataFilesH")
 	AddToolTip(DownloadDataFilesH, "Downloads all data files (mods, enchantments etc) on every script start.`nBy disabling this, these files are only updated with new releases.`nDisabling is not recommended.")
+	
+	GuiAddCheckbox("Delete cookies on start", "x557 yp+30 w200 h30", TradeOpts.DeleteCookies, "DeleteCookies", "DeleteCookiesH")
+	AddToolTip(DeleteCookiesH, "Delete Internet Explorer's poe.trade cookies.")
 	
     ; Hotkeys
 	
@@ -854,8 +861,7 @@ TradeFunc_CheckBrowserPath(path, showMsg){
 }
 
 TradeFunc_DownloadDataFiles() {
-	; disabled while using debug mode 
-	
+	; disabled while using debug mode 	
 	owner := TradeGlobals.Get("GithubUser", "POE-TradeMacro")
 	repo  := TradeGlobals.Get("GithubRepo", "POE-TradeMacro")
 	url   := "https://raw.githubusercontent.com/" . owner . "/" . repo . "/master/trade_data/"
@@ -885,20 +891,24 @@ TradeFunc_DownloadDataFiles() {
 
 TradeFunc_ReadCookieData() {
 	SplashTextOn, 450, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`nup a few seconds if your Internet Explorer doesn't have the cookies cached.
+	
+	If (TradeOpts.DeleteCookies) {
+		TradeFunc_DeleteCookies()
+	}
+	
 	; compile the c# script reading the user-agent and cookies
 	DotNetFrameworkInstallation := TradeFunc_GetLatestDotNetInstallation()
 	DotNetFrameworkPath := DotNetFrameworkInstallation.Path
 	CompilerExe := "csc.exe"
 	
 	If (TradeOpts.Debug) {
-		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" "%A_ScriptDir%\Lib\getCookieData.cs""		
+		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs""
 	}
 	Else {
-		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide	
+		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide
 	}
 	
-	Try {
-		FileMove, %A_ScriptDir%\getCookieData.exe, %A_ScriptDir%\temp, 1		
+	Try {		
 		If (!FileExist(A_ScriptDir "\temp\getCookieData.exe")) {
 			CompiledExeNotFound := 1			
 			If (DotNetFrameworkInstallation.Major < 4) {
@@ -978,16 +988,18 @@ TradeFunc_ReadCookieData() {
 		}
 		Else If (BypassFailed) {
 			Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed!
-			Gui, CookieWindow:Add, Text, , - Cookies and user-agent were retrieved.`n- Lowered/disabled Internet Explorer security settings can cause this to fail.			
-			Gui, CookieWindow:Add, Text, , - You could also delete your Internet Explorers cookies and try again`n  or test the compiled script <ScriptDirectory\PoE-TradeMacro.exe>.`n- Make sure that you're not using any proxy server.				
+			Gui, CookieWindow:Add, Text, , - Cookies and user-agent were retrieved.`n- Lowered/disabled Internet Explorer security settings can cause this to fail.
+			cookiesDeleted := (TradeOpts.DeleteCookies) ? "Cookies were deleted on script start." : ""
+			Gui, CookieWindow:Add, Text, , - %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.`n- Make sure that you're not using any proxy server.				
 		}
 		Else {
 			Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
 			If (CookieFileNotFound) {
-				Gui, CookieWindow:Add, Text, , - File <ScriptDirectory\temp\cookie_data.txt>	could not be found.
+				Gui, CookieWindow:Add, Text, , - File <ScriptDirectory\temp\cookie_data.txt> could not be found.
 			}
 			Else {
-				Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. `n- You could also delete your Internet Explorers cookies and try again`n  or test the compiled script <ScriptDirectory\PoE-TradeMacro.exe>.	
+				cookiesDeleted := (TradeOpts.DeleteCookies) ? "Cookies were deleted on script start." : ""
+				Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. `n- %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.	
 			}
 		}
 		
@@ -1103,6 +1115,25 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent, cfduid, cfClearance) {
 	}
 	Else {
 		Return 0
+	}
+}
+
+TradeFunc_DeleteCookies() {
+	appData := RegExReplace(A_AppData, "i)Roaming", "")
+	; Win XP, Win 7, Win8/10
+	paths := [appData "Local Settings\Temporary Internet Files", appData "Roaming\Microsoft\Windows\Cookies", appData "Local\Microsoft\Windows\INetCookies"]
+
+	For key, path in paths {
+		If (FileExist(path)) {
+			Loop Files, %path%\*.txt, R 
+			{ 
+				FileRead, contents, %A_LoopFileFullPath%
+				RegExMatch(contents, "i)poe\.trade", match)
+				If (match) {
+					FileDelete, %A_LoopFileFullPath%
+				}			
+			}		
+		}
 	}
 }
 
