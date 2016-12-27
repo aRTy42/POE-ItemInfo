@@ -3213,3 +3213,9 @@ Return
 OpenCookieFile:
 	Run, %A_ScriptDir%\temp\cookie_data.txt
 Return
+
+DeleteCookies:
+	TradeFunc_DeleteCookies()
+	Run, Run_only_This.ahk
+	ExitApp
+Return
