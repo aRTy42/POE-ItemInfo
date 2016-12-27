@@ -94,6 +94,11 @@ class TradeUserOptions {
 	AlternativeCurrencySearch := 0	;
 	
 	Expire := 3					; cache expire min
+	
+	UseManualCookies := 0
+	UserAgent := ""
+	CfdUid := ""
+	CfClearance := ""
 }
 TradeOpts := new TradeUserOptions()
 
@@ -220,6 +225,12 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		
         ; Cache        
 		TradeOpts.Expire := TradeFunc_ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
+		
+	   ; Cookies
+		TradeOpts.UseManualCookies := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "UseManualCookies", TradeOpts.UseManualCookies)
+		TradeOpts.UserAgent := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "UserAgent", TradeOpts.UserAgent)
+		TradeOpts.CfdUid := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "CfdUid", TradeOpts.CfdUid)
+		TradeOpts.CfClearance := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "CfClearance", TradeOpts.CfClearance)
 	}
 }
 
@@ -337,6 +348,11 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.CurrencySearchHave := CurrencySearchHave
 		TradeOpts.BuyoutOnly := BuyoutOnly
 		TradeOpts.ForceMaxLinks := ForceMaxLinks
+		
+		TradeOpts.UseManualCookies := UseManualCookies
+		TradeOpts.UserAgent := UserAgent
+		TradeOpts.CfdUid := CfdUid
+		TradeOpts.CfClearance := CfClearance
 	}        
 	SavedTradeSettings := false
 	
@@ -395,6 +411,12 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	
 	; Cache	
 	TradeFunc_WriteIniValue(TradeOpts.Expire, TradeConfigPath, "Cache", "Expire")
+	
+	; Cookies	
+	TradeFunc_WriteIniValue(TradeOpts.UseManualCookies, TradeConfigPath, "Cookies", "UseManualCookies")
+	TradeFunc_WriteIniValue(TradeOpts.UserAgent, TradeConfigPath, "Cookies", "UserAgent")
+	TradeFunc_WriteIniValue(TradeOpts.CfdUid, TradeConfigPath, "Cookies", "CfdUid")
+	TradeFunc_WriteIniValue(TradeOpts.CfClearance, TradeConfigPath, "Cookies", "CfClearance")
 }
 
 CopyDefaultTradeConfig()
@@ -602,7 +624,7 @@ CreateTradeSettingsUI()
 	
     ; General 
 	
-	GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h306")
+	GuiAddGroupBox("[TradeMacro] General", "x547 y15 w260 h260")
 	
     ; Note: window handles (hwnd) are only needed If a UI tooltip should be attached.
 	
@@ -619,15 +641,12 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("Open browser Win10 fix", "x557 yp+30 w210 h30", TradeOpts.OpenWithDefaultWin10Fix, "OpenWithDefaultWin10Fix", "OpenWithDefaultWin10FixH")
 	AddToolTip(OpenWithDefaultWin10FixH, " If your PC always asks you what program to use to open`n the wiki-link, enable this to let ahk find your default`nprogram from the registry.")
 	
-	GuiAddText("Browser Path:", "x557 yp+38 w70 h20 0x0100", "LblBrowserPath", "LblBrowserPathH")
+	GuiAddText("Browser Path:", "x557 yp+35 w70 h20 0x0100", "LblBrowserPath", "LblBrowserPathH")
 	AddToolTip(LblBrowserPathH, "Optional: Set the path to the browser (.exe) to open Urls with.")
 	GuiAddEdit(TradeOpts.BrowserPath, "x+10 yp-2 w150 h20", "BrowserPath", "BrowserPathH")
 	
-	GuiAddCheckbox("Enable ""Url shortcuts"" without item hover.", "x557 yp+30 w220 h30", TradeOpts.OpenUrlsOnEmptyItem, "OpenUrlsOnEmptyItem", "OpenUrlsOnEmptyItemH")
+	GuiAddCheckbox("Enable ""Url shortcuts"" without item hover.", "x557 yp+23 w220 h30", TradeOpts.OpenUrlsOnEmptyItem, "OpenUrlsOnEmptyItem", "OpenUrlsOnEmptyItemH")
 	AddToolTip(OpenUrlsOnEmptyItemH, "This enables the ctrl+q and ctrl+w shortcuts`neven without hovering over an item.`nBe careful!")
-	
-	GuiAddCheckbox("Debug Output", "x557 yp+30 w100 h30 cRed", TradeOpts.Debug, "Debug", "DebugH")
-	AddToolTip(DebugH, "Don't use this unless you're developing!")
 	
 	GuiAddCheckbox("Download Data Files on start", "x557 yp+30 w200 h30", TradeOpts.DownloadDataFiles, "DownloadDataFiles", "DownloadDataFilesH")
 	AddToolTip(DownloadDataFilesH, "Downloads all data files (mods, enchantments etc) on every script start.`nBy disabling this, these files are only updated with new releases.`nDisabling is not recommended.")
@@ -637,7 +656,7 @@ CreateTradeSettingsUI()
 	
     ; Hotkeys
 	
-	GuiAddGroupBox("[TradeMacro] Hotkeys", "x547 yp+65 w260 h235")
+	GuiAddGroupBox("[TradeMacro] Hotkeys", "x547 yp+45 w260 h230")
 	
 	GuiAddText("Price Check Hotkey:", "x557 yp+28 w160 h20 0x0100", "LblPriceCheckHotKey", "LblPriceCheckHotKeyH")
 	AddToolTip(LblPriceCheckHotKeyH, "Check item prices.")
@@ -682,6 +701,27 @@ CreateTradeSettingsUI()
 	AddToolTip(ShowItemAgeEnabledH, "Enable Hotkey.")
 	
 	Gui, Add, Link, x557 yp+32 w160 h20 cBlue, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
+	
+    ; Cookies
+    
+	GuiAddGroupBox("[TradeMacro] Manual cookie selection", "x547 yp+40 w260 h160")
+    
+	GuiAddCheckbox("Overwrite automatic cookie retrieval.", "x557 yp+20 w200 h30", TradeOpts.UseManualCookies, "UseManualCookies", "UseManualCookiesH")
+	AddToolTip(UseManualCookiesH, "Use your own cookies instead of automatically retrieving`nthem from Internet Explorer.")
+	
+	GuiAddText("User-Agent:", "x557 yp+32 w70 h20 0x0100", "LblUserAgent", "LblUserAgentH")
+	AddToolTip(LblUserAgentH, "Your browsers user-agent. See 'How to'.")
+	GuiAddEdit(TradeOpts.UserAgent, "x+10 yp-2 w150 h20", "UserAgent", "UserAgentH")
+	
+	GuiAddText("__cfduid:", "x557 yp+30 w70 h20 0x0100", "LblCfdUid", "LblCfdUidH")
+	AddToolTip(LblCfdUidH, "'__cfduid' cookie. See 'How to'.")
+	GuiAddEdit(TradeOpts.CfdUid, "x+10 yp-2 w150 h20", "CfdUid", "CfdUidH")
+	
+	GuiAddText("cf_clearance:", "x557 yp+30 w70 h20 0x0100", "LblCfClearance", "LblCfClearanceH")
+	AddToolTip(LblCfClearanceH, "'cf_clearance' cookie. See 'How to'.")
+	GuiAddEdit(TradeOpts.CfClearance, "x+10 yp-2 w150 h20", "CfClearance", "CfClearanceH")
+	
+	Gui, Add, Link, x557 yp+28 w160 h20 cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Cookie-retrieval">How to</a>
 	
     ; Search
 	
@@ -751,6 +791,9 @@ CreateTradeSettingsUI()
 	Gui, Add, Link, x827 yp+43 w230 cBlue, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
 	
 	GuiAddText("Mouse over settings to see what these settings do exactly.", "x827 y585 w250 h30")
+	
+	GuiAddCheckbox("Debug Output", "x827 yp+25 w100 h25 cRed", TradeOpts.Debug, "Debug", "DebugH")
+	AddToolTip(DebugH, "Don't use this unless you're developing!")
 	
 	GuiAddButton("[Trade] Defaults", "x822 y640 w90 h23", "TradeSettingsUI_BtnDefaults")
 	GuiAddButton("[Trade] OK", "Default x+5 y640 w75 h23", "TradeSettingsUI_BtnOK")
@@ -890,72 +933,83 @@ TradeFunc_DownloadDataFiles() {
 }
 
 TradeFunc_ReadCookieData() {
-	SplashTextOn, 450, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`nup a few seconds if your Internet Explorer doesn't have the cookies cached.
+	If (!TradeOpts.UseManualCookies) {
+		SplashTextOn, 500, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`na few seconds if your Internet Explorer doesn't have the cookies cached.
+		
+		If (TradeOpts.DeleteCookies) {
+			TradeFunc_DeleteCookies()
+		}
 	
-	If (TradeOpts.DeleteCookies) {
-		TradeFunc_DeleteCookies()
-	}
-	
-	; compile the c# script reading the user-agent and cookies
-	DotNetFrameworkInstallation := TradeFunc_GetLatestDotNetInstallation()
-	DotNetFrameworkPath := DotNetFrameworkInstallation.Path
-	CompilerExe := "csc.exe"
-	
-	If (TradeOpts.Debug) {
-		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs""
-	}
-	Else {
-		RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide
-	}
-	
-	Try {		
-		If (!FileExist(A_ScriptDir "\temp\getCookieData.exe")) {
-			CompiledExeNotFound := 1			
-			If (DotNetFrameworkInstallation.Major < 4) {
-				WrongNetFrameworkVersion := 1
-			}
+		; compile the c# script reading the user-agent and cookies
+		DotNetFrameworkInstallation := TradeFunc_GetLatestDotNetInstallation()
+		DotNetFrameworkPath := DotNetFrameworkInstallation.Path
+		CompilerExe := "csc.exe"
+		
+		If (TradeOpts.Debug) {
+			RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs""
 		}
 		Else {
-			RunWait %A_ScriptDir%\temp\getCookieData.exe, , Hide		
-		}
-	} Catch e {
-		CompiledExeNotFound := 1
-	}		
-	
-	; read user-agent and cookies
-	ErrorLevel := 0
-	If (FileExist(A_ScriptDir "\temp\cookie_data.txt")) {
-		FileRead, cookieFile, %A_ScriptDir%\temp\cookie_data.txt
-		Loop, parse, cookieFile, `n`r
-		{
-			RegExMatch(A_LoopField, "i)(.*)\s?=", key)
-			RegExMatch(A_LoopField, "i)=\s?(.*)", value)
-
-			If (InStr(key1, "useragent")) {
-				TradeGlobals.Set("UserAgent", Trim(value1))
-			}
-			Else If (InStr(key1, "cfduid")) {		   
-				TradeGlobals.Set("cfduid", Trim(value1))
-			} 
-			Else If (InStr(key1, "cf_clearance")) {
-				TradeGlobals.Set("cfClearance", Trim(value1))
-			}		
+			RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide
 		}
 		
-		If (StrLen(TradeGlobals.Get("UserAgent")) < 1) {
-			ErrorLevel := 1
+		Try {		
+			If (!FileExist(A_ScriptDir "\temp\getCookieData.exe")) {
+				CompiledExeNotFound := 1			
+				If (DotNetFrameworkInstallation.Major < 4) {
+					WrongNetFrameworkVersion := 1
+				}
+			}
+			Else {
+				RunWait %A_ScriptDir%\temp\getCookieData.exe, , Hide		
+			}
+		} Catch e {
+			CompiledExeNotFound := 1
+		}		
+		
+		; read user-agent and cookies
+		ErrorLevel := 0
+		If (FileExist(A_ScriptDir "\temp\cookie_data.txt")) {
+			FileRead, cookieFile, %A_ScriptDir%\temp\cookie_data.txt
+			Loop, parse, cookieFile, `n`r
+			{
+				RegExMatch(A_LoopField, "i)(.*)\s?=", key)
+				RegExMatch(A_LoopField, "i)=\s?(.*)", value)
+
+				If (InStr(key1, "useragent")) {
+					TradeGlobals.Set("UserAgent", Trim(value1))
+				}
+				Else If (InStr(key1, "cfduid")) {		   
+					TradeGlobals.Set("cfduid", Trim(value1))
+				} 
+				Else If (InStr(key1, "cf_clearance")) {
+					TradeGlobals.Set("cfClearance", Trim(value1))
+				}		
+			}		
 		}
-		If (StrLen(TradeGlobals.Get("cfduid")) < 1) {
-			ErrorLevel := 1
+		Else {
+			CookieFileNotFound := 1
 		}
-		If (StrLen(TradeGlobals.Get("cfClearance")) < 1) {
-			ErrorLevel := 1
-		}	
 	}
-	Else {
-		CookieFileNotFound := 1
+	Else {		
+		; use useragent/cookies from settings instead
+		SplashTextOn, 500, 20, PoE-TradeMacro, Testing CloudFlare bypass using manual set user-agent/cookies.
+		TradeGlobals.Set("UserAgent", TradeOpts.UserAgent)	   
+		TradeGlobals.Set("cfduid", TradeOpts.CfdUid)
+		TradeGlobals.Set("cfClearance", TradeOpts.CfClearance)
 	}
 	
+	; check if useragent/cookies are all set
+	If (StrLen(TradeGlobals.Get("UserAgent")) < 1) {
+		ErrorLevel := 1
+	}
+	If (StrLen(TradeGlobals.Get("cfduid")) < 1) {
+		ErrorLevel := 1
+	}
+	If (StrLen(TradeGlobals.Get("cfClearance")) < 1) {
+		ErrorLevel := 1
+	}	
+	
+	; test connection to poe.trade
 	If (!ErrorLevel) { 
 		If (!TradeFunc_TestCloudflareBypass("http://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"))) {
 			BypassFailed := 1
@@ -976,8 +1030,10 @@ TradeFunc_ReadCookieData() {
 		}
 		IE := "Internet Explorer: v" IEVersion
 		
+		; create GUI window
 		WinSet, AlwaysOnTop, Off, PoE-TradeMacro
 		
+		; something went wrong while compiling the script
 		If (CompiledExeNotFound) {			
 			Gui, CookieWindow:Add, Text, cRed, <ScriptDirectory\temp\getCookieData.exe> not found!
 			Gui, CookieWindow:Add, Text, , - It seems compiling and moving the .exe file failed.
@@ -986,20 +1042,28 @@ TradeFunc_ReadCookieData() {
 				Gui, CookieWindow:Add, Link, cBlue, <a href="https://www.microsoft.com/en-us/download/details.aspx?id=17851">Download it here</a> 
 			}
 		}
+		; something went wrong while testing the connection to poe.trade
 		Else If (BypassFailed) {
 			Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed!
 			Gui, CookieWindow:Add, Text, , - Cookies and user-agent were retrieved.`n- Lowered/disabled Internet Explorer security settings can cause this to fail.
-			cookiesDeleted := (TradeOpts.DeleteCookies) ? "Cookies were deleted on script start." : ""
+			cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "Cookies were deleted on script start." : ""
 			Gui, CookieWindow:Add, Text, , - %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.`n- Make sure that you're not using any proxy server.				
 		}
+		; something went wrong while reading the cookies
 		Else {
 			Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
 			If (CookieFileNotFound) {
 				Gui, CookieWindow:Add, Text, , - File <ScriptDirectory\temp\cookie_data.txt> could not be found.
 			}
 			Else {
-				cookiesDeleted := (TradeOpts.DeleteCookies) ? "Cookies were deleted on script start." : ""
-				Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. `n- %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.	
+				cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "Cookies were deleted on script start." : ""
+				If (!TradeOpts.UseManualCookies) {
+					Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. `n- %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.		
+				}
+				Else {
+					Gui, CookieWindow:Add, Text, , - The user-agent/cookies set in the settings menu seem to be invalid/incomplete. `n- %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.	
+				}
+				Gui, CookieWindow:Add, Text, , The connection test sometimes fails while using the correct user-agent/cookies. `nJust try it again to be sure.
 			}
 		}
 		
@@ -1009,7 +1073,7 @@ TradeFunc_ReadCookieData() {
 		Gui, CookieWindow:Add, Button, y+10 gOpenCookieFile, Open cookie file
 		Gui, CookieWindow:Add, Button, yp+0 x+10 gCloseCookieWindow, Continue
 		
-		Gui, CookieWindow:Add, Text, x10, Delete Internet Explorer cookies and restart the script.
+		Gui, CookieWindow:Add, Text, x10, Delete Internet Explorer's poe.trade cookies and restart the script.
 		Gui, CookieWindow:Add, Button, gDeleteCookies, Delete cookies
 		Gui, CookieWindow:Show, w450 xCenter yCenter, Notice
 		ControlFocus, Delete cookies, Notice
