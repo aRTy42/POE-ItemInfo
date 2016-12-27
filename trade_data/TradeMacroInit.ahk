@@ -1047,7 +1047,9 @@ TradeFunc_ReadCookieData() {
 			Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed!
 			Gui, CookieWindow:Add, Text, , - Cookies and user-agent were retrieved.`n- Lowered/disabled Internet Explorer security settings can cause this to fail.
 			cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "Cookies were deleted on script start." : ""
-			Gui, CookieWindow:Add, Text, , - %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.`n- Make sure that you're not using any proxy server.				
+			Gui, CookieWindow:Add, Text, , - %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.`n- Make sure that you're not using any proxy server.
+			Gui, CookieWindow:Add, Text, , The connection test sometimes fails while using the correct user-agent/cookies. `nJust try it again to be sure.			
+			Gui, CookieWindow:Add, Text, , You can also try setting the cookies manually in the settings menu (with 'How to' link).
 		}
 		; something went wrong while reading the cookies
 		Else {
@@ -1058,12 +1060,11 @@ TradeFunc_ReadCookieData() {
 			Else {
 				cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "Cookies were deleted on script start." : ""
 				If (!TradeOpts.UseManualCookies) {
-					Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. `n- %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.		
+					Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. `n- %cookiesDeleted%.		
 				}
 				Else {
-					Gui, CookieWindow:Add, Text, , - The user-agent/cookies set in the settings menu seem to be invalid/incomplete. `n- %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.	
+					Gui, CookieWindow:Add, Text, , - The user-agent/cookies set in the settings menu seem to be invalid/incomplete. `n- %cookiesDeleted%.
 				}
-				Gui, CookieWindow:Add, Text, , The connection test sometimes fails while using the correct user-agent/cookies. `nJust try it again to be sure.
 			}
 		}
 		
