@@ -50,3 +50,16 @@ Temporary Items
 POE-ItemInfo.ahk.bak
 .idea/
 backup/
+
+*.bak
+main.ahk
+temp/*
+temp
+trade_data/leagues.json
+trade_data/backup/*
+backup/*
+backup/
+trade_data/old_data_files/
+test.ahk
+backup/
+
