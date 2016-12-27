@@ -1,5 +1,13 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.5.0
+================================================================================================
+Improved error handling/feedback (CloudFlare bypass).
+Added option to set cookies manually instead of having them retrieved automatically (settings menu).
+Added button to delete IE cookies (error window).
+Added option to delete IE cookies on script start (default = enabled).
+Fixed some minor issues.
+
 1.4.1
 ================================================================================================
 Added c# script to get user-agent and cookies automatically.

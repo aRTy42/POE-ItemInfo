@@ -955,7 +955,7 @@ TradeFunc_ReadCookieData() {
 		Try {		
 			If (!FileExist(A_ScriptDir "\temp\getCookieData.exe")) {
 				CompiledExeNotFound := 1			
-				If (DotNetFrameworkInstallation.Major < 4) {
+				If (DotNetFrameworkInstallation.Major < 2) {
 					WrongNetFrameworkVersion := 1
 				}
 			}
@@ -1038,7 +1038,7 @@ TradeFunc_ReadCookieData() {
 			Gui, CookieWindow:Add, Text, cRed, <ScriptDirectory\temp\getCookieData.exe> not found!
 			Gui, CookieWindow:Add, Text, , - It seems compiling and moving the .exe file failed.
 			If (WrongNetFrameworkVersion) {
-				Gui, CookieWindow:Add, Text, , `n- Net Framework 4 is required (for now) but it seems you don't have it.
+				Gui, CookieWindow:Add, Text, , `n- Net Framework 2 is required but it seems you don't have it.
 				Gui, CookieWindow:Add, Link, cBlue, <a href="https://www.microsoft.com/en-us/download/details.aspx?id=17851">Download it here</a> 
 			}
 		}
@@ -1047,7 +1047,7 @@ TradeFunc_ReadCookieData() {
 			Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed!
 			Gui, CookieWindow:Add, Text, , - Cookies and user-agent were retrieved.`n- Lowered/disabled Internet Explorer security settings can cause this to fail.
 			cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "Cookies were deleted on script start." : ""
-			Gui, CookieWindow:Add, Text, , - %cookiesDeleted% Please try again or test the compiled`n  script <ScriptDirectory\PoE-TradeMacro.exe>.`n- Make sure that you're not using any proxy server.
+			Gui, CookieWindow:Add, Text, , - %cookiesDeleted% Please try again and make sure that `n  you're not using any proxy server.`n- If all else fails try using the compiled script <PoE-TradeMacro_(Fallback).exe>.
 			Gui, CookieWindow:Add, Text, , The connection test sometimes fails while using the correct user-agent/cookies. `nJust try it again to be sure.			
 			Gui, CookieWindow:Add, Text, , You can also try setting the cookies manually in the settings menu (with 'How to' link).
 		}
@@ -1067,7 +1067,8 @@ TradeFunc_ReadCookieData() {
 				}
 			}
 		}
-		
+				
+		Gui, CookieWindow:Add, Link, cBlue, Take a look at the <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/FAQ">FAQ</a>.
 		Gui, CookieWindow:Add, Link, cBlue, Report on <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Github</a>, <a href="https://discord.gg/taKZqWw">Discord</a>, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">the forum</a>.
 		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
 		Gui, CookieWindow:Add, Edit, r5 ReadOnly w430, %CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
