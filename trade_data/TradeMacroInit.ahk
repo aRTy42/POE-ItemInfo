@@ -1072,11 +1072,18 @@ TradeFunc_ReadCookieData() {
 		Gui, CookieWindow:Add, Link, cBlue, Report on <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Github</a>, <a href="https://discord.gg/taKZqWw">Discord</a>, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">the forum</a>.
 		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
 		Gui, CookieWindow:Add, Edit, r5 ReadOnly w430, %CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
-		Gui, CookieWindow:Add, Button, y+10 gOpenCookieFile, Open cookie file
+		If (!TradeOpts.UseManualCookies) {
+			Gui, CookieWindow:Add, Button, y+10 gOpenCookieFile, Open Settings
+		}
+		Else {
+			Gui, CookieWindow:Add, Button, y+10 gShowSettingsUI, Open cookie file
+		}
 		Gui, CookieWindow:Add, Button, yp+0 x+10 gCloseCookieWindow, Continue
 		
-		Gui, CookieWindow:Add, Text, x10, Delete Internet Explorer's poe.trade cookies and restart the script.
-		Gui, CookieWindow:Add, Button, gDeleteCookies, Delete cookies
+		If (!TradeOpts.UseManualCookies) {
+			Gui, CookieWindow:Add, Text, x10, Delete Internet Explorer's poe.trade cookies and restart the script.
+			Gui, CookieWindow:Add, Button, gDeleteCookies, Delete cookies
+		}		
 		Gui, CookieWindow:Show, w450 xCenter yCenter, Notice
 		ControlFocus, Delete cookies, Notice
 		WinWaitClose, Notice
