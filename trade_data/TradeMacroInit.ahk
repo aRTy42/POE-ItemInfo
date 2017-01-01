@@ -796,7 +796,7 @@ CreateTradeSettingsUI()
 	AddToolTip(DebugH, "Don't use this unless you're developing!")
 	
 	GuiAddButton("[Trade] Defaults", "x822 y640 w90 h23", "TradeSettingsUI_BtnDefaults")
-	GuiAddButton("[Trade] OK", "Default x+5 y640 w75 h23", "TradeSettingsUI_BtnOK")
+	GuiAddButton("[Trade] Save", "Default x+5 y640 w75 h23", "TradeSettingsUI_BtnOK")
 	GuiAddButton("[Trade] Cancel", "x+5 y640 w80 h23", "TradeSettingsUI_BtnCancel")
 	
 	GuiAddText("Use these Buttons to change TradeMacro Settings only.", "x827 y+10 w250 h50 cRed")
@@ -946,10 +946,10 @@ TradeFunc_ReadCookieData() {
 		CompilerExe := "csc.exe"
 		
 		If (TradeOpts.Debug) {
-			RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs""
+			RunWait %comspec% /c "chcp 1251 & "%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs""
 		}
 		Else {
-			RunWait %comspec% /c ""%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide
+			RunWait %comspec% /c "chcp 1251 & "%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide
 		}
 		
 		Try {		
@@ -1063,11 +1063,12 @@ TradeFunc_ReadCookieData() {
 					Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. `n- %cookiesDeleted%.		
 				}
 				Else {
+					Gui, CookieWindow:Add, Text, , - Your cookies will change every few days (make sure they are correct). `n.
 					Gui, CookieWindow:Add, Text, , - The user-agent/cookies set in the settings menu seem to be invalid/incomplete. `n- %cookiesDeleted%.
 				}
 			}
 		}
-				
+		
 		Gui, CookieWindow:Add, Link, cBlue, Take a look at the <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/FAQ">FAQ</a>.
 		Gui, CookieWindow:Add, Link, cBlue, Report on <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Github</a>, <a href="https://discord.gg/taKZqWw">Discord</a>, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">the forum</a>.
 		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
