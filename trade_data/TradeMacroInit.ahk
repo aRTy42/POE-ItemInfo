@@ -1168,19 +1168,22 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent, cfduid, cfClearance) {
 	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
 	HttpObj.Send()
 	HttpObj.WaitForResponse()
-	html := HttpObj.ResponseText
-	
-	If Encoding {
-		oADO          := ComObjCreate("adodb.stream")
-		oADO.Type     := 1
-		oADO.Mode     := 3
-		oADO.Open()
-		oADO.Write( HttpObj.ResponseBody )
-		oADO.Position := 0
-		oADO.Type     := 2
-		oADO.Charset  := Encoding
-		html := oADO.ReadText()
-		oADO.Close()
+
+	Try {				
+		If Encoding {
+			oADO          := ComObjCreate("adodb.stream")
+			oADO.Type     := 1
+			oADO.Mode     := 3
+			oADO.Open()
+			oADO.Write(HttpObj.ResponseBody)
+			oADO.Position := 0
+			oADO.Type     := 2
+			oADO.Charset  := Encoding
+			html := oADO.ReadText()
+			oADO.Close()
+		}
+	} Catch e {			
+		html := HttpObj.ResponseText
 	}
 	
 	If A_LastError

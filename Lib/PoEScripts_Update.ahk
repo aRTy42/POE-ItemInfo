@@ -14,20 +14,23 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 		HttpObj.Open("GET",url)
 		HttpObj.SetRequestHeader("Content-type","application/html")
 		HttpObj.Send("")
-		HttpObj.WaitForResponse()   
-		html := HttpObj.ResponseText
-		
-		If Encoding {
-			oADO          := ComObjCreate("adodb.stream")
-			oADO.Type     := 1
-			oADO.Mode     := 3
-			oADO.Open()
-			oADO.Write(HttpObj.ResponseBody)
-			oADO.Position := 0
-			oADO.Type     := 2
-			oADO.Charset  := Encoding
-			html := oADO.ReadText()
-			oADO.Close()
+		HttpObj.WaitForResponse()
+
+		Try {				
+			If Encoding {
+				oADO          := ComObjCreate("adodb.stream")
+				oADO.Type     := 1
+				oADO.Mode     := 3
+				oADO.Open()
+				oADO.Write(HttpObj.ResponseBody)
+				oADO.Position := 0
+				oADO.Type     := 2
+				oADO.Charset  := Encoding
+				html := oADO.ReadText()
+				oADO.Close()
+			}
+		} Catch e {			
+			html := HttpObj.ResponseText
 		}
 		
 		RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)
