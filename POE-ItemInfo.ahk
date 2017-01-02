@@ -851,11 +851,26 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		}
 		IfInString, LoopField, %A_Space%Map
 		{
-			Global matchList
-			BaseType = Map
-			Loop % matchList.MaxIndex()
+			IfInString, LoopField, Shaped
 			{
-				Match := matchList[A_Index]
+				Global shapedMapMatchList
+				BaseType = Map
+				Loop % shapedMapMatchList.MaxIndex()
+				{
+					Match := shapedMapMatchList[A_Index]
+					IfInString, LoopField, %Match%
+					{
+						SubType = %Match%
+						return
+					}
+				}
+			}
+			
+			Global mapMatchList
+			BaseType = Map
+			Loop % mapMatchList.MaxIndex()
+			{
+				Match := mapMatchList[A_Index]
 				IfInString, LoopField, %Match%
 				{
 					SubType = %Match%
@@ -864,13 +879,6 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			}
 
 			SubType = Unknown%A_Space%Map
-			return
-		}
-		; Dry Peninsula fix
-		IfInString, LoopField, Dry%A_Space%Peninsula
-		{
-			BaseType = Map
-			SubType = Dry%A_Space%Peninsula
 			return
 		}
 
@@ -6242,7 +6250,7 @@ ItemIsMirrored(ItemDataText)
 ;
 ParseItemData(ItemDataText, ByRef RarityLevel="")
 {
-	Global Item, ItemData, AffixTotals, uniqueMapList, mapList, matchList, divinationCardList, gemQualityList
+	Global Item, ItemData, AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList
 
 	ItemDataPartsIndexLast =
 	ItemDataPartsIndexAffixes =
