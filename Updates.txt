@@ -1,6 +1,13 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.5.03
+================================
+from aRTy42, Eruyome
+Included an update notifier for the script (by Eruyome).
+Updated Maps, Divination Cards and Uniques with the current wiki info.
+Included the name change of "Armory Map" to "Armoury Map" (again), because it got partially reverted with v2.5.02.
+
 2.5.02
 ================================
 from aRTy42
