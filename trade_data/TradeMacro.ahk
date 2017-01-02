@@ -1065,6 +1065,9 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 		}
 	} Catch e {			
 		html := HttpObj.ResponseText
+		If (TradeOpts.Debug) {
+			MsgBox % e
+		}
 	}
 	
 	If A_LastError
@@ -1118,6 +1121,9 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 		}
 	} Catch e {			
 		html := HttpObj.ResponseText
+		If (TradeOpts.Debug) {
+			MsgBox % e
+		}
 	}
 	
 	If A_LastError
@@ -3142,6 +3148,15 @@ OverwriteSettingsWidthTimer:
 	}	
 Return
 
+OverwriteSettingsHeightTimer:
+	o := Globals.Get("SettingsUIHeight")
+
+	If (o) {
+		Globals.Set("SettingsUIHeight", 750)
+		SetTimer, OverwriteSettingsHeightTimer, Off
+	}	
+Return
+
 OverwriteSettingsNameTimer:
 	o := Globals.Get("SettingsUITitle")
 
@@ -3213,7 +3228,7 @@ ReadPoeNinjaCurrencyData:
 Return
 
 CloseCookieWindow:
-	Gui, Cancel
+	Gui, CookieWindow:Cancel
 Return
 
 OpenCookieFile:

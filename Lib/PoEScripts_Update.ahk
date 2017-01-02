@@ -31,6 +31,9 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 			}
 		} Catch e {			
 			html := HttpObj.ResponseText
+			If (TradeOpts.Debug) {
+				MsgBox % e
+			}
 		}
 		
 		RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)

@@ -1058,13 +1058,13 @@ TradeFunc_ReadCookieData() {
 				Gui, CookieWindow:Add, Text, , - File <ScriptDirectory\temp\cookie_data.txt> could not be found.
 			}
 			Else {
-				cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "Cookies were deleted on script start." : ""
+				cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "`n- Cookies were deleted on script start." : ""
 				If (!TradeOpts.UseManualCookies) {
-					Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. `n- %cookiesDeleted%.		
+					Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. %cookiesDeleted%.		
 				}
 				Else {
-					Gui, CookieWindow:Add, Text, , - Your cookies will change every few days (make sure they are correct). `n.
-					Gui, CookieWindow:Add, Text, , - The user-agent/cookies set in the settings menu seem to be invalid/incomplete. `n- %cookiesDeleted%.
+					Gui, CookieWindow:Add, Text, , - Your cookies will change every few days (make sure they are correct).
+					Gui, CookieWindow:Add, Text, , - The user-agent/cookies set in the settings menu seem to be invalid/incomplete. %cookiesDeleted%.
 				}
 			}
 		}
@@ -1074,19 +1074,19 @@ TradeFunc_ReadCookieData() {
 		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
 		Gui, CookieWindow:Add, Edit, r5 ReadOnly w430, %CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
 		If (!TradeOpts.UseManualCookies) {
-			Gui, CookieWindow:Add, Button, y+10 gOpenCookieFile, Open Settings
+			Gui, CookieWindow:Add, Button, y+10 gOpenCookieFile, Open cookie file
+			Gui, CookieWindow:Add, Button, yp+0 x+10 gCloseCookieWindow, Continue
 		}
 		Else {
-			Gui, CookieWindow:Add, Button, y+10 gShowSettingsUI, Open cookie file
+			Gui, CookieWindow:Add, Button, y+10 gCloseCookieWindow, Continue
 		}
-		Gui, CookieWindow:Add, Button, yp+0 x+10 gCloseCookieWindow, Continue
 		
 		If (!TradeOpts.UseManualCookies) {
 			Gui, CookieWindow:Add, Text, x10, Delete Internet Explorer's poe.trade cookies and restart the script.
 			Gui, CookieWindow:Add, Button, gDeleteCookies, Delete cookies
 		}		
 		Gui, CookieWindow:Show, w450 xCenter yCenter, Notice
-		ControlFocus, Delete cookies, Notice
+		ControlFocus, Continue, Notice
 		WinWaitClose, Notice
 	}	
 }
@@ -1184,6 +1184,9 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent, cfduid, cfClearance) {
 		}
 	} Catch e {			
 		html := HttpObj.ResponseText
+		If (TradeOpts.Debug) {
+			MsgBox % e
+		}
 	}
 	
 	If A_LastError
@@ -1262,6 +1265,7 @@ TradeFunc_StopSplashScreen() {
 	
     ; Let timer run until SettingsUIWidth is set and overwrite some options.
 	SetTimer, OverwriteSettingsWidthTimer, 500
+	SetTimer, OverwriteSettingsHeightTimer, 500
 	SetTimer, OverwriteSettingsNameTimer, 500
 	GoSub, ReadPoeNinjaCurrencyData
 }
