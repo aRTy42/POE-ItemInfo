@@ -179,6 +179,7 @@ Globals.Set("SettingsUIHeight", 710)
 Globals.Set("SettingsUITitle", "PoE Item Info Settings")
 Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
+Globals.Set("ScriptList", [A_ScriptDir "\POE-ItemInfo"])
 
 global SuspendPOEItemScript = 0
 
@@ -8011,6 +8012,29 @@ GetContributors(AuthorsPerLine=0)
 		}
 	}
 	return Authors
+}
+
+CloseScripts() {
+	; Close all active scripts listed in Globals.Get("ScriptList").
+	; Can be used with scripts extending/including ItemInfo (TradeMacro for example) by adding to/altering this list.
+	; Shortcut is placed in AdditionalMacros.txt
+	
+	scripts := Globals.Get("ScriptList")	
+	currentScript := A_ScriptDir . "\" . A_ScriptName
+	SplitPath, currentScript, , , ext, currentscript_name_no_ext
+	currentScript :=  A_ScriptDir . "\" . currentscript_name_no_ext
+	
+	DetectHiddenWindows, On 
+
+	Loop, % scripts.Length() {
+		scriptPath := scripts[A_Index]
+	
+		; close current script last (with ExitApp)
+		If (currentScript != scriptPath) {
+			WinClose, %scriptPath% ahk_class AutoHotkey
+		}
+	}
+	ExitApp
 }
 
 ; ########### TIMERS ############
