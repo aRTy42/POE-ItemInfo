@@ -3236,7 +3236,7 @@ OpenCookieFile:
 Return
 
 DeleteCookies:
-	TradeFunc_DeleteCookies()
+	TradeFunc_ClearWebHistory()
 	Run, Run_only_This.ahk
 	ExitApp
 Return

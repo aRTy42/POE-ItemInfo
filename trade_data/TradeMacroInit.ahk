@@ -53,6 +53,7 @@ class TradeUserOptions {
 	OpenUrlsOnEmptyItem := 0			; Open wiki/poe.trade also when no item was checked
 	DownloadDataFiles := 0			; 
 	DeleteCookies := 1				; Delete Internet Explorer cookies on startup (only poe.trade)
+	CookieSelect := "All"
 	
 	Debug := 0      				; 
 	
@@ -164,6 +165,7 @@ ReadTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.OpenUrlsOnEmptyItem := TradeFunc_ReadIniValue(TradeConfigPath, "General", "OpenUrlsOnEmptyItem", TradeOpts.OpenUrlsOnEmptyItem)
 		TradeOpts.DownloadDataFiles := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DownloadDataFiles", TradeOpts.DownloadDataFiles)
 		TradeOpts.DeleteCookies := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DeleteCookies", TradeOpts.DeleteCookies)
+		TradeOpts.CookieSelect := TradeFunc_ReadIniValue(TradeConfigPath, "General", "CookieSelect", TradeOpts.CookieSelect)
 		
         ; Check If browser path is valid, delete ini-entry If not
 		BrowserPath := TradeFunc_ReadIniValue(TradeConfigPath, "General", "BrowserPath", TradeOpts.BrowserPath)
@@ -294,6 +296,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 		TradeOpts.OpenUrlsOnEmptyItem := OpenUrlsOnEmptyItem
 		TradeOpts.DownloadDataFiles := DownloadDataFiles
 		TradeOpts.DeleteCookies := DeleteCookies
+		TradeOpts.CookieSelect := CookieSelect
 		TradeOpts.Debug := Debug
 		
 		If (ValidBrowserPath) {
@@ -364,6 +367,7 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 	TradeFunc_WriteIniValue(TradeOpts.OpenUrlsOnEmptyItem, TradeConfigPath, "General", "OpenUrlsOnEmptyItem")   
 	TradeFunc_WriteIniValue(TradeOpts.DownloadDataFiles, TradeConfigPath, "General", "DownloadDataFiles")   
 	TradeFunc_WriteIniValue(TradeOpts.DeleteCookies, TradeConfigPath, "General", "DeleteCookies")   
+	TradeFunc_WriteIniValue(TradeOpts.CookieSelect, TradeConfigPath, "General", "CookieSelect")   
 	
 	If (ValidBrowserPath) {
 		TradeFunc_WriteIniValue(TradeOpts.BrowserPath, TradeConfigPath, "General", "BrowserPath")           
@@ -651,8 +655,9 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("Download Data Files on start", "x557 yp+30 w200 h30", TradeOpts.DownloadDataFiles, "DownloadDataFiles", "DownloadDataFilesH")
 	AddToolTip(DownloadDataFilesH, "Downloads all data files (mods, enchantments etc) on every script start.`nBy disabling this, these files are only updated with new releases.`nDisabling is not recommended.")
 	
-	GuiAddCheckbox("Delete cookies on start", "x557 yp+30 w200 h30", TradeOpts.DeleteCookies, "DeleteCookies", "DeleteCookiesH")
-	AddToolTip(DeleteCookiesH, "Delete Internet Explorer's poe.trade cookies.")
+	GuiAddCheckbox("Delete cookies on start", "x557 yp+30 w150 h30", TradeOpts.DeleteCookies, "DeleteCookies", "DeleteCookiesH")
+	AddToolTip(DeleteCookiesH, "Delete Internet Explorer cookies.`nThe default option (all) is preferred.")	
+	GuiAddDropDownList("All|poe.trade", "x+10 yp+2 w70", TradeOpts.CookieSelect, "CookieSelect", "CookieSelectH")	
 	
     ; Hotkeys
 	
@@ -937,7 +942,7 @@ TradeFunc_ReadCookieData() {
 		SplashTextOn, 500, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`na few seconds if your Internet Explorer doesn't have the cookies cached.
 		
 		If (TradeOpts.DeleteCookies) {
-			TradeFunc_DeleteCookies()
+			TradeFunc_ClearWebHistory()
 		}
 	
 		; compile the c# script reading the user-agent and cookies
@@ -1200,23 +1205,27 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent, cfduid, cfClearance) {
 	}
 }
 
-TradeFunc_DeleteCookies() {
-	appData := RegExReplace(A_AppData, "i)Roaming", "")
-	; Win XP, Win 7, Win8/10
-	paths := [appData "Local Settings\Temporary Internet Files", appData "Roaming\Microsoft\Windows\Cookies", appData "Local\Microsoft\Windows\INetCookies"]
+TradeFunc_ClearWebHistory() {
+	; use this to delete all cookies
+		
+	ValidCmdList 	= Files,Cookies,History,Forms,Passwords,All,All2
+	Files 		= 8 ; Clear Temporary Internet Files
+	Cookies 		= 2 ; Clear Cookies
+	History 		= 1 ; Clear History
+	Forms 		= 16 ; Clear Form Data
+	Passwords 	= 32 ; Clear Passwords
+	All 			= 255 ; Clear all
+	All2 		= 4351 ; Clear All and Also delete files and settings stored by add-ons
 
-	For key, path in paths {
-		If (FileExist(path)) {
-			Loop Files, %path%\*.txt, R 
-			{ 
-				FileRead, contents, %A_LoopFileFullPath%
-				RegExMatch(contents, "i)poe\.trade", match)
-				If (match) {
-					FileDelete, %A_LoopFileFullPath%
-				}			
-			}		
-		}
+	If (!TradeOpts.CookieSelect == "All") {		
+		RunWait %comspec% /c "chcp 1251 & "%A_ScriptDir%\lib\clearWebHistory.bat"", , Hide
 	}
+	Else {
+		DllCall("InetCpl.cpl\ClearMyTracksByProcess", uint, 2)
+		; Fallback in case of enabled IE protected mode: http://www.winhelponline.com/blog/clear-ie-cache-command-line-rundll32/
+		RunWait %comspec% /c "chcp 1251 & "%A_ScriptDir%\lib\clearWebHistoryAll.bat"", , Hide
+	}
+
 }
 
 TradeFunc_GetOSInfo() {
