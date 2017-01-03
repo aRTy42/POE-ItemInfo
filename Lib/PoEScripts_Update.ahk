@@ -14,20 +14,26 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 		HttpObj.Open("GET",url)
 		HttpObj.SetRequestHeader("Content-type","application/html")
 		HttpObj.Send("")
-		HttpObj.WaitForResponse()   
-		html := HttpObj.ResponseText
-		
-		If Encoding {
-			oADO          := ComObjCreate("adodb.stream")
-			oADO.Type     := 1
-			oADO.Mode     := 3
-			oADO.Open()
-			oADO.Write(HttpObj.ResponseBody)
-			oADO.Position := 0
-			oADO.Type     := 2
-			oADO.Charset  := Encoding
-			html := oADO.ReadText()
-			oADO.Close()
+		HttpObj.WaitForResponse()
+
+		Try {				
+			If Encoding {
+				oADO          := ComObjCreate("adodb.stream")
+				oADO.Type     := 1
+				oADO.Mode     := 3
+				oADO.Open()
+				oADO.Write(HttpObj.ResponseBody)
+				oADO.Position := 0
+				oADO.Type     := 2
+				oADO.Charset  := Encoding
+				html := oADO.ReadText()
+				oADO.Close()
+			}
+		} Catch e {			
+			html := HttpObj.ResponseText
+			If (TradeOpts.Debug) {
+				MsgBox, 16,, % "Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
+			}
 		}
 		
 		RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)
@@ -66,7 +72,11 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 			Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
 			
 			Loop, Parse, description, §
-				Gui, UpdateNotification:Add, Text, w320, % "- " A_LoopField
+			{
+				If(StrLen(A_LoopField) > 1) {
+					Gui, UpdateNotification:Add, Text, w320, % "- " A_LoopField				
+				}
+			}
 			
 			Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
 			Gui, UpdateNotification:Show, w400 xCenter yCenter, Update 
