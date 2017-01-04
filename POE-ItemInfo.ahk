@@ -7739,6 +7739,7 @@ CreateSettingsUI()
 	GuiAddButton("&OK", "Default x372 y640 w75 h23", "SettingsUI_BtnOK")
 	GuiAddButton("&Cancel", "x452 y640 w80 h23", "SettingsUI_BtnCancel")
 	
+	If (Scripts.Length() > 1) {
 		Gui, Tab
 	}
 }
