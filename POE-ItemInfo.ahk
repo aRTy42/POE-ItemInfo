@@ -181,6 +181,7 @@ Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
 Globals.Set("ScriptList", [A_ScriptDir "\POE-ItemInfo"])
 Globals.Set("UpdateNoteFileList", [[A_ScriptDir "\updates.txt","ItemInfo"]])
+Globals.Set("SettingsScriptList", ["POE-ItemInfo"])
 
 global SuspendPOEItemScript = 0
 
@@ -7637,8 +7638,11 @@ ShowUnhandledCaseDialog()
 CreateSettingsUI()
 {
 	Global
+	
+	Scripts := Globals.Get("SettingsScriptList")
+	
 	; General
-
+	
 	GuiAddGroupBox("General", "x7 y15 w260 h90")
 
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
@@ -7734,6 +7738,9 @@ CreateSettingsUI()
 	GuiAddButton("&Defaults", "x287 y640 w80 h23", "SettingsUI_BtnDefaults")
 	GuiAddButton("&OK", "Default x372 y640 w75 h23", "SettingsUI_BtnOK")
 	GuiAddButton("&Cancel", "x452 y640 w80 h23", "SettingsUI_BtnCancel")
+	
+		Gui, Tab
+	}
 }
 
 UpdateSettingsUI()
