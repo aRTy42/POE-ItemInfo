@@ -177,6 +177,8 @@ Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
 Globals.Set("SettingsUIHeight", 710)
+Globals.Set("AboutWindowHeight", 340)
+Globals.Set("AboutWindowWidth", 435)
 Globals.Set("SettingsUITitle", "PoE Item Info Settings")
 Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
@@ -8302,17 +8304,17 @@ MenuTray_About:
 	{
 		Authors := GetContributors(0)
 		RelVer := Globals.get("ReleaseVersion")
-		Gui, 2:+owner1 -Caption +Border
-		Gui, 2:Font, S10 CA03410,verdana
-		Gui, 2:Add, Text, x260 y27 w170 h20 Center, Release %RelVer%
-		Gui, 2:Add, Button, 0x8000 x316 y300 w70 h21, Close
-		Gui, 2:Add, Picture, 0x1000 x17 y16 w230 h180 gAboutDlg_Fishing, %A_ScriptDir%\data\splash.png
-		Gui, 2:Font, Underline C3571AC,verdana
-		Gui, 2:Add, Text, x260 y57 w170 h20 gVisitForumsThread Center, PoE forums thread
-		Gui, 2:Add, Text, x260 y87 w170 h20 gAboutDlg_AhkHome Center, AutoHotkey homepage
-		Gui, 2:Add, Text, x260 y117 w170 h20 gAboutDlg_GitHub Center, PoE-Item-Info GitHub
-		Gui, 2:Font, S7 CDefault normal, Verdana
-		Gui, 2:Add, Text, x16 y207 w410 h80,
+		Gui, About:+owner1 -Caption +Border
+		Gui, About:Font, S10 CA03410,verdana
+		Gui, About:Add, Text, x260 y27 w170 h20 Center, Release %RelVer%
+		Gui, About:Add, Button, 0x8000 x316 y300 w70 h21, Close
+		Gui, About:Add, Picture, 0x1000 x17 y16 w230 h180 gAboutDlg_Fishing, %A_ScriptDir%\data\splash.png
+		Gui, About:Font, Underline C3571AC,verdana
+		Gui, About:Add, Text, x260 y57 w170 h20 gVisitForumsThread Center, PoE forums thread
+		Gui, About:Add, Text, x260 y87 w170 h20 gAboutDlg_AhkHome Center, AutoHotkey homepage
+		Gui, About:Add, Text, x260 y117 w170 h20 gAboutDlg_GitHub Center, PoE-Item-Info GitHub
+		Gui, About:Font, S7 CDefault normal, Verdana
+		Gui, About:Add, Text, x16 y207 w410 h80,
 		(LTrim
 		Shows affix breakdowns and other useful infos for any item or item link.
 
@@ -8320,12 +8322,14 @@ MenuTray_About:
 
 		(c) %A_YYYY% Hazydoc, Nipper4369 and contributors:
 		)
-		Gui, 2:Add, Text, x16 y277 w270 h80, %Authors%
+		Gui, About:Add, Text, x16 y277 w270 h80, %Authors%
 
 		FirstTimeA = No
 	}
-
-	Gui, 2:Show, h340 w435, About..
+	
+	height := Globals.Get("AboutWindowHeight", 340)
+	width  := Globals.Get("AboutWindowWidth", 435)
+	Gui, About:Show, h%height% w%width%, About..
 
 	; Release counter animation
 	tmpH = 0
@@ -8354,8 +8358,8 @@ VisitForumsThread:
 	Run, https://www.pathofexile.com/forum/view-thread/1678678
 	return
 
-2ButtonClose:
-2GuiClose:
+AboutButtonClose:
+AboutGuiClose:
 	WinGet, AbtWndID, ID, About..
 	DllCall("AnimateWindow", "Int", AbtWndID, "Int", 500, "Int", 0x00090010)
 	WinActivate, ahk_id %MainWndID%
