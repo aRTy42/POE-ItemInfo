@@ -1,3 +1,6 @@
+  Pause::TogglePOEItemScript()				;pause item parsing with the pause key (other macros remain). key bind enabled by default.
+;  ^Escape::CloseScripts()					;closes all running scripts specified by (and including) ItemInfo or TradeMacro.
+  
 setAfkMessage(){		
 	T1 := A_Now
 	T2 := A_NowUTC

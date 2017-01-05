@@ -1,5 +1,17 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.6.0
+================================================================================================
+Reworked cookie deletion scripts to be more reliable.
+Improved error handling/feedback (CloudFlare bypass).
+Added shortcut to close the macro (optional, in AdditionalMacros.txt).
+Added tray menu option to show update notes.
+Added tray menu option to open the TradeMacro wiki/faq.
+Added tabs to the settings menu.
+Added checkbox to select all normal mods to advanced search.
+Added checkboxes to include "max-links/sockets = 4" to advanced search.
+Minor fixes and optimizations.
+
 1.5.0
 ================================================================================================
 Improved error handling/feedback (CloudFlare bypass).

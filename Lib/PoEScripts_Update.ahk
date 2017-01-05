@@ -32,7 +32,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 		} Catch e {			
 			html := HttpObj.ResponseText
 			If (TradeOpts.Debug) {
-				MsgBox % e
+				MsgBox, 16,, % "Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
 			}
 		}
 		
@@ -72,7 +72,11 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 			Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
 			
 			Loop, Parse, description, §
-				Gui, UpdateNotification:Add, Text, w320, % "- " A_LoopField
+			{
+				If(StrLen(A_LoopField) > 1) {
+					Gui, UpdateNotification:Add, Text, w320, % "- " A_LoopField				
+				}
+			}
 			
 			Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
 			Gui, UpdateNotification:Show, w400 xCenter yCenter, Update 
@@ -80,7 +84,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 			WinWaitClose, Update
 		}
 	} Catch e {
-		MsgBox % "Update-Check failed, Github is probably not available."
+		MsgBox,,, % "Update-Check failed, Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
 	}
 	Return
 }

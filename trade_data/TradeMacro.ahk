@@ -188,7 +188,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 
 	If (!Item.IsUnique) {		
-		preparedItem  := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)
+		preparedItem  := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)	
+		preparedItem.maxSockets := Item.maxSockets
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
 		
@@ -227,6 +228,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			
 			preparedItem :=
 			preparedItem := TradeFunc_GetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
+			preparedItem.maxSockets := Item.maxSockets
 			Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
 			
@@ -472,6 +474,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	; handle gems
 	If (Item.IsGem) {
 		RequestParams.xtype := Item.BaseType
+		RequestParams.xbase := Trim(RegExReplace(Item.Name, "i)support|superior", ""))
+		RequestParams.name := ""
 		If (TradeOpts.GemQualityRange > 0) {
 			RequestParams.q_min := Item.Quality - TradeOpts.GemQualityRange
 			RequestParams.q_max := Item.Quality + TradeOpts.GemQualityRange
@@ -2083,7 +2087,7 @@ TradeFunc_CreatePseudoMods(mods) {
 		If (RegExMatch(val.name, "i)elemental damage with weapons")) {
 			weaponEleDmg_Percent := weaponEleDmg_Percent + val.values[1]
 		}
-		If (RegExMatch(val.name, "i)spell", element)) {
+		If (RegExMatch(val.name, "i)spell", element) and RegExMatch(val.name, "i)damage", element) and not RegExMatch(val.name, "i)chance|multiplier", element)) {
 			spellDmg_Percent := spellDmg_Percent + val.values[1]
 		}
 	}
@@ -2728,6 +2732,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		TradeAdvancedParam%e%  		:= ChangedImplicit.param
 		TradeAdvancedIsImplicit%e%  := true
 	}
+	TradeAdvancedImplicitCount := e
 	
 	If (ChangedImplicit) {
 		Gui, SelectModsGui:Add, Text, x0 w700 yp+18 cc9cacd, %line% 
@@ -2736,6 +2741,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	;add mods	
 	l := 1
 	p := 1
+	TradeAdvancedNormalModCount := 0
 	ModNotFound := false
 	Loop % advItem.mods.Length() {
 		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
@@ -2844,11 +2850,14 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			p++
 			;change color if pseudo mod
 			color := "cGray"
-		}	
+		}
+		Else {
+			TradeAdvancedNormalModCount++
+		}
 		
 		state := modValue ? 0 : 1	
 		
-		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%  %color%									, % isPseudo ? "(pseudo) " . displayName : displayName
+		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%  %color% vTradeAdvancedModName%index%			, % isPseudo ? "(pseudo) " . displayName : displayName
 		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w40 vTradeAdvancedModMin%index% r1 Disabled%state% 	, % modValueMin
 		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen                  		 				, % (advItem.mods[A_Index].ranges[1]) ? minLabelFirst : ""
 		Gui, SelectModsGui:Add, Text, x+10 yp+0       w45 r1     		                         		, % TradeUtils.ZeroTrim(modValue)
@@ -2856,7 +2865,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen 			                       		, % (advItem.mods[A_Index].ranges[1]) ? maxLabelFirst : ""
 		checkEnabled := ErrorMsg ? 0 : 1
 		If (checkEnabled) {
-			Gui, SelectModsGui:Add, CheckBox, x+10 yp+1       vTradeAdvancedSelected%index%	
+			Gui, SelectModsGui:Add, CheckBox, x+10 yp+1 vTradeAdvancedSelected%index%	
 		}
 		Else {
 			GUI, SelectModsGui:Add, Picture, x+10 yp+1 hwndErrorPic 0x0100, %A_ScriptDir%\trade_data\error.png
@@ -2870,30 +2879,42 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	}
 	
 	m := 1	
-	;If (Sockets >= 5 or Links >= 5) {
-	If (true) {
-		If (advItem.mods.Length()) {
-			Gui, SelectModsGui:Add, Text, x0 w700 y+5 cc9cacd, %line% 	
-		}		
-				
-		If (Sockets >= 5) {
-			m++
-			text := "Sockets: " . Trim(Sockets)
-			Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets     , % text
-		}
-		If (Links >= 5) {
-			offset := (m > 1 ) ? "+15" : "15"
-			m++
-			text := "Links:  " . Trim(Links)
-			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks Checked, % text
-		}
-		
-		offsetX := (m = 1)  ? "15" : "+15"
-		offsetY := (m = 1) ? "20" : "+0"
-		Gui, SelectModsGui:Add, CheckBox, x%offsetX% yp%offsetY% vTradeAdvancedSelectedILvl , % "Item Level (min)"
-		Gui, SelectModsGui:Add, Edit    , x+5 yp-3 w30 vTradeAdvancedMinILvl , % ""
-		Gui, SelectModsGui:Add, CheckBox, x+15 yp+3 vTradeAdvancedSelectedItemBase , % "Include Item Base"		
+
+	; Links and Sockets
+	If (advItem.mods.Length()) {
+		Gui, SelectModsGui:Add, Text, x0 w700 y+5 cc9cacd, %line% 	
+	}		
+			
+	If (Sockets >= 5) {
+		m++
+		text := "Sockets: " . Trim(Sockets)
+		Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets     , % text
 	}
+	Else If (Sockets <= 4 and advItem.maxSockets > 4) {
+		m++
+		text := "Sockets (max): 4"
+		Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSocketsMaxFour, % text
+	}
+	
+	If (Links >= 5) {
+		offset := (m > 1 ) ? "+15" : "15"
+		m++
+		text := "Links:  " . Trim(Links)
+		Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks Checked, % text
+	}
+	Else If (Links <= 4 and advItem.maxSockets > 4) {
+		offset := (m > 1 ) ? "+15" : "15"
+		m++
+		text := "Links (max): 4"
+		Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour Checked, % text
+	}
+	
+	offsetX := (m = 1)  ? "15" : "+15"
+	offsetY := (m = 1) ? "20" : "+0"
+	Gui, SelectModsGui:Add, CheckBox, x%offsetX% yp%offsetY% vTradeAdvancedSelectedILvl , % "Item Level (min)"
+	Gui, SelectModsGui:Add, Edit    , x+5 yp-3 w30 vTradeAdvancedMinILvl , % ""
+	Gui, SelectModsGui:Add, CheckBox, x+15 yp+3 vTradeAdvancedSelectedItemBase , % "Include Item Base"		
+	
 	
 	Item.UsedInSearch.SearchType := "Advanced"
 	; closes this window and starts the search
@@ -2902,19 +2923,45 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	
 	; open search on poe.trade instead
 	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Op&en on poe.trade
-	Gui, SelectModsGui:Add, Text, x+20 yp+5 cGray, (Pro-Tip: Use Alt + S/E to submit a button)
+	
+	; add some widths and margins to align the checkox with the others on the right side
+	RightPos := xPosMin + 40 + 5 + 45 + 10 + 45 + 10 + 40 + 5 + 45 + 10
+	RightPosText := RightPos - 100
+	Gui, SelectModsGui:Add, Text, x%RightPosText% yp+5, Check normal mods
+	Gui, SelectModsGui:Add, CheckBox, x%RightPos% yp+0 vTradeAdvancedSelectedCheckAllMods gAdvancedCheckAllMods, % ""
 	
 	If (ModNotFound) {
-		Gui, SelectModsGui:Add, Picture, x10 y+12, %A_ScriptDir%\trade_data\error.png
+		Gui, SelectModsGui:Add, Picture, x10 y+16, %A_ScriptDir%\trade_data\error.png
 		Gui, SelectModsGui:Add, Text, x+10 yp+2 cRed,One or more mods couldn't be found on poe.trade
 	}
-	Gui, SelectModsGui:Add, Text, x10 y+10 cGreen, Please support poe.trade by visiting without adblocker
-	Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://poe.trade">visit</a>    		
+	Gui, SelectModsGui:Add, Text, x10 y+14 cGreen, Please support poe.trade by disabling adblock
+	Gui, SelectModsGui:Add, Link, x+5 yp+0 cBlue, <a href="https://poe.trade">visit</a>    
+	Gui, SelectModsGui:Add, Text, x+10 yp+0 cGray, (Use Alt + S/E to submit a button)
 
 	windowWidth := modGroupBox + 40 + 5 + 45 + 10 + 45 + 10 +40 + 5 + 45 + 10 + 65
-	windowWidth := (windowWidth > 500) ? windowWidth : 500
+	windowWidth := (windowWidth > 510) ? windowWidth : 510
 	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search
 }
+
+AdvancedCheckAllMods:
+	ImplicitCount := TradeAdvancedIsImplicit1 ? 1 : 0
+	ImplicitCount := TradeAdvancedImplicitCount
+	EmptySelect := 0
+	GuiControlGet, IsChecked, SelectModsGui:, TradeAdvancedSelectedCheckAllMods
+	Loop, 20 {
+		If ((A_Index) > (TradeAdvancedNormalModCount + ImplicitCount + EmptySelect) or (ImplicitCount = A_Index)) {
+			continue
+		}
+		Else {
+			state := IsChecked ? 1 : 0
+			GuiControl, SelectModsGui:, TradeAdvancedSelected%A_Index%, %state%	
+			GuiControlGet, TempModName, SelectModsGui:, TradeAdvancedModName%A_Index%
+			If (StrLen(TempModName) < 1) {
+				EmptySelect++
+			}
+		}
+	}
+Return
 
 AdvancedPriceCheckSearch:	
 	TradeFunc_HandleGuiSubmit()
@@ -2929,11 +2976,12 @@ return
 TradeFunc_ResetGUI(){
 	Global 
 	Loop {
-		If (TradeAdvancedModMin%A_Index%) {
+		If (TradeAdvancedModMin%A_Index% or TradeAdvancedParam%A_Index%) {
 			TradeAdvancedParam%A_Index%	:=
 			TradeAdvancedSelected%A_Index%:=
 			TradeAdvancedModMin%A_Index%	:=
 			TradeAdvancedModMax%A_Index%	:=
+			TradeAdvancedModName%A_Index%	:=
 		}
 		Else If (A_Index >= 20){
 			TradeAdvancedStatCount :=
@@ -2942,7 +2990,7 @@ TradeFunc_ResetGUI(){
 	}
 	
 	Loop {
-		If (TradeAdvancedStatMin%A_Index%) {
+		If (TradeAdvancedStatMin%A_Index% or TradeAdvancedStatParam%A_Index%) {
 			TradeAdvancedStatParam%A_Index%	:=
 			TradeAdvancedStatSelected%A_Index%	:=
 			TradeAdvancedStatMin%A_Index%		:=
@@ -2959,6 +3007,9 @@ TradeFunc_ResetGUI(){
 	TradeAdvancedSelectedILvl	:=
 	TradeAdvancedMinILvl		:=
 	TradeAdvancedSelectedItemBase	:=
+	TradeAdvancedSelectedCheckAllMods	:=
+	TradeAdvancedImplicitCount	:=
+	TradeAdvancedNormalModCount	:=
 }
 
 TradeFunc_HandleGuiSubmit(){
@@ -3056,6 +3107,15 @@ class TradeUtils {
 		Return Trim(in)
 	}
 	
+	
+	Arr_concatenate(p*) {
+		res := Object()
+		For each, obj in p
+			For each, value in obj
+				res.Insert(value)
+		return res
+	}
+	
 	; ------------------------------------------------------------------------------------------------------------------ ;
 	; TradeUtils.StrX Function for parsing html, see simple example usage at https://gist.github.com/thirdy/9cac93ec7fd947971721c7bdde079f94
 	; ------------------------------------------------------------------------------------------------------------------ ;
@@ -3143,7 +3203,7 @@ OverwriteSettingsWidthTimer:
 	o := Globals.Get("SettingsUIWidth")
 
 	If (o) {
-		Globals.Set("SettingsUIWidth", 1085)
+		Globals.Set("SettingsUIWidth", 543)
 		SetTimer, OverwriteSettingsWidthTimer, Off
 	}	
 Return
@@ -3152,8 +3212,37 @@ OverwriteSettingsHeightTimer:
 	o := Globals.Get("SettingsUIHeight")
 
 	If (o) {
-		Globals.Set("SettingsUIHeight", 750)
+		Globals.Set("SettingsUIHeight", 725)
 		SetTimer, OverwriteSettingsHeightTimer, Off
+	}	
+Return
+
+OverwriteAboutWindowSizesTimer:
+	o := Globals.Get("AboutWindowHeight")
+	l := Globals.Get("AboutWindowWidth")
+
+	If (o and l) {
+		Globals.Set("AboutWindowHeight", 400)
+		Globals.Set("AboutWindowWidth", 880)
+		TradeFunc_CreateTradeAboutWindow()
+		SetTimer, OverwriteAboutWindowSizesTimer, Off
+	}
+
+Return
+
+ChangeScriptListsTimer:
+	o := Globals.Get("ScriptList")
+	l := Globals.Get("UpdateNoteFileList")
+
+	If (o and l and m) {
+		o.push(A_ScriptDir "\main")
+		o.push(A_ScriptDir "\PoE-TradeMacro_(Fallback)")
+		Global.Set("ScriptList", o)
+		
+		l.push([A_ScriptDir "\TradeUpdates.txt","TradeMacro"])
+		Global.Set("UpdateNoteFileList", l)
+
+		SetTimer, ChangeScriptListsTimer, Off
 	}	
 Return
 
@@ -3168,12 +3257,19 @@ OverwriteSettingsNameTimer:
 		Menu, Tray, UseErrorLevel
 		Menu, Tray, Rename, % OldMenuTrayName, % NewMenuTrayName
 		If (ErrorLevel = 0) {		
-			Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico		
+			Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico	
+			Globals.Set("SettingsUITitle", TradeGlobals.Get("SettingsUITitle"))
 			SetTimer, OverwriteSettingsNameTimer, Off
 		}
-		Menu, Tray, UseErrorLevel, off		
+		Menu, Tray, UseErrorLevel, off			
 	}	
 Return
+
+OpenGithubWikiFromMenu:
+	repo := TradeGlobals.Get("GithubRepo")
+	user := TradeGlobals.Get("GithubUser")
+	TradeFunc_OpenUrlInBrowser("https://github.com/" user "/" repo "/wiki")
+return
 
 TradeSettingsUI_BtnOK:
 	Global TradeOpts
@@ -3239,4 +3335,14 @@ DeleteCookies:
 	TradeFunc_ClearWebHistory()
 	Run, Run_only_This.ahk
 	ExitApp
+Return
+
+TradeAboutDlg_GitHub:
+	repo := TradeGlobals.Get("GithubRepo")
+	user := TradeGlobals.Get("GithubUser")
+	TradeFunc_OpenUrlInBrowser("https://github.com/" user "/" repo)
+Return
+
+TradeVisitForumsThread:
+	TradeFunc_OpenUrlInBrowser("https://www.pathofexile.com/forum/view-thread/1757730")
 Return
