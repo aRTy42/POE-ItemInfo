@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.6.2
+================================================================================================
+Hotfix - added check to skip cloudflare bypass/cookie fetching if not necessary.
+(messed up the versioning)
+
 1.6.1
 ================================================================================================
 Hotfix - added check to skip cloudflare bypass/cookie fetching if not necessary.
