@@ -144,7 +144,7 @@ TradeGlobals.Set("EnchantmentData", TradeFunc_ReadEnchantments())
 TradeGlobals.Set("CorruptedModsData", TradeFunc_ReadCorruptions())
 TradeGlobals.Set("CurrencyIDs", object := {})
 
-TradeFunc_ReadCookieData()
+TradeFunc_CheckIfCloudFlareBypassNeeded()
 ; get currency ids from currency.poe.trade
 TradeFunc_DoCurrencyRequest("", false, true)
 If (TradeOpts.DownloadDataFiles and not TradeOpts.Debug) {
@@ -999,6 +999,14 @@ TradeFunc_DownloadDataFiles() {
 	FileDelete, %dir%\*.bak	
 }
 
+TradeFunc_CheckIfCloudFlareBypassNeeded() {
+	; call this function without parameters to access poe.trade without cookies
+	; if it succeeds we don't need any cookies
+	If (TradeFunc_TestCloudflareBypass("https://poe.trade")) {
+		TradeFunc_ReadCookieData()
+	}
+}
+
 TradeFunc_ReadCookieData() {
 	If (!TradeOpts.UseManualCookies) {
 		SplashTextOn, 500, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`na few seconds if your Internet Explorer doesn't have the cookies cached.
@@ -1078,7 +1086,7 @@ TradeFunc_ReadCookieData() {
 	
 	; test connection to poe.trade
 	If (!ErrorLevel) { 
-		If (!TradeFunc_TestCloudflareBypass("http://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"))) {
+		If (!TradeFunc_TestCloudflareBypass("http://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"), true)) {
 			BypassFailed := 1
 		}
 	}
@@ -1086,11 +1094,12 @@ TradeFunc_ReadCookieData() {
 	SplashTextOff		
 	If (ErrorLevel or BypassFailed or CompiledExeNotFound) {
 		; collect debug information
+		ScriptVersion := TradeGlobals.Get("RelVersion")
 		CookieFile := (!CookieFileNotFound) ? "Cookie file found." : "Cookie file not found."
 		Cookies := (!ErrorLevel) ? "Retrieving cookies successful." : "Retrieving cookies failed."
 		OSInfo := TradeFunc_GetOSInfo()
 		Compilation := (!CompiledExeNotFound) ? "Compiling 'getCookieData' script successful." : "Compiling 'getCookieData' script failed."
-		NetFramework := "Net Framework used for compiling: v" DotNetFrameworkInstallation.Number 
+		NetFramework := DotNetFrameworkInstallation.Number  ? "Net Framework used for compiling: v" DotNetFrameworkInstallation.Number : "Using manual cookies"
 		RegRead, IEVersion, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\Internet Explorer, svcVersion
 		If (!IEVersion) {
 			RegRead, IEVersion, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\Internet Explorer\Version Vector, IE
@@ -1139,7 +1148,8 @@ TradeFunc_ReadCookieData() {
 		Gui, CookieWindow:Add, Link, cBlue, Take a look at the <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/FAQ">FAQ</a>.
 		Gui, CookieWindow:Add, Link, cBlue, Report on <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Github</a>, <a href="https://discord.gg/taKZqWw">Discord</a>, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">the forum</a>.
 		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
-		Gui, CookieWindow:Add, Edit, r5 ReadOnly w430, %CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
+		Gui, CookieWindow:Add, Edit, r6 ReadOnly w430, %ScriptVersion% `n%CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
+		Gui, CookieWindow:Add, Text, , Continue the script to access the settings menu.
 		If (!TradeOpts.UseManualCookies) {
 			Gui, CookieWindow:Add, Button, y+10 gOpenCookieFile, Open cookie file
 			Gui, CookieWindow:Add, Button, yp+0 x+10 gCloseCookieWindow, Continue
@@ -1225,14 +1235,16 @@ TradeFunc_GetLatestDotNetInstallation() {
 	Return LatestDotNetInstall
 }
 
-TradeFunc_TestCloudflareBypass(Url, UserAgent, cfduid, cfClearance) {
+TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", useCookies=false) {
 	ComObjError(0)
 	Encoding := "utf-8"
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	
 	HttpObj.Open("GET",Url)
-	HttpObj.SetRequestHeader("User-Agent", UserAgent)
-	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
+	If (useCookies) {
+		HttpObj.SetRequestHeader("User-Agent", UserAgent)
+		HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
+	}	
 	HttpObj.Send()
 	HttpObj.WaitForResponse()
 
