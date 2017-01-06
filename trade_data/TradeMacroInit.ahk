@@ -1021,10 +1021,10 @@ TradeFunc_ReadCookieData() {
 		CompilerExe := "csc.exe"
 		
 		If (TradeOpts.Debug) {
-			RunWait %comspec% /c "chcp 1251 & "%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs""
+			RunWait %comspec% /c "chcp 1251 & "%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\lib\getCookieData.cs""
 		}
 		Else {
-			RunWait %comspec% /c "chcp 1251 & "%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\Lib\getCookieData.cs"", , Hide
+			RunWait %comspec% /c "chcp 1251 & "%DotNetFrameworkPath%%CompilerExe%" /target:exe  /out:"%A_ScriptDir%\temp\getCookieData.exe" "%A_ScriptDir%\lib\getCookieData.cs"", , Hide
 		}
 		
 		Try {		
