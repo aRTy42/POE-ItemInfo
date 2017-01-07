@@ -336,7 +336,6 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Item.UsedInSearch.Sockets := ItemData.Sockets
 		}	
 		; handle item links
-
 		If (s.UseLinks) {
 			RequestParams.link_min := ItemData.Links
 			Item.UsedInSearch.Links := ItemData.Links
@@ -384,7 +383,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		; xbase = Item.TypeName (Eternal Burgonet)
 
 		;If desired crafting base and not isAdvancedPriceCheckRedirect		
-		If (isCraftingBase and not Enchantment and not Corruption and not isAdvancedPriceCheckRedirect) {		
+		If (isCraftingBase and not Enchantment.param and not Corruption.param and not isAdvancedPriceCheckRedirect) {		
 			RequestParams.xbase := Item.TypeName
 			Item.UsedInSearch.ItemBase := Item.TypeName
 			; If highest item level needed for crafting
@@ -392,14 +391,14 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 				RequestParams.ilvl_min := hasHighestCraftingILvl
 				Item.UsedInSearch.iLvl.min := hasHighestCraftingILvl
 			}			
-		} Else If (Enchantment and not isAdvancedPriceCheckRedirect) {
+		} Else If (Enchantment.param and not isAdvancedPriceCheckRedirect) {
 			modParam := new _ParamMod()
 			modParam.mod_name := Enchantment.param
 			modParam.mod_min  := Enchantment.min
 			modParam.mod_max  := Enchantment.max
 			RequestParams.modGroup.AddMod(modParam)	
 			Item.UsedInSearch.Enchantment := true
-		} Else If (Corruption and not isAdvancedPriceCheckRedirect) {			
+		} Else If (Corruption.param and not isAdvancedPriceCheckRedirect) {			
 			modParam := new _ParamMod()
 			modParam.mod_name := Corruption.param
 			modParam.mod_min  := (Corruption.min) ? Corruption.min : ""
@@ -413,6 +412,23 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
 		Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType
 	}			
+	
+	If (TradeOpts.debug) {
+		uniq := Item.IsUnique ? "Yes" : "No"
+		console.log("Is unique: " uniq)
+		ench := Enchantment.param ? "Yes" : "No"
+		console.log("Has enchantment: " ench " - " Enchantment.param)
+		If (ench == "Yes") {
+			enchused := Item.UsedInSearch.Enchantment ? "Yes" : "No"
+			console.log("Enchantment used in search: " enchused)	
+		}
+		corr := Corruption.param ? "Yes" : "No"
+		console.log("Has corruption: " corr " - " Corruption.param)
+		If (corr == "Yes") {
+			corrused := Item.UsedInSearch.CorruptedMod ? "Yes" : "No"
+			console.log("Enchantment used in search: " corrused)	
+		}
+	}
 	
 	; don't overwrite advancedItemPriceChecks decision to inlucde/exclude sockets/links
 	If (not isAdvancedPriceCheckRedirect) {
@@ -616,6 +632,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	; reset Item and ItemData after search
 	Item := {}
 	ItemData := {}
+	TradeGlobals.Set("AdvancedPriceCheckItem", {})
 }
 
 ; parse items defense stats
@@ -3010,6 +3027,8 @@ TradeFunc_ResetGUI(){
 	TradeAdvancedSelectedCheckAllMods	:=
 	TradeAdvancedImplicitCount	:=
 	TradeAdvancedNormalModCount	:=
+	
+	TradeGlobals.Set("AdvancedPriceCheckItem", {})
 }
 
 TradeFunc_HandleGuiSubmit(){

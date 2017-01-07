@@ -1,13 +1,17 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.6.3
+================================================================================================
+Fixed a bug where making an advanced search could influence the parameters used in the following normal searches.
+
 1.6.2
 ================================================================================================
-Hotfix - added check to skip cloudflare bypass/cookie fetching if not necessary.
-(messed up the versioning)
+Hotfix - added check to skip cloudflare bypass/cookie fetching if not neccessary.
+Fixed the messed up the versioning.
 
 1.6.1
 ================================================================================================
-Hotfix - added check to skip cloudflare bypass/cookie fetching if not necessary.
+Hotfix - added check to skip cloudflare bypass/cookie fetching if not neccessary.
 
 1.6.0
 ================================================================================================
