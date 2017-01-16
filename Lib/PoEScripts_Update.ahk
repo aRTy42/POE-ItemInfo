@@ -84,7 +84,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 			WinWaitClose, Update
 		}
 	} Catch e {
-		MsgBox % "Update-Check failed, Github is probably not available."
+		MsgBox,,, % "Update-Check failed, Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
 	}
 	Return
 }
