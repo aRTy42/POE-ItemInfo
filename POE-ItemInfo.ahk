@@ -156,6 +156,8 @@ If (A_AhkVersion <= AHKVersionRequired)
 }
 
 #Include %A_ScriptDir%\data\Messages.txt
+IfNotExist, %A_ScriptDir%\temp
+	FileCreateDir, %A_ScriptDir%\temp
 
 ; Instead of polluting the default namespace with Globals, create our own Globals "namespace".
 class Globals {
