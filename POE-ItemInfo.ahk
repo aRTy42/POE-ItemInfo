@@ -146,6 +146,7 @@ GroupAdd, PoEexe, ahk_exe PathOfExile_x64.exe
 GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 
 #Include %A_ScriptDir%\data\Version.txt
+#Include, %A_ScriptDir%\lib\JSON.ahk
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
 If (A_AhkVersion <= AHKVersionRequired)
@@ -573,6 +574,7 @@ Menu, Tray, Icon, %A_ScriptDir%\data\poe-bw.ico
 ReadConfig()
 Sleep, 100
 CreateSettingsUI()
+GoSub, FetchCurrencyData
 
 Menu, TextFiles, Add, User Settings Folder, EditOpenUserSettings
 Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
@@ -6052,8 +6054,8 @@ ParseSockets(ItemDataText)
 ; TODO: find a way to poll this date from the web!
 
 ; Converts a currency stack to Chaos by looking up the
-; conversion ratio from CurrencyRates.txt
-ConvertCurrency(ItemName, ItemStats)
+; conversion ratio from CurrencyRates.txt or downloaded ratios from poe.ninja
+ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 {
 	If (InStr(ItemName, "Shard"))
 	{
@@ -6077,25 +6079,83 @@ ConvertCurrency(ItemName, ItemStats)
 		SetFormat, FloatFast, 5.2
 		StackSize := RegExReplace(StackSizeParts1, "i)[^0-9a-z]")
 	}
-	ValueInChaos := 0
-	Loop, Read, %A_ScriptDir%\data\CurrencyRates.txt
+	
+	; Update currency rates from poe.ninja
+	last := Globals.Get("LastCurrencyUpdate")
+	now  := A_NowUTC
+	diff := now - last
+	If (diff > 1800 or !last) {
+		GoSub, FetchCurrencyData
+	}
+	
+	; Use downloaded currency rates if they exist, otherwise use hardcoded fallback 
+	fallback   := A_ScriptDir . "\data\CurrencyRates.txt"
+	ninjaRates := [A_ScriptDir . "\temp\CurrencyRates_Standard.txt", A_ScriptDir . "\temp\CurrencyRates_Hardcore.txt", A_ScriptDir . "\temp\CurrencyRates_tmpstandard.txt", A_ScriptDir . "\temp\CurrencyRates_tmphardcore.txt"]
+	result := []
+	
+	Loop, % ninjaRates.Length() 
 	{
-		Line := StripLineCommentRight(A_LoopReadLine)
-		If (SkipLine(Line))
+		dataSource := "Currency rates powered by poe.ninja`n"
+		If (FileExist(ninjaRates[A_Index])) 
 		{
-			Continue
-		}
-		IfInString, Line, %ItemName%
-		{
-			StringSplit, LineParts, Line, |
-			ChaosRatio := LineParts2
-			StringSplit, ChaosRatioParts,ChaosRatio, :
-			ChaosMult := ChaosRatioParts2 / ChaosRatioParts1
-			ValueInChaos := (ChaosMult * StackSize)
-			return ValueInChaos
+			ValueInChaos := 0
+			leagueName := ""
+			file := ninjaRates[A_Index]
+			Loop, Read, %file%
+			{			
+				Line := Trim(A_LoopReadLine)
+				RegExMatch(Line, "i)^;(.*)", match)
+				If (match) {
+					leagueName := match1 . ": "
+					Continue
+				}
+				
+				IfInString, Line, %ItemName%
+				{
+					StringSplit, LineParts, Line, |
+					ChaosRatio := LineParts2
+					StringSplit, ChaosRatioParts,ChaosRatio, :
+					ChaosMult := ChaosRatioParts2 / ChaosRatioParts1
+					ValueInChaos := (ChaosMult * StackSize)
+				}
+			}
+			
+			If (ValueInChaos) {
+				tmp := [leagueName, ValueInChaos]
+				result.push(tmp)
+			}
 		}
 	}
-	return ValueInChaos
+	
+	; fallback - condition : no results found so far
+	If (!result.Length()) {
+		ValueInChaos := 0
+		dataSource := "Fallback <\data\CurrencyRates.txt>`n"
+		leagueName := "Hardcoded rates: "
+
+		Loop, Read, %fallback%
+		{
+			Line := StripLineCommentRight(A_LoopReadLine)
+			If (SkipLine(Line))
+			{
+				Continue
+			}
+			IfInString, Line, %ItemName%
+			{
+				StringSplit, LineParts, Line, |
+				ChaosRatio := LineParts2
+				StringSplit, ChaosRatioParts,ChaosRatio, :
+				ChaosMult := ChaosRatioParts2 / ChaosRatioParts1
+				ValueInChaos := (ChaosMult * StackSize)
+			}
+		}
+		If (ValueInChaos) {
+			tmp := [leagueName, ValueInChaos]
+			result.push(tmp)
+		}
+	}
+	
+	return result
 }
 
 FindUnique(ItemName)
@@ -6435,12 +6495,18 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
 		If (Item.IsCurrency and Opts.ShowCurrencyValueInChaos == 1)
 		{
-			ValueInChaos := ConvertCurrency(Item.Name, ItemData.Stats)
-			If (ValueInChaos)
+			dataSource := ""
+			ValueInChaos := ConvertCurrency(Item.Name, ItemData.Stats, dataSource)
+			If (ValueInChaos.Length() and not Item.Name == "Chaos Orb")
 			{
-				CurrencyDetails := ValueInChaos . " Chaos"
+				CurrencyDetails := "`n" . dataSource
+				Loop, % ValueInChaos.Length() 
+				{
+					CurrencyDetails .= ValueInChaos[A_Index][1] . "" . ValueInChaos[A_Index][2] . " Chaos`n"
+				}
 			}
 		}
+		
 		; Don't do this on Divination Cards or this script crashes on trying to do the ParseItemLevel
 		Else If (Not Item.IsCurrency and Not Item.IsDivinationCard)
 		{
@@ -8390,6 +8456,86 @@ UnhandledDlg_ShowItemText:
 UnhandledDlg_OK:
 	Gui, 3:Submit
 	return
+	
+FetchCurrencyData:
+	CurrencyDataJSON := {}
+	currencyLeagues := ["Standard", "Hardcore", "tmpstandard", "tmphardcore"]
+	
+	Loop, % currencyLeagues.Length() {
+		currencyLeague := currencyLeagues[A_Index]
+		url  := "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . currencyLeague
+		file := A_ScriptDir . "\temp\currencyData_" . currencyLeague . ".json"
+		UrlDownloadToFile, %url% , %file%
+
+		Try {
+			If (FileExist(file)) {
+				FileRead, JSONFile, %file%
+				parsedJSON := JSON.Load(JSONFile)				
+				CurrencyDataJSON[currencyLeague] := parsedJSON.lines
+				ParsedAtLeastOneLeague := True
+			}
+			Else	{
+				CurrencyDataJSON[currencyLeague] := null
+			}
+		} Catch error {
+			errorMsg := "Parsing the currency data (json) from poe.ninja failed for league:"
+			errorMsg .= "`n" currencyLeague 
+			;MsgBox, 16, PoE-ItemInfo - Error, %errorMsg%
+		}
+	}
+	
+	If (ParsedAtLeastOneLeague) {
+		Globals.Set("LastCurrencyUpdate", A_NowUTC)
+	}
+	
+	; parse JSON and write files to disk (like \data\CurrencyRates.txt)
+	For league, data in CurrencyDataJSON {
+		ratesFile := A_ScriptDir . "\temp\currencyRates_" . league . ".txt"
+		ratesJSONFile := A_ScriptDir . "\temp\currencyData_" . league . ".json"
+		FileDelete, %ratesFile% 
+		FileDelete, %ratesJSONFile% 
+		
+		If (league == "tmpstandard" or league == "tmphardcore" ) {
+			comment := InStr(league, "standard") ? ";Standard Challenge League`n" : ";Hardcore Challenge League`n"
+		}
+		Else {
+			comment := ";" . league . " League`n"
+		}
+		FileAppend, %comment%, %ratesFile%
+		
+		Loop, % data.Length() {
+			cName       := data[A_Index].currencyTypeName
+			cChaosEquiv := data[A_Index].chaosEquivalent
+			
+			If (cChaosEquiv >= 1) {
+				cChaosQuantity := ZeroTrim(Round(cChaosEquiv, 2))
+				cOwnQuantity   := 1
+			}
+			Else {
+				cChaosQuantity := 1 
+				cOwnQuantity   := ZeroTrim(Round(1 / cChaosEquiv, 2))
+			}			
+			
+			result := cName . "|" . cOwnQuantity . ":" . cChaosQuantity . "`n"
+			FileAppend, %result%, %ratesFile%
+		}
+	}
+	
+	CurrencyDataJSON :=
+Return
+
+ZeroTrim(number) {
+	; Trim trailing zeros from numbers
+	
+	RegExMatch(number, "(\d+)\.?(.+)?", match)
+	If (StrLen(match2) < 1) {
+		Return number
+	} Else {
+		trail := RegExReplace(match2, "0+$", "")
+		number := (StrLen(trail) > 0) ? match1 "." trail : match1
+		Return number
+	}
+}
 
 TogglePOEItemScript()
 {

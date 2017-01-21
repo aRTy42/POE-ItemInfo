@@ -1,32 +1,40 @@
-; Data from http://www.poepro.net/currency/#more-259, http://exilestats.com/ex, ingame trade chat
+; Data from http://poe.ninja
 ; Preloaded with standard league rates.
 ; Adjust these to reflect current rates in your league.
 ; The base currency item is Orb of Chaos.
 ; The format is <exact name to match>|<number of source orbs>:<number of chaos orbs>
 ; Comments with semicolon. Blank lines will be ignored.
-; Last updated (manually): 2015-03-19
-Scroll of Wisdom|250:1
-Portal Scroll|200:1
-Armourer's Scrap|40:1
-Orb of Transmutation|40:1
-Orb of Augmentation|30:1
-Blacksmith's Whetstone|30:1
-Chromatic Orb|14.25:1
-Orb of Alteration|12:1
-Jeweller's Orb|7.25:1
-Orb of Chance|7:1
-Cartographer's Chisel|3:1
-Glassblower's Bauble|10:1
-Orb of Fusing|2:1
-Orb of Alchemy|2.5:1
-Orb of Scouring|2:1
-Blessed Orb|1.3:1
-Chaos Orb|1:1
+; Last updated (manually): 2017-01-21
+Exalted Orb|1:88.52
+Blessing of Tul|1:24.5
+Divine Orb|1:21
+Blessing of Xoph|1:20
+Master Cartographer's Sextant|1:6.25
+Splinter of Uul-Netol|1:2.8
+Journeyman Cartographer's Sextant|1:2.62
+Splinter of Tul|1:1.8
+Splinter of Esh|1:1.8
+Orb of Regret|1:1.4
+Gemcutter's Prism|1:1.17
 Vaal Orb|1:1
-Orb of Regret|1:1.5
-Regal Orb|1:1.75
-Gemcutter's Prism|1:2.75
-Divine Orb|1:9
-Exalted Orb|1:39
-Eternal Orb|1:91
-Mirror of Kalandra|1:2500
+Regal Orb|1.1:1
+Apprentice Cartographer's Sextant|1.22:1
+Orb of Scouring|1.41:1
+Splinter of Xoph|2.08:1
+Orb of Fusing|2.86:1
+Orb of Alchemy|3.33:1
+Cartographer's Chisel|3.33:1
+Orb of Chance|4.17:1
+Blessed Orb|4.55:1
+Silver Coin|8.33:1
+Jeweller's Orb|11.11:1
+Orb of Alteration|12.5:1
+Chromatic Orb|12.5:1
+Glassblower's Bauble|14.29:1
+Orb of Augmentation|50:1
+Perandus Coin|100:1
+Orb of Transmutation|100:1
+Portal Scroll|100:1
+Blacksmith's Whetstone|100:1
+Armourer's Scrap|100:1
+Mirror of Kalandra|18000:1
