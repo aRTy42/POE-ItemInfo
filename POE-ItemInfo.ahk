@@ -6335,6 +6335,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsMapFragment := False
 	Item.IsEssence := False
 	Item.SubType := ""
+	Item.Implicit := ""
 
 	ResetAffixDetailVars()
 
