@@ -1991,7 +1991,7 @@ AdjustValueForQuality(Value, ItemQuality, Direction="up")
 ; down from quality increase (to get the original value back)
 AdjustRangeForQuality(ValueRange, ItemQuality, Direction="up")
 {
-	If (ItemQuality = 0)
+	If (ItemQuality == 0)
 	{
 		return ValueRange
 	}
