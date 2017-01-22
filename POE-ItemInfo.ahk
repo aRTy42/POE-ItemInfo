@@ -468,42 +468,55 @@ class ItemData_ {
 ItemData := new ItemData_()
 
 class Item {
-	Name := ""
-	TypeName := ""
-	Quality := ""
-	BaseLevel := ""
-	RarityLevel := ""
-	BaseType := ""
-	SubType := ""
-	GripType := ""
-	Level := ""
-	MapLevel := ""
-	MaxSockets := ""
-	IsUnidentified := ""
-	IsCorrupted := ""
-	IsGem := ""
-	IsCurrency := ""
-	IsUnique := ""
-	IsRare := ""
-	IsBow := ""
-	IsFlask := ""
-	IsBelt := ""
-	IsRing := ""
-	IsUnsetRing := ""
-	IsAmulet := ""
-	IsTalisman := ""
-	IsJewel := ""
-	IsDivinationCard := ""
-	IsSingleSocket := ""
-	IsFourSocket := ""
-	IsThreeSocket := ""
-	IsQuiver := ""
-	IsWeapon := ""
-	IsMap := ""
-	IsMirrored := ""
-	HasEffect := ""
+	; Initialize all the Item object attributes to default values
+	Init()
+	{
+		This.Name := ""
+		This.TypeName := ""
+		This.Quality := ""
+		This.BaseLevel := ""
+		This.RarityLevel := ""
+		This.BaseType := ""
+		This.GripType := ""
+		This.Level := ""
+		This.MapLevel := ""
+		This.MaxSockets := ""
+		This.SubType := ""
+		This.Implicit := ""
+		
+		This.HasImplicit := False
+		This.HasEffect := False
+		This.IsWeapon := False
+		This.IsArmour := False
+		This.IsQuiver := False
+		This.IsFlask := False
+		This.IsGem := False
+		This.IsCurrency := False
+		This.IsUnidentified := False
+		This.IsBelt := False
+		This.IsRing := False
+		This.IsUnsetRing := False
+		This.IsBow := False
+		This.IsAmulet := False
+		This.IsSingleSocket := False
+		This.IsFourSocket := False
+		This.IsThreeSocket := False
+		This.IsMap := False
+		This.IsTalisman := False
+		This.IsJewel := False
+		This.IsDivinationCard := False
+		This.IsUnique := False
+		This.IsRare := False
+		This.IsCorrupted := False
+		This.IsMirrored := False
+		This.IsMapFragment := False
+		This.IsEssence := False
+		
+		This.DamageDetails := {}
+	}
 }
 Item := new Item()
+Item.Init()
 
 class AffixTotals_ {
 
@@ -6368,36 +6381,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	RarityLevel =
 	TempResult =
 
-	Item.DamageDetails := {}
-	Item.IsWeapon := False
-	Item.IsArmour := False
-	Item.IsQuiver := False
-	Item.IsFlask := False
-	Item.IsGem := False
-	Item.IsCurrency := False
-	Item.IsUnidentified := False
-	Item.IsBelt := False
-	Item.IsRing := False
-	Item.IsUnsetRing := False
-	Item.IsBow := False
-	Item.IsAmulet := False
-	Item.IsSingleSocket := False
-	Item.IsFourSocket := False
-	Item.IsThreeSocket := False
-	Item.IsMap := False
-	Item.IsTalisman := False
-	Item.IsJewel := False
-	Item.IsDivinationCard := False
-	Item.IsUnique := False
-	Item.IsRare := False
-	Item.IsCorrupted := False
-	Item.IsMirrored := False
-	Item.HasEffect := False
-	Item.HasImplicit := False
-	Item.IsMapFragment := False
-	Item.IsEssence := False
-	Item.SubType := ""
-	Item.Implicit := ""
+	Item.Init()
 
 	ResetAffixDetailVars()
 
