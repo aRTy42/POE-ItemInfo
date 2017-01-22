@@ -1877,7 +1877,7 @@ AssembleAffixDetails()
 		}
 		else
 		{
-			ProcessedLine := "   ? Unprocessed Essence Mod or Unknown Mod ?"
+			ProcessedLine := "   Unprocessed Essence Mod or unknown Mod"
 		}
 		
 		Result := Result . "`n" . ProcessedLine
