@@ -1079,6 +1079,10 @@ GetClipboardContents(DropNewlines=False)
 SetClipboardContents(String)
 {
 	Clipboard := String
+	; Temp, I used this for debugging and considering adding it to UserOptions
+	; 
+	; append the result for easier comparison and debugging
+	; Clipboard = %Clipboard%`n*******************************************`n`n%String%
 }
 
 ; Splits StrInput on StrDelimiter. Returns an object that has a 'length' field
@@ -1783,90 +1787,99 @@ AssembleAffixDetails()
 	Loop, %NumAffixLines%
 	{
 		CurLine := AffixLines[A_Index]
-		ProcessedLine =
-		Loop, %AffixLineParts0%
+		; Any empty line is considered as an Unprocessed Mod
+		if CurLine
 		{
-			AffixLineParts%A_Index% =
-		}
-		StringSplit, AffixLineParts, CurLine, |
-		AffixLine := AffixLineParts1
-		ValueRange := AffixLineParts2
-		AffixType := AffixLineParts3
-		AffixTier := AffixLineParts4
-
-		Delim := Opts.AffixDetailDelimiter
-		Ellipsis := Opts.AffixDetailEllipsis
-
-		If (Opts.ValueRangeFieldWidth > 0)
-		{
-			ValueRange := StrPad(ValueRange, Opts.ValueRangeFieldWidth, "left")
-		}
-		If (Opts.MirrorAffixLines == 1)
-		{
-			If (Opts.MirrorLineFieldWidth > 0)
+			ProcessedLine =
+			Loop, %AffixLineParts0%
 			{
-				If ( Not Item.IsUnique )
-				{
-					If(StrLen(AffixLine) > Opts.MirrorLineFieldWidth)
-					{
-						AffixLine := StrTrimSpaceRight(SubStr(AffixLine, 1, Opts.MirrorLineFieldWidth)) . Ellipsis
-					}
-					AffixLine := StrPad(AffixLine, Opts.MirrorLineFieldWidth + StrLen(Ellipsis))
-				}
-				Else
-				{
-					If(StrLen(AffixLine) > Opts.MirrorLineFieldWidth + 10)
-					{
-						AffixLine := StrTrimSpaceRight(SubStr(AffixLine, 1, Opts.MirrorLineFieldWidth + 10)) . Ellipsis
-					}
-					AffixLine := StrPad(AffixLine, Opts.MirrorLineFieldWidth + 10 + StrLen(Ellipsis))
-				}
+				AffixLineParts%A_Index% =
 			}
-			ProcessedLine := AffixLine . Delim
-		}
-		IfInString, ValueRange, *
-		{
-			ValueRangeString := StrPad(ValueRange, (Opts.ValueRangeFieldWidth * 2) + (StrLen(Opts.AffixDetailDelimiter)))
-		}
-		Else
-		{
-			ValueRangeString := ValueRange
-		}
-		ProcessedLine := ProcessedLine . ValueRangeString . Delim
-		If (Opts.ShowAffixBracketTier == 1 and Not (ItemDataRarity == "Unique") and Not StrLen(AffixTier) = 0)
-		{
-			If (InStr(ValueRange, "*") and Opts.ShowAffixBracketTier)
-			{
-				TierString := "   "
-				AdditionalPadding := ""
-				If (Opts.ShowAffixLevel or Opts.ShowAffixBracketTotalTier)
-				{
-					TierString := ""
-				}
-				If (Opts.ShowAffixLevel)
-				{
-					AdditionalPadding := AdditionalPadding . StrMult(" ", Opts.ValueRangeFieldWidth)
-				}
-				If (Opts.ShowAffixBracketTierTotal)
-				{
-					AdditionalPadding := AdditionalPadding . StrMult(" ", Opts.ValueRangeFieldWidth)
+			StringSplit, AffixLineParts, CurLine, |
+			AffixLine := AffixLineParts1
+			ValueRange := AffixLineParts2
+			AffixType := AffixLineParts3
+			AffixTier := AffixLineParts4
 
+			Delim := Opts.AffixDetailDelimiter
+			Ellipsis := Opts.AffixDetailEllipsis
+
+			If (Opts.ValueRangeFieldWidth > 0)
+			{
+				ValueRange := StrPad(ValueRange, Opts.ValueRangeFieldWidth, "left")
+			}
+			If (Opts.MirrorAffixLines == 1)
+			{
+				If (Opts.MirrorLineFieldWidth > 0)
+				{
+					If ( Not Item.IsUnique )
+					{
+						If(StrLen(AffixLine) > Opts.MirrorLineFieldWidth)
+						{
+							AffixLine := StrTrimSpaceRight(SubStr(AffixLine, 1, Opts.MirrorLineFieldWidth)) . Ellipsis
+						}
+						AffixLine := StrPad(AffixLine, Opts.MirrorLineFieldWidth + StrLen(Ellipsis))
+					}
+					Else
+					{
+						If(StrLen(AffixLine) > Opts.MirrorLineFieldWidth + 10)
+						{
+							AffixLine := StrTrimSpaceRight(SubStr(AffixLine, 1, Opts.MirrorLineFieldWidth + 10)) . Ellipsis
+						}
+						AffixLine := StrPad(AffixLine, Opts.MirrorLineFieldWidth + 10 + StrLen(Ellipsis))
+					}
 				}
-				TierString := TierString . AdditionalPadding
+				ProcessedLine := AffixLine . Delim
+			}
+			IfInString, ValueRange, *
+			{
+				ValueRangeString := StrPad(ValueRange, (Opts.ValueRangeFieldWidth * 2) + (StrLen(Opts.AffixDetailDelimiter)))
 			}
 			Else
 			{
-				AddedWidth := 0
-				If (Opts.ShowAffixBracketTierTotal)
-				{
-					AddedWidth += 2
-
-				}
-				TierString := StrPad("T" . AffixTier, 3+AddedWidth, "left")
+				ValueRangeString := ValueRange
 			}
-			ProcessedLine := ProcessedLine . TierString . Delim
+			ProcessedLine := ProcessedLine . ValueRangeString . Delim
+			If (Opts.ShowAffixBracketTier == 1 and Not (ItemDataRarity == "Unique") and Not StrLen(AffixTier) = 0)
+			{
+				If (InStr(ValueRange, "*") and Opts.ShowAffixBracketTier)
+				{
+					TierString := "   "
+					AdditionalPadding := ""
+					If (Opts.ShowAffixLevel or Opts.ShowAffixBracketTotalTier)
+					{
+						TierString := ""
+					}
+					If (Opts.ShowAffixLevel)
+					{
+						AdditionalPadding := AdditionalPadding . StrMult(" ", Opts.ValueRangeFieldWidth)
+					}
+					If (Opts.ShowAffixBracketTierTotal)
+					{
+						AdditionalPadding := AdditionalPadding . StrMult(" ", Opts.ValueRangeFieldWidth)
+
+					}
+					TierString := TierString . AdditionalPadding
+				}
+				Else
+				{
+					AddedWidth := 0
+					If (Opts.ShowAffixBracketTierTotal)
+					{
+						AddedWidth += 2
+
+					}
+					TierString := StrPad("T" . AffixTier, 3+AddedWidth, "left")
+				}
+				ProcessedLine := ProcessedLine . TierString . Delim
+			}
+			ProcessedLine := ProcessedLine . AffixType . Delim
 		}
-		ProcessedLine := ProcessedLine . AffixType . Delim
+		else
+		{
+			ProcessedLine := "   ? Unprocessed Essence Mod or Unknown Mod ?"
+		}
+		
 		Result := Result . "`n" . ProcessedLine
 	}
 	return Result
