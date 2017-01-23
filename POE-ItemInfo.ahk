@@ -19,8 +19,7 @@
 ;   - show affix ranges for uniques
 ;   - show map info (thank you, Kislorod and Necrolis)
 ;   - show max socket info (thank you, Necrolis)
-;   - has the ability to convert currency items to chaos orbs (you can adjust the rates by editing
-;     <datadir>\CurrencyRates.txt)
+;   - has the ability to convert currency items to chaos orbs
 ;   - adds a system tray icon and proper system tray description tooltip
 ;
 ; All of these features are user-adjustable by using a "database" of text files which come
@@ -91,15 +90,7 @@
 ;      to be addressed for 2.0 or not /shrug.  I have passed on the request to GGG to perhaps mark up their affixes so they are decipherable.
 ;    - Divination card info would be great such as a) what you can possibly get for the collection, b) where that card drops, and c) what supporter
 ;      created it (if known).
-;    - Jewel support for min/max rolls and what is a suffix and what is a prefix so you know what you may be able to exalt.  9/15/2015 - I just noticed that
-;      GGG added jewel affixes, both prefix and suffix, for jewels to their item database.
-;    - Legacy item alert on the item would be useful for those players that take breaks and come back without reading all the patch notes and/or
-;      not recognizing some item may have changed or not.  This alert can be placed along the bottom with 'quality, valuable, mirrored, etc.'
-;      I imagine that this would not be hard to do, but would require a lot of small detail work.  Because all uniques are nerfed/buffed in
-;      specific ways, there is no 'quick' and easy way to do this.  There would have to be a specific check for each specific unique item looking
-;      at the particular change(s) and compare it to the existing known unique setup vs the legacy setup.  I would be willing to do all the small
-;      detail work required for each unique if someone would write the code required for this to work and how this would work with the current uniques.txt
-;      list.  This is obviously less valuable of an addition to the PoE-Item-Info script than general upgrades/div cards/jewel support.
+;    - Legacy item alert on the item would be useful for those players that take breaks and come back without reading all the patch notes and/or not recognizing some item may have changed or not.
 ;
 ; Notes:
 ;
@@ -238,7 +229,7 @@ class UserOptions {
 									; If this option is set to 0, the tiers will always display relative to the full
 									; range of tiers available, ignoring the item level.
 
-	ShowCurrencyValueInChaos := 0   ; Convert the value of currency items into chaos orbs.
+	ShowCurrencyValueInChaos := 1   ; Convert the value of currency items into chaos orbs.
 									; This is based on the rates defined in <datadir>\CurrencyRates.txt
 									; You should edit this file with the current currency rates.
 
@@ -8279,20 +8270,6 @@ SettingsUI_BtnDefaults:
 	Sleep, 75
 	UpdateSettingsUI()
 	ShowSettingsUI()
-	return
-
-SettingsUI_ChkShowGemEvaluation:
-	GuiControlGet, IsChecked,, ShowGemEvaluation
-	If (Not IsChecked)
-	{
-		GuiControl, Disable, LblGemQualityThreshold
-		GuiControl, Disable, GemQualityValueThreshold
-	}
-	Else
-	{
-		GuiControl, Enable, LblGemQualityThreshold
-		GuiControl, Enable, GemQualityValueThreshold
-	}
 	return
 
 SettingsUI_ChkShowAffixDetails:
