@@ -1,4 +1,4 @@
-﻿,; Data from https://pathofexile.gamepedia.com/Path_of_Exile_Wiki using the SMW API.
+; Data from https://pathofexile.gamepedia.com/Path_of_Exile_Wiki using the SMW API.
 ; The "@" symbol marks a mod as implicit. This means a separator line will be appended after this mod. If there are multiple implicit mods, mark the last one in line.
 ; Comments can be made with ";", blank lines will be ignored.
 ;
