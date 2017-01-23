@@ -432,7 +432,7 @@ Flesh-Eater|@:20% increased Stun Duration on Enemies|60-80:Increased Physical Da
 Frostbreath|@:40% increased Stun Duration on Enemies|16-26,22-32:Adds Physical Damage|16-26,22-32:Adds Cold Damage|8-14:Increased Attack Speed|40-50:To Fire Resistance|35-50:Increased Chill Duration on Enemies|:Attacks with this Weapon deal double Damage to Chilled Enemies
 Gorebreaker|@:20% increased Stun Duration on Enemies|300-360:Increased Physical Damage|:20% reduced Attack Speed|10-20:Reduced Enemy Stun Threshold|30-50:Increased Stun Duration on Enemies|:Extra gore
 Lavianga's Wisdom|@:20% increased Stun Duration on Enemies|10-20:To maximum Life|10-20:To maximum Mana|130-160:Increased Physical Damage|:5% reduced Movement Speed|:10% increased Radius of Area Skills|10-15:Increased Area Damage
-MjÃ¶lner|@:40% increased Stun Duration on Enemies|80-120:Increased Physical Damage|:Skills Chain +1 times|30-40:Increased Lightning Damage with Weapons|:+200 Strength Requirement|:+300 Intelligence Requirement|:Cast a Socketed Lightning Spell on Hit
+Mjölner|@:40% increased Stun Duration on Enemies|80-120:Increased Physical Damage|:Skills Chain +1 times|30-40:Increased Lightning Damage with Weapons|:+200 Strength Requirement|:+300 Intelligence Requirement|:Cast a Socketed Lightning Spell on Hit
 Axiom Perpetuum|@:12% increased Elemental Damage|4-6:Increased Cast Speed|100-140:Increased Critical Strike Chance for Spells|2-5,3-6:Adds Fire Damage to Spells|2-5,3-6:Adds Cold Damage to Spells|1-10,1-12:Adds Lightning Damage to Spells
 Bitterdream|@:22% increased Elemental Damage|:Socketed Gems are Supported by Level 1 Hypothermia|:Socketed Gems are Supported by Level 1 Ice Bite|:Socketed Gems are Supported by Level 1 Cold Penetration|:Socketed Gems are Supported by Level 1 Mana Leech|:Socketed Gems are Supported by Level 10 Added Cold Damage|:Socketed Gems are Supported by Level 1 Reduced Mana
 Breath of the Council|@:32% increased Elemental Damage|260-310:Increased Physical Damage|60-80:Increased Chaos Damage|:10% increased Radius of Area Skills|:40% increased Chaos Skill Effect Duration
@@ -670,7 +670,7 @@ Caer Blaidd, Wolfpack's Den|:Unique Boss drops 4 additional Maps|20-50:More Magi
 Death and Taxes|50-60:Unique Boss deals increased Damage|25-30:Unique Boss has increased Attack and Cast Speed|:Unique Boss gives 10000% increased Experience
 Hall of Grandmasters|:Contains the Immortalised Grandmasters|:PvP damage scaling in effect
 Hallowed Ground|:Unique Boss drops 3 additional Maps|:Unique Boss gives 2000% increased Experience|:0.5 Flask Charges recovered every 3 seconds|70-79:Monster Level:
-MaelstrÃ¶m of Chaos|:Area has patches of chilled ground|:Monsters deal 50% extra Damage as Lightning|:Monsters are Immune to randomly chosen Elemental Status Ailments or Stun|:Monsters' Melee Attacks apply random Curses on Hit|:Monsters reflect Curses
+Maelström of Chaos|:Area has patches of chilled ground|:Monsters deal 50% extra Damage as Lightning|:Monsters are Immune to randomly chosen Elemental Status Ailments or Stun|:Monsters' Melee Attacks apply random Curses on Hit|:Monsters reflect Curses
 Mao Kun|175-190:Monsters deal extra Damage as Lightning|:Monsters gain 3 Endurance Charges every 20 seconds|:Monsters gain 3 Power Charges every 20 seconds
 Oba's Cursed Trove|:Area has patches of desecrated ground|40-50:More Monster Life|30-40:Increased Monster Damage|:Area becomes fatal after some time
 Olmec's Sanctum|40-50:More Monster Life|30-40:Increased Monster Damage|:Final Boss drops higher Level Items
