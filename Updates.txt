@@ -1,6 +1,27 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.5.04
+================================
+from Eruyome, aRTy42, 4GForce
+
+UPDATE YOUR AUTOHOTKEY INSTALLATION
+(unless you updated in the last 2-3 months already)
+http://ahkscript.org/
+
+New feature: Currency ratios fetched from http://poe.ninja/. Using the script on currency other than chaos calculates the
+	conversion of the whole stack into chaos and displays the ratio. All four leagues are displayed.
+	This feature is enabled by default. The data gets refreshed when starting or reloading the script or
+	when using the function while the data is older than 3 hours. (by Eruyome; special thanks also
+	to poe.ninja dev rasmuskl for the API and assistance)
+Added two functions to the AdditionalMacros: "setAfkMessage" and "CloseScripts" (by Eruyome).
+Added missing gem quality infos (Blade Flurry, Blight, Scorching Ray, Vaal Breach).
+Unknown mods and special essence mods now display that they are unknown or from essences instead of leaving a blank line. (by 4GForce)
+Fixed a bug that sometimes caused pseudo mods from an earlier item to show up if the current item had none. (thanks to 4GForce)
+Fixed a bug with data fetching for uniques. The last release was missing data for a few body armours and many jewels.
+Fixed several errors in the data for maps about vendoring and atlas connections.
+Updated Maps, Divination Cards and Uniques with the current wiki info.
+
 2.5.03
 ================================
 from aRTy42, Eruyome
