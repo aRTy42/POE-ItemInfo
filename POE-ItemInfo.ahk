@@ -6110,8 +6110,8 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 	
 	; Update currency rates from poe.ninja
 	last := Globals.Get("LastCurrencyUpdate")
-	now  := A_NowUTC
-	diff := now - last
+	diff  := A_NowUTC
+	EnvSub, diff, %last%, Seconds
 	If (diff > 1800 or !last) {
 		GoSub, FetchCurrencyData
 	}
