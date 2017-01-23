@@ -6079,8 +6079,6 @@ ParseSockets(ItemDataText)
 	return SocketsCount
 }
 
-; TODO: find a way to poll this date from the web!
-
 ; Converts a currency stack to Chaos by looking up the
 ; conversion ratio from CurrencyRates.txt or downloaded ratios from poe.ninja
 ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
@@ -6110,20 +6108,21 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 	
 	; Update currency rates from poe.ninja
 	last := Globals.Get("LastCurrencyUpdate")
-	now  := A_NowUTC
-	diff := now - last
-	If (diff > 1800 or !last) {
+	diff  := A_NowUTC
+	EnvSub, diff, %last%, Minutes
+	If (diff > 180 or !last) {
+		; no data or older than 3 hours
 		GoSub, FetchCurrencyData
 	}
 	
 	; Use downloaded currency rates if they exist, otherwise use hardcoded fallback 
 	fallback   := A_ScriptDir . "\data\CurrencyRates.txt"
-	ninjaRates := [A_ScriptDir . "\temp\CurrencyRates_Standard.txt", A_ScriptDir . "\temp\CurrencyRates_Hardcore.txt", A_ScriptDir . "\temp\CurrencyRates_tmpstandard.txt", A_ScriptDir . "\temp\CurrencyRates_tmphardcore.txt"]
+	ninjaRates := [A_ScriptDir . "\temp\CurrencyRates_tmpstandard.txt", A_ScriptDir . "\temp\CurrencyRates_tmphardcore.txt", A_ScriptDir . "\temp\CurrencyRates_Standard.txt", A_ScriptDir . "\temp\CurrencyRates_Hardcore.txt"]
 	result := []
 	
 	Loop, % ninjaRates.Length() 
 	{
-		dataSource := "Currency rates powered by poe.ninja`n"
+		dataSource := "Currency rates powered by poe.ninja`n`n"
 		If (FileExist(ninjaRates[A_Index])) 
 		{
 			ValueInChaos := 0
@@ -6149,7 +6148,7 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 			}
 			
 			If (ValueInChaos) {
-				tmp := [leagueName, ValueInChaos]
+				tmp := [leagueName, ValueInChaos, ChaosRatio]
 				result.push(tmp)
 			}
 		}
@@ -6158,7 +6157,7 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 	; fallback - condition : no results found so far
 	If (!result.Length()) {
 		ValueInChaos := 0
-		dataSource := "Fallback <\data\CurrencyRates.txt>`n"
+		dataSource := "Fallback <\data\CurrencyRates.txt>`n`n"
 		leagueName := "Hardcoded rates: "
 
 		Loop, Read, %fallback%
@@ -6177,8 +6176,9 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 				ValueInChaos := (ChaosMult * StackSize)
 			}
 		}
+		
 		If (ValueInChaos) {
-			tmp := [leagueName, ValueInChaos]
+			tmp := [leagueName, ValueInChaos, ChaosRatio]
 			result.push(tmp)
 		}
 	}
@@ -6502,7 +6502,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 				CurrencyDetails := "`n" . dataSource
 				Loop, % ValueInChaos.Length() 
 				{
-					CurrencyDetails .= ValueInChaos[A_Index][1] . "" . ValueInChaos[A_Index][2] . " Chaos`n"
+					CurrencyDetails .= ValueInChaos[A_Index][1] . "" . ValueInChaos[A_Index][2] . " Chaos (" . ValueInChaos[A_Index][3] . "c)`n"
 				}
 			}
 		}
@@ -8496,10 +8496,10 @@ FetchCurrencyData:
 		FileDelete, %ratesJSONFile% 
 		
 		If (league == "tmpstandard" or league == "tmphardcore" ) {
-			comment := InStr(league, "standard") ? ";Standard Challenge League`n" : ";Hardcore Challenge League`n"
+			comment := InStr(league, "standard") ? ";Challenge Standard`n" : ";Challenge Hardcore`n"
 		}
 		Else {
-			comment := ";" . league . " League`n"
+			comment := ";Permanent " . league . "`n"
 		}
 		FileAppend, %comment%, %ratesFile%
 		
