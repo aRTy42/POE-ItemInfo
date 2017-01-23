@@ -12,8 +12,7 @@ item level and weapon DPS reveal:
 - maps: infos such as the 3->1 vendor recipe result, bosses, layout and possible divination cards
 - divination cards: drop locations
 - gems: display the quality effect
-- has the ability to convert currency items to chaos orbs (you can adjust the rates by editing
-    `data\CurrencyRates.txt`)
+- has the ability to convert currency items to chaos orbs with ratios fetched from http://poe.ninja/
 - optional macros for fast hideout travel (via chat command), faster stash tab selection and more
 - adds a system tray icon and proper system tray description tooltip
 
@@ -32,7 +31,7 @@ https://www.pathofexile.com/forum/view-thread/1678678
 Requirements
 ------------
 
-AutoHotkey v1.1.21 or newer. You can get AutoHotkey from https://autohotkey.com
+AutoHotkey v1.1.24 or newer. You can get AutoHotkey from http://ahkscript.org/
 
 
 Known Issues
