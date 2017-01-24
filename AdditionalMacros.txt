@@ -1,6 +1,16 @@
   Pause::TogglePOEItemScript()				;pause item parsing with the pause key (other macros remain). key bind enabled by default.
-;  ^Escape::CloseScripts()					;closes all running scripts specified by (and including) ItemInfo or TradeMacro.
+;  ^Escape::CloseScripts()					;Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
   
+
+;   F5::SendInput {Enter}/hideout{Enter}		; go to hideout with F5
+;   ^WheelUp::SendInput {Left}					; Ctrl+mouse wheel up toggles stash tabs left
+;   ^WheelDown::SendInput {Right}				; Ctrl+mouse wheel down toggles stash tabs right	
+;   ^RButton::SendInput ^c						; Ctrl+right mouse button sends ctrl+c
+;   F2::^c										; binds ctrl+c to F2 key (in addition, not instead)
+;   F9::SendInput {Enter}/remaining{Enter}		; mobs remaining with F9
+;   F10::SendInput {Enter}/global 820{Enter}	; join a channel with F10
+;   F11::setAfkMessage()						; pastes afk message to your chat and marks "X" so you can type in the estimated time
+
 setAfkMessage(){		
 	T1 := A_Now
 	T2 := A_NowUTC
@@ -28,12 +38,3 @@ setAfkMessage(){
 		}
 	}		
 }
-
-;   F5::SendInput {Enter}/hideout{Enter}		; go to hideout with F5
-;   ^WheelUp::SendInput {Left}					; ctrl-mouse wheel up toggles stash tabs left
-;   ^WheelDown::SendInput {Right}				; ctrl-mouse wheel down toggles stash tabs right	
-;   ^RButton::SendInput ^c						; ctrl-right mouse button sends ctrl-c
-;   F2::^c										; binds ctrl-c to F2 key (in addition, not instead)
-;   F9::SendInput {Enter}/remaining{Enter}		; mobs remaining with F9
-;   F10::SendInput {Enter}/global 820{Enter}	; join a channel with F10
-;	F11::setAfkMessage()						; pastes afk message to your chat, just change "X" to your estimated afk time

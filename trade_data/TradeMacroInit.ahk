@@ -1,4 +1,4 @@
-; TradeMacro Add-on to POE-ItemInfo
+﻿; TradeMacro Add-on to POE-ItemInfo
 ; IGN: Eruyome, ManicCompression
 
 FileRemoveDir, %A_ScriptDir%/temp, 1
@@ -970,6 +970,21 @@ TradeFunc_CheckBrowserPath(path, showMsg){
 	}
 }
 
+; parse poe.trades gem names and other item types from the search form
+TradeFunc_ParseSearchFormOptions() {
+	FileRead, types, %A_ScriptDir%\temp\poe_trade_search_form_options.txt
+	
+	RegExMatch(types, "i)(var)?\s*(items_types\s*=\s*{.*})", match)
+	itemTypes := RegExReplace(match2, "i)items_types\s*=", "{""items_types"" :")
+	itemTypes .= "}"	
+	parsedJSON := JSON.Load(itemTypes)
+
+	TradeGlobals.Set("ItemTypeList", parsedJSON.items_types)
+	TradeGlobals.Set("GemNameList", parsedJSON.items_types.gem)
+	itemTypes := 
+	FileDelete, %A_ScriptDir%\temp\poe_trade_search_form_options.txt
+}
+
 TradeFunc_DownloadDataFiles() {
 	; disabled while using debug mode 	
 	owner := TradeGlobals.Get("GithubUser", "POE-TradeMacro")
@@ -1002,7 +1017,7 @@ TradeFunc_DownloadDataFiles() {
 TradeFunc_CheckIfCloudFlareBypassNeeded() {
 	; call this function without parameters to access poe.trade without cookies
 	; if it succeeds we don't need any cookies
-	If (TradeFunc_TestCloudflareBypass("https://poe.trade")) {
+	If (!TradeFunc_TestCloudflareBypass("http://poe.trade")) {
 		TradeFunc_ReadCookieData()
 	}
 }
@@ -1130,6 +1145,7 @@ TradeFunc_ReadCookieData() {
 		; something went wrong while reading the cookies
 		Else {
 			Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
+			Gui, CookieWindow:Add, Text, cRed, This can be a false positive. Poe.trade doesn't always use CloudFlare protection`n but the test to check this can fail if the request takes too long.`nPlease try again.
 			If (CookieFileNotFound) {
 				Gui, CookieWindow:Add, Text, , - File <ScriptDirectory\temp\cookie_data.txt> could not be found.
 			}
@@ -1247,7 +1263,7 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 	}	
 	HttpObj.Send()
 	HttpObj.WaitForResponse()
-
+	
 	Try {				
 		If Encoding {
 			oADO          := ComObjCreate("adodb.stream")
@@ -1268,13 +1284,15 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 		}
 	}
 	
-	If A_LastError
-		MsgBox % "Error while testing CloudFlare bypass.`n" A_LastError
-	
-	If (InStr(html, "Path of Exile")) {
+	RegExMatch(html, "i)Path of Exile", match)
+	If (match) {
+		FileDelete, %A_ScriptDir%\temp\poe_trade_search_form_options.txt
+		FileAppend, %html%, %A_ScriptDir%\temp\poe_trade_search_form_options.txt, utf-8	
+		TradeFunc_ParseSearchFormOptions()		
 		Return 1
 	}
 	Else {
+		FileDelete, %A_ScriptDir%\temp\poe_trade_gem_names.txt
 		Return 0
 	}
 }
@@ -1344,6 +1362,14 @@ TradeFunc_StopSplashScreen() {
 		MsgBox % "Debug mode enabled! Disable in settings-menu unless you're developing!"
 		Class_Console("console",0,335,600,900,,,,9)
 		console.show()
+		
+		gemList := TradeGlobals.Get("GemNameList")
+		If(gemList.Length()) {
+			console.log("Fetching gem names successful.")
+		}
+		Else {
+			console.log("Fetching gem names failed.")
+		}
 	}   	
 
     ; Let timer run until ItemInfos global settings are set to overwrite them.

@@ -63,7 +63,7 @@ OpenWiki:
 			UrlAffix := Item.Name
 		} Else If (Item.IsFlask or Item.IsMap) {
 			UrlAffix := Item.SubType
-		} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key")) {
+		} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
 			UrlAffix := Item.Name
 		} Else {
 			UrlAffix := Item.BaseType
@@ -82,27 +82,7 @@ return
 CustomInputSearch:
 	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
-		ScreenOffsetY := A_ScreenHeight / 2 - 50
-		ScreenOffsetX := A_ScreenWidth / 2 - 125
-		
-		InputBox,ItemName,Price Check,Item Name,,250,100,%ScreenOffsetX%,%ScreenOffsetY%,,30,
-		If ItemName {
-			RequestParams := new RequestParams_()
-			LeagueName := TradeGlobals.Get("LeagueName")
-			RequestParams.name   := ItemName
-			RequestParams.league := LeagueName
-			Item.Name := ItemName
-			
-			ShowToolTip("Running search...")
-			
-			Payload := RequestParams.ToPayload()
-			Html := TradeFunc_DoPostRequest(Payload)
-			ParsedData := TradeFunc_ParseHtml(Html, Payload)
-			SetClipboardContents(ParsedData)
-			
-			ShowToolTip("")
-			ShowToolTip(ParsedData, true)
-		}
+		TradeFunc_CustomSearchGui()
 	}
 return
 
@@ -430,7 +410,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 	
-	; don't overwrite advancedItemPriceChecks decision to inlucde/exclude sockets/links
+	; don't overwrite advancedItemPriceChecks decision to include/exclude sockets/links
 	If (not isAdvancedPriceCheckRedirect) {
 		; handle item sockets
 		; maybe don't use this for unique-items as default
@@ -490,7 +470,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	; handle gems
 	If (Item.IsGem) {
 		RequestParams.xtype := Item.BaseType
-		RequestParams.xbase := Trim(RegExReplace(Item.Name, "i)support|superior", ""))
+		RequestParams.xbase := TradeFunc_CompareGemNames(Trim(RegExReplace(Item.Name, "i)support|superior", "")))
+		
 		RequestParams.name := ""
 		If (TradeOpts.GemQualityRange > 0) {
 			RequestParams.q_min := Item.Quality - TradeOpts.GemQualityRange
@@ -574,8 +555,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Else {
 			; Update currency data if last update is older than 30min
 			last := TradeGlobals.Get("LastAltCurrencyUpdate")
-			now  := A_NowUTC
-			diff := now - last
+			diff  := A_NowUTC
+			EnvSub, diff, %last%, Seconds
 			If (diff > 1800) {
 				GoSub, ReadPoeNinjaCurrencyData
 			}
@@ -951,6 +932,23 @@ TradeFunc_CalculateEleDps(fireLo, fireHi, coldLo, coldHi, lightLo, lightHi, aps)
 	dps := ((fireLo + fireHi + coldLo + coldHi + lightLo + lightHi) / 2) * aps
 	
 	return dps
+}
+
+TradeFunc_CompareGemNames(name) {
+	poeTradeNames := TradeGlobals.Get("GemNameList")
+	
+	If(poeTradeNames.Length() < 1) {
+		return name
+	}
+	Else {
+		Loop, % poeTradeNames.Length() {
+			stack := Trim(RegExReplace(poeTradeNames[A_Index], "i)support", ""))
+			If (stack = name) {
+				return poeTradeNames[A_Index]
+			}
+		}
+		return name
+	}
 }
 
 TradeFunc_GetUniqueStats(name){
@@ -2541,7 +2539,74 @@ TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 	}
 }
 
-; Open Gui window to show the items variable mods, select the ones that should be used in the search and se their min/max values
+; Create custom search GUI
+TradeFunc_CustomSearchGui() {
+	Global
+	customSearchItemTypes := TradeGlobals.Get("ItemTypeList")
+	
+	CustomSearchTypeList := ""		
+	CustomSearchBaseList := ""	
+	For type, bases in customSearchItemTypes {   
+		CustomSearchTypeList .= "|" . type
+		For key, base in bases {
+			CustomSearchBaseList .= "|" . base	
+		}		
+	}
+	
+	Gui, CustomSearch:Add, Edit, w480 vCustomSearchName
+	
+	; Type
+	Gui, CustomSearch:Add, Text, x10 y+10, Type
+	Gui, CustomSearch:Add, DropDownList, x+10 yp-4 vCustomSearchType, %CustomSearchTypeList%
+	; Rarity
+	Gui, CustomSearch:Add, Text, x+10 yp+4 w50, Rarity   
+	Gui, CustomSearch:Add, DropDownList, x+10 yp-4 w90 vCustomSearchRarity, any||Normal|Magic|Rare|Unique
+	; Sockets
+	Gui, CustomSearch:Add, Text, x+10 yp+4 w50, Sockets
+	Gui, CustomSearch:Add, Edit, x+10 yp-4 w30 vCustomSearchSocketsMin
+	Gui, CustomSearch:Add, Text, x+6 yp+4 w10, -
+	Gui, CustomSearch:Add, Edit, x+0 yp-4 w30 vCustomSearchSocketsMax
+
+	; Base	
+	Gui, CustomSearch:Add, Text, x10 y+10, Base
+	Gui, CustomSearch:Add, DropDownList, x+10 yp-4 vCustomSearchBase, %CustomSearchBaseList%	
+	; Corrupted
+	Gui, CustomSearch:Add, Text, x+10 yp+4 w50, Corrupted
+	Gui, CustomSearch:Add, DropDownList, x+10 yp-4 w90 vCustomSearchCorrupted, either||Yes|No
+	; Links
+	Gui, CustomSearch:Add, Text, x+10 yp+4 w50, Links
+	Gui, CustomSearch:Add, Edit, x+10 yp-4 w30 vCustomSearchLinksMin
+	Gui, CustomSearch:Add, Text, x+6 yp+4 w10, -
+	Gui, CustomSearch:Add, Edit, x+0 yp-4 w30 vCustomSearchLinksMax
+	
+	; Quality
+	Gui, CustomSearch:Add, Text, x10 y+10 w40, Quality
+	Gui, CustomSearch:Add, Edit, x+10 yp-4 w30 vCustomSearchQualityMin
+	Gui, CustomSearch:Add, Text, x+6 yp+4 w10, -
+	Gui, CustomSearch:Add, Edit, x+0 yp-4 w30 vCustomSearchQualityMax
+
+	; Level/Tier
+	Gui, CustomSearch:Add, Text, x175 yp+4 w40, Level/Tier
+	Gui, CustomSearch:Add, Edit, x+10 yp-4 w30 vCustomSearchLevelMin
+	Gui, CustomSearch:Add, Text, x+6 yp+4 w10, -
+	Gui, CustomSearch:Add, Edit, x+0 yp-4 w30 vCustomSearchLevelMax
+	
+	; ItemLevel
+	Gui, CustomSearch:Add, Text, x335 yp+4 w50, ItemLevel
+	Gui, CustomSearch:Add, Edit, x+10 yp-4 w30 vCustomSearchItemLevelMin
+	Gui, CustomSearch:Add, Text, x+6 yp+4 w10, -
+	Gui, CustomSearch:Add, Edit, x+0 yp-4 w30 vCustomSearchItemLevelMax
+	
+	; Buttons
+	Gui, CustomSearch:Add, Button, x10 gSubmitCustomSearch, &Search
+	Gui, CustomSearch:Add, Button, x+10 yp+0 gOpenCustomSearchOnPoeTrade, Op&en on poe.trade
+	Gui, CustomSearch:Add, Button, x+10 yp+0 gCloseCustomSearch, &Close
+	Gui, CustomSearch:Add, Text, x+10 yp+4 cGray, (Use Alt + S/C to submit a button)
+	
+	Gui, CustomSearch:Show, w500 , Custom Search
+}
+
+; Open Gui window to show the items variable mods, select the ones that should be used in the search and set their min/max values
 TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedImplicit = ""){	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	Global 
@@ -3253,7 +3318,7 @@ ChangeScriptListsTimer:
 	o := Globals.Get("ScriptList")
 	l := Globals.Get("UpdateNoteFileList")
 
-	If (o and l and m) {
+	If (o and l.Length()) {
 		o.push(A_ScriptDir "\main")
 		o.push(A_ScriptDir "\PoE-TradeMacro_(Fallback)")
 		Global.Set("ScriptList", o)
@@ -3327,12 +3392,12 @@ Return
 
 ReadPoeNinjaCurrencyData:
 	league := TradeUtils.UriEncode(TradeGlobals.Get("LeagueName"))
-	url := "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . league	
+	url := "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league	
 	UrlDownloadToFile, %url% , %A_ScriptDir%\temp\currencyData.json
 	FileRead, JSONFile, %A_ScriptDir%/temp/currencyData.json
 	parsedJSON 	:= JSON.Load(JSONFile)	
 	global CurrencyHistoryData := parsedJSON.lines
-	
+
 	TradeGlobals.Set("LastAltCurrencyUpdate", A_NowUTC)
 	
 	global ChaosEquivalents := {}
@@ -3365,3 +3430,91 @@ Return
 TradeVisitForumsThread:
 	TradeFunc_OpenUrlInBrowser("https://www.pathofexile.com/forum/view-thread/1757730")
 Return
+
+CloseCustomSearch:
+	TradeFunc_ResetCustomSearchGui()
+	Gui, CustomSearch:Destroy
+Return
+
+TradeFunc_ResetCustomSearchGui() {
+	CustomSearchName		:=
+	CustomSearchType		:=
+	CustomSearchBase		:=
+	CustomSearchRarity		:=
+	CustomSearchCorrupted	:=
+	CustomSearchSocketsMin	:=
+	CustomSearchSocketsMax	:=
+	CustomSearchLinksMin	:=
+	CustomSearchLinksMax	:=
+	CustomSearchQualityMin	:=
+	CustomSearchQualityMax	:=
+	CustomSearchLevelMin	:=
+	CustomSearchLevelMax	:=
+	CustomSearchItemLevelMin	:=
+	CustomSearchItemLevelMax	:=
+}
+
+OpenCustomSearchOnPoeTrade:
+	TradeFunc_HandleCustomSearchSubmit(true)
+Return
+
+SubmitCustomSearch:
+	TradeFunc_HandleCustomSearchSubmit()
+Return
+
+TradeFunc_HandleCustomSearchSubmit(openInBrowser = false) {
+	Global
+	Gui, CustomSearch:Submit
+	
+	If (CustomSearchName or CustomSearchType or CustomSearchBase) {
+		RequestParams := new RequestParams_()
+		LeagueName := TradeGlobals.Get("LeagueName")
+		RequestParams.name   := CustomSearchName
+		RequestParams.league := LeagueName
+		Item.Name := CustomSearchName		
+		
+		StringLower, CustomSearchRarity, CustomSearchRarity
+		
+		RequestParams.xtype 	:= CustomSearchType         ? CustomSearchType : ""
+		RequestParams.xbase 	:= CustomSearchBase         ? CustomSearchBase : ""
+		RequestParams.rarity	:= CustomSearchRarity       ? CustomSearchRarity : ""
+		RequestParams.link_min	:= CustomSearchLinksMin     ? CustomSearchLinksMin : ""
+		RequestParams.link_max	:= CustomSearchLinksMax     ? CustomSearchLinksMax : ""
+		RequestParams.q_min		:= CustomSearchQualityMin   ? CustomSearchQualityMin : ""
+		RequestParams.q_max		:= CustomSearchQualityMax   ? CustomSearchQualityMax : ""
+		RequestParams.sockets_min:= CustomSearchSocketsMin   ? CustomSearchSocketsMin : ""
+		RequestParams.sockets_max:= CustomSearchSocketsMax   ? CustomSearchSocketsMax : ""
+		RequestParams.level_min 	:= CustomSearchLevelMin     ? CustomSearchLevelMin : ""
+		RequestParams.level_max	:= CustomSearchLevelMax     ? CustomSearchLevelMax : ""
+		RequestParams.ilvl_min 	:= CustomSearchItemLevelMin ? CustomSearchItemLevelMin : ""
+		RequestParams.ilvl_max 	:= CustomSearchItemLevelMax ? CustomSearchItemLevelMax : ""
+		
+		If (CustomSearchCorrupted = "Yes") {
+			RequestParams.corrupted := "1"
+		} Else If (CustomSearchCorrupted = "No") {
+			RequestParams.corrupted := "0"			
+		} Else {
+			RequestParams.corrupted := "x"
+		}		
+		Item.UsedInSearch.Corruption := CustomSearchCorrupted
+			
+		GoSub, CloseCustomSearch
+		ShowToolTip("Running search...")
+		
+		Payload := RequestParams.ToPayload()
+		If (openInBrowser) {
+			ShowToolTip("")
+			Html := TradeFunc_DoPostRequest(Payload, true)
+			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
+			TradeFunc_OpenUrlInBrowser(ParsedUrl1)
+		}
+		Else {
+			Html := TradeFunc_DoPostRequest(Payload)
+			ParsedData := TradeFunc_ParseHtml(Html, Payload)
+			SetClipboardContents(ParsedData)
+			
+			ShowToolTip("")
+			ShowToolTip(ParsedData, true)	
+		}		
+	}
+}
