@@ -35,7 +35,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 				MsgBox, 16,, % "Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
 			}
 		}
-		
+
 		RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)
 		RegExMatch(html, "i)""name"":""(.*?)""", vName)
 		RegExMatch(html, "i)""html_url"":""(.*?)""", url)
@@ -52,6 +52,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 		
 		description := RegExReplace(description1, "iU)\\""", """")
 		StringReplace, description, description, \r\n, §, All 
+		StringReplace, description, description, \n, §, All 
 
 		newRelease := false
 		Loop {			
@@ -70,7 +71,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 			Gui, UpdateNotification:Add, Text, cGreen, Update available!
 			Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>.`nThe latest version is <%latestVersion%>.
 			Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
-			
+
 			Loop, Parse, description, §
 			{
 				If(StrLen(A_LoopField) > 1) {
