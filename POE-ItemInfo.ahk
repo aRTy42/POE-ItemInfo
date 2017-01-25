@@ -169,7 +169,7 @@ class Globals {
 Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
-Globals.Set("SettingsUIWidth", 545)
+Globals.Set("SettingsUIWidth", 570)
 Globals.Set("SettingsUIHeight", 710)
 Globals.Set("AboutWindowHeight", 340)
 Globals.Set("AboutWindowWidth", 435)
@@ -7754,109 +7754,115 @@ ShowUnhandledCaseDialog()
 ;   Gui, Add, Text, (.+?) hwnd(.+?) v(.+?), (.+) -> GuiAddText("$4", "$1", "$3", "", "$2")
 ; Button
 ;   Gui, Add, Button, (.+?) g(.+?), (.+) -> GuiAddButton("$3", "$1", "", "$2", "")
+;
+; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 
 CreateSettingsUI()
 {
 	Global
+
+	; setting gui margins for xm and ym positionning
+	Gui, Margin, 15, 15		
 	
 	; General
-	GuiAddGroupBox("General", "x7 y+15 w260 h90 Section")
+	
+	GuiAddGroupBox("General", "xm ym w260 h90 Section")
 
-	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
-
-	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 ys20 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
+	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 ys30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "If checked the script does nothing if the`nPath of Exile window isn't the frontmost")
-	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 ys50 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
+	GuiAddCheckbox("Put tooltip results on clipboard", "y+m", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
 	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")
 
 	; Display
 
-	GuiAddGroupBox("Display", "x7 y+20 w260 h150 Section")
+	GuiAddGroupBox("Display", "xs+m w260 h150 Section")
 
-	GuiAddCheckbox("Show item level (gear)", "xs10 ys20 w240 h30", Opts.ShowItemLevel, "ShowItemLevel")
-	GuiAddCheckbox("Show max sockets based on item lvl (gear)", "xs10 ys50 w240 h30", Opts.ShowMaxSockets, "ShowMaxSockets", "ShowMaxSocketsH")
+	GuiAddCheckbox("Show item level (gear)", "xs10 ys30", Opts.ShowItemLevel, "ShowItemLevel")
+	GuiAddCheckbox("Show max sockets based on item lvl (gear)", "y+m", Opts.ShowMaxSockets, "ShowMaxSockets", "ShowMaxSocketsH")
 	AddToolTip(ShowMaxSocketsH, "Show maximum amount of sockets the item can have`nbased on its item level")
-	GuiAddCheckbox("Show damage calculations (weapons)", "xs10 ys80 w240 h30", Opts.ShowDamageCalculations, "ShowDamageCalculations")
-	GuiAddCheckbox("Show currency value in chaos", "xs10 ys110 w240 h30", Opts.ShowCurrencyValueInChaos, "ShowCurrencyValueInChaos")
+	GuiAddCheckbox("Show damage calculations (weapons)", "y+m", Opts.ShowDamageCalculations, "ShowDamageCalculations")
+	GuiAddCheckbox("Show currency value in chaos", "y+m", Opts.ShowCurrencyValueInChaos, "ShowCurrencyValueInChaos")
 
 	; Tooltip
 
-	GuiAddGroupBox("Tooltip", "x7 y+20 w260 h185 Section")
+	GuiAddGroupBox("Tooltip", "xs+m w260 h220 Section")
 
-	GuiAddCheckBox("Use tooltip timeout", "xs10 ys20 w210 h30", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
+	GuiAddCheckBox("Use tooltip timeout", "xs10 ys30", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
 	AddToolTip(UseTooltipTimeoutH, "Hide tooltip automatically after x amount of ticks have passed")
-		GuiAddText("Timeout ticks (1 tick = 100ms):", "xs20 ys47 w150 h20", "LblToolTipTimeoutTicks")
-		GuiAddEdit(Opts.ToolTipTimeoutTicks, "xs180 ys45 w50 h20", "ToolTipTimeoutTicks")
-
-	GuiAddCheckbox("Display at fixed coordinates", "xs10 ys65 w230 h30", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
+	GuiAddText("Timeout ticks (1 tick = 100ms):", "xs20 y+m", "LblToolTipTimeoutTicks")
+	GuiAddEdit(Opts.ToolTipTimeoutTicks, "x+m yp-2 w50 Number", "ToolTipTimeoutTicks")
+	GuiAddCheckbox("Display at fixed coordinates", "xs10 y+m", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
 	AddToolTip(DisplayToolTipAtFixedCoordsH, "Show tooltip in virtual screen space at the fixed`ncoordinates given below. Virtual screen space means`nthe full desktop frame, including any secondary`nmonitors. Coords are relative to the top left edge`nand increase going down and to the right.")
-		GuiAddText("X:", "xs30 ys97 w20 h20", "LblScreenOffsetX")
-		GuiAddEdit(Opts.ScreenOffsetX, "xs48 ys90 w40 h20", "ScreenOffsetX")
-		GuiAddText("Y:", "xs98 ys97 w20 h20", "LblScreenOffsetY")
-		GuiAddEdit(Opts.ScreenOffsetY, "xs118 ys90 w40 h20", "ScreenOffsetY")
-
-	GuiAddText("Mousemove threshold (px):", "xs10 ys127 w160 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
+	GuiAddText("X:", "xs30 y+m", "LblScreenOffsetX")
+	GuiAddEdit(Opts.ScreenOffsetX, "x+m yp-4 w40 Number", "ScreenOffsetX")
+	GuiAddText("Y:", "x+m yp+4", "LblScreenOffsetY")
+	GuiAddEdit(Opts.ScreenOffsetY, "x+m yp-4 w40 Number", "ScreenOffsetY")
+	GuiAddText("Mousemove threshold (px):", "xs10 yp+40 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
 	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip automatically after the mouse has moved x amount of pixels")
-	GuiAddEdit(Opts.MouseMoveThreshold, "xs180 ys125 w50 h20", "MouseMoveThreshold", "MouseMoveThresholdH")
-
-	GuiAddText("Font Size:", "xs10 ys157 w160 h20", "LblFontSize")
-	GuiAddEdit(Opts.FontSize, "xs180 ys155 w50 h20", "FontSize")
+	GuiAddEdit(Opts.MouseMoveThreshold, "xs175 yp-4 w50 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
+	GuiAddText("Font Size:", "xs10 y+m", "LblFontSize")
+	GuiAddEdit(Opts.FontSize, "xs175 yp-4 w50 Number", "FontSize")
 
 	; Display - Affixes
 
 	; This groupbox is positioned relative to the last control (first column), this is not optimal but makes it possible to wrap these groupboxes in Tabs without further repositing.
-	GuiAddGroupBox("Display - Affixes", "xs270 yp-415 w260 h360 Section")
+	GuiAddGroupBox("Display - Affixes", "ym w260 h370 Section")
 
-	GuiAddCheckbox("Show affix totals", "xs10 ys20 w210 h30", Opts.ShowAffixTotals, "ShowAffixTotals", "ShowAffixTotalsH")
+	GuiAddCheckbox("Show affix totals", "xs10 ys30", Opts.ShowAffixTotals, "ShowAffixTotals", "ShowAffixTotalsH")
 	AddToolTip(ShowAffixTotalsH, "Show a statistic how many prefixes and suffixes`nthe item has")
-	GuiAddCheckbox("Show affix details", "xs10 ys50 w210 h30", Opts.ShowAffixDetails, "ShowAffixDetails", "ShowAffixDetailsH", "SettingsUI_ChkShowAffixDetails")
+	GuiAddCheckbox("Show affix details", "y+m", Opts.ShowAffixDetails, "ShowAffixDetails", "ShowAffixDetailsH", "SettingsUI_ChkShowAffixDetails")
 	AddToolTip(ShowAffixDetailsH, "Show detailed affix breakdown. Note that crafted mods are not`nsupported and some ranges are guesstimated (marked with a *)")
-		GuiAddCheckbox("Mirror affix lines", "xs30 ys80 w190 h30", Opts.MirrorAffixLines, "MirrorAffixLines", "MirrorAffixLinesH")
-		AddToolTip(MirrorAffixLinesH, "Display truncated affix names within the breakdown")
-	GuiAddCheckbox("Show affix level", "xs10 ys110 w210 h30", Opts.ShowAffixLevel, "ShowAffixLevel", "ShowAffixLevelH")
-		AddToolTip(ShowAffixLevelH, "Show item level of the displayed affix value bracket")
-	GuiAddCheckbox("Show affix bracket", "xs10 ys140 w210 h30", Opts.ShowAffixBracket, "ShowAffixBracket", "ShowAffixBracketH")
-		AddToolTip(ShowAffixBracketH, "Show affix value bracket as is on the item")
-	GuiAddCheckbox("Show affix max possible", "xs10 ys170 w210 h30", Opts.ShowAffixMaxPossible, "ShowAffixMaxPossible", "ShowAffixMaxPossibleH", "SettingsUI_ChkShowAffixMaxPossible")
-		AddToolTip(ShowAffixMaxPossibleH, "Show max possible affix value bracket")
-		GuiAddCheckbox("Max span starting from first", "xs30 ys200 w190 h30", Opts.MaxSpanStartingFromFirst, "MaxSpanStartingFromFirst", "MaxSpanStartingFromFirstH")
-		AddToolTip(MaxSpanStartingFromFirstH, "Construct a pseudo range by combining the lowest possible`naffix value bracket with the max possible based on item level")
-	GuiAddCheckbox("Show affix bracket tier", "xs10 ys230 w210 h30", Opts.ShowAffixBracketTier, "ShowAffixBracketTier", "ShowAffixBracketTierH", "SettingsUI_ChkShowAffixBracketTier")
-		AddToolTip(ShowAffixBracketTierH, "Display affix bracket tier in reverse ordering,`nT1 being the best possible roll.")
-		GuiAddCheckbox("Tier relative to item lvl", "xs30 ys260 w190 h20", Opts.TierRelativeToItemLevel, "TierRelativeToItemLevel", "TierRelativeToItemLevelH")
-		GuiAddText("(hold Shift to toggle temporarily)", "xs50 ys280 w190 h20", "LblTierRelativeToItemLevelOverrideNote")
-		AddToolTip(TierRelativeToItemLevelH, "When showing affix bracket tier, make T1 being best possible`ntaking item level into account.")
-		GuiAddCheckbox("Show affix bracket tier total", "xs30 ys300 w190 h20", Opts.ShowAffixBracketTierTotal, "ShowAffixBracketTierTotal", "ShowAffixBracketTierTotalH")
-		AddToolTip(ShowAffixBracketTierTotalH, "Show number of total affix bracket tiers in format T/N,`n where T = tier on item, N = number of total tiers available")
-	GuiAddCheckbox("Show Darkshrine information", "xs10 ys330 w210 h20", Opts.ShowDarkShrineInfo, "ShowDarkShrineInfo", "ShowDarkShrineInfoH")
+	GuiAddCheckbox("Mirror affix lines", "xs30 y+m", Opts.MirrorAffixLines, "MirrorAffixLines", "MirrorAffixLinesH")
+	AddToolTip(MirrorAffixLinesH, "Display truncated affix names within the breakdown")
+	GuiAddCheckbox("Show affix level", "xs10 y+m", Opts.ShowAffixLevel, "ShowAffixLevel", "ShowAffixLevelH")
+	AddToolTip(ShowAffixLevelH, "Show item level of the displayed affix value bracket")
+	GuiAddCheckbox("Show affix bracket", "y+m", Opts.ShowAffixBracket, "ShowAffixBracket", "ShowAffixBracketH")
+	AddToolTip(ShowAffixBracketH, "Show affix value bracket as is on the item")
+	GuiAddCheckbox("Show affix max possible", "y+m", Opts.ShowAffixMaxPossible, "ShowAffixMaxPossible", "ShowAffixMaxPossibleH", "SettingsUI_ChkShowAffixMaxPossible")
+	AddToolTip(ShowAffixMaxPossibleH, "Show max possible affix value bracket")
+	GuiAddCheckbox("Max span starting from first", "xs30 y+m", Opts.MaxSpanStartingFromFirst, "MaxSpanStartingFromFirst", "MaxSpanStartingFromFirstH")
+	AddToolTip(MaxSpanStartingFromFirstH, "Construct a pseudo range by combining the lowest possible`naffix value bracket with the max possible based on item level")
+	GuiAddCheckbox("Show affix bracket tier", "xs10 y+m", Opts.ShowAffixBracketTier, "ShowAffixBracketTier", "ShowAffixBracketTierH", "SettingsUI_ChkShowAffixBracketTier")
+	AddToolTip(ShowAffixBracketTierH, "Display affix bracket tier in reverse ordering,`nT1 being the best possible roll.")
+	GuiAddCheckbox("Tier relative to item lvl", "xs30 y+m", Opts.TierRelativeToItemLevel, "TierRelativeToItemLevel", "TierRelativeToItemLevelH")
+	GuiAddText("( hold Shift to toggle temporarily )", "xs50 y+m", "LblTierRelativeToItemLevelOverrideNote")
+	AddToolTip(TierRelativeToItemLevelH, "When showing affix bracket tier, make T1 being best possible`ntaking item level into account.")
+	GuiAddCheckbox("Show affix bracket tier total", "xs30 y+m", Opts.ShowAffixBracketTierTotal, "ShowAffixBracketTierTotal", "ShowAffixBracketTierTotalH")
+	AddToolTip(ShowAffixBracketTierTotalH, "Show number of total affix bracket tiers in format T/N,`n where T = tier on item, N = number of total tiers available")
+	GuiAddCheckbox("Show Darkshrine information", "xs10 y+m", Opts.ShowDarkShrineInfo, "ShowDarkShrineInfo", "ShowDarkShrineInfoH")
 	AddToolTip(ShowDarkShrineInfoH, "Show information about possible Darkshrine effects")
 
 	; Display - Results
 
-	GuiAddGroupBox("Display - Results", "xs y+20 w260 h185 Section")
+	GuiAddGroupBox("Display - Results", "xs+m w260 h210 Section")
 
-	GuiAddCheckbox("Compact double ranges", "xs10 ys20 w210 h30", Opts.CompactDoubleRanges, "CompactDoubleRanges", "CompactDoubleRangesH")
+	GuiAddCheckbox("Compact double ranges", "xs10 ys30", Opts.CompactDoubleRanges, "CompactDoubleRanges", "CompactDoubleRangesH")
 	AddToolTip(CompactDoubleRangesH, "Show double ranges as one range,`ne.g. x-y (to) z-w becomes x-w")
-	GuiAddCheckbox("Compact affix types", "xs10 ys50 w210 h30", Opts.CompactAffixTypes, "CompactAffixTypes", "CompactAffixTypesH")
+	GuiAddCheckbox("Compact affix types", "y+m", Opts.CompactAffixTypes, "CompactAffixTypes", "CompactAffixTypesH")
 	AddToolTip(CompactAffixTypesH, "Replace affix type with a short-hand version,`ne.g. P=Prefix, S=Suffix, CP=Composite")
+	GuiAddText("Mirror line field width:", "xs10 y+m", "LblMirrorLineFieldWidth")
+	GuiAddEdit(Opts.MirrorLineFieldWidth, "xs175 yp-4 w50 Number", "MirrorLineFieldWidth")
+	GuiAddText("Value range field width:", "xs10 y+m", "LblValueRangeFieldWidth")
+	GuiAddEdit(Opts.ValueRangeFieldWidth, "xs175 yp-4 w50 Number", "ValueRangeFieldWidth")
+	GuiAddText("Affix detail delimiter:", "xs10 y+m", "LblAffixDetailDelimiter")
+	GuiAddEdit(Opts.AffixDetailDelimiter, "xs175 yp-4 w50", "AffixDetailDelimiter")
+	GuiAddText("Affix detail ellipsis:", "xs10 y+m", "LblAffixDetailEllipsis")
+	GuiAddEdit(Opts.AffixDetailEllipsis, "xs175 yp-4 w50", "AffixDetailEllipsis")
 
-	GuiAddText("Mirror line field width:", "xs10 ys87 w110 h20", "LblMirrorLineFieldWidth")
-	GuiAddEdit(Opts.MirrorLineFieldWidth, "xs130 ys85 w40 h20", "MirrorLineFieldWidth")
-	GuiAddText("Value range field width:", "xs10 ys112 w120 h20", "LblValueRangeFieldWidth")
-	GuiAddEdit(Opts.ValueRangeFieldWidth, "xs130 ys110 w40 h20", "ValueRangeFieldWidth")
-	GuiAddText("Affix detail delimiter:", "xs10 ys137 w120 h20", "LblAffixDetailDelimiter")
-	GuiAddEdit(Opts.AffixDetailDelimiter, "xs130 ys135 w40 h20", "AffixDetailDelimiter")
-	GuiAddText("Affix detail ellipsis:", "xs10 ys162 w120 h20", "LblAffixDetailEllipsis")
-	GuiAddEdit(Opts.AffixDetailEllipsis, "xs130 ys160 w40 h20", "AffixDetailEllipsis")
+	; Footer
+	
+	; Knowing the groupboxes width and estimating the spacing between them,
+	; the gui width should be around 540 ( (2 x 260) + 20 )
+	; we will use this to center the footer component	
+	
+	GuiAddText("Mouse over settings or see the beginning of the PoE-Item-Info.ahk script for comments on what these settings do exactly.", "xm+70 w400")
 
-	GuiAddText("Mouse over settings or see the beginning of the PoE-Item-Info.ahk script for comments on what these settings do exactly.", "x277 yp+40 w250 h60")
-
-	GuiAddButton("&Defaults", "x287 yp+55 w80 h23", "SettingsUI_BtnDefaults")
-	GuiAddButton("&OK", "Default x372 yp+0 w75 h23", "SettingsUI_BtnOK")
-	GuiAddButton("&Cancel", "x452 yp+0 w80 h23", "SettingsUI_BtnCancel")
+	GuiAddButton("&Defaults", "xm+110 y+m w80", "SettingsUI_BtnDefaults")
+	GuiAddButton("&OK", "Default xm+230 yp w80", "SettingsUI_BtnOK")
+	GuiAddButton("&Cancel", "xm+350 yp w80", "SettingsUI_BtnCancel")
 	
 	; close tabs in case some other script added some
-	Gui, Tab
+	gui, Tab
 }
 
 UpdateSettingsUI()
@@ -7975,7 +7981,7 @@ ShowSettingsUI()
 	SetTimer, ToolTipTimer, Off
 	ToolTip
 	Fonts.SetUIFont(9)
-	SettingsUIWidth := Globals.Get("SettingsUIWidth", 545)
+	SettingsUIWidth := Globals.Get("SettingsUIWidth", 570)
 	SettingsUIHeight := Globals.Get("SettingsUIHeight", 710)
 	SettingsUITitle := Globals.Get("SettingsUITitle", "PoE Item Info Settings")
 	Gui, Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
