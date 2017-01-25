@@ -8,7 +8,7 @@ FileRemoveDir, %A_ScriptDir%/temp, 1
 #Include, %A_ScriptDir%/lib/Class_Console.ahk
 #Include, %A_ScriptDir%/lib/DebugPrintArray.ahk
 #Include, %A_ScriptDir%/lib/AssociatedProgram.ahk
-#Include, %A_ScriptDir%/trade_data/jsonData.ahk
+#Include, %A_ScriptDir%/data_trade/jsonData.ahk
 #Include, %A_ScriptDir%/resources/VersionTrade.txt
 
 TradeMsgWrongAHKVersion := "AutoHotkey v" . TradeAHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
@@ -41,7 +41,7 @@ class TradeGlobals {
 }
 
 global TradeTempDir := A_ScriptDir . "\temp"
-global TradeDataDir := A_ScriptDir . "\trade_data"
+global TradeDataDir := A_ScriptDir . "\data_trade"
 global SettingsWindowWidth := 845 
 global SavedTradeSettings := false
 
@@ -908,7 +908,7 @@ TradeFunc_GetContributors(AuthorsPerLine=0)
 
 TradeFunc_ReadCraftingBases(){
 	bases := []
-	Loop, Read, %A_ScriptDir%\trade_data\crafting_bases.txt
+	Loop, Read, %A_ScriptDir%\data_trade\crafting_bases.txt
 	{
 		bases.push(A_LoopReadLine)
 	}
@@ -921,19 +921,19 @@ TradeFunc_ReadEnchantments(){
 	enchantments.helmet  := []
 	enchantments.gloves  := []
 	
-	Loop, Read, %A_ScriptDir%\trade_data\boot_enchantment_mods.txt
+	Loop, Read, %A_ScriptDir%\data_trade\boot_enchantment_mods.txt
 	{
 		If (StrLen(Trim(A_LoopReadLine)) > 0) {        
 			enchantments.boots.push(A_LoopReadLine)            
 		}
 	}
-	Loop, Read, %A_ScriptDir%\trade_data\helmet_enchantment_mods.txt
+	Loop, Read, %A_ScriptDir%\data_trade\helmet_enchantment_mods.txt
 	{
 		If (StrLen(Trim(A_LoopReadLine)) > 0) {
 			enchantments.helmet.push(A_LoopReadLine)
 		}
 	}
-	Loop, Read, %A_ScriptDir%\trade_data\glove_enchantment_mods.txt
+	Loop, Read, %A_ScriptDir%\data_trade\glove_enchantment_mods.txt
 	{
 		If (StrLen(Trim(A_LoopReadLine)) > 0) {
 			enchantments.gloves.push(A_LoopReadLine)
@@ -945,7 +945,7 @@ TradeFunc_ReadEnchantments(){
 TradeFunc_ReadCorruptions(){
 	mods := []    
 	
-	Loop, read, %A_ScriptDir%\trade_data\item_corrupted_mods.txt
+	Loop, read, %A_ScriptDir%\data_trade\item_corrupted_mods.txt
 	{
 		If (StrLen(Trim(A_LoopReadLine)) > 0) {        
 			mods.push(A_LoopReadLine)            
@@ -992,9 +992,9 @@ TradeFunc_DownloadDataFiles() {
 	; disabled while using debug mode 	
 	owner := TradeGlobals.Get("GithubUser", "POE-TradeMacro")
 	repo  := TradeGlobals.Get("GithubRepo", "POE-TradeMacro")
-	url   := "https://raw.githubusercontent.com/" . owner . "/" . repo . "/master/trade_data/"
-	dir = %A_ScriptDir%\trade_data
-	bakDir = %A_ScriptDir%\trade_data\old_data_files
+	url   := "https://raw.githubusercontent.com/" . owner . "/" . repo . "/master/data_trade/"
+	dir = %A_ScriptDir%\data_trade
+	bakDir = %A_ScriptDir%\data_trade\old_data_files
 	files := ["boot_enchantment_mods.txt","crafting_bases.txt","glove_enchantment_mods.txt","helmet_enchantment_mods.txt","item_corrupted_mods.txt","mods.json","uniques.json"]		
 	
 	; create .bak files and download (overwrite) data files

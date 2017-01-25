@@ -3,16 +3,16 @@
 ; Data is available via global variables
 ; json scraped with https://github.com/Eruyome/scrapeVariableUniqueItems/
 
-#Include, %A_ScriptDir%/lib/JSON.ahk
+#Include, %A_ScriptDir%\lib\JSON.ahk
 
 ; Parse the unique items data
-FileRead, JSONFile, %A_ScriptDir%/trade_data/uniques.json
+FileRead, JSONFile, %A_ScriptDir%\data_trade\uniques.json
 parsedJSON := JSON.Load(JSONFile)
 global TradeUniqueData := parsedJSON.uniques
 
 
 ; Parse the poe.trade mods
-FileRead, JSONFile, %A_ScriptDir%/trade_data/mods.json
+FileRead, JSONFile, %A_ScriptDir%\data_trade\mods.json
 parsedJSON := JSON.Load(JSONFile)
 global TradeModsData := parsedJSON.mods
 
