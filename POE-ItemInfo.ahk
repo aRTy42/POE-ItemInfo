@@ -188,7 +188,7 @@ If (UseExternalProjectName) {
 Else {
     Globals.Set("ProjectName", "PoE-ItemInfo")    
 }
-;FilesToCopyToUserFolder := [A_ScriptDir . "\data\defaults.ini", A_ScriptDir . "\data\AdditionalMacros.txt"]
+;FilesToCopyToUserFolder := [A_ScriptDir . "\resources\default_config.ini", A_ScriptDir . "\data\AdditionalMacros.txt"]
 ;PoEScripts_UserSettings(Globals.Get("ProjectName"), UseExternalProjectName, FilesToCopyToUserFolder)
 
 
@@ -214,7 +214,7 @@ class UserOptions {
 	ShowAffixBracketTier := 1       ; Show a T# indicator of the tier the affix bracket is in.
 									; T1 being the highest possible, T2 second-to-highest and so on
 
-	ShowAffixBracketTierTotal := 1  ; Appends the total number of tiers for a given affix in parentheses T/#Total
+	ShowAffixBracketTierTotal := 0  ; Appends the total number of tiers for a given affix in parentheses T/#Total
 									; T4/8 would represent the fourth highest tier, in eight total tiers.
 
 	ShowDarkShrineInfo := 0          ; Appends info about DarkShrine effects of affixes to rares
@@ -288,7 +288,7 @@ class UserOptions {
 	ToolTipTimeoutTicks := 150
 
 	; Font size for the tooltip, leave empty for default
-	FontSize := 11
+	FontSize := 9
 
 	; Displays the tooltip in virtual screen space at fixed coordinates.
 	; Virtual screen space means the complete desktop frame, including any secondary monitors.
@@ -298,7 +298,7 @@ class UserOptions {
 	; Only used if DisplayToolTipAtFixedCoords is 1.
 	ScreenOffsetX := 0
 	ScreenOffsetY := 0
-
+	
 	ScanUI()
 	{
 		this.OnlyActiveIfPOEIsFront := GuiGet("OnlyActiveIfPOEIsFront")
@@ -339,7 +339,7 @@ Opts := new UserOptions()
 ; This code block should only be called when ItemInfo runs by itself, not when it's included in other scripts like PoE-TradeMacro
 ; "SkipItemInfoUpdateCall" should be set outside by other scripts
 If (!SkipItemInfoUpdateCall) {
-	; file "PoEScripts_Update.ahk" has to exist in "%A_ScriptDir%\Lib\"
+	; file "PoEScripts_Update.ahk" has to exist in "%A_ScriptDir%\lib\"
 	repo := Globals.Get("GithubRepo")
 	user := Globals.Get("GithubUser")
 	ReleaseVersion := Globals.Get("ReleaseVersion")
@@ -565,17 +565,13 @@ AffixLines := new AffixLines_()
 
 IfNotExist, %A_ScriptDir%\config.ini
 {
-	IfNotExist, %A_ScriptDir%\data\defaults.ini
-	{
-		CreateDefaultConfig()
-	}
 	CopyDefaultConfig()
 }
 
 ; Windows system tray icon
 ; possible values: poe.ico, poe-bw.ico, poe-web.ico, info.ico
 ; set before creating the settings UI so it gets used for the settigns dialog as well
-Menu, Tray, Icon, %A_ScriptDir%\data\poe-bw.ico
+Menu, Tray, Icon, %A_ScriptDir%\resources\poe-bw.ico
 
 ReadConfig()
 Sleep, 100
@@ -7725,7 +7721,7 @@ ShowUnhandledCaseDialog()
 
 	Gui, 3:New,, Unhandled Case
 	Gui, 3:Color, FFFFFF
-	Gui, 3:Add, Picture, x25 y25 w36 h36, %A_ScriptDir%\data\info.png
+	Gui, 3:Add, Picture, x25 y25 w36 h36, %A_ScriptDir%\resources\info.png
 	Gui, 3:Add, Text, x65 y31 w500 h100, % Msg.Unhandled
 	Gui, 3:Add, Edit, x65 y96 w400 h120 ReadOnly vUnhDlg_EditItemText, % Globals.Get("ItemText", "Error: could'nt get item text (system clipboard modified?). Please try again or report the item manually.")
 	Gui, 3:Add, Text, x-5 y230 w500 h50 -Background
@@ -7856,6 +7852,7 @@ CreateSettingsUI()
 	; we will use this to center the footer component	
 	
 	GuiAddText("Mouse over settings or see the beginning of the PoE-Item-Info.ahk script for comments on what these settings do exactly.", "xm+70 w400")
+
 
 	GuiAddButton("&Defaults", "xm+110 y+m w80", "SettingsUI_BtnDefaults")
 	GuiAddButton("&OK", "Default xm+230 yp w80", "SettingsUI_BtnOK")
@@ -8147,20 +8144,13 @@ WriteConfig(ConfigPath="config.ini")
 
 CopyDefaultConfig()
 {
-	FileCopy, %A_ScriptDir%\data\defaults.ini, %A_ScriptDir%
-	FileMove, %A_ScriptDir%\defaults.ini, %A_ScriptDir%\config.ini
+	FileCopy, %A_ScriptDir%\resources\default_config.ini, %A_ScriptDir%\config.ini
 }
 
 RemoveConfig()
 {
 	FileDelete, %A_ScriptDir%\config.ini
 }
-
-CreateDefaultConfig()
-{
-	WriteConfig(A_ScriptDir . "\data\defaults.ini")
-}
-
 GetContributors(AuthorsPerLine=0)
 {
 	IfNotExist, %A_ScriptDir%\AUTHORS.txt
@@ -8357,7 +8347,7 @@ MenuTray_About:
 		Gui, About:Font, S10 CA03410,verdana
 		Gui, About:Add, Text, x260 y27 w170 h20 Center, Release %RelVer%
 		Gui, About:Add, Button, 0x8000 x316 y300 w70 h21, Close
-		Gui, About:Add, Picture, 0x1000 x17 y16 w230 h180 gAboutDlg_Fishing, %A_ScriptDir%\data\splash.png
+		Gui, About:Add, Picture, 0x1000 x17 y16 w230 h180 gAboutDlg_Fishing, %A_ScriptDir%\resources\splash.png
 		Gui, About:Font, Underline C3571AC,verdana
 		Gui, About:Add, Text, x260 y57 w170 h20 gVisitForumsThread Center, PoE forums thread
 		Gui, About:Add, Text, x260 y87 w170 h20 gAboutDlg_AhkHome Center, AutoHotkey homepage
