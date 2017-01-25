@@ -1,4 +1,4 @@
-; jewelry data from http://www.pathofexile.com/item-data/jewelry/order-by/implicit_mods/order/asc
+﻿; jewelry data from http://www.pathofexile.com/item-data/jewelry/order-by/implicit_mods/order/asc
 ; quiver data from http://pathofexile.gamepedia.com/Quivers
 
 ; Amulets
