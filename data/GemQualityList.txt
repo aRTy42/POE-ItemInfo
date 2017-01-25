@@ -1,4 +1,4 @@
-; Data from http://pathofexile.gamepedia.com
+﻿; Data from http://pathofexile.gamepedia.com
 
 gemQualityList := Object()
 

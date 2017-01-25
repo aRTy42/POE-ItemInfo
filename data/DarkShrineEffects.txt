@@ -1,4 +1,4 @@
-# Life Regenerated per second|Refills flasks |Drink Deeply |Player mod - Special |0
+﻿# Life Regenerated per second|Refills flasks |Drink Deeply |Player mod - Special |0
 +# Mana Gained on kill|Grants permanent Replenishing shrine |Restore that which was lost |Player mod - Shrine |0
 #% Additional Chance To Block Spells While Dual Wielding|An Arcanist's Strongbox spawns in the area |A trove of magic awaits you |Spawn - Strongbox |0
 #% Additional Chance To Block Spells With Staves|An Arcanist's Strongbox spawns in the area |A trove of magic awaits you |Spawn - Strongbox |0
@@ -242,7 +242,7 @@ Area is inhabited by Animals|25-30% more Monster Life, Monsters cannot be Stunne
 #% of Lightning Damage Leeched as Life|You are rewarded with a stack of Chance Orbs|Roll the dice|Reward - Currency|0
 +# to Level of Socketed Lightning Gems|True craftsmanship awaits you|An Artisan's Strongbox spawns in the area|Spawn - Strongbox|0
 Area is inhabited by one additional Invasion Boss|Opens six portals to Acton's Nightmare|A soft melody plays|Portal|0
-Hits can't be evaded|Opens six portals to Maelström of Chaos|Travel back in time|Portal|0
+Hits can't be evaded|Opens six portals to MaelstrÃ¶m of Chaos|Travel back in time|Portal|0
 Equipped Animated Guardian Drops Item on Death|You are rewarded with a stack of Vaal Orbs|Those who will not tempt fate lack the courage of manhood|Reward - Currency|0
 #% increased Melee Physical Damage while holding a Shield|A rare monster in the area will drop five rare shields|Keeper of the shield|Map mod - Item|0
 -#% maximum Player Resistances|100% increased experience gained|You always were a fast learner|Map mod - Special|0

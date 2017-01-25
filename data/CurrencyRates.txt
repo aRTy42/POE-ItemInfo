@@ -1,4 +1,4 @@
-; Data from http://poe.ninja
+﻿; Data from http://poe.ninja
 ; Preloaded with standard league rates.
 ; Adjust these to reflect current rates in your league.
 ; The base currency item is Orb of Chaos.

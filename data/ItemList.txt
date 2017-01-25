@@ -1,4 +1,4 @@
-Rusted Hatchet|2
+﻿Rusted Hatchet|2
 Jade Hatchet|6
 Boarding Axe|11
 Cleaver|16
@@ -210,7 +210,7 @@ Moon Staff|57
 Primordial Staff|58
 Lathi|60
 Ezomyte Staff|62
-Maelstr�m Staff|64
+Maelström Staff|64
 Imperial Staff|66
 Judgement Staff|68
 Eclipse Staff|70
