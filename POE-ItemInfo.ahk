@@ -136,7 +136,7 @@ GroupAdd, PoEexe, ahk_exe PathOfExileSteam.exe
 GroupAdd, PoEexe, ahk_exe PathOfExile_x64.exe
 GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 
-#Include %A_ScriptDir%\data\Version.txt
+#Include %A_ScriptDir%\resources\Version.txt
 #Include, %A_ScriptDir%\lib\JSON.ahk
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
@@ -146,7 +146,7 @@ If (A_AhkVersion <= AHKVersionRequired)
 	ExitApp
 }
 
-#Include %A_ScriptDir%\data\Messages.txt
+#Include %A_ScriptDir%\resources\Messages.txt
 IfNotExist, %A_ScriptDir%\temp
 	FileCreateDir, %A_ScriptDir%\temp
 
