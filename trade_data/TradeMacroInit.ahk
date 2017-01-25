@@ -9,7 +9,7 @@ FileRemoveDir, %A_ScriptDir%/temp, 1
 #Include, %A_ScriptDir%/lib/DebugPrintArray.ahk
 #Include, %A_ScriptDir%/lib/AssociatedProgram.ahk
 #Include, %A_ScriptDir%/trade_data/jsonData.ahk
-#Include, %A_ScriptDir%/trade_data/Version.txt
+#Include, %A_ScriptDir%/resources/VersionTrade.txt
 
 TradeMsgWrongAHKVersion := "AutoHotkey v" . TradeAHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
 If (A_AhkVersion < TradeAHKVersionRequired)
@@ -18,7 +18,7 @@ If (A_AhkVersion < TradeAHKVersionRequired)
 	ExitApp
 }
 
-Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico
+Menu, Tray, Icon, %A_ScriptDir%\resources\poe-trade-bl.ico
 Menu, Tray, Add, Open Wiki/FAQ, OpenGithubWikiFromMenu
 
 TradeFunc_StartSplashScreen()
@@ -58,12 +58,12 @@ class TradeUserOptions {
 	
 	Debug := 0      				; 
 	
-	PriceCheckHotKey := ^d        	; 
-	AdvancedPriceCheckHotKey := ^!s	; 
-	OpenWikiHotKey := ^w            	; 
-	CustomInputSearch := ^i         	;     
-	OpenSearchOnPoeTrade := ^q      	;     
-	ShowItemAge := ^e               	;     
+	PriceCheckHotKey := "^d"
+	AdvancedPriceCheckHotKey := "^!s"
+	OpenWikiHotKey := "^w"
+	CustomInputSearch := "^i"   
+	OpenSearchOnPoeTrade := "^q"  
+	ShowItemAge := "^e"     
 	
 	PriceCheckEnabled :=1
 	AdvancedPriceCheckEnabled :=1
@@ -104,9 +104,9 @@ class TradeUserOptions {
 }
 TradeOpts := new TradeUserOptions()
 
-IfNotExist, %A_ScriptDir%\trade_config.ini
+IfNotExist, %A_ScriptDir%\config_trade.ini
 {
-	IfNotExist, %TradeDataDir%\trade_defaults.ini
+	IfNotExist, %A_ScriptDir%\resources\default_config_trade.ini
 	{
 		CreateDefaultTradeConfig()
 	}
@@ -156,7 +156,7 @@ TradeFunc_StopSplashScreen()
 
 ; ----------------------------------------------------------- Functions ----------------------------------------------------------------
 
-ReadTradeConfig(TradeConfigPath="trade_config.ini")
+ReadTradeConfig(TradeConfigPath="config_trade.ini")
 {
 	Global
 	IfExist, %TradeConfigPath%
@@ -285,7 +285,7 @@ TradeFunc_AssignAllHotkeys() {
 	}
 }
 
-WriteTradeConfig(TradeConfigPath="trade_config.ini")
+WriteTradeConfig(TradeConfigPath="config_trade.ini")
 {  
 	Global
 	
@@ -429,18 +429,21 @@ WriteTradeConfig(TradeConfigPath="trade_config.ini")
 
 CopyDefaultTradeConfig()
 {
-	FileCopy, %TradeDataDir%\trade_defaults.ini, %A_ScriptDir%
-	FileMove, %A_ScriptDir%\trade_defaults.ini, %A_ScriptDir%\trade_config.ini
+	FileCopy, %A_ScriptDir%\resources\default_config_trade.ini, %A_ScriptDir%
+	FileMove, %A_ScriptDir%\default_config_trade.ini, %A_ScriptDir%\config_trade.ini
+	FileDelete, %A_ScriptDir%\default_config_trade.ini
+	
 }
 
 RemoveTradeConfig()
 {
-	FileDelete, %A_ScriptDir%\trade_config.ini
+	FileDelete, %A_ScriptDir%\config_trade.ini
 }
 
 CreateDefaultTradeConfig()
 {
-	WriteTradeConfig(%TradeDataDir% . "\trade_defaults.ini")
+	path := A_ScriptDir "\resources\default_config_trade.ini"	
+	WriteTradeConfig(path)
 }
 
 TradeFunc_SetLeagueIfSelectedIsInactive() 
@@ -865,7 +868,7 @@ TradeFunc_CreateTradeAboutWindow() {
 		Gui, About:Font, S10 CA03410,verdana
 	
 		Gui, About:Add, Text, x705 y27 w170 h20 Center, Release %RelVer%
-		Gui, About:Add, Picture, 0x1000 x462 y16 w230 h180, %A_ScriptDir%\trade_data\splash.png
+		Gui, About:Add, Picture, 0x1000 x462 y16 w230 h180, %A_ScriptDir%\resources\splash-bl.png
 		Gui, About:Font, Underline C3571AC,verdana
 		Gui, About:Add, Text, x705 y57 w170 h20 gTradeVisitForumsThread Center, PoE forums thread
 		Gui, About:Add, Text, x705 y87 w170 h20 gTradeAboutDlg_GitHub Center, PoE-TradeMacro GitHub

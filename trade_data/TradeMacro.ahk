@@ -2950,7 +2950,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			Gui, SelectModsGui:Add, CheckBox, x+10 yp+1 vTradeAdvancedSelected%index%	
 		}
 		Else {
-			GUI, SelectModsGui:Add, Picture, x+10 yp+1 hwndErrorPic 0x0100, %A_ScriptDir%\trade_data\error.png
+			GUI, SelectModsGui:Add, Picture, x+10 yp+1 hwndErrorPic 0x0100, %A_ScriptDir%\resources\error.png
 		}	
 		
 		color := "cBlack"
@@ -3013,7 +3013,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	Gui, SelectModsGui:Add, CheckBox, x%RightPos% yp+0 vTradeAdvancedSelectedCheckAllMods gAdvancedCheckAllMods, % ""
 	
 	If (ModNotFound) {
-		Gui, SelectModsGui:Add, Picture, x10 y+16, %A_ScriptDir%\trade_data\error.png
+		Gui, SelectModsGui:Add, Picture, x10 y+16, %A_ScriptDir%\resources\error.png
 		Gui, SelectModsGui:Add, Text, x+10 yp+2 cRed,One or more mods couldn't be found on poe.trade
 	}
 	Gui, SelectModsGui:Add, Text, x10 y+14 cGreen, Please support poe.trade by disabling adblock
@@ -3341,7 +3341,7 @@ OverwriteSettingsNameTimer:
 		Menu, Tray, UseErrorLevel
 		Menu, Tray, Rename, % OldMenuTrayName, % NewMenuTrayName
 		If (ErrorLevel = 0) {		
-			Menu, Tray, Icon, %A_ScriptDir%\trade_data\poe-trade-bl.ico	
+			Menu, Tray, Icon, %A_ScriptDir%\resources\poe-trade-bl.ico	
 			Globals.Set("SettingsUITitle", TradeGlobals.Get("SettingsUITitle"))
 			SetTimer, OverwriteSettingsNameTimer, Off
 		}
