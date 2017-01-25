@@ -21,7 +21,7 @@ Never completely trust any price checking tool. Inform yourself about what this 
 3. Make sure to run PoE in (borderless) windowed mode. Otherwise it won't work!
 4. Run **_Run_Only_This.ahk_** or (`Run_without_Admin_Elevation.ahk` if you don't need and want it).
 5. Default league is set to `tmpstandard` (Softcore Temp-League).
-6. A lot of options, including the league can be changed by opening the settings window or editing `trade_config.ini`.   
+6. A lot of options, including the league can be changed by opening the settings window or editing `config_trade.ini`.   
 
 > **Right-click the script icon in your system tray and select `PoE Item Info Settings` to open the settings window and to edit both `PoE-ItemInfos` and `PoE-TradeMacros` settings.**
 
