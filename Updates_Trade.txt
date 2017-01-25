@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.7.1
+================================================================================================
+Fixed some file encodings which caused some issues.
+
 1.7.0
 ================================================================================================
 Reworked custom search (added a few options).

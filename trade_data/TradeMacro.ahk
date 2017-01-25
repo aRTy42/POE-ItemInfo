@@ -3323,7 +3323,7 @@ ChangeScriptListsTimer:
 		o.push(A_ScriptDir "\PoE-TradeMacro_(Fallback)")
 		Global.Set("ScriptList", o)
 		
-		l.push([A_ScriptDir "\TradeUpdates.txt","TradeMacro"])
+		l.push([A_ScriptDir "\Updates_Trade.txt","TradeMacro"])
 		Global.Set("UpdateNoteFileList", l)
 
 		SetTimer, ChangeScriptListsTimer, Off
