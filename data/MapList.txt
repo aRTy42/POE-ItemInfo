@@ -155,11 +155,7 @@ mapList["Ramparts Map"] := "Tier: 6, Level: 73, Atlas position: right`nTileset: 
 
 mapList["Shaped Ramparts Map"] := "Tier: 11, Level: 78, Atlas position: right`nTileset: `n`nUpgrades to: ?`n`nInfos from Ramparts Map:`n`nBoss: Legius Garhall (based on: Guard Captain)`nLeap Slam, Cleave, Double Strike`n`nDifficulty: 4/5, Layout: A"
 
-<<<<<<< HEAD
-mapList["Spider Forest Map"] := "Tier: 6, Level: 73, Atlas position: right`nTileset: The Blackwood (Outdoors)`n`nProduced by: Tower Map, Spider Lair Map`nUpgrades to: Armoury Map`nConnected to: Mud Geyser Map`n`nDivination cards:`n- The Doctor`n- The Gambler`n- Her Mask`n- The Incantation`n`nBoss: Enticer of Rot (based on: Alira)`nBlood Balls`n`nDifficulty: 3/5, Layout: C"
-=======
 mapList["Spider Forest Map"] := "Tier: 6, Level: 73, Atlas position: right`nTileset: The Blackwood (Outdoors)`n`nProduced by: Tower Map, Spider Lair Map`nUpgrades to: Armoury Map`nConnected to: Mud Geyser Map`n`nDivination cards:`n- Call to the First Ones`n- The Doctor`n- The Gambler`n- Her Mask`n- The Incantation`n`nBoss: Enticer of Rot (based on: Alira)`nBlood Balls`n`nDifficulty: 3/5, Layout: C"
->>>>>>> 87cac4fa66554223b039b5ea7452c219bc3d4e0f
 
 mapList["Shaped Spider Forest Map"] := "Tier: 11, Level: 78, Atlas position: right`nTileset: The Blackwood`n`nUpgrades to: ?`n`nInfos from Spider Forest Map:`n`nBoss: Enticer of Rot (based on: Alira)`nBlood Balls`n`nDifficulty: 3/5, Layout: C"
 

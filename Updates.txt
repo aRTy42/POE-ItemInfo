@@ -1,7 +1,6 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
-=======
 2.5.04
 ================================
 from Eruyome, aRTy42, 4GForce
