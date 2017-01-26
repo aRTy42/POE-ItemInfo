@@ -1,4 +1,7 @@
-﻿PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScreenTitle = "") {
+﻿#Include, %A_ScriptDir%\lib\JSON.ahk
+#Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
+
+PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScreenTitle = "") {
 	GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScreenTitle)
 }
 
@@ -7,7 +10,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 		return
 	}
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	url := "https://api.github.com/repos/" . user . "/" . repo . "/releases/latest"
+	url := "https://api.github.com/repos/" . user . "/" . repo . "/releases"
 	
 	Try  {
 		Encoding := "utf-8"
@@ -35,25 +38,45 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 				MsgBox, 16,, % "Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
 			}
 		}
-
-		RegExMatch(html, "i)""tag_name"":""(.*?)""", tag)
-		RegExMatch(html, "i)""name"":""(.*?)""", vName)
-		RegExMatch(html, "i)""html_url"":""(.*?)""", url)
 		
-		tag := tag1
-		vName := vName1
-		url := url1    
+		parsedJSON := JSON.Load(html)
+		LatestRelease := {}		
+		For key, val in parsedJSON {
+			If (not val.draft) {
+				LatestRelease := val				
+				Break
+			}
+		}
 		
-		RegExReplace(tag, "^v", tag)
+		; get download link to zip files (normal release zip and asset zip file)
+		downloadURL_zip := LatestRelease.zipball_url
+		If (LatestRelease.assets.Length()) {
+			For key, val in LatestRelease.assets {
+				If (val.content_type = "application/zip") {
+					downloadURL_asset := val.browser_download_url
+				}
+			}
+		}
+		
+		isPrerelease:= LatestRelease.prerelease
+		releaseTag  := LatestRelease.tag_name
+		releaseURL  := url . "/tag/" . releaseTag
+		publisedAt  := LatestRelease.published_at
+		description := LatestRelease.body
+		
+		RegExReplace(releaseTag, "^v", releaseTag)
           ; works only in x.x.x format (valid semantic versioning)
-		RegExMatch(tag, "(\d+).(\d+).(\d+)(.*)", latestVersion)
+		RegExMatch(releaseTag, "(\d+).(\d+).(\d+)(.*)", latestVersion)
 		RegExMatch(ReleaseVersion, "(\d+).(\d+).(\d+)(.*)", currentVersion)
-		RegExMatch(html,  "iU)""body"":""(.*?)""", description)
 		
-		description := RegExReplace(description1, "iU)\\""", """")
+		If (StrLen(releaseTag) < 1) {
+			MsgBox, 16,, % "Exception thrown! Parsing release information from Github failed."
+		}
+		
+		description := RegExReplace(description, "iU)\\""", """")
 		StringReplace, description, description, \r\n, §, All 
 		StringReplace, description, description, \n, §, All 
-
+		
 		newRelease := false
 		Loop {			
 			If (not latestVersion%A_Index% and not currentVersion%A_Index%) {
@@ -68,14 +91,26 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 			If(SplashScreenTitle) {
 				WinSet, AlwaysOnTop, Off, %SplashScreenTitle%	
 			}
-			Gui, UpdateNotification:Add, Text, cGreen, Update available!
-			Gui, UpdateNotification:Add, Text, , Your installed version is <%currentVersion%>.`nThe latest version is <%latestVersion%>.
-			Gui, UpdateNotification:Add, Link, cBlue, <a href="%url%">Download it here</a>        
+			;Gui, UpdateNotification:Add, Text, cGreen, Update available!
+			boxHeight := isPrerelease ? 80 : 60
+			Gui, UpdateNotification:Add, GroupBox, w380 h%boxHeight% cGreen, Update available!
+			If (isPrerelease) {
+				Gui, UpdateNotification:Add, Text, x20 yp+20, Warning: This is a pre-release.
+				Gui, UpdateNotification:Add, Text, x20 y+10, Installed version:
+			} Else {
+				Gui, UpdateNotification:Add, Text, x20 yp+20, Installed version:
+			}
 
+			Gui, UpdateNotification:Add, Text, x100 yp+0, <%currentVersion%>.
+			Gui, UpdateNotification:Add, Link, x+20 yp+0 cBlue, <a href="%url%">Download it here</a>        
+			Gui, UpdateNotification:Add, Text, x20 y+0, Latest version:
+			Gui, UpdateNotification:Add, Text, x100 yp+0, <%latestVersion%>.			
+			
+			Gui, UpdateNotification:Add, Text, x10 cGreen, Update notes:		
 			Loop, Parse, description, §
 			{
 				If(StrLen(A_LoopField) > 1) {
-					Gui, UpdateNotification:Add, Text, w320, % "- " A_LoopField				
+					Gui, UpdateNotification:Add, Text, w320 x10 y+5, % "- " A_LoopField				
 				}
 			}
 			
