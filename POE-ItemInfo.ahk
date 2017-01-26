@@ -502,8 +502,6 @@ class Item {
 		This.IsMirrored := False
 		This.IsMapFragment := False
 		This.IsEssence := False
-		
-		This.DamageDetails := {}
 	}
 }
 Item := new Item()
@@ -5902,7 +5900,8 @@ AssembleDamageDetails(FullItemData)
 			Result = %Result%`nQ20 DPS:    %Q20Dps%
 		}
 	}
-
+	
+	Item.DamageDetails := {}
 	Item.DamageDetails.MainHEleDps := MainHEleDps
 	Item.DamageDetails.OffHEleDps := OffHEleDps
 	Item.DamageDetails.MainHChaosDps := MainHChaosDps
