@@ -7584,8 +7584,18 @@ GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabe
 	av := StrPrefix(AssocVar, "v")
 	al := StrPrefix(AssocLabel, "g")
 	ah := StrPrefix(AssocHwnd, "hwnd")
+	
+	If (ControlType = "GroupBox") {
+		Gui, Font, cDA4F49
+		Options := Param4
+	}
+	Else {
+		Options := Param4 . " BackgroundTrans "
+	}		
+	
 	GuiName := (StrLen(GuiName) > 0) ? Trim(GuiName) . ":Add" : "Add"
-	Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Param4%, %Contents%
+	Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Options%, %Contents%
+	Gui, Font
 }
 
 GuiAddButton(Contents, PositionInfo, AssocLabel="", AssocVar="", AssocHwnd="", Options="", GuiName="")
@@ -8000,7 +8010,7 @@ ShowUpdateNotes()
 	Loop, % Files.Length() {
 		file := Files[A_Index][1]
 		FileRead, notes, %file%
-		Gui, UpdateNotes:Add, Edit, r50 ReadOnly w700, %notes%		
+		Gui, UpdateNotes:Add, Edit, r50 ReadOnly w700 BackgroundTrans, %notes%		
 		
 		NextTab := A_Index + 1
 		Gui, UpdateNotes:Tab, %NextTab%
