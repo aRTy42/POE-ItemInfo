@@ -680,47 +680,47 @@ CreateTradeSettingsUI()
 	
 	GuiAddText("Price Check Hotkey:", "x17 yp+28 w160 h20 0x0100", "LblPriceCheckHotKey", "LblPriceCheckHotKeyH")
 	AddToolTip(LblPriceCheckHotKeyH, "Check item prices.")
-	GuiAddEdit(TradeOpts.PriceCheckHotKey, "x+10 yp-2 w50 h20", "PriceCheckHotKey", "PriceCheckHotKeyH")
+	GuiAddEdit(TradeOpts.PriceCheckHotKey, "x+1 yp-2 w50 h20", "PriceCheckHotKey", "PriceCheckHotKeyH")
 	AddToolTip(PriceCheckHotKeyH, "Default: ctrl + d")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.PriceCheckEnabled, "PriceCheckEnabled", "PriceCheckEnabledH")
 	AddToolTip(PriceCheckEnabledH, "Enable Hotkey.")
 	
 	GuiAddText("Advanced Price Check Hotkey:", "x17 yp+38 w160 h20 0x0100", "LblAdvancedPriceCheckHotKey", "LblAdvancedPriceCheckHotKeyH")
 	AddToolTip(LblAdvancedPriceCheckHotKeyH, "Select mods to include in your search`nbefore checking prices.")
-	GuiAddEdit(TradeOpts.AdvancedPriceCheckHotKey, "x+10 yp-2 w50 h20", "AdvancedPriceCheckHotKey", "AdvancedPriceCheckHotKeyH")
+	GuiAddEdit(TradeOpts.AdvancedPriceCheckHotKey, "x+1 yp-2 w50 h20", "AdvancedPriceCheckHotKey", "AdvancedPriceCheckHotKeyH")
 	AddToolTip(AdvancedPriceCheckHotKeyH, "Default: ctrl + alt + d")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.AdvancedPriceCheckEnabled, "AdvancedPriceCheckEnabled", "AdvancedPriceCheckEnabledH")
 	AddToolTip(AdvancedPriceCheckEnabledH, "Enable Hotkey.")
 	
 	GuiAddText("Custom Input Search:", "x17 yp+38 w160 h20 0x0100", "LblCustomInputSearchHotkey", "LblCustomInputSearchHotkeyH")
 	AddToolTip(LblCustomInputSearchHotkeyH, "Custom text input search.")
-	GuiAddEdit(TradeOpts.CustomInputSearchHotkey, "x+10 yp-2 w50 h20", "CustomInputSearchHotkey", "CustomInputSearchHotkeyH")
+	GuiAddEdit(TradeOpts.CustomInputSearchHotkey, "x+1 yp-2 w50 h20", "CustomInputSearchHotkey", "CustomInputSearchHotkeyH")
 	AddToolTip(CustomInputSearchHotkeyH, "Default: ctrl + i")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.CustomInputSearchEnabled, "CustomInputSearchEnabled", "CustomInputSearchEnabledH")
 	AddToolTip(CustomInputSearchEnabledH, "Enable Hotkey.")
 	
 	GuiAddText("Open Search on poe.trade:", "x17 yp+38 w160 h20 0x0100", "LblOpenSearchOnPoeTradeHotKey", "LblOpenSearchOnPoeTradeHotKeyH")
 	AddToolTip(LblOpenSearchOnPoeTradeHotKeyH, "Open your search on poe.trade instead of showing`na tooltip with results.")
-	GuiAddEdit(TradeOpts.OpenSearchOnPoeTradeHotKey, "x+10 yp-2 w50 h20", "OpenSearchOnPoeTradeHotKey", "OpenSearchOnPoeTradeHotKeyH")
+	GuiAddEdit(TradeOpts.OpenSearchOnPoeTradeHotKey, "x+1 yp-2 w50 h20", "OpenSearchOnPoeTradeHotKey", "OpenSearchOnPoeTradeHotKeyH")
 	AddToolTip(OpenSearchOnPoeTradeHotKeyH, "Default: ctrl + q")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.OpenSearchOnPoeTradeEnabled, "OpenSearchOnPoeTradeEnabled", "OpenSearchOnPoeTradeEnabledH")
 	AddToolTip(OpenSearchOnPoeTradeEnabledH, "Enable Hotkey.")
 	
 	GuiAddText("Open Item on Wiki:", "x17 yp+38 w160 h20 0x0100", "LblOpenWikiHotkey", "LblOpenWikiHotkeyH")
 	AddToolTip(LblOpenWikiHotKeyH, "Open your items page on the PoE-Wiki.")
-	GuiAddEdit(TradeOpts.OpenWikiHotKey, "x+10 yp-2 w50 h20", "OpenWikiHotKey", "OpenWikiHotKeyH")
+	GuiAddEdit(TradeOpts.OpenWikiHotKey, "x+1 yp-2 w50 h20", "OpenWikiHotKey", "OpenWikiHotKeyH")
 	AddToolTip(OpenWikiHotKeyH, "Default: ctrl + w")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.OpenWikiEnabled, "OpenWikiEnabled", "OpenWikiEnabledH")
 	AddToolTip(OpenWikiEnabledH, "Enable Hotkey.")
 	
 	GuiAddText("Show Item Age:", "x17 yp+38 w160 h20 0x0100", "LblShowItemAgeHotkey", "LblShowItemAgeHotkeyH")
 	AddToolTip(LblShowItemAgeHotkeyH, "Checks your item's age.")
-	GuiAddEdit(TradeOpts.ShowItemAgeHotkey, "x+10 yp-2 w50 h20", "ShowItemAgeHotkey", "ShowItemAgeHotkeyH")
+	GuiAddEdit(TradeOpts.ShowItemAgeHotkey, "x+1 yp-2 w50 h20", "ShowItemAgeHotkey", "ShowItemAgeHotkeyH")
 	AddToolTip(ShowItemAgeHotkeyH, "Default: ctrl + a")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.ShowItemAgeEnabled, "ShowItemAgeEnabled", "ShowItemAgeEnabledH")
 	AddToolTip(ShowItemAgeEnabledH, "Enable Hotkey.")
 	
-	Gui, Add, Link, x17 yp+32 w160 h20 cBlue, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
+	Gui, Add, Link, x17 yp+32 w160 h20 cBlue BackgroundTrans, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
 	
     ; Cookies
     
@@ -741,7 +741,7 @@ CreateTradeSettingsUI()
 	AddToolTip(LblCfClearanceH, "'cf_clearance' cookie. See 'How to'.")
 	GuiAddEdit(TradeOpts.CfClearance, "x+10 yp-2 w150 h20", "CfClearance", "CfClearanceH")
 	
-	Gui, Add, Link, x17 yp+28 w160 h20 cBlue, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Cookie-retrieval">How to</a>
+	Gui, Add, Link, x17 yp+28 w160 h20 cBlue BackgroundTrans, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Cookie-retrieval">How to</a>
 	
     ; Search
 	
@@ -808,7 +808,7 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("Alternative currency search", "x287 yp+30 w230 h40", TradeOpts.AlternativeCurrencySearch, "AlternativeCurrencySearch", "AlternativeCurrencySearchH")
 	AddToolTip(AlternativeCurrencySearchH, "Shows historical data of the searched currency.")
 	
-	Gui, Add, Link, x287 yp+43 w230 cBlue, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
+	Gui, Add, Link, x287 yp+43 w230 cBlue BackgroundTrans, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
 	
 	GuiAddText("Mouse over settings to see what these settings do exactly.", "x287 y585 w250 h30")
 	

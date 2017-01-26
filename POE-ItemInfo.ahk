@@ -502,8 +502,6 @@ class Item {
 		This.IsMirrored := False
 		This.IsMapFragment := False
 		This.IsEssence := False
-		
-		This.DamageDetails := {}
 	}
 }
 Item := new Item()
@@ -5902,7 +5900,8 @@ AssembleDamageDetails(FullItemData)
 			Result = %Result%`nQ20 DPS:    %Q20Dps%
 		}
 	}
-
+	
+	Item.DamageDetails := {}
 	Item.DamageDetails.MainHEleDps := MainHEleDps
 	Item.DamageDetails.OffHEleDps := OffHEleDps
 	Item.DamageDetails.MainHChaosDps := MainHChaosDps
@@ -7585,8 +7584,18 @@ GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabe
 	av := StrPrefix(AssocVar, "v")
 	al := StrPrefix(AssocLabel, "g")
 	ah := StrPrefix(AssocHwnd, "hwnd")
+	
+	If (ControlType = "GroupBox") {
+		Gui, Font, cDA4F49
+		Options := Param4
+	}
+	Else {
+		Options := Param4 . " BackgroundTrans "
+	}		
+	
 	GuiName := (StrLen(GuiName) > 0) ? Trim(GuiName) . ":Add" : "Add"
-	Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Param4%, %Contents%
+	Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Options%, %Contents%
+	Gui, Font
 }
 
 GuiAddButton(Contents, PositionInfo, AssocLabel="", AssocVar="", AssocHwnd="", Options="", GuiName="")
@@ -7779,24 +7788,24 @@ CreateSettingsUI()
 
 	GuiAddGroupBox("Tooltip", "x7 y+20 w260 h185 Section")
 
-	GuiAddCheckBox("Use tooltip timeout", "xs10 ys20 w210 h30", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
+	GuiAddCheckBox("Use tooltip timeout", "xs10 ys20 w210", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
 	AddToolTip(UseTooltipTimeoutH, "Hide tooltip automatically after x amount of ticks have passed")
-		GuiAddText("Timeout ticks (1 tick = 100ms):", "xs20 ys47 w150 h20", "LblToolTipTimeoutTicks")
-		GuiAddEdit(Opts.ToolTipTimeoutTicks, "xs180 ys45 w50 h20", "ToolTipTimeoutTicks")
+		GuiAddText("Timeout ticks (1 tick = 100ms):", "xs20 ys45 w150", "LblToolTipTimeoutTicks")
+		GuiAddEdit(Opts.ToolTipTimeoutTicks, "xs180 ys41 w50 Number", "ToolTipTimeoutTicks")
 
-	GuiAddCheckbox("Display at fixed coordinates", "xs10 ys65 w230 h30", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
+	GuiAddCheckbox("Display at fixed coordinates", "xs10 ys70 w230", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
 	AddToolTip(DisplayToolTipAtFixedCoordsH, "Show tooltip in virtual screen space at the fixed`ncoordinates given below. Virtual screen space means`nthe full desktop frame, including any secondary`nmonitors. Coords are relative to the top left edge`nand increase going down and to the right.")
-		GuiAddText("X:", "xs30 ys97 w20 h20", "LblScreenOffsetX")
-		GuiAddEdit(Opts.ScreenOffsetX, "xs48 ys90 w40 h20", "ScreenOffsetX")
-		GuiAddText("Y:", "xs98 ys97 w20 h20", "LblScreenOffsetY")
-		GuiAddEdit(Opts.ScreenOffsetY, "xs118 ys90 w40 h20", "ScreenOffsetY")
+		GuiAddText("X:", "xs30 ys97 w20", "LblScreenOffsetX")
+		GuiAddEdit(Opts.ScreenOffsetX, "xs48 ys93 w40 Number", "ScreenOffsetX")
+		GuiAddText("Y:", "xs98 ys97 w20", "LblScreenOffsetY")
+		GuiAddEdit(Opts.ScreenOffsetY, "xs118 ys93 w40 Number", "ScreenOffsetY")
 
 	GuiAddText("Mousemove threshold (px):", "xs10 ys127 w160 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
 	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip automatically after the mouse has moved x amount of pixels")
-	GuiAddEdit(Opts.MouseMoveThreshold, "xs180 ys125 w50 h20", "MouseMoveThreshold", "MouseMoveThresholdH")
+	GuiAddEdit(Opts.MouseMoveThreshold, "xs180 ys125 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
 
 	GuiAddText("Font Size:", "xs10 ys157 w160 h20", "LblFontSize")
-	GuiAddEdit(Opts.FontSize, "xs180 ys155 w50 h20", "FontSize")
+	GuiAddEdit(Opts.FontSize, "xs180 ys155 w50 h20 Number", "FontSize")
 
 	; Display - Affixes
 
@@ -7836,10 +7845,11 @@ CreateSettingsUI()
 	GuiAddCheckbox("Compact affix types", "xs10 ys50 w210 h30", Opts.CompactAffixTypes, "CompactAffixTypes", "CompactAffixTypesH")
 	AddToolTip(CompactAffixTypesH, "Replace affix type with a short-hand version,`ne.g. P=Prefix, S=Suffix, CP=Composite")
 
+
 	GuiAddText("Mirror line field width:", "xs10 ys87 w110 h20", "LblMirrorLineFieldWidth")
-	GuiAddEdit(Opts.MirrorLineFieldWidth, "xs130 ys85 w40 h20", "MirrorLineFieldWidth")
+	GuiAddEdit(Opts.MirrorLineFieldWidth, "xs130 ys85 w40 h20 Number", "MirrorLineFieldWidth")
 	GuiAddText("Value range field width:", "xs10 ys112 w120 h20", "LblValueRangeFieldWidth")
-	GuiAddEdit(Opts.ValueRangeFieldWidth, "xs130 ys110 w40 h20", "ValueRangeFieldWidth")
+	GuiAddEdit(Opts.ValueRangeFieldWidth, "xs130 ys110 w40 h20 Number", "ValueRangeFieldWidth")
 	GuiAddText("Affix detail delimiter:", "xs10 ys137 w120 h20", "LblAffixDetailDelimiter")
 	GuiAddEdit(Opts.AffixDetailDelimiter, "xs130 ys135 w40 h20", "AffixDetailDelimiter")
 	GuiAddText("Affix detail ellipsis:", "xs10 ys162 w120 h20", "LblAffixDetailEllipsis")
@@ -8000,7 +8010,7 @@ ShowUpdateNotes()
 	Loop, % Files.Length() {
 		file := Files[A_Index][1]
 		FileRead, notes, %file%
-		Gui, UpdateNotes:Add, Edit, r50 ReadOnly w700, %notes%		
+		Gui, UpdateNotes:Add, Edit, r50 ReadOnly w700 BackgroundTrans, %notes%		
 		
 		NextTab := A_Index + 1
 		Gui, UpdateNotes:Tab, %NextTab%
