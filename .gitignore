@@ -49,19 +49,18 @@ Temporary Items
 .idea/workspace.xml
 POE-ItemInfo.ahk.bak
 .idea/
-backup/
 
 *.bak
 main.ahk
+TradeMacroMain.ahk
 temp/*
 temp
-trade_data/leagues.json
-trade_data/backup/*
+data_trade/leagues.json
+data_trade/old_data_files/
+data_trade/backup/*
 backup/*
 backup/
-trade_data/old_data_files/
 test.ahk
-backup/
 
 config.ini
-trade_config.ini
+config_trade.ini

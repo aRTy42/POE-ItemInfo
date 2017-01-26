@@ -13,17 +13,17 @@ If (A_AhkVersion < TradeAHKVersionRequired)
 StartSplashScreen()
 
 FileRead, info, POE-ItemInfo.ahk
-FileRead, tradeInit, %A_ScriptDir%\data_trade\TradeMacroInit.ahk
-FileRead, trade, %A_ScriptDir%\data_trade\TradeMacro.ahk
+FileRead, tradeInit, %A_ScriptDir%\resources\ahk\TradeMacroInit.ahk
+FileRead, trade, %A_ScriptDir%\resources\ahk\TradeMacro.ahk
 
 info := "`n`r`n`r" . info . "`n`r`n`r"
-CloseScript("main.ahk")
-FileDelete, %A_ScriptDir%\main.ahk
-FileCopy, %A_ScriptDir%\data_trade\TradeMacroInit.ahk, %A_ScriptDir%\main.ahk
-FileAppend, %info%, %A_ScriptDir%\main.ahk
-FileAppend, %trade%, %A_ScriptDir%\main.ahk
+CloseScript("TradeMacroMain.ahk")
+FileDelete, %A_ScriptDir%\TradeMacroMain.ahk
+FileCopy, %A_ScriptDir%\resources\ahk\TradeMacroInit.ahk, %A_ScriptDir%\TradeMacroMain.ahk
+FileAppend, %info%, %A_ScriptDir%\TradeMacroMain.ahk
+FileAppend, %trade%, %A_ScriptDir%\TradeMacroMain.ahk
 
-Run %A_ScriptDir%\main.ahk
+Run %A_ScriptDir%\TradeMacroMain.ahk
 ExitApp 
 
 CloseScript(Name)

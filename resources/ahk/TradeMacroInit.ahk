@@ -1,15 +1,15 @@
 ﻿; TradeMacro Add-on to POE-ItemInfo
 ; IGN: Eruyome, ManicCompression
 
-FileRemoveDir, %A_ScriptDir%/temp, 1
+FileRemoveDir, %A_ScriptDir%\temp, 1
 ;https://autohotkey.com/boards/viewtopic.php?f=6&t=53
-#Include, %A_ScriptDir%/lib/JSON.ahk
+#Include, %A_ScriptDir%\lib\JSON.ahk
 ; Console https://autohotkey.com/boards/viewtopic.php?f=6&t=2116
-#Include, %A_ScriptDir%/lib/Class_Console.ahk
-#Include, %A_ScriptDir%/lib/DebugPrintArray.ahk
-#Include, %A_ScriptDir%/lib/AssociatedProgram.ahk
-#Include, %A_ScriptDir%/data_trade/jsonData.ahk
-#Include, %A_ScriptDir%/resources/VersionTrade.txt
+#Include, %A_ScriptDir%\lib\Class_Console.ahk
+#Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
+#Include, %A_ScriptDir%\lib\AssociatedProgram.ahk
+#Include, %A_ScriptDir%\resources\ahk\jsonData.ahk
+#Include, %A_ScriptDir%\resources\VersionTrade.txt
 
 TradeMsgWrongAHKVersion := "AutoHotkey v" . TradeAHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
 If (A_AhkVersion < TradeAHKVersionRequired)
@@ -18,7 +18,7 @@ If (A_AhkVersion < TradeAHKVersionRequired)
 	ExitApp
 }
 
-Menu, Tray, Icon, %A_ScriptDir%\resources\poe-trade-bl.ico
+Menu, Tray, Icon, %A_ScriptDir%\resources\images\poe-trade-bl.ico
 Menu, Tray, Add, Open Wiki/FAQ, OpenGithubWikiFromMenu
 
 TradeFunc_StartSplashScreen()
@@ -106,7 +106,7 @@ TradeOpts := new TradeUserOptions()
 
 IfNotExist, %A_ScriptDir%\config_trade.ini
 {
-	IfNotExist, %A_ScriptDir%\resources\default_config_trade.ini
+	IfNotExist, %A_ScriptDir%\resources\config\default_config_trade.ini
 	{
 		CreateDefaultTradeConfig()
 	}
@@ -429,7 +429,7 @@ WriteTradeConfig(TradeConfigPath="config_trade.ini")
 
 CopyDefaultTradeConfig()
 {
-	FileCopy, %A_ScriptDir%\resources\default_config_trade.ini, %A_ScriptDir%
+	FileCopy, %A_ScriptDir%\resources\config\default_config_trade.ini, %A_ScriptDir%
 	FileMove, %A_ScriptDir%\default_config_trade.ini, %A_ScriptDir%\config_trade.ini
 	FileDelete, %A_ScriptDir%\default_config_trade.ini
 	
@@ -442,7 +442,7 @@ RemoveTradeConfig()
 
 CreateDefaultTradeConfig()
 {
-	path := A_ScriptDir "\resources\default_config_trade.ini"	
+	path := A_ScriptDir "\resources\config\default_config_trade.ini"	
 	WriteTradeConfig(path)
 }
 
@@ -868,7 +868,7 @@ TradeFunc_CreateTradeAboutWindow() {
 		Gui, About:Font, S10 CA03410,verdana
 	
 		Gui, About:Add, Text, x705 y27 w170 h20 Center, Release %RelVer%
-		Gui, About:Add, Picture, 0x1000 x462 y16 w230 h180, %A_ScriptDir%\resources\splash-bl.png
+		Gui, About:Add, Picture, 0x1000 x462 y16 w230 h180, %A_ScriptDir%\resources\images\splash-bl.png
 		Gui, About:Font, Underline C3571AC,verdana
 		Gui, About:Add, Text, x705 y57 w170 h20 gTradeVisitForumsThread Center, PoE forums thread
 		Gui, About:Add, Text, x705 y87 w170 h20 gTradeAboutDlg_GitHub Center, PoE-TradeMacro GitHub
@@ -888,13 +888,13 @@ TradeFunc_CreateTradeAboutWindow() {
 
 TradeFunc_GetContributors(AuthorsPerLine=0)
 {
-	IfNotExist, %A_ScriptDir%\AUTHORS_Trade.txt
+	IfNotExist, %A_ScriptDir%\resources\AUTHORS_Trade.txt
 	{
 		return "`r`n AUTHORS.txt missing `r`n"
 	}
 	Authors := "`r`n"
 	i := 0
-	Loop, Read, %A_ScriptDir%\AUTHORS_Trade.txt, `r, `n
+	Loop, Read, %A_ScriptDir%\resources\AUTHORS_Trade.txt, `r, `n
 	{
 		Authors := Authors . A_LoopReadLine . " "
 		i += 1

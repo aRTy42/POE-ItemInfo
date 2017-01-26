@@ -1,10 +1,10 @@
-﻿If (!FileExist(A_ScriptDir "\main.ahk")) {
+﻿If (!FileExist(A_ScriptDir "\TradeMacroMain.ahk")) {
 	RunWait, Run_Only_This.ahk
-	While (!FileExist(A_ScriptDir "\main.ahk")) {
+	While (!FileExist(A_ScriptDir "\TradeMacroMain.ahk")) {
 		Sleep, 500
 	}
 }
 
 SplitPath, A_AhkPath,, AhkDir
-RunWait %comspec% /c ""%AhkDir%"\Compiler\Ahk2Exe.exe /in "main.ahk" /out "PoE-TradeMacro_(Fallback).exe" /icon "resources\poe-trade-bl.ico""
+RunWait %comspec% /c ""%AhkDir%"\Compiler\Ahk2Exe.exe /in "TradeMacroMain.ahk" /out "PoE-TradeMacro_(Fallback).exe" /icon "resources\images\poe-trade-bl.ico""
 ExitApp

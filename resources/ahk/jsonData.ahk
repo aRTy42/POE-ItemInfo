@@ -30,7 +30,7 @@ errorMsg .= "`n`nThe script execution will be stopped, please try again at a lat
 Try {
 	test := FileExist(A_ScriptDir "\temp\currentLeagues.json")
 	If (test) {
-		FileRead, JSONFile, %A_ScriptDir%/temp/currentLeagues.json
+		FileRead, JSONFile, %A_ScriptDir%\temp\currentLeagues.json
 		parsedJSON := JSON.Load(JSONFile)	
 		global LeaguesData := parsedJSON
 	}

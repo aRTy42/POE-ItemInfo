@@ -177,7 +177,7 @@ Globals.Set("SettingsUITitle", "PoE Item Info Settings")
 Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
 Globals.Set("ScriptList", [A_ScriptDir "\POE-ItemInfo"])
-Globals.Set("UpdateNoteFileList", [[A_ScriptDir "\updates.txt","ItemInfo"]])
+Globals.Set("UpdateNoteFileList", [[A_ScriptDir "\resources\updates.txt","ItemInfo"]])
 
 ; Set ProjectName to create user settings folder in A_MyDocuments.
 ; Don't set variable "UseExternalProjectName" in this script.
@@ -571,7 +571,7 @@ IfNotExist, %A_ScriptDir%\config.ini
 ; Windows system tray icon
 ; possible values: poe.ico, poe-bw.ico, poe-web.ico, info.ico
 ; set before creating the settings UI so it gets used for the settigns dialog as well
-Menu, Tray, Icon, %A_ScriptDir%\resources\poe-bw.ico
+Menu, Tray, Icon, %A_ScriptDir%\resources\images\poe-bw.ico
 
 ReadConfig()
 Sleep, 100
@@ -7721,7 +7721,7 @@ ShowUnhandledCaseDialog()
 
 	Gui, 3:New,, Unhandled Case
 	Gui, 3:Color, FFFFFF
-	Gui, 3:Add, Picture, x25 y25 w36 h36, %A_ScriptDir%\resources\info.png
+	Gui, 3:Add, Picture, x25 y25 w36 h36, %A_ScriptDir%\resources\images\info.png
 	Gui, 3:Add, Text, x65 y31 w500 h100, % Msg.Unhandled
 	Gui, 3:Add, Edit, x65 y96 w400 h120 ReadOnly vUnhDlg_EditItemText, % Globals.Get("ItemText", "Error: could'nt get item text (system clipboard modified?). Please try again or report the item manually.")
 	Gui, 3:Add, Text, x-5 y230 w500 h50 -Background
@@ -8137,7 +8137,7 @@ WriteConfig(ConfigPath="config.ini")
 
 CopyDefaultConfig()
 {
-	FileCopy, %A_ScriptDir%\resources\default_config.ini, %A_ScriptDir%\config.ini
+	FileCopy, %A_ScriptDir%\resources\config\default_config.ini, %A_ScriptDir%\config.ini
 }
 
 RemoveConfig()
@@ -8147,13 +8147,13 @@ RemoveConfig()
 
 GetContributors(AuthorsPerLine=0)
 {
-	IfNotExist, %A_ScriptDir%\AUTHORS.txt
+	IfNotExist, %A_ScriptDir%\resources\AUTHORS.txt
 	{
 		return "`r`n AUTHORS.txt missing `r`n"
 	}
 	Authors := "`r`n"
 	i := 0
-	Loop, Read, %A_ScriptDir%\AUTHORS.txt, `r, `n
+	Loop, Read, %A_ScriptDir%\resources\AUTHORS.txt, `r, `n
 	{
 		Authors := Authors . A_LoopReadLine . " "
 		i += 1
@@ -8341,7 +8341,7 @@ MenuTray_About:
 		Gui, About:Font, S10 CA03410,verdana
 		Gui, About:Add, Text, x260 y27 w170 h20 Center, Release %RelVer%
 		Gui, About:Add, Button, 0x8000 x316 y300 w70 h21, Close
-		Gui, About:Add, Picture, 0x1000 x17 y16 w230 h180 gAboutDlg_Fishing, %A_ScriptDir%\resources\splash.png
+		Gui, About:Add, Picture, 0x1000 x17 y16 w230 h180 gAboutDlg_Fishing, %A_ScriptDir%\resources\images\splash.png
 		Gui, About:Font, Underline C3571AC,verdana
 		Gui, About:Add, Text, x260 y57 w170 h20 gVisitForumsThread Center, PoE forums thread
 		Gui, About:Add, Text, x260 y87 w170 h20 gAboutDlg_AhkHome Center, AutoHotkey homepage
@@ -8531,4 +8531,4 @@ F8::
 ; ############ (user) macros #############
 #IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe
 
-#Include %A_ScriptDir%/AdditionalMacros.txt
+#Include %A_ScriptDir%\AdditionalMacros.txt

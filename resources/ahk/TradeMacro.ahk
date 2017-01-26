@@ -3319,11 +3319,11 @@ ChangeScriptListsTimer:
 	l := Globals.Get("UpdateNoteFileList")
 
 	If (o and l.Length()) {
-		o.push(A_ScriptDir "\main")
+		o.push(A_ScriptDir "\TradeMacroMain")
 		o.push(A_ScriptDir "\PoE-TradeMacro_(Fallback)")
 		Global.Set("ScriptList", o)
 		
-		l.push([A_ScriptDir "\Updates_Trade.txt","TradeMacro"])
+		l.push([A_ScriptDir "\resources\Updates_Trade.txt","TradeMacro"])
 		Global.Set("UpdateNoteFileList", l)
 
 		SetTimer, ChangeScriptListsTimer, Off
@@ -3341,7 +3341,7 @@ OverwriteSettingsNameTimer:
 		Menu, Tray, UseErrorLevel
 		Menu, Tray, Rename, % OldMenuTrayName, % NewMenuTrayName
 		If (ErrorLevel = 0) {		
-			Menu, Tray, Icon, %A_ScriptDir%\resources\poe-trade-bl.ico	
+			Menu, Tray, Icon, %A_ScriptDir%\resources\images\poe-trade-bl.ico	
 			Globals.Set("SettingsUITitle", TradeGlobals.Get("SettingsUITitle"))
 			SetTimer, OverwriteSettingsNameTimer, Off
 		}
@@ -3394,8 +3394,8 @@ ReadPoeNinjaCurrencyData:
 	league := TradeUtils.UriEncode(TradeGlobals.Get("LeagueName"))
 	url := "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league	
 	UrlDownloadToFile, %url% , %A_ScriptDir%\temp\currencyData.json
-	FileRead, JSONFile, %A_ScriptDir%/temp/currencyData.json
-	parsedJSON 	:= JSON.Load(JSONFile)	
+	FileRead, JSONFile, %A_ScriptDir%\temp\currencyData.json
+	parsedJSON 	:= JSON.Load(JSONFile)
 	global CurrencyHistoryData := parsedJSON.lines
 
 	TradeGlobals.Set("LastAltCurrencyUpdate", A_NowUTC)
