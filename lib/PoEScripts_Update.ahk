@@ -10,6 +10,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 	}
 	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	url := "https://api.github.com/repos/" . user . "/" . repo . "/releases"
+	downloadUrl := "https://github.com/" . user . "/" . repo . "/releases"
 	
 	Try  {
 		Encoding := "utf-8"
@@ -59,7 +60,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 		
 		isPrerelease:= LatestRelease.prerelease
 		releaseTag  := LatestRelease.tag_name
-		releaseURL  := url . "/tag/" . releaseTag
+		releaseURL  := downloadUrl . "/tag/" . releaseTag
 		publisedAt  := LatestRelease.published_at
 		description := LatestRelease.body
 		
@@ -101,7 +102,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 			}
 
 			Gui, UpdateNotification:Add, Text, x100 yp+0, <%currentVersion%>.
-			Gui, UpdateNotification:Add, Link, x+20 yp+0 cBlue, <a href="%url%">Download it here</a>        
+			Gui, UpdateNotification:Add, Link, x+20 yp+0 cBlue, <a href="%releaseURL%">Download it here</a>        
 			Gui, UpdateNotification:Add, Text, x20 y+0, Latest version:
 			Gui, UpdateNotification:Add, Text, x100 yp+0, <%latestVersion%>.			
 			
