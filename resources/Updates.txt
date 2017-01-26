@@ -1,6 +1,13 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.5.05
+================================
+from aRTy42, Eruyome, 4GForce
+
+Fixed an issue with the file encoding of the config file and adjusted the handling of it. If you had weird characters instead
+	of the three dots for abbreviating mods, try this release.
+
 2.5.04
 ================================
 from Eruyome, aRTy42, 4GForce
