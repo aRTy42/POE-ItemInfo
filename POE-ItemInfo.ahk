@@ -435,30 +435,25 @@ class Fonts {
 }
 
 class ItemData_ {
-
-	Links := ""
-	Sockets := ""
-	Stats := ""
-	NamePlate := ""
-	Affixes := ""
-	FullText := ""
-	IndexAffixes := -1
-	IndexLast := -1
-	PartsLast := ""
-	Rarity := ""
-	Parts := []
-
-	ClearParts()
+	Init() 
 	{
-		Loop, % this.Parts.MaxIndex()
-		{
-			this.Parts.Remove(this.Parts.MaxIndex())
-		}
+		This.Links := ""
+		This.Sockets := ""
+		This.Stats := ""
+		This.NamePlate := ""
+		This.Affixes := ""
+		This.FullText := ""
+		This.IndexAffixes := -1
+		This.IndexLast := -1
+		This.PartsLast := ""
+		This.Rarity := ""
+		This.Parts := []
 	}
 }
-ItemData := new ItemData_()
+Global ItemData := new ItemData_
+ItemData.Init()
 
-class Item {
+class Item_ {
 	; Initialize all the Item object attributes to default values
 	Init()
 	{
@@ -504,7 +499,7 @@ class Item {
 		This.IsEssence := False
 	}
 }
-Item := new Item()
+Global Item := new Item_
 Item.Init()
 
 class AffixTotals_ {
@@ -6357,7 +6352,7 @@ ItemIsMirrored(ItemDataText)
 ;
 ParseItemData(ItemDataText, ByRef RarityLevel="")
 {
-	Global Item, ItemData, AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList
+	Global AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList
 
 	ItemDataPartsIndexLast =
 	ItemDataPartsIndexAffixes =
@@ -6381,6 +6376,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	TempResult =
 
 	Item.Init()
+	ItemData.Init()
 
 	ResetAffixDetailVars()
 
@@ -6406,7 +6402,6 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	ItemDataIndexLast := ItemDataParts0
 	ItemDataPartsLast := ItemDataParts%ItemDataIndexLast%
 
-	ItemData.ClearParts()
 	Loop, %ItemDataParts0%
 	{
 		ItemData.Parts[A_Index] := ItemDataParts%A_Index%

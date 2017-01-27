@@ -5,7 +5,6 @@ PriceCheck:
 	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		Global TradeOpts, Item
-		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		Send ^{sc02E}
 		Sleep 250
@@ -18,7 +17,6 @@ AdvancedPriceCheck:
 	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		Global TradeOpts, Item
-		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		Send ^{sc02E}
 		Sleep 250
@@ -35,7 +33,6 @@ ShowItemAge:
 			ShowTooltip("No Account Name specified in settings menu.")
 			return
 		}
-		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		Send ^{sc02E}
 		Sleep 250
@@ -48,7 +45,6 @@ OpenWiki:
 	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		Global TradeOpts, Item
-		Item := {}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		Send ^{sc02E}
 		Sleep 250
@@ -88,7 +84,6 @@ return
 
 OpenSearchOnPoeTrade:
 	Global TradeOpts, Item
-	Item := {}
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^{sc02E}
 	Sleep 250
@@ -609,10 +604,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}    
-	
-	; reset Item and ItemData after search
-	Item := {}
-	ItemData := {}
+
 	TradeGlobals.Set("AdvancedPriceCheckItem", {})
 }
 
