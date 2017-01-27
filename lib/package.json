@@ -1,0 +1,21 @@
+{
+  "name": "make_release_archive",
+  "version": "1.0.0",
+  "description": "creates a zip archive to distribute on github",
+  "main": "makeReleaseArchive_nodeJS.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npm install && node makeReleaseArchive_nodeJS.js"
+  },
+  "author": "Eruyome",
+  "license": "ISC",
+  "dependencies": {
+    "archiver": "^1.3.0",
+    "cli-interact": "^0.1.9",
+    "compare-versions": "^3.0.0",
+    "extract-zip": "^1.6.0",
+    "fs-extra": "^2.0.0",
+    "ini": "^1.3.4",
+    "request": "^2.79.0"
+  }
+}
