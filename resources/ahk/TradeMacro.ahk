@@ -3489,8 +3489,7 @@ TradeFunc_HandleCustomSearchSubmit(openInBrowser = false) {
 			RequestParams.corrupted := "x"
 		}		
 		Item.UsedInSearch.Corruption := CustomSearchCorrupted
-			
-		GoSub, CloseCustomSearch
+
 		ShowToolTip("Running search...")
 		
 		Payload := RequestParams.ToPayload()
@@ -3509,4 +3508,5 @@ TradeFunc_HandleCustomSearchSubmit(openInBrowser = false) {
 			ShowToolTip(ParsedData, true)	
 		}		
 	}
+	GoSub, CloseCustomSearch
 }
