@@ -73,7 +73,7 @@ OpenWiki:
 		}
 		
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-		clipboard :=
+		SetClipboardContents("")
 	}
 return
 
@@ -572,6 +572,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
 		}		
 		TradeFunc_OpenUrlInBrowser(ParsedUrl1)
+		SetClipboardContents("")
 	}
 	Else If (Item.isCurrency and !Item.IsEssence) {
 		; Default currency search
@@ -583,7 +584,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			ParsedData := TradeFunc_ParseAlternativeCurrencySearch(Item.Name, Payload)
 		}
 		
-		;SetClipboardContents(ParsedData)
+		;SetClipboardContents(ParsedData)		
+		SetClipboardContents("")
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}
@@ -600,7 +602,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
 		
-		;SetClipboardContents(ParsedData)
+		;SetClipboardContents(ParsedData)		
+		SetClipboardContents("")
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}    
