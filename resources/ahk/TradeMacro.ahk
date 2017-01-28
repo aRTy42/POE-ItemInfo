@@ -87,13 +87,6 @@ OpenSearchOnPoeTrade:
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^{sc02E}
 	Sleep 250
-	
-	TradeFunc_DoParseClipboard()
-	If (!Item.Name and TradeOpts.OpenUrlsOnEmptyItem) {
-		TradeFunc_OpenUrlInBrowser("http://poe.trade/")
-		return
-	}
-	
 	TradeFunc_Main(true)
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 return
@@ -107,8 +100,12 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 {	
 	LeagueName := TradeGlobals.Get("LeagueName")
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList, Opts
-		
-	TradeFunc_DoParseClipboard()
+	
+	; When redirected from AdvancedPriceCheck form the clipboard has already been parsed
+	if(!isAdvancedPriceCheckRedirect) {
+		TradeFunc_DoParseClipboard()
+	}
+	
 	iLvl     := Item.Level
 	
 	; cancel search If Item is empty
@@ -128,6 +125,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	DamageDetails := Item.DamageDetails
 	Name := Item.Name
 
+	Item.xtype := ""
 	Item.UsedInSearch := {}
 	Item.UsedInSearch.iLvl := {}
 	
@@ -1374,7 +1372,7 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 		}
 		
 		; replace "
-		StringReplace, Currency, Currency, ", , All
+		StringReplace, Currency, Currency, ", , All			; "
 		StringReplace, Currency, Currency, currency-, , All
 		CurrencyName := TradeUtils.Cleanup(Currency)
 		
