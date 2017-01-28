@@ -49,29 +49,31 @@ OpenWiki:
 		Send ^{sc02E}
 		Sleep 250
 		TradeFunc_DoParseClipboard()
-
+		
 		If (!Item.Name and TradeOpts.OpenUrlsOnEmptyItem) {
 			TradeFunc_OpenUrlInBrowser("http://pathofexile.gamepedia.com/")
-			return
 		}
-		
-		If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
-			UrlAffix := Item.Name
-		} Else If (Item.IsFlask or Item.IsMap) {
-			UrlAffix := Item.SubType
-		} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
-			UrlAffix := Item.Name
-		} Else {
-			UrlAffix := Item.BaseType
-		}
-		
-		If (StrLen(UrlAffix) > 0) {			
-			UrlAffix := StrReplace(UrlAffix," ","_")
-			WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
-			TradeFunc_OpenUrlInBrowser(WikiUrl)	
+		Else {	
+			UrlAffix := 
+			If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
+				UrlAffix := Item.Name
+			} Else If (Item.IsFlask or Item.IsMap) {
+				UrlAffix := Item.SubType
+			} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
+				UrlAffix := Item.Name
+			} Else {
+				UrlAffix := Item.BaseType
+			}
+			
+			If (StrLen(UrlAffix) > 0) {			
+				UrlAffix := StrReplace(UrlAffix," ","_")
+				WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
+				TradeFunc_OpenUrlInBrowser(WikiUrl)	
+			}
 		}
 		
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+		clipboard :=
 	}
 return
 
@@ -109,8 +111,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	iLvl     := Item.Level
 	
 	; cancel search If Item is empty
-	If (!Item.name) {
-		If (TradeOpts.OpenUrlsOnEmptyItem) {
+	If (!Item.Name) {
+		If (TradeOpts.OpenUrlsOnEmptyItem and openSearchInBrowser) {
 			TradeFunc_OpenUrlInBrowser("https://poe.trade")
 		}
 		return
@@ -1017,6 +1019,7 @@ TradeFunc_CheckIfItemHasHighestCraftingLevel(subtype, iLvl){
 
 TradeFunc_DoParseClipboard()
 {
+	Global Opts, Globals
 	CBContents := GetClipboardContents()
 	CBContents := PreProcessContents(CBContents)
 	
