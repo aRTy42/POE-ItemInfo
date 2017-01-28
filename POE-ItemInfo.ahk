@@ -435,30 +435,25 @@ class Fonts {
 }
 
 class ItemData_ {
-
-	Links := ""
-	Sockets := ""
-	Stats := ""
-	NamePlate := ""
-	Affixes := ""
-	FullText := ""
-	IndexAffixes := -1
-	IndexLast := -1
-	PartsLast := ""
-	Rarity := ""
-	Parts := []
-
-	ClearParts()
+	Init() 
 	{
-		Loop, % this.Parts.MaxIndex()
-		{
-			this.Parts.Remove(this.Parts.MaxIndex())
-		}
+		This.Links := ""
+		This.Sockets := ""
+		This.Stats := ""
+		This.NamePlate := ""
+		This.Affixes := ""
+		This.FullText := ""
+		This.IndexAffixes := -1
+		This.IndexLast := -1
+		This.PartsLast := ""
+		This.Rarity := ""
+		This.Parts := []
 	}
 }
-ItemData := new ItemData_()
+Global ItemData := new ItemData_
+ItemData.Init()
 
-class Item {
+class Item_ {
 	; Initialize all the Item object attributes to default values
 	Init()
 	{
@@ -504,7 +499,7 @@ class Item {
 		This.IsEssence := False
 	}
 }
-Item := new Item()
+Global Item := new Item_
 Item.Init()
 
 class AffixTotals_ {
@@ -6357,7 +6352,7 @@ ItemIsMirrored(ItemDataText)
 ;
 ParseItemData(ItemDataText, ByRef RarityLevel="")
 {
-	Global Item, ItemData, AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList
+	Global AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList
 
 	ItemDataPartsIndexLast =
 	ItemDataPartsIndexAffixes =
@@ -6381,6 +6376,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	TempResult =
 
 	Item.Init()
+	ItemData.Init()
 
 	ResetAffixDetailVars()
 
@@ -6406,7 +6402,6 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	ItemDataIndexLast := ItemDataParts0
 	ItemDataPartsLast := ItemDataParts%ItemDataIndexLast%
 
-	ItemData.ClearParts()
 	Loop, %ItemDataParts0%
 	{
 		ItemData.Parts[A_Index] := ItemDataParts%A_Index%
@@ -6935,17 +6930,17 @@ PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
 						Index++
 					}
 					
-					tempStr := RegExReplace(mod.name_orig, "i)([.0-9]+)", "#")
+					tempStr := RegExReplace(mod.name_orig, "i)(-?[.0-9]+)", "#")
 					
 					Pos := 1
 					tempArr := []
-					While Pos := RegExMatch(tempmod.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {
+					While Pos := RegExMatch(tempmod.name_orig, "i)(-?[.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {
 						tempArr.push(value)
 					}
 					
 					Pos := 1
 					Index := 1
-					While Pos := RegExMatch(mod.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {
+					While Pos := RegExMatch(mod.name_orig, "i)(-?[.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {
 						tempStr := StrReplace(tempStr, "#", value + tempArr[Index],, 1)
 						Index++
 					}
@@ -6966,7 +6961,7 @@ PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
 		mod.values := []
 		Pos := 1
 		Index := 1
-		While Pos := RegExMatch(mod.name_orig, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {
+		While Pos := RegExMatch(mod.name_orig, "i)(-?[.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {
 			mod.values.push(value)
 			Index++
 		}
@@ -6986,7 +6981,7 @@ ModStringToObject(string, isImplicit) {
 	
 	; Collect all numeric values in the mod-string
 	Pos        := 0
-	While Pos := RegExMatch(val, "i)([.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
+	While Pos := RegExMatch(val, "i)(-?[.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
 		values.push(value)
 	}
 
@@ -6998,8 +6993,8 @@ ModStringToObject(string, isImplicit) {
 	}
 	
 	type := ""
-	; Matching "x% fire and cold resistance" etc is easier this way.
-	If (RegExMatch(val, "i)Resistance")) {
+	; Matching "x% fire and cold resistance" or "x% to cold resist", excluding "to maximum cold resistance" and "damage penetrates x% cold resistance"
+	If (RegExMatch(val, "i)to ((cold|fire|lightning)( and (cold|fire|lightning))?) resistance")) {
 		type := "Resistance"
 		If (RegExMatch(val, "i)fire")) {
 			Matches.push("Fire")
@@ -7029,7 +7024,16 @@ ModStringToObject(string, isImplicit) {
 	; Create single mod from every collected resist/attribute
 	Loop % Matches.Length() {
 		RegExMatch(val, "i)(Resistance)", match)
-		Matches[A_Index] := match1 ? "+#% to " . Matches[A_Index] . " " . match1 : "+# to " . Matches[A_Index]
+		; differentiate between negative and positive values; flat and increased attributes
+		sign := "+"
+		type := RegExMatch(val, "i)increased", inc) ? "% increased " : " to "		
+		If (inc) {
+			sign := ""
+		}		
+		If (RegExMatch(val, "i)^-")) {
+			sign := "-"
+		}		
+		Matches[A_Index] := match1 ? sign . "#% to " . Matches[A_Index] . " " . match1 : sign . "#" . type . "" . Matches[A_Index]
 	}
 	
 	; Handle "all attributes"/"all resist"
@@ -7048,17 +7052,17 @@ ModStringToObject(string, isImplicit) {
 		temp := {}
 		temp.name_orig := Matches[A_Index]
 		Loop {
-			temp.name_orig := RegExReplace(temp.name_orig, "#", values[A_Index], Count, 1)
+			temp.name_orig := RegExReplace(temp.name_orig, "-?#", values[A_Index], Count, 1)
 			If (!Count) {
 				break
 			}
 		}
-
-		temp.values     := values
-		s            := RegExReplace(Matches[A_Index], "i)([.0-9]+)", "#")
-		temp.name     := RegExReplace(s, "i)# ?to ? #", "#", isRange)
+		
+		temp.values	:= values
+		s			:= RegExReplace(Matches[A_Index], "i)(-?[.0-9]+)", "#")
+		temp.name		:= RegExReplace(s, "i)# ?to ? #", "#", isRange)
 		temp.isVariable:= false
-		temp.type        := (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"
+		temp.type		:= (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"
 		arr.push(temp)
 	}
 	
@@ -7110,7 +7114,7 @@ CreatePseudoMods(mods) {
 	hasChaosRes := false
 
 	For key, val in mods {
-		If (RegExMatch(val.name, "i)maximum life$")) {
+		If (RegExMatch(val.name, "i)([.0-9]+) to maximum life$")) {
 			life := life + val.values[1]
 		}
 		If (RegExMatch(val.name, "i)to intelligence$|to dexterity$|to (strength)$", match)) {
@@ -7168,18 +7172,18 @@ CreatePseudoMods(mods) {
 			spellDmg_Percent := spellDmg_Percent + val.values[1]
 		}
 	}
-	
+
 	If (eleDmg_Percent > 0) {
 		If (weaponEleDmg_Percent) {
-			eleDmg_AttacksPercent        := eleDmg_Percent ? eleDmg_AttacksPercent + weaponEleDmg_Percent : 0
+			eleDmg_AttacksPercent		:= eleDmg_Percent ? eleDmg_AttacksPercent + weaponEleDmg_Percent : 0
 			fireDmg_AttacksPercent        := fireDmg_Percent ? fireDmg_AttacksPercent + weaponEleDmg_Percent : 0
-			coldDmg_AttacksPercent       := coldDmg_Percent ? coldDmg_AttacksPercent + weaponEleDmg_Percent : 0
-			lightningDmg_AttacksPercent := lightningDmg_Percent ? lightningDmg_AttacksPercent + weaponEleDmg_Percent : 0
+			coldDmg_AttacksPercent		:= coldDmg_Percent ? coldDmg_AttacksPercent + weaponEleDmg_Percent : 0
+			lightningDmg_AttacksPercent	:= lightningDmg_Percent ? lightningDmg_AttacksPercent + weaponEleDmg_Percent : 0
 		}
 		If (spellDmg_Percent) {
-			fireDmg_SpellsPercent        := fireDmg_Percent ? fireDmg_SpellsPercent + spellDmg_Percent : 0
-			coldDmg_SpellsPercent       := coldDmg_Percent ? coldDmg_SpellsPercent + spellDmg_Percent : 0
-			lightningDmg_SpellsPercent  := lightningDmg_Percent ? lightningDmg_SpellsPercent + spellDmg_Percent : 0
+			fireDmg_SpellsPercent		:= fireDmg_Percent ? fireDmg_SpellsPercent + spellDmg_Percent : 0
+			coldDmg_SpellsPercent		:= coldDmg_Percent ? coldDmg_SpellsPercent + spellDmg_Percent : 0
+			lightningDmg_SpellsPercent	:= lightningDmg_Percent ? lightningDmg_SpellsPercent + spellDmg_Percent : 0
 		}
 	}
 
