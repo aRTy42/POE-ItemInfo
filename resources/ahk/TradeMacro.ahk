@@ -49,29 +49,31 @@ OpenWiki:
 		Send ^{sc02E}
 		Sleep 250
 		TradeFunc_DoParseClipboard()
-
+		
 		If (!Item.Name and TradeOpts.OpenUrlsOnEmptyItem) {
 			TradeFunc_OpenUrlInBrowser("http://pathofexile.gamepedia.com/")
-			return
 		}
-		
-		If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
-			UrlAffix := Item.Name
-		} Else If (Item.IsFlask or Item.IsMap) {
-			UrlAffix := Item.SubType
-		} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
-			UrlAffix := Item.Name
-		} Else {
-			UrlAffix := Item.BaseType
-		}
-		
-		If (StrLen(UrlAffix) > 0) {			
-			UrlAffix := StrReplace(UrlAffix," ","_")
-			WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
-			TradeFunc_OpenUrlInBrowser(WikiUrl)	
+		Else {	
+			UrlAffix := 
+			If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
+				UrlAffix := Item.Name
+			} Else If (Item.IsFlask or Item.IsMap) {
+				UrlAffix := Item.SubType
+			} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
+				UrlAffix := Item.Name
+			} Else {
+				UrlAffix := Item.BaseType
+			}
+			
+			If (StrLen(UrlAffix) > 0) {			
+				UrlAffix := StrReplace(UrlAffix," ","_")
+				WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
+				TradeFunc_OpenUrlInBrowser(WikiUrl)	
+			}
 		}
 		
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+		SetClipboardContents("")
 	}
 return
 
@@ -87,13 +89,6 @@ OpenSearchOnPoeTrade:
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 	Send ^{sc02E}
 	Sleep 250
-	
-	TradeFunc_DoParseClipboard()
-	If (!Item.Name and TradeOpts.OpenUrlsOnEmptyItem) {
-		TradeFunc_OpenUrlInBrowser("http://poe.trade/")
-		return
-	}
-	
 	TradeFunc_Main(true)
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 return
@@ -107,13 +102,17 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 {	
 	LeagueName := TradeGlobals.Get("LeagueName")
 	Global Item, ItemData, TradeOpts, mapList, uniqueMapList, Opts
-		
-	TradeFunc_DoParseClipboard()
+	
+	; When redirected from AdvancedPriceCheck form the clipboard has already been parsed
+	if(!isAdvancedPriceCheckRedirect) {
+		TradeFunc_DoParseClipboard()
+	}
+	
 	iLvl     := Item.Level
 	
 	; cancel search If Item is empty
-	If (!Item.name) {
-		If (TradeOpts.OpenUrlsOnEmptyItem) {
+	If (!Item.Name) {
+		If (TradeOpts.OpenUrlsOnEmptyItem and openSearchInBrowser) {
 			TradeFunc_OpenUrlInBrowser("https://poe.trade")
 		}
 		return
@@ -128,6 +127,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	DamageDetails := Item.DamageDetails
 	Name := Item.Name
 
+	Item.xtype := ""
 	Item.UsedInSearch := {}
 	Item.UsedInSearch.iLvl := {}
 	
@@ -572,6 +572,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
 		}		
 		TradeFunc_OpenUrlInBrowser(ParsedUrl1)
+		SetClipboardContents("")
 	}
 	Else If (Item.isCurrency and !Item.IsEssence) {
 		; Default currency search
@@ -583,7 +584,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			ParsedData := TradeFunc_ParseAlternativeCurrencySearch(Item.Name, Payload)
 		}
 		
-		;SetClipboardContents(ParsedData)
+		;SetClipboardContents(ParsedData)		
+		SetClipboardContents("")
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}
@@ -600,7 +602,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
 		
-		;SetClipboardContents(ParsedData)
+		;SetClipboardContents(ParsedData)		
+		SetClipboardContents("")
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}    
@@ -1019,6 +1022,7 @@ TradeFunc_CheckIfItemHasHighestCraftingLevel(subtype, iLvl){
 
 TradeFunc_DoParseClipboard()
 {
+	Global Opts, Globals
 	CBContents := GetClipboardContents()
 	CBContents := PreProcessContents(CBContents)
 	
@@ -1374,7 +1378,7 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 		}
 		
 		; replace "
-		StringReplace, Currency, Currency, ", , All
+		StringReplace, Currency, Currency, ", , All			; "
 		StringReplace, Currency, Currency, currency-, , All
 		CurrencyName := TradeUtils.Cleanup(Currency)
 		
