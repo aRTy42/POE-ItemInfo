@@ -2821,6 +2821,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	p := 1
 	TradeAdvancedNormalModCount := 0
 	ModNotFound := false
+	PreCheckNormalMods := TradeOpts.AdvancedSearchCheckMods ? "Checked" : ""
 	Loop % advItem.mods.Length() {
 		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
@@ -2942,11 +2943,11 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		Gui, SelectModsGui:Add, Edit, x+10 yp-3       w40 vTradeAdvancedModMax%index% r1 Disabled%state% 	, % modValueMax
 		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen 			                       		, % (advItem.mods[A_Index].ranges[1]) ? maxLabelFirst : ""
 		checkEnabled := ErrorMsg ? 0 : 1
-		If (checkEnabled) {
-			Gui, SelectModsGui:Add, CheckBox, x+10 yp+1 vTradeAdvancedSelected%index%	
+		If (checkEnabled) {			
+			Gui, SelectModsGui:Add, CheckBox, x+10 yp+1 %PreCheckNormalMods% vTradeAdvancedSelected%index%	
 		}
 		Else {
-			GUI, SelectModsGui:Add, Picture, x+10 yp+1 hwndErrorPic 0x0100, %A_ScriptDir%\resources\error.png
+			GUI, SelectModsGui:Add, Picture, x+10 yp+1 hwndErrorPic 0x0100, %A_ScriptDir%\resources\images\error.png
 		}	
 		
 		color := "cBlack"
@@ -3006,10 +3007,10 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	RightPos := xPosMin + 40 + 5 + 45 + 10 + 45 + 10 + 40 + 5 + 45 + 10
 	RightPosText := RightPos - 100
 	Gui, SelectModsGui:Add, Text, x%RightPosText% yp+5, Check normal mods
-	Gui, SelectModsGui:Add, CheckBox, x%RightPos% yp+0 vTradeAdvancedSelectedCheckAllMods gAdvancedCheckAllMods, % ""
+	Gui, SelectModsGui:Add, CheckBox, x%RightPos% yp+0 %PreCheckNormalMods% vTradeAdvancedSelectedCheckAllMods gAdvancedCheckAllMods, % ""
 	
 	If (ModNotFound) {
-		Gui, SelectModsGui:Add, Picture, x10 y+16, %A_ScriptDir%\resources\error.png
+		Gui, SelectModsGui:Add, Picture, x10 y+16, %A_ScriptDir%\resources\images\error.png
 		Gui, SelectModsGui:Add, Text, x+10 yp+2 cRed,One or more mods couldn't be found on poe.trade
 	}
 	Gui, SelectModsGui:Add, Text, x10 y+14 cGreen, Please support poe.trade by disabling adblock

@@ -1,5 +1,13 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+1.7.3
+================================================================================================
+Added option to pre-select normal mods (advanced search).
+Fixed cloudflare bypass check (it's reliable now).
+Fixed some issues with the pseudo mod creation and added more pseudo mods.
+Fixed a rare issue where all text in GUI tabs had black background. 
+Minor fixes and improvements.
+
 1.7.2
 ================================================================================================
 Fixed file references after renaming some of them (reverted those changes by accident).

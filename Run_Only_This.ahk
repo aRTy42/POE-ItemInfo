@@ -34,24 +34,24 @@ CloseScript(Name)
 		WinClose
 		WinWaitClose, i)%Name%.* ahk_class AutoHotkey, , 2
 		If ErrorLevel
-			return "Unable to close " . Name
-		else
-			return "Closed " . Name
+			Return "Unable to close " . Name
+		Else
+			Return "Closed " . Name
 		}
-	else
-		return Name . " not found"
+	Else
+		Return Name . " not found"
 }
 
 RunAsAdmin() 
 {
     ShellExecute := A_IsUnicode ? "shell32\ShellExecute":"shell32\ShellExecuteA" 
-    if not A_IsAdmin 
+    If Not A_IsAdmin 
     { 
-        If A_IsCompiled 
-           DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_ScriptFullPath, str, A_WorkingDir, int, 1) 
-        Else 
-           DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_AhkPath, str, """" . A_ScriptFullPath . """", str, A_WorkingDir, int, 1) 
-        ExitApp 
+		If A_IsCompiled 
+			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_ScriptFullPath, str, A_WorkingDir, int, 1) 
+		Else 
+			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_AhkPath, str, """" . A_ScriptFullPath . """", str, A_WorkingDir, int, 1) 
+		ExitApp 
     }
 }	
 

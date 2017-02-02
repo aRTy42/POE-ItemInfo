@@ -8,8 +8,6 @@ If (A_AhkVersion < TradeAHKVersionRequired)
     ExitApp
 }
 
-
-
 StartSplashScreen()
 
 FileRead, info, POE-ItemInfo.ahk
@@ -35,12 +33,12 @@ CloseScript(Name)
 		WinClose
 		WinWaitClose, i)%Name%.* ahk_class AutoHotkey, , 2
 		If ErrorLevel
-			return "Unable to close " . Name
-		else
-			return "Closed " . Name
+			Return "Unable to close " . Name
+		Else
+			Return "Closed " . Name
 		}
-	else
-		return Name . " not found"
+	Else
+		Return Name . " not found"
 }
 
 

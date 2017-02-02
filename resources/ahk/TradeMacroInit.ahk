@@ -94,6 +94,7 @@ class TradeUserOptions {
 	BuyoutOnly := 1				;
 	ForceMaxLinks := 1				;
 	AlternativeCurrencySearch := 0	;
+	AdvancedSearchCheckMods := 0
 	
 	Expire := 3					; cache expire min
 	
@@ -228,6 +229,7 @@ ReadTradeConfig(TradeConfigPath="config_trade.ini")
 		TradeOpts.BuyoutOnly := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "BuyoutOnly", TradeOpts.BuyoutOnly)	
 		TradeOpts.ForceMaxLinks := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "ForceMaxLinks", TradeOpts.ForceMaxLinks)	
 		TradeOpts.AlternativeCurrencySearch := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AlternativeCurrencySearch", TradeOpts.AlternativeCurrencySearch)	
+		TradeOpts.AdvancedSearchCheckMods := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckMods", TradeOpts.AdvancedSearchCheckMods)	
 		
         ; Cache        
 		TradeOpts.Expire := TradeFunc_ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
@@ -339,8 +341,9 @@ WriteTradeConfig(TradeConfigPath="config_trade.ini")
 		; Get currency data only if league was changed while alternate search is active or alternate search was changed from disabled to enabled
 		If ((TradeOpts.SearchLeague != tempOldLeague and AlternativeCurrencySearch) or (AlternativeCurrencySearch and tempOldAltCurrencySearch != AlternativeCurrencySearch)) {			
 			GoSub, ReadPoeNinjaCurrencyData	
-		}
+		}		
 		
+		TradeOpts.AdvancedSearchCheckMods := AdvancedSearchCheckMods
 		TradeOpts.GemLevel := GemLevel
 		TradeOpts.GemLevelRange := GemLevelRange
 		TradeOpts.GemQualityRange := GemQualityRange
@@ -416,6 +419,7 @@ WriteTradeConfig(TradeConfigPath="config_trade.ini")
 	TradeFunc_WriteIniValue(TradeOpts.BuyoutOnly, TradeConfigPath, "Search", "BuyoutOnly")
 	TradeFunc_WriteIniValue(TradeOpts.ForceMaxLinks, TradeConfigPath, "Search", "ForceMaxLinks")
 	TradeFunc_WriteIniValue(TradeOpts.AlternativeCurrencySearch, TradeConfigPath, "Search", "AlternativeCurrencySearch")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckMods, TradeConfigPath, "Search", "AdvancedSearchCheckMods")
 	
 	; Cache	
 	TradeFunc_WriteIniValue(TradeOpts.Expire, TradeConfigPath, "Cache", "Expire")
@@ -807,6 +811,9 @@ CreateTradeSettingsUI()
 	
 	GuiAddCheckbox("Alternative currency search", "x287 yp+30 w230 h40", TradeOpts.AlternativeCurrencySearch, "AlternativeCurrencySearch", "AlternativeCurrencySearchH")
 	AddToolTip(AlternativeCurrencySearchH, "Shows historical data of the searched currency.")
+	
+	GuiAddCheckbox("Pre-select normal mods (advanced search)", "x287 yp+30 w230 h40", TradeOpts.AdvancedSearchCheckMods, "AdvancedSearchCheckMods", "AdvancedSearchCheckModsH")
+	AddToolTip(AdvancedSearchCheckModsH, "Selects all normal mods (no pseudo mods)`nwhen creating the advanced search GUI.")
 	
 	Gui, Add, Link, x287 yp+43 w230 cBlue BackgroundTrans, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
 	
@@ -1287,7 +1294,8 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 		}
 	}
 	
-	RegExMatch(html, "i)Path of Exile", match)
+	; pathofexile.com link in page footer (forum thread)
+	RegExMatch(html, "i)pathofexile", match)
 	If (match) {
 		FileDelete, %A_ScriptDir%\temp\poe_trade_search_form_options.txt
 		FileAppend, %html%, %A_ScriptDir%\temp\poe_trade_search_form_options.txt, utf-8	
