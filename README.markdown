@@ -38,6 +38,7 @@ Never completely trust any price checking tool. Inform yourself about what this 
 | ctrl+w      | Open the items wiki page. 
 | ctrl+q      | Open the item search on poe.trade instead of showing a tooltip with results.
 | ctrl+e      | Show item age (own listed items).
+| ctrl+l      | Switch leagues.
 
 ####Additional Macros####
 
