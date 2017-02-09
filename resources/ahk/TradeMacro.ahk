@@ -93,6 +93,14 @@ OpenSearchOnPoeTrade:
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 return
 
+ChangeLeague:
+	Global TradeOpts
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		TradeFunc_ChangeLeague()
+	}
+Return
+
 ; Prepare Reqeust Parametes and send Post Request
 ; openSearchInBrowser : set to true to open the search on poe.trade instead of showing the tooltip
 ; isAdvancedPriceCheck : set to true If the GUI to select mods should be openend
@@ -3293,7 +3301,7 @@ OverwriteSettingsHeightTimer:
 	o := Globals.Get("SettingsUIHeight")
 
 	If (o) {
-		Globals.Set("SettingsUIHeight", 725)
+		Globals.Set("SettingsUIHeight", 735)
 		SetTimer, OverwriteSettingsHeightTimer, Off
 	}	
 Return
@@ -3308,7 +3316,6 @@ OverwriteAboutWindowSizesTimer:
 		TradeFunc_CreateTradeAboutWindow()
 		SetTimer, OverwriteAboutWindowSizesTimer, Off
 	}
-
 Return
 
 ChangeScriptListsTimer:
@@ -3388,6 +3395,12 @@ TradeSettingsUI_ChkCorruptedOverride:
 Return
 
 ReadPoeNinjaCurrencyData:
+	; Disable hotkey until currency data was parsed
+	key := TradeOpts.ChangeLeagueHotKey
+	If (TempChangingLeagueInProgress) {
+		ShowToolTip("Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ")...")
+	}
+	
 	league := TradeUtils.UriEncode(TradeGlobals.Get("LeagueName"))
 	url := "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league	
 	UrlDownloadToFile, %url% , %A_ScriptDir%\temp\currencyData.json
@@ -3402,6 +3415,11 @@ ReadPoeNinjaCurrencyData:
 		ChaosEquivalents[val.currencyTypeName] := val.chaosEquivalent		
 	}
 	ChaosEquivalents["Chaos Orb"] := 1
+	
+	If (TempChangingLeagueInProgress) {
+		ShowToolTip("Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ") finished.")
+	}
+	TempChangingLeagueInProgress := False
 Return
 
 CloseCookieWindow:
@@ -3511,7 +3529,45 @@ TradeFunc_HandleCustomSearchSubmit(openInBrowser = false) {
 			
 			ShowToolTip("")
 			ShowToolTip(ParsedData, true)	
-		}		
+		}
 	}
 	GoSub, CloseCustomSearch
+}
+
+TradeFunc_ChangeLeague() {
+	Global
+	If (TempChangingLeagueInProgress = true) {
+		; Return while league is being changed in case of enabled alternative currency search. 
+		; Downloading and parsing the data from poe.ninja takes a moment.
+		Return
+	}
+	
+	leagues := TradeGlobals.Get("Leagues")
+
+	If (TradeOpts.SearchLeague == "standard") {
+		TradeOpts.SearchLeague := "hardcore"
+	} Else If (TradeOpts.SearchLeague == "hardcore") {
+		TradeOpts.SearchLeague := "tmpstandard"
+	} Else If (TradeOpts.SearchLeague == "tmpstandard") {
+		TradeOpts.SearchLeague := "tmphardcore"
+	} Else If (TradeOpts.SearchLeague == "tmphardcore") {
+		TradeOpts.SearchLeague := "standard"
+	}
+	
+	; Call Submit for the settings UI, otherwise we can't set the new league if the UI was last closed via close button or "x"
+	Gui, Submit
+	
+	TradeFunc_SetLeagueIfSelectedIsInactive()        
+	TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
+	TradeFunc_WriteIniValue(TradeOpts.SearchLeague, "config_trade.ini", "Search", "SearchLeague")
+	GuiUpdateDropdownList("tmpstandard|tmphardcore|standard|hardcore", TradeOpts.SearchLeague, SearchLeague)	
+	
+	; Get currency data only if league was changed while alternate search is active or alternate search was changed from disabled to enabled
+	If (TradeOpts.AlternativeCurrencySearch) {
+		TempChangingLeagueInProgress := True 
+		GoSub, ReadPoeNinjaCurrencyData	
+	}
+	Else {
+		ShowToolTip("Changed league to " . TradeOpts.SearchLeague . " (" . TradeGlobals.Get("LeagueName") . ").", true)
+	}
 }

@@ -64,6 +64,7 @@ class TradeUserOptions {
 	CustomInputSearch := "^i"   
 	OpenSearchOnPoeTrade := "^q"  
 	ShowItemAge := "^e"     
+	ChangeLeagueHotKey := "^l"
 	
 	PriceCheckEnabled :=1
 	AdvancedPriceCheckEnabled :=1
@@ -71,6 +72,7 @@ class TradeUserOptions {
 	CustomInputSearchEnabled :=1
 	OpenSearchOnPoeTradeEnabled :=1
 	ShowItemAgeEnabled :=1
+	ChangeLeagueEnabled :=1
 	
 	AccountName := ""               	; 
 	SearchLeague := "tmpstandard"   	; Defaults to "standard" or "tmpstandard" If there is an active Temp-League at the time of script execution.
@@ -285,6 +287,13 @@ TradeFunc_AssignAllHotkeys() {
 		key := TradeOpts.ShowItemAgeHotKey
 		Hotkey, %key% , off, UseErrorLevel
 	}
+	If (TradeOpts.ChangeLeagueEnabled) {
+		TradeFunc_AssignHotkey(TradeOpts.ChangeLeagueHotKey, "ChangeLeague")
+	}
+	Else {
+		key := TradeOpts.ChangeLeagueHotKey
+		Hotkey, %key% , off, UseErrorLevel
+	}	
 }
 
 WriteTradeConfig(TradeConfigPath="config_trade.ini")
@@ -318,6 +327,7 @@ WriteTradeConfig(TradeConfigPath="config_trade.ini")
 		TradeOpts.CustomInputSearchHotKey := CustomInputSearchHotKey
 		TradeOpts.OpenSearchOnPoeTradeHotKey := OpenSearchOnPoeTradeHotKey
 		TradeOpts.ShowItemAgeHotKey := ShowItemAgeHotKey
+		TradeOpts.ChangeLeagueHotKey := ChangeLeagueHotKey
 		
 		TradeOpts.PriceCheckEnabled := PriceCheckEnabled
 		TradeOpts.AdvancedPriceCheckEnabled := AdvancedPriceCheckEnabled
@@ -325,6 +335,7 @@ WriteTradeConfig(TradeConfigPath="config_trade.ini")
 		TradeOpts.CustomInputSearchEnabled := CustomInputSearchEnabled
 		TradeOpts.OpenSearchOnPoeTradeEnabled := OpenSearchOnPoeTradeEnabled
 		TradeOpts.ShowItemAgeEnabled := ShowItemAgeEnabled
+		TradeOpts.ChangeLeagueEnabled := ChangeLeagueEnabled
 		
 		TradeFunc_AssignAllHotkeys()
 		
@@ -332,7 +343,7 @@ WriteTradeConfig(TradeConfigPath="config_trade.ini")
 		tempOldLeague := TradeOpts.SearchLeague
 		TradeOpts.SearchLeague := SearchLeague
 		
-		TradeFunc_SetLeagueIfSelectedIsInactive()        
+		TradeFunc_SetLeagueIfSelectedIsInactive()
 		TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])		
 		
 		tempOldAltCurrencySearch := TradeOpts.AlternativeCurrencySearch
@@ -393,6 +404,7 @@ WriteTradeConfig(TradeConfigPath="config_trade.ini")
 	TradeFunc_WriteIniValue(TradeOpts.CustomInputSearchHotKey, TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey")
 	TradeFunc_WriteIniValue(TradeOpts.OpenSearchOnPoeTradeHotKey, TradeConfigPath, "Hotkeys", "OpenSearchOnPoeTradeHotKey")
 	TradeFunc_WriteIniValue(TradeOpts.ShowItemAgeHotKey, TradeConfigPath, "Hotkeys", "ShowItemAgeHotKey")
+	TradeFunc_WriteIniValue(TradeOpts.ChangeLeagueHotKey, TradeConfigPath, "Hotkeys", "ChangeLeagueHotKey")
 	
 	TradeFunc_WriteIniValue(TradeOpts.PriceCheckEnabled, TradeConfigPath, "HotkeyStates", "PriceCheckEnabled")
 	TradeFunc_WriteIniValue(TradeOpts.AdvancedPriceCheckEnabled, TradeConfigPath, "HotkeyStates", "AdvancedPriceCheckEnabled")
@@ -435,8 +447,7 @@ CopyDefaultTradeConfig()
 {
 	FileCopy, %A_ScriptDir%\resources\config\default_config_trade.ini, %A_ScriptDir%
 	FileMove, %A_ScriptDir%\default_config_trade.ini, %A_ScriptDir%\config_trade.ini
-	FileDelete, %A_ScriptDir%\default_config_trade.ini
-	
+	FileDelete, %A_ScriptDir%\default_config_trade.ini	
 }
 
 RemoveTradeConfig()
@@ -502,6 +513,8 @@ TradeFunc_ReadIniValue(iniFilePath, Section = "General", IniKey="", DefaultValue
 TradeFunc_WriteIniValue(Val, TradeConfigPath, Section_, Key)
 {
 	IniWrite, %Val%, %TradeConfigPath%, %Section_%, %Key%
+	if errorlevel
+		msgbox error
 }
 
 ; ------------------ ASSIGN HOTKEY AND HANDLE ERRORS ------------------ 
@@ -630,7 +643,6 @@ TradeFunc_ScriptUpdate() {
 }
 
 ;----------------------- Trade Settings UI (added onto ItemInfos Settings UI) ---------------------------------------
-
 CreateTradeSettingsUI() 
 {
 	Global
@@ -643,7 +655,7 @@ CreateTradeSettingsUI()
 	}
 
 	StringTrimRight, TabNames, TabNames, 1
-	Gui, Add, Tab3, Choose1 h720 x0, %TabNames%
+	Gui, Add, Tab3, Choose1 h730 x0, %TabNames%
 
     ; General 
 	
@@ -680,7 +692,7 @@ CreateTradeSettingsUI()
 	
     ; Hotkeys
 	
-	GuiAddGroupBox("[TradeMacro] Hotkeys", "x7 yp+45 w260 h230")
+	GuiAddGroupBox("[TradeMacro] Hotkeys", "x7 yp+42 w260 h255")
 	
 	GuiAddText("Price Check Hotkey:", "x17 yp+28 w160 h20 0x0100", "LblPriceCheckHotKey", "LblPriceCheckHotKeyH")
 	AddToolTip(LblPriceCheckHotKeyH, "Check item prices.")
@@ -724,11 +736,18 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.ShowItemAgeEnabled, "ShowItemAgeEnabled", "ShowItemAgeEnabledH")
 	AddToolTip(ShowItemAgeEnabledH, "Enable Hotkey.")
 	
+	GuiAddText("Change league:", "x17 yp+38 w160 h20 0x0100", "LblChangeLeagueHotkey", "LblChangeLeagueH")
+	AddToolTip(LblChangeLeagueHotkeyH, "Checks your item's age.")
+	GuiAddEdit(TradeOpts.ChangeLeagueHotkey, "x+1 yp-2 w50 h20", "ChangeLeagueHotkey", "ChangeLeagueHotkeyH")
+	AddToolTip(ChangeLeagueHotkeyH, "Default: ctrl + l")
+	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.ChangeLeagueEnabled, "ChangeLeagueEnabled", "ChangeLeagueEnabledH")
+	AddToolTip(ChangeLeagueEnabledH, "Enable Hotkey.")
+	
 	Gui, Add, Link, x17 yp+32 w160 h20 cBlue BackgroundTrans, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
 	
     ; Cookies
     
-	GuiAddGroupBox("[TradeMacro] Manual cookie selection", "x7 yp+40 w260 h160")
+	GuiAddGroupBox("[TradeMacro] Manual cookie selection", "x7 yp+33 w260 h160")
     
 	GuiAddCheckbox("Overwrite automatic cookie retrieval.", "x17 yp+20 w200 h30", TradeOpts.UseManualCookies, "UseManualCookies", "UseManualCookiesH")
 	AddToolTip(UseManualCookiesH, "Use your own cookies instead of automatically retrieving`nthem from Internet Explorer.")
@@ -784,11 +803,7 @@ CreateTradeSettingsUI()
 	
 	GoSub, TradeSettingsUI_ChkCorruptedOverride
 	
-	CurrencyList := ""
-	CurrencyTemp := TradeGlobals.Get("CurrencyIDs")	
-	For currName, currID in CurrencyTemp {   
-		CurrencyList .= "|" . currName
-	}
+	CurrencyList := TradeFunc_GetDelimitedCurrencyListString()
 	GuiAddText("Currency Search:", "x287 yp+30 w100 h20 0x0100", "LblCurrencySearchHave", "LblCurrencySearchHaveH")
 	AddToolTip(LblCurrencySearchHaveH, "This settings sets the currency that you`nwant to use as ""have"" for the currency search.")
 	GuiAddDropDownList(CurrencyList, "x+10 yp-2", TradeOpts.CurrencySearchHave, "CurrencySearchHave", "CurrencySearchHaveH")
@@ -834,6 +849,15 @@ CreateTradeSettingsUI()
 	GuiAddText("", "x10 y10 w250 h10")
 }
 
+TradeFunc_GetDelimitedCurrencyListString() {
+	CurrencyList := ""
+	CurrencyTemp := TradeGlobals.Get("CurrencyIDs")	
+	For currName, currID in CurrencyTemp {   
+		CurrencyList .= "|" . currName
+	}
+	Return CurrencyList
+}
+
 UpdateTradeSettingsUI()
 {    
 	Global
@@ -844,6 +868,11 @@ UpdateTradeSettingsUI()
 	GuiControl,, ShowUpdateNotifications, % TradeOpts.ShowUpdateNotifications
 	GuiControl,, OpenWithDefaultWin10Fix, % TradeOpts.OpenWithDefaultWin10Fix
 	GuiControl,, BrowserPath, % TradeOpts.BrowserPath
+	GuiControl,, OpenUrlsOnEmptyItem, % TradeOpts.OpenUrlsOnEmptyItem
+	GuiControl,, DownloadDataFiles, % TradeOpts.DownloadDataFiles
+	GuiControl,, DeleteCookies, % TradeOpts.DeleteCookies
+	GuiControl,, CookieSelect, % TradeOpts.CookieSelect
+	GuiUpdateDropdownList("All|poe.trade", TradeOpts.CookieSelect, CookieSelect)	
 	GuiControl,, Debug, % TradeOpts.Debug
 	
 	GuiControl,, PriceCheckHotKey, % TradeOpts.PriceCheckHotKey
@@ -852,19 +881,38 @@ UpdateTradeSettingsUI()
 	GuiControl,, OpenSearchOnPoeTradeHotKey, % TradeOpts.OpenSearchOnPoeTradeHotKey
 	GuiControl,, OpenWikiHotKey, % TradeOpts.OpenWikiHotKey
 	GuiControl,, ShowItemAgeHotKey, % TradeOpts.ShowItemAgeHotKey
+	GuiControl,, ChangeLeagueHotKey, % TradeOpts.ChangeLeagueHotKey
 	
-	GuiControl,, SearchLeague, % TradeOpts.SearchLeague
+	GuiControl,, PriceCheckEnabled, % TradeOpts.PriceCheckEnabled
+	GuiControl,, AdvancedPriceCheckEnabled, % TradeOpts.AdvancedPriceCheckEnabled
+	GuiControl,, OpenWikiEnabled, % TradeOpts.OpenWikiEnabled
+	GuiControl,, CustomInputSearchEnabled, % TradeOpts.CustomInputSearchEnabled
+	GuiControl,, OpenSearchOnPoeTradeEnabled, % TradeOpts.OpenSearchOnPoeTradeEnabled
+	GuiControl,, ShowItemAgeEnabled, % TradeOpts.ShowItemAgeEnabled
+	GuiControl,, ChangeLeagueEnabled, % TradeOpts.ChangeLeagueEnabled
+	
+	GuiUpdateDropdownList("tmpstandard|tmphardcore|standard|hardcore", TradeOpts.SearchLeague, SearchLeague)	
 	GuiControl,, AccountName, % TradeOpts.AccountName
 	GuiControl,, GemLevel, % TradeOpts.GemLevel
 	GuiControl,, GemQualityRange, % TradeOpts.GemQualityRange
 	GuiControl,, AdvancedSearchModValueRangeMin, % TradeOpts.AdvancedSearchModValueRangeMin
 	GuiControl,, AdvancedSearchModValueRangeMax, % TradeOpts.AdvancedSearchModValueRangeMax
-	GuiControl,, CurrencySearchHave, % TradeOpts.CurrencySearchHave
+	CurrencyList := TradeFunc_GetDelimitedCurrencyListString()
+	GuiUpdateDropdownList(CurrencyList, TradeOpts.CurrencySearchHave, CurrencySearchHave)
 	GuiControl,, Corrupted, % TradeOpts.Corrupted
 	GuiControl,, OnlineOnly, % TradeOpts.OnlineOnly
 	GuiControl,, PrefillMinValue, % TradeOpts.PrefillMinValue
 	GuiControl,, PrefillMaxValue, % TradeOpts.PrefillMaxValue
 	GuiControl,, RemoveMultipleListingsFromSameAccount, % TradeOpts.RemoveMultipleListingsFromSameAccount
+	GuiControl,, ForceMaxLinks, % TradeOpts.ForceMaxLinks
+	GuiControl,, BuyoutOnly, % TradeOpts.BuyoutOnly
+	GuiControl,, AlternativeCurrencySearch, % TradeOpts.AlternativeCurrencySearch
+	GuiControl,, AdvancedSearchCheckMods, % TradeOpts.AdvancedSearchCheckMods
+	
+	GuiControl,, UseManualCookies, % TradeOpts.UseManualCookies
+	GuiControl,, UserAgent, % TradeOpts.UserAgent
+	GuiControl,, CfdUid, % TradeOpts.CfdUid
+	GuiControl,, CfClearance, % TradeOpts.CfClearance
 }
 
 TradeFunc_CreateTradeAboutWindow() {
@@ -1309,8 +1357,7 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 }
 
 TradeFunc_ClearWebHistory() {
-	; use this to delete all cookies
-		
+	; use this to delete all cookies		
 	ValidCmdList 	= Files,Cookies,History,Forms,Passwords,All,All2
 	Files 		= 8 ; Clear Temporary Internet Files
 	Cookies 		= 2 ; Clear Cookies
