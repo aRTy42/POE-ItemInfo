@@ -83,7 +83,7 @@
 ;   - de-globalize the script (almost done)
 ;   - refactor ParseAffixes into ParseAffixesSimple and ParseAffixesComplex (low priority)
 ;
-; Slinkston edit for Todo for 2.0 additions for hazydoc or someone else knowledgable in coding:
+; Slinkston edit for Todo for 2.0 additions for hazydoc or someone Else knowledgable in coding:
 ;    - FYI: All of the stuff I have edited has been marked with ; Slinkston edit.  Some may need to be cleaned up or redone if
 ;      they are done improperly/sloppy.  I have tested all changes with stuff in my stash and with friends, but not every single possibility.
 ;    - Accuracy is a nightmare.  Anyhow, "of the Assassin - 321 to 360 Accuracy (80) (Bow and Wand)" needs
@@ -198,7 +198,7 @@ class UserOptions {
 
 	OnlyActiveIfPOEIsFront := 1     ; Set to 1 to make it so the script does nothing if Path of Exile window isn't the frontmost.
 									; If 0, the script also works if PoE isn't frontmost. This is handy for have the script parse
-									; textual item representations appearing somewhere else, like in the forums or text files.
+									; textual item representations appearing somewhere Else, like in the forums or text files.
 
 	PutResultsOnClipboard := 0      ; Put result text on clipboard (overwriting the textual representation the game put there to begin with)
 
@@ -632,7 +632,7 @@ OpenCreateDataTextFile(Filename)
 	Else
 	{
 		File := FileOpen(Filepath, "w")
-		if !IsObject(File)
+		IF !IsObject(File)
 		{
 			MsgBox, 16, Error, File not found and can't write new file.
 			return
@@ -705,7 +705,7 @@ CheckBaseLevel(ItemTypeName)
 	Loop %ItemListArray% {
 		element := Array%A_Index%1
 
-		if (InStr(ItemTypeName, element) != 0 && StrLen(element) > ResultLength)
+		IF (InStr(ItemTypeName, element) != 0 && StrLen(element) > ResultLength)
 		{
 			ResultIndex := A_Index
 			ResultLength := StrLen(element)
@@ -713,7 +713,7 @@ CheckBaseLevel(ItemTypeName)
 	}
 
 	BaseLevel := ""
-	if (ResultIndex > 0) {
+	IF (ResultIndex > 0) {
 		BaseLevel := Array%ResultIndex%2
 	}
 	return BaseLevel
@@ -1030,7 +1030,7 @@ GetClipboardContents(DropNewlines=False)
 			{
 				Result := Result . A_LoopField
 			}
-			else
+			Else
 			{
 				Result := Result . "`r`n" . A_LoopField  ; and then adding those before adding lines. This makes sure there are no trailing `n or `r.
 				;Result := Result . A_LoopField . "`r`n"  ; the original line, left in for clarity.
@@ -1768,7 +1768,7 @@ AssembleAffixDetails()
 	{
 		CurLine := AffixLines[A_Index]
 		; Any empty line is considered as an Unprocessed Mod
-		if CurLine
+		IF CurLine
 		{
 			ProcessedLine =
 			Loop, %AffixLineParts0%
@@ -1855,7 +1855,7 @@ AssembleAffixDetails()
 			}
 			ProcessedLine := ProcessedLine . AffixType . Delim
 		}
-		else
+		Else
 		{
 			ProcessedLine := "   Unprocessed Essence Mod or unknown Mod"
 		}
@@ -1918,7 +1918,7 @@ AssembleDarkShrineInfo()
 		{
 			; This loop retrieves each line from the file, one at a time.
 			StringSplit, DsEffect, A_LoopReadLine, |,
-			if (DsAffix = DsEffect1) {
+			IF (DsAffix = DsEffect1) {
 				If ((Item.IsRing or Item.IsAmulet or Item.IsBelt or Item.IsJewel) and (DsAffix = "+# to Evasion Rating" or DsAffix = "#% Increased Evasion Rating")) {
 					; Evasion rating on jewelry and jewels has a different effect than Evasion rating on other rares
 					Result := Result . "`n  - Always watch your back (jewelry only)`n  -- Three rare monsters spawn around the darkshrine"
@@ -3263,7 +3263,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				ValueRange := LookupAffixData("data\CastSpeedRings.txt", ItemLevel, CurrValue, "", CurrTier)
 			} Else {
 				; Shields can receive a cast speed master mod.
-				; Leaving this as non shield specific if the master mod ever applicable on something else
+				; Leaving this as non shield specific if the master mod ever applicable on something Else
 				ValueRange := LookupAffixData("data\CastSpeedCraft.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
 			NumSuffixes += 1
@@ -3830,7 +3830,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		}
 		IfInString, A_LoopField, to Evasion Rating
 		{
-			; Slinkston edit. I am not sure if using 'else if' statements are the best way here, but it seems to work.
+			; Slinkston edit. I am not sure if using 'Else If' statements are the best way here, but it seems to work.
 			; AR, EV, and ES items are all correct for Armour, Shields, Helmets, Boots, Gloves, and different jewelry.
 			; to Evasion Rating has Ring, but does not have Belt or Amulet.
 			If (ItemSubType == "Ring")
@@ -5812,14 +5812,14 @@ AssembleDamageDetails(FullItemData)
 			ParseAddedDamage(A_LoopField, "Lightning", MainHLighLo, MainHLighHi)
 			ParseAddedDamage(A_LoopField, "Chaos", MainHChaoLo, MainHChaoHi)
 		}
-		else IfInString, A_LoopField, in Off Hand
+		Else IfInString, A_LoopField, in Off Hand
 		{
 			ParseAddedDamage(A_LoopField, "Fire", OffHFireLo, OffHFireHi)
 			ParseAddedDamage(A_LoopField, "Cold", OffHColdLo, OffHColdHi)
 			ParseAddedDamage(A_LoopField, "Lightning", OffHLighLo, OffHLighHi)
 			ParseAddedDamage(A_LoopField, "Chaos", OffHChaoLo, OffHChaoHi)
 		}
-		else
+		Else
 		{
 			ParseAddedDamage(A_LoopField, "Fire", FireLo, FireHi)
 			ParseAddedDamage(A_LoopField, "Cold", ColdLo, ColdHi)
@@ -5851,19 +5851,19 @@ AssembleDamageDetails(FullItemData)
 		TotalMainHChaosDps := MainHChaosDps + ChaosDps
 		TotalOffHChaosDps := OffHChaosDps + ChaosDps
 	}
-	else twoColDisplay := false
+	Else twoColDisplay := false
 
 	If ( MainHEleDps > 0 or OffHEleDps > 0 )
 	{
 		Result = %Result%`nElem DPS:   %TotalMainHEleDps% MainH | %TotalOffHEleDps% OffH
 	}
-	else Result = %Result%`nElem DPS:   %EleDps%
+	Else Result = %Result%`nElem DPS:   %EleDps%
 
 	If ( MainHChaosDps > 0 or OffHChaosDps > 0 )
 	{
 		Result = %Result%`nChaos DPS:  %TotalMainHChaosDps% MainH | %TotalOffHChaosDps% OffH
 	}
-	else Result = %Result%`nChaos DPS:  %ChaosDps%
+	Else Result = %Result%`nChaos DPS:  %ChaosDps%
 
 	If ( twoColDisplay )
 	{
@@ -5871,7 +5871,7 @@ AssembleDamageDetails(FullItemData)
 		TotalOffHDps := PhysDps + TotalOffHEleDps + TotalOffHChaosDps
 		Result = %Result%`nTotal DPS:  %TotalMainHDps% MainH | %TotalOffHDps% OffH
 	}
-	else
+	Else
 	{
 		TotalDps := PhysDps + EleDps + ChaosDps
 		Result = %Result%`nTotal DPS:  %TotalDps%
@@ -5889,7 +5889,7 @@ AssembleDamageDetails(FullItemData)
 			Q20OffHDps := Q20Dps + TotalOffHEleDps + TotalOffHChaosDps
 			Result = %Result%`nQ20 DPS:    %Q20MainHDps% MainH | %Q20OffHDps% OffH
 		}
-		else
+		Else
 		{
 			Q20Dps := Q20Dps + EleDps + ChaosDps
 			Result = %Result%`nQ20 DPS:    %Q20Dps%
@@ -6632,7 +6632,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			{
 				Item.BaseLevel := CheckBaseLevel(Item.Name)
 			}
-			else if (Item.IsUnidentified)
+			Else If (Item.IsUnidentified)
 			{
 				Item.BaseLevel := CheckBaseLevel(Item.Name)
 			}
@@ -6895,75 +6895,27 @@ GetNegativeAffixOffset(Item)
 	return NegativeAffixOffset
 }
 
+; ### TODO: Fix issue for white items, currently receiving duplicate infos (affixes and implicit containing the same line)
 ; Prepare item affixes to create pseudo mods, taken from PoE-TradeMacro
+; Moved from TradeMacro to ItemInfo to avoid duplicate code, please be careful with any changes
 PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
-	Affixes := StrSplit(Affixes, "`n")
+	; ### TODO: remove blank lines ( rare cases, maybe from crafted mods )
+
 	mods := []
-	i := 0
-
+	; ### Append Implicit if any
 	If (Implicit) {
-		temp := ModStringToObject(Implicit, true)
-		For key, val in temp {
-			mods.push(val)
-			i++
+		tempMods := ModStringToObject(Implicit, true)
+		; there should be only one returned mod since its implicit but why risk it
+		For i, tempMod in tempMods {
+			mods.push(tempMod)
 		}
 	}
-
-	For key, val in Affixes {
-		If (!val or RegExMatch(val, "i)---")) {
-			continue
-		}
-		If (i <= 1 and Implicit and Rarity = 1) {
-			continue
-		}
-
-		temp := ModStringToObject(val, false)
-		;combine mods if they have the same name and add their values
-		For tempkey, tempmod in temp {
-			found := false
-
-			For key, mod in mods {
-				If (tempmod.name = mod.name) {
-					Index := 1
-					Loop % mod.values.MaxIndex() {
-						mod.values[Index] := mod.values[Index] + tempmod.values[Index]
-						Index++
-					}
-					
-					tempStr := RegExReplace(mod.name_orig, "i)(-?[.0-9]+)", "#")
-					
-					Pos := 1
-					tempArr := []
-					While Pos := RegExMatch(tempmod.name_orig, "i)(-?[.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {
-						tempArr.push(value)
-					}
-					
-					Pos := 1
-					Index := 1
-					While Pos := RegExMatch(mod.name_orig, "i)(-?[.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {
-						tempStr := StrReplace(tempStr, "#", value + tempArr[Index],, 1)
-						Index++
-					}
-					mod.name_orig := tempStr
-					found := true
-				}
-			}
-			If (tempmod.name and !found) {
-				mods.push(tempmod)
-			}
-		}
-	}
-
-	; adding the values (value array) fails in the above loop, so far I have no idea why,
-	; as a workaround we take the values from the mod description (where it works and use them)
-
-	For key, mod in mods {
-		mod.values := []
-		Pos := 1
-		Index := 1
-		While Pos := RegExMatch(mod.name_orig, "i)(-?[.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 0)) {
-			mod.values.push(value)
-			Index++
+	; ### Convert affix lines to mod objects
+	modStrings := StrSplit(Affixes, "`n")	
+	For i, modString in modStrings {
+		tempMods := ModStringToObject(modString, false)
+		For i, tempMod in tempMods {
+			mods.push(tempMod)
 		}
 	}
 
@@ -6974,6 +6926,7 @@ PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
 }
 
 ; Convert mod strings to objects while seperating combined mods like "+#% to Fire and Lightning Resitances"
+; Moved from TradeMacro to ItemInfo to avoid duplicate code, please be careful with any changes
 ModStringToObject(string, isImplicit) {
 	StringReplace, val, string, `r,, All
 	StringReplace, val, val, `n,, All
@@ -6987,9 +6940,12 @@ ModStringToObject(string, isImplicit) {
 
 	; Collect all resists/attributes that are combined in one mod
 	Matches := []
-	Pos := 0
-	While Pos := RegExMatch(val, "i) ?(Dexterity) ?| ?(Intelligence) ?| ?(Strength) ?", match, Pos + (StrLen(match) ? StrLen(match) : 1)) {
-		Matches.push(Trim(match))
+	
+	If (RegexMatch(val, "i)to (Strength|Dexterity|Intelligence) and (Strength|Dexterity|Intelligence)$", attribute)) {
+		IF ( attribute1 AND attribute2 ) {
+			Matches.push(attribute1)
+			Matches.push(attribute2)
+		}
 	}
 	
 	type := ""
@@ -7036,13 +6992,13 @@ ModStringToObject(string, isImplicit) {
 		Matches[A_Index] := match1 ? sign . "#% to " . Matches[A_Index] . " " . match1 : sign . "#" . type . "" . Matches[A_Index]
 	}
 	
-	; Handle "all attributes"/"all resist"
-	If (RegExMatch(val, "i)all attributes|all elemental (Resistances)", match)) {
+	If (RegExMatch(val, "i)to all attributes|to all elemental (Resistances)", match)) {
 		resist := match1 ? true : false
 		Matches[1] := resist ? "+#% to Fire Resistance" : "+# to Strength"
 		Matches[2] := resist ? "+#% to Lightning Resistance" : "+# to Intelligence"
 		Matches[3] := resist ? "+#% to Cold Resistance" : "+# to Dexterity"
 	}
+
 	; Use original mod-string if no combination is found
 	Matches[1] := Matches.Length() > 0 ? Matches[1] : val
 
@@ -7067,8 +7023,704 @@ ModStringToObject(string, isImplicit) {
 	}
 	
 	Return arr
+}	
+
+
+; #######################################################################################################################
+; ###	Dev:	4GForce
+; ### 	Date:	01/28/2017
+; ###   Issue:	#224 @ https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/224
+; ###	Desc:	Not only about this issue, many reports of improper pseudo calculation, I experienced it plenty myself
+; ###			Tried debugging the old function but it was so messed up that I decided to rewrite it.
+; ###			Based on the same logic that was used before, but simpler and clearer.
+; ###			Using simplifiedNames for the mods so they are easier to compare without rewritting regex all the time
+; ###	TODO:	- Test, test and more test
+; ### 			- Max life will show up in the pseudo from + x Strength, its hard to retrace the parent because value is divided 
+; ###			- Check attributes ... strength is taken into account but we could add intel and dex to the pseudo calc
+; ###			- Unhandled cases : mana, armour, evasion, energy shield, etc
+; ###			- Build a structure for the possible mods ? 
+; ###					something like: { simplifiedName: "xToFireResistance", regex: "i)to Fire Resistance", displayFormat: "+#% to Fire Resistance" }
+; #######################################################################################################################
+; ### Notes from Eru:
+; ### - Taking int and dex into account is ok to calculate % increased ES/added Accuracy Rating, but won't work for TradeMacro, could be display for ItemInfo though
+; ### - Total mana (from int), Total accuracy (from dex), % Evasion (global), % ES (global), % Melee PhysDmg (Global) are added.
+; ### - Some mods are only shown for ItemInfo
+
+; Moved from TradeMacro to ItemInfo to avoid duplicate code, please be careful with any changes
+CreatePseudoMods(mods, returnAllMods := False) {
+	tempMods := []
+	lifeFlat := 0
+	manaFlat := 0
+	energyShieldFlat := 0
+	energyShieldPercent := 0
+	energyShieldPercentGlobal := 0
+	evasionRatingPercentGlobal := 0
+	
+	rarityItemsFoundPercent := 0
+	
+	accuracyRatingFlat := 0
+	globalCritChancePercent := 0
+	globalCritMultiplierPercent := 0
+	critChanceForSpellsPercent := 0
+
+	; TBD : theese 2 variables should probly have the same format as the others
+	spellDmg_Percent := 0
+	; and this one is never used ??
+	; TBD : is '% increased Damage With Weapons' a possible mod ?  its currently unhandled !
+	; Eruyome : Don't think that mod exists or can be derived from other mods
+	attackDmg_Percent := 0
+	
+	; Attributes
+	strengthFlat := 0
+	dexterityFlat := 0
+	intelligenceFlat := 0
+	allAttributesFlat := 0
+	strengthPercent := 0
+	dexterityPercent := 0
+	intelligencePercent := 0
+	allAttributesPercent := 0
+	
+	; Resistances
+	coldResist := 0
+	fireResist := 0
+	lightningResist := 0
+	chaosResist := 0
+	toAllElementalResist := 0
+
+	; Damages
+	; TODO : these could easily be initialized through a loop
+	meleePhysDmgGlobal_Percent := 0
+	
+	elementalDmg_Percent := 0
+	elementalDmg_AttacksPercent := 0
+	elementalDmg_SpellsPercent := 0
+	elementalDmg_AttacksFlatLow := 0
+	elementalDmg_AttacksFlatHi := 0		
+	elementalDmg_SpellsFlatLow := 0
+	elementalDmg_SpellsFlatHi := 0
+	elementalDmg_FlatLow := 0
+	elementalDmg_FlatHi := 0
+
+	fireDmg_Percent := 0
+	fireDmg_AttacksPercent := 0
+	fireDmg_SpellsPercent := 0
+	fireDmg_AttacksFlatLow := 0
+	fireDmg_AttacksFlatHi := 0
+	fireDmg_SpellsFlatLow := 0
+	fireDmg_SpellsFlatHi := 0
+	fireDmg_FlatLow := 0
+	fireDmg_FlatHi := 0
+	
+	coldDmg_Percent := 0
+	coldDmg_AttacksPercent := 0
+	coldDmg_SpellsPercent := 0
+	coldDmg_AttacksFlatLow := 0
+	coldDmg_AttacksFlatHi := 0
+	coldDmg_SpellsFlatLow := 0
+	coldDmg_SpellsFlatHi := 0
+	coldDmg_FlatLow := 0
+	coldDmg_FlatHi := 0
+	
+	lightningDmg_Percent := 0
+	lightningDmg_AttacksPercent := 0
+	lightningDmg_SpellsPercent := 0
+	lightningDmg_AttacksFlatLow := 0
+	lightningDmg_AttacksFlatHi := 0
+	lightningDmg_SpellsFlatLow := 0
+	lightningDmg_SpellsFlatHi := 0
+	lightningDmg_FlatLow := 0
+	lightningDmg_FlatHi := 0
+
+/* BREAKPOINT
+; ########################################################################
+; ###	Combine values from mods of same types 
+; ###		- also assign simplifiedName to the found mod for easier comparison later without duplicating precious regex
+; ########################################################################
+*/
+	; Note that at this point combined mods/attributes have already been separated into two mods
+	; like '+ x % to fire and lightning resist' would be '+ x % to fire resist' AND '+ x % to lightning resist' as 2 different mods
+	For key, mod in mods {
+		; ### Base stats
+		; life and mana
+		If (RegExMatch(mod.name, "i)to maximum (Life|Mana)$", stat)) {
+			%stat1%Flat := %stat1%Flat + mod.values[1]
+			mod.simplifiedName := "xToMaximum" stat1
+		}
+		; flat energy shield
+		Else If (RegExMatch(mod.name, "i)to maximum Energy Shield$")) {
+			energyShieldFlat := energyShieldFlat + mod.values[1]
+			mod.simplifiedName := "xToMaximumEnergyShield"
+		}
+		; percent energy shield
+		Else If (RegExMatch(mod.name, "i)increased maximum Energy Shield$")) {
+			energyShieldPercent := energyShieldPercent + mod.values[1]
+			mod.simplifiedName := "xIncreasedMaximumEnergyShield"
+		}
+		
+		; ### Items found
+		; rarity
+		Else If (RegExMatch(mod.name, "i)increased Rarity of items found$")) {
+			rarityItemsFoundPercent := rarityItemsFoundPercent + mod.values[1]
+			mod.simplifiedName := "xIncreasedRarityOfItemsFound"
+		}
+		
+		; ### Crits
+		Else If (RegExMatch(mod.name, "i)increased Global Critical Strike Chance$")) {
+			globalCritChancePercent := globalCritChancePercent + mod.values[1]
+			mod.simplifiedName := "xIncreasedGlobalCriticalChance"
+		}
+		Else If (RegExMatch(mod.name, "i)to Global Critical Strike Multiplier$")) {
+			globalCritMultiplierPercent := globalCritMultiplierPercent + mod.values[1]
+			mod.simplifiedName := "xIncreasedGlobalCriticalMultiplier"
+		}
+		Else If (RegExMatch(mod.name, "i)increased Critical Strike Chance for Spells$")) {
+			critChanceForSpellsPercent := critChanceForSpellsPercent + mod.values[1]
+			mod.simplifiedName := "xIncreasedCriticalSpells"
+		}
+		
+		; ### Attributes
+		; all attributes
+		Else If (RegExMatch(mod.name, "i)to All Attributes$")) {
+			allAttributesFlat := allAttributesFlat + mod.values[1]
+			mod.simplifiedName := "xToAllAttributes"
+		}
+		; flat attributes
+		Else If (RegExMatch(mod.name, "i)to (Intelligence|Dexterity|Strength)$", attribute)) {
+			%attribute1%Flat := %attribute1%Flat + mod.values[1]
+			mod.simplifiedName := "xTo" . attribute1
+		}
+		; percent attributes
+		Else If (RegExMatch(mod.name, "i)increased (Intelligence|Dexterity|Strength)$", attribute)) {
+			%attribute1%Percent := %attribute1%Percent + mod.values[1]
+			mod.simplifiedName := "xIncreased" . attribute1 . "Percentage"
+		}
+
+		; ### Resistances
+		; % to all resistances ( careful about 'max all resistances' )
+		Else If (RegExMatch(mod.name, "i)to all Elemental Resistances$")) {
+			toAllElementalResist := toAllElementalResist + mod.values[1]
+			mod.simplifiedName := "xToAllElementalResistances"
+		}
+		; % to base resistances
+		Else If (RegExMatch(mod.name, "i)to (Cold|Fire|Lightning|Chaos) Resistance$", resistType)) {
+			%resistType1%Resist := %resistType1%Resist + mod.values[1]
+			mod.simplifiedName := "xTo" resistType1 "Resistance"
+		}
+		
+		; ### Percent damages
+		; % increased Elemental damage - global
+		Else If (RegExMatch(mod.name, "i)increased (Cold|Fire|Lightning|Elemental) damage$", element)) {
+			%element1%Dmg_Percent := %element1%Dmg_Percent + mod.values[1]
+			mod.simplifiedName := "xIncreased" element1 "Damage"
+		}
+		; % Elemental damage with weapons
+		Else If (RegExMatch(mod.name, "i)(Cold|Fire|Lightning|Elemental) damage with weapons", element)) {
+			%element1%Dmg_AttacksPercent := %element1%Dmg_AttacksPercent + mod.values[1]
+			mod.simplifiedName := "xIncreased" element1 "DamageAttacks"
+		}
+		
+		; ### Flat Damages
+		; Flat 'element' damage - weapons only ( I think )
+		; TODO: this regex should be more precise like 'Adds # to # (Cold|Fire|Lightning|Elemental) Damage'
+		Else If (RegExMatch(mod.name, "i)(Cold|Fire|Lightning|Elemental) Damage$", element)) {
+			%element1%Dmg_FlatLow := %element1%Dmg_FlatLow + mod.values[1]
+			%element1%Dmg_FlatHi  := %element1%Dmg_FlatHi + mod.values[2]
+			mod.simplifiedName := "xFlat" element1 "Damage"
+		}
+		; Flat 'element' damage - various sources
+		Else If (RegExMatch(mod.name, "i)(Cold|Fire|Lightning|Elemental) damage to (Attacks|Spells)$", element)) {
+			%element1%Dmg_%element2%FlatLow := %element1%Dmg_%element2%FlatLow + mod.values[1]
+			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi + mod.values[2]
+			mod.simplifiedName := "xFlat" element1 "Damage" element2
+		}
+		; this would catch any * Spell * Damage * ( we might need to be more precise here )
+		Else If (RegExMatch(mod.name, "i)spell") and RegExMatch(mod.name, "i)damage") and not RegExMatch(mod.name, "i)chance|multiplier")) {
+			spellDmg_Percent := spellDmg_Percent + mod.values[1]
+			mod.simplifiedName := "xIncreasedSpellDamage" 
+		}
+		
+		; ### remaining mods that can be derived from attributes (str|dex|int)
+		; flat accuracy rating
+		Else If (RegExMatch(mod.name, "i)to accuracy rating$")) {
+			accuracyRatingFlat := accuracyRatingFlat + mod.values[1]
+		}	
+	}
+/* BREAKPOINT
+; ########################################################################
+; ###	Spread global values to their sub element
+; ### 	- like % all Elemental to the base elementals
+; ###   TODO : Flat damage should probably be affected here 
+; ###		   Note that flat damage values are averaged from low/hi values LATER when selecting the pseudos to keep so
+; ### 			those values should be affected by other +% Elemental damage at this point
+; ########################################################################
+*/
+; ### Eruyome: Flat elemental damage values should never be affected by % increased elemental damage mods.
+; ###		Flat values on items in general should never be multiplied with global modifiers.
+; ###		If there's any need to have this then let's only implement it as an option that you can toggle and only show it on the ItemInfo tooltip, not TradeMacro.
+
+
+	; ### Attributes
+	; flat attributes
+	If (allAttributesFlat) {
+		strengthFlat		:= strengthFlat + allAttributesFlat
+		dexterityFlat		:= dexterityFlat + allAttributesFlat
+		intelligenceFlat 	:= intelligenceFlat + allAttributesFlat
+	}
+	; add percent attributes to the flat values
+	; ### Eruyome: Add this only as a toggle option (display yes/no) for ItemInfo if at all
+	If ( strengthFlat AND strengthPercent ) {
+		;strengthFlat := strengthFlat + Floor(strengthFlat * (strengthPercent/100))
+	}
+	If ( dexterityFlat AND dexterityPercent ) {
+		;dexterityFlat := dexterityFlat + Floor(dexterityFlat * (dexterityPercent/100))
+	}	
+	If ( intelligenceFlat AND intelligencePercent ) {
+		;intelligenceFlat := intelligenceFlat + Floor(intelligenceFlat * (intelligencePercent/100))
+	}
+	
+	; ### TODO: Here we should spread attributes to their corresponding stats they give
+	If ( strengthFlat ) {
+		lifeFlat := lifeFlat + Floor(strengthFlat/2)
+		meleePhysDmgGlobal_Percent := meleePhysDmgGlobal_Percent + Floor(strengthFlat/5)
+	}
+	If ( intelligenceFlat ) {
+		manaFlat := manaFlat + Floor(intelligenceFlat/2)
+		energyShieldPercentGlobal := Floor(intelligenceFlat/5)
+	}
+	If ( dexterityFlat ) {
+		accuracyRatingFlat := accuracyRatingFlat + Floor(dexterityFlat/2)
+		evasionRatingPercentGlobal := Floor(dexterityFlat/5)
+	}
+
+	; ###  Elemental Damage - Global %
+	; ###  - I don't think this mod can be found on items, but lets spreads it to the base elements in case it does
+	; ### Eruyome: Of course it exists, just only as an implicit mod (unless there are uniques that have it)
+	fireDmg_Percent	:= fireDmg_Percent + elementalDmg_Percent
+	coldDmg_Percent	:= coldDmg_Percent + elementalDmg_Percent
+	lightningDmg_Percent:= lightningDmg_Percent + elementalDmg_Percent
+	
+	; ### Elemental damage - Weapons %
+	; ### - spreads Elemental damage with weapon to each 'element' damage with weapon and adds related % increased 'element' damage
+	fireDmg_AttacksPercent      	:= fireDmg_AttacksPercent + elementalDmg_AttacksPercent + fireDmg_Percent
+	coldDmg_AttacksPercent		:= coldDmg_AttacksPercent + elementalDmg_AttacksPercent + coldDmg_Percent
+	lightningDmg_AttacksPercent	:= lightningDmg_AttacksPercent + elementalDmg_AttacksPercent + lightningDmg_Percent
+	
+	; ### Elemental damage - Spells %
+	; ### - spreads % spell damage to each % 'element' spell damage and adds related % increased 'element' damage
+	fireDmg_SpellsPercent 		:= fireDmg_SpellsPercent + spellDmg_Percent + fireDmg_Percent
+	coldDmg_SpellsPercent 		:= coldDmg_SpellsPercent + spellDmg_Percent + coldDmg_Percent
+	lightningDmg_SpellsPercent	:= lightningDmg_SpellsPercent + spellDmg_Percent + lightningDmg_Percent
+
+	; ### TODO: Here we should apply % damage to flat damages
+	; TBD: should probably also combine general elemental flat dmg 
+	; TODO: could be done in a loop for all dmg types
+	; ### Eruyome: Again, don't multiply flat values with global increased multipliers unless its only used for ItemInfo as a toggle option
+	If ( lightningDmg_Percent AND lightningDmg_FlatLow ) {
+		;lightningDmg_FlatLow	:= lightningDmg_FlatLow + Floor(lightningDmg_FlatLow * (lightningDmg_Percent/100))
+		;lightningDmg_FlatHi		:= lightningDmg_FlatHi + Floor(lightningDmg_FlatHi * (lightningDmg_Percent/100))
+	}
+
+	; ### Elemental Resistances
+	; ### - spreads % to all Elemental Resistances to the base resist
+	; ### - also calculates the totalElementalResistance and totalResistance	
+	totalElementalResistance := 0	
+	For i, element in ["Fire", "Cold", "Lightning"] {
+		%element%Resist := %element%Resist + toAllElementalResist		
+		totalElementalResistance := totalElementalResistance + %element%Resist
+	}
+	totalResistance := totalElementalResistance + chaosResist
+	
+/* BREAKPOINT
+; ########################################################################
+; ###	Generate ALL the pseudo mods from the non 0 values combined above
+; ### 	   - just remember the spreading logic above when assigning the temp mods inherited values references in possibleParentSimplifiedNames
+; ###	TODO : Should probly set those temp mod simplified names but im too lazy for now and its only used in this function 
+; ########################################################################
+*/
+
+	; ### Generate Basic Stats pseudos
+	If (lifeFlat > 0) {
+		temp := {}
+		temp.values := [lifeFlat]
+		temp.name_orig := "+" . lifeFlat . " to maximum Life"
+		temp.name     := "+# to maximum Life"
+		temp.simplifiedName := "xToMaximumLife"
+		temp.possibleParentSimplifiedNames := ["xToMaximumLife"]
+		tempMods.push(temp)
+	}
+	If (manaFlat > 0) {
+		temp := {}
+		temp.values := [manaFlat]
+		temp.name_orig := "+" . manaFlat . " to maximum Mana"
+		temp.name     := "+# to maximum Mana"
+		temp.simplifiedName := "xToMaximumMana"
+		temp.possibleParentSimplifiedNames := ["xToMaximumMana"]
+		tempMods.push(temp)
+	}
+	If (energyShieldFlat > 0) {
+		temp := {}
+		temp.values := [energyShieldFlat]
+		temp.name_orig := "+" . energyShieldFlat . " to maximum Energy Shield"
+		temp.name     := "+# to maximum Energy Shield"
+		temp.simplifiedName := "xToMaximumEnergyShield"
+		temp.possibleParentSimplifiedNames := ["xToMaximumEnergyShield"]
+		tempMods.push(temp)
+	}
+	If (energyShieldPercent > 0) {
+		temp := {}
+		temp.values := [energyShieldPercent]
+		temp.name_orig := energyShieldPercent . "% increased maximum Energy Shield"
+		temp.name     := "#% increased maximum Energy Shield"
+		temp.simplifiedName := "xIncreasedMaximumEnergyShield"
+		temp.possibleParentSimplifiedNames := ["xIncreasedMaximumEnergyShield"]
+		tempMods.push(temp)
+	}
+	; ### Generate rarity item found pseudo
+	If (rarityItemsFoundPercent > 0) {
+		temp := {}
+		temp.values := [rarityItemsFoundPercent]
+		temp.name_orig := rarityItemsFoundPercent . "% increased Rarity of items found"
+		temp.name     := "#% increased Rarity of items found"
+		temp.simplifiedName := "xIncreasedRarityOfItemsFound"
+		temp.possibleParentSimplifiedNames := ["xIncreasedRarityOfItemsFound"]
+		tempMods.push(temp)
+	}
+	; ### Generate crit pseudos	
+	If (globalCritChancePercent > 0) {
+		temp := {}
+		temp.values := [globalCritChancePercent]
+		temp.name_orig := globalCritChancePercent . "% increased Global Critical Strike Chance"
+		temp.name     := "#% increased Global Critical Strike Chance"
+		temp.simplifiedName := "xIncreasedGlobalCriticalChance"
+		temp.possibleParentSimplifiedNames := ["xIncreasedGlobalCriticalChance"]
+		tempMods.push(temp)
+	}
+	If (globalCritMultiplierPercent > 0) {
+		temp := {}
+		temp.values := [globalCritMultiplierPercent]
+		temp.name_orig := "+" . globalCritMultiplierPercent . "% to Global Critical Strike Multiplier"
+		temp.name     := "+#% to Global Critical Strike Multiplier"
+		temp.simplifiedName := "xIncreasedGlobalCriticalMultiplier"
+		temp.possibleParentSimplifiedNames := ["xIncreasedGlobalCriticalMultiplier"]
+		tempMods.push(temp)
+	}
+	If (critChanceForSpellsPercent > 0) {
+		temp := {}
+		temp.values := [critChanceForSpellsPercent]
+		temp.name_orig := critChanceForSpellsPercent . "% increased Critical Strike Chance for Spells"
+		temp.name     := "#% increased Critical Strike Chance for Spells"
+		temp.simplifiedName := "xIncreasedCriticalSpells"
+		temp.possibleParentSimplifiedNames := ["xIncreasedCriticalSpells"]
+		tempMods.push(temp)
+	}
+	; ### Generate Attributes pseudos
+	For i, attribute in ["Strength", "Dexterity", "Intelligence"] {
+		If ( %attribute%Flat > 0 ) {
+			temp := {}
+			temp.values := [%attribute%Flat]
+			temp.name_orig := "+" .  %attribute%Flat . " to " .  attribute
+			temp.name     := "+# to " . attribute
+			temp.simplifiedName := "xTo" attribute
+			temp.possibleParentSimplifiedNames := ["xTo" attribute, "xToAllAttributes"]
+			tempMods.push(temp)
+		}
+	}
+	; cumulative all attributes mods
+	If (allAttributesFlat > 0) {
+		temp := {}
+		temp.values := [allAttributesFlat]
+		temp.name_orig := "+" . allAttributesFlat . " to all Attributes"
+		temp.name     := "+#% to all Attributes"
+		temp.simplifiedName := "xToAllAttributes"
+		temp.possibleParentSimplifiedNames := ["xToAllAttributes"]
+		tempMods.push(temp)
+	}
+	
+	; ### Generate Resists pseudos
+	; ### TBD: no need to add chaos and all resist mods to pseudos since they cant get higher than their parent value anyway ???
+	; Eruyome: all resist can get higher, you could have an implicit (prismatic ring) and a suffix
+	; Eruyome: It's also wrong for chaos resist, you can have a corrupted implicit + suffix
+	For i, element in ["Fire", "Cold", "Lightning"] {
+		If ( %element%Resist > 0) {
+			temp := {}
+			temp.values := [%element%Resist]
+			temp.name_orig := "+" %element%Resist "% to " element " Resistance"
+			temp.name     := "+#% to " element " Resistance"
+			temp.simplifiedName := "xTo" element "Resistance"
+			temp.possibleParentSimplifiedNames := ["xTo" element "Resistance", "xToAllElementalResistances"]
+			temp.hideForTradeMacro := true
+			tempMods.push(temp)
+		}
+	}
+	If (toAllElementalResist > 0) {
+		console.log("all " + toAllElementalResist)
+		temp := {}
+		temp.values := [toAllElementalResist]
+		temp.name_orig := "+" . toAllElementalResist . "% to all Elemental Resistances"
+		temp.name     := "+#% to all Elemental Resistances"
+		temp.simplifiedName := "xToAllElementalResistances"
+		temp.possibleParentSimplifiedNames := ["xToAllElementalResistances"]
+		temp.hideForTradeMacro := true
+		tempMods.push(temp)
+	}
+	; Note that total resistances are calculated values with no possible child mods, so they have no simplifiedName
+	If (totalElementalResistance > 0) {
+		console.log("ele " + totalElementalResistance)
+		temp := {}
+		temp.values := [totalElementalResistance]
+		temp.name_orig := "+" . totalElementalResistance . "% total Elemental Resistance"
+		temp.name     := "+#% total Elemental Resistance"
+		temp.possibleParentSimplifiedNames := ["xToFireResistance", "xToColdResistance", "xToLignthningResistance", "xToAllElementalResistances"]
+		tempMods.push(temp)
+	}
+	; without chaos resist, this would have the same value as totalElementalResistance
+	If ((totalResistance > 0) AND (chaosResist > 0)) {
+		temp := {}
+		temp.values := [totalResistance]
+		temp.name_orig := "+" . totalResistance . "% total Resistance"
+		temp.name     := "+#% total Resistance"
+		temp.possibleParentSimplifiedNames := ["xToFireResistance", "xToColdResistance", "xToLignthningResistance", "xToAllElementalResistances", "xToChaosResistance"]
+		tempMods.push(temp)
+	}
+	
+	; ### Generate remaining pseudos derived from attributes
+	If (meleePhysDmgGlobal_Percent > 0) {
+		temp := {}
+		temp.values := [meleePhysDmgGlobal_Percent]
+		temp.name_orig := "+" . meleePhysDmgGlobal_Percent . "% Melee Physical Damage"
+		temp.name     := "+#% Melee Physical Damage"
+		temp.simplifiedName := "xIncreasedMeleePhysicalDamage"
+		temp.possibleParentSimplifiedNames := ["xIncreasedMeleePhysicalDamage"]
+		temp.hideForTradeMacro := true
+		tempMods.push(temp)
+	}
+	If (energyShieldPercentGlobal > 0) {
+		temp := {}
+		temp.values := [energyShieldPercentGlobal]
+		temp.name_orig := "+" . energyShieldPercentGlobal . "% Energy Shield (Global)"
+		temp.name     := "+#% Energy Shield (Global)"
+		temp.simplifiedName := "xIncreasedEnergyShieldPercentGlobal"
+		temp.possibleParentSimplifiedNames := ["xIncreasedEnergyShieldPercentGlobal"]
+		temp.hideForTradeMacro := true
+		tempMods.push(temp)
+	}
+	If (evasionRatingPercentGlobal > 0) {
+		temp := {}
+		temp.values := [evasionRatingPercentGlobal]
+		temp.name_orig := "+" . evasionRatingPercentGlobal . "% Evasion (Global)"
+		temp.name     := "+#% Evasion (Global)"
+		temp.simplifiedName := "xIncreasedEvasionRatingPercentGlobal"
+		temp.possibleParentSimplifiedNames := ["xIncreasedEvasionRatingPercentGlobal"]
+		temp.hideForTradeMacro := true
+		tempMods.push(temp)
+	}
+	If (accuracyRatingFlat > 0) {
+		temp := {}
+		temp.values := [accuracyRatingFlat]
+		temp.name_orig := "+" . accuracyRatingFlat . " to Accuracy Rating"
+		temp.name     := "+# to Accuracy Rating"
+		temp.simplifiedName := "xToAccuracyRating"
+		temp.possibleParentSimplifiedNames := ["xToAccuracyRating"]
+		tempMods.push(temp)
+	}
+
+	; ### Generate Damages pseudos
+	; spell damage global
+	If (spellDmg_Percent > 0) {
+		temp := {}
+		temp.values := [spellDmg_Percent]
+		temp.name_orig := "+" . spellDmg_Percent . "% increased Spell Damage"
+		temp.name     := "+#% increased Spell Damage"
+		temp.simplifiedName := "xIncreasedSpellDamage"
+		temp.possibleParentSimplifiedNames := ["xIncreasedSpellDamage"]
+		tempMods.push(temp)
+	}
+	; other damages
+	percentDamageModSuffixes := [" Damage", " Damage with Weapons", " Spell Damage"]
+	flatDamageModSuffixes := ["", " to Attacks", " to Spells"]
+	For i, element in ["Fire", "Cold", "Lightning", "Elemental"]
+	{	
+		For j, dmgType in ["", "Attacks",  "Spells"]
+		{			
+			; ### Percentage damages
+			If (%element%Dmg_%dmgType%Percent > 0) {
+				modSuffix := percentDamageModSuffixes[j]
+				temp := {}
+				temp.values := [%element%Dmg_%dmgType%Percent]
+				temp.name_orig := %element%Dmg_%dmgType%Percent "% increased " element . modSuffix
+				temp.name     := "#% increased " element . modSuffix
+				temp.simplifiedName := "xIncreased" element "Damage" dmgType
+				temp.possibleParentSimplifiedNames := ["xIncreased" element "Damage" dmgType, "xIncreased" element "Damage"]
+				( element != "Elemental" ) ? temp.possibleParentSimplifiedNames.push("xIncreasedElementalDamage" dmgType) : False
+				( dmgType == "Spells" ) ? temp.possibleParentSimplifiedNames.push("xIncreasedSpellDamage") : False
+				tempMods.push(temp)
+			}
+			; ### Flat damages
+			If (%element%Dmg_%dmgType%FlatLow > 0) {
+				; TODO : Unhandled case for flat damage from weapon only
+				modSuffix := flatDamageModSuffixes[j]
+				temp := {}
+				temp.values := [%element%Dmg_%dmgType%FlatLow, %element%Dmg_%dmgType%FlatHi]
+				temp.name_orig := "Adds " %element%Dmg_%dmgType%FlatLow " to " %element%Dmg_%dmgType%FlatHi " " element " Damage" modSuffix
+				temp.name     := "Adds # " element " Damage" modSuffix
+				temp.simplifiedName := "xFlat" element "Damage" dmgType
+				temp.possibleParentSimplifiedNames := ["xFlat" element "Damage" dmgType]
+				( element != "Elemental" ) ? temp.possibleParentSimplifiedNames.push("xFlatElementalDamage" dmgType) : False
+				tempMods.push(temp)
+			}
+		}
+	}
+
+/* BREAKPOINT
+; ########################################################################
+; ###	Filter/Remove unwanted pseudos
+; ###	Only keep pseudos with values higher than other related mods
+; ###	TODO:	Improve/Simplify this part, so far I just copy/pasted code and doing ALMOST the same thing in each loop
+; ###			We could exit inner loop as soon as higher is set to false, I'll check the docs later
+; ########################################################################
+ */
+
+	; This 1st pass is for TradeMacro 
+	; remove pseudos that are shadowed by an original mod ONLY if they have the same name
+	; inherited values not taken into account for this 1st pass
+	; ex ( '25% increased Cold Spell Damage' is shadowed by '%25 increased Spell Damage' ) BUT don't have same name
+
+	allPseudoMods := []
+	For i, tempMod in tempMods {
+		higher := true
+		For j, mod in mods {
+			; check for mods with same name
+			; Eruyome: Is there any reason to use simplifiedName here? This can fail for pseudo mods like total ele resists
+			; Eruyome: It's possible to match empty simplified names and compare the values of different mods with each other that way
+			
+			;If ( tempMod.simplifiedName == mod.simplifiedName ) {
+			If ( tempMod.name == mod.name ) {
+				; check if it''s a flat damage mod
+				If (mod.values[2]) {
+					mv := (mod.values[1] + mod.values[2]) / 2
+					tv := (tempMod.values[1] + tempMod.values[2]) / 2
+					If (tv <= mv) {
+						higher := false
+					}
+				}
+				Else {
+					If (tempMod.values[1] <= mod.values[1]) {
+						higher := false
+					}
+				}
+			}
+		}
+		; add the tempMod to pseudos if it has greater values, or no parent
+		If (higher){
+			tempMod.isVariable:= false
+			tempMod.type := "pseudo"
+			allPseudoMods.push(tempMod)
+		}
+	}
+
+	; ### This is mostly for TradeMacro
+	; returns all original mods and all the pseudo mods if requested
+	If (returnAllMods) {
+		returnedMods := mods
+		For i, mod in allPseudoMods {
+			returnedMods.push(mod)
+		}
+		Return returnedMods
+	}
+
+	; 2nd pass
+	; now we remove pseudos that are shadowed by an original mod they inherited from
+	; ex ( '25% increased Cold Spell Damage' is shadowed by '%25 increased Spell Damage' )
+ 
+	tempPseudoMods := []
+	For i, tempMod in allPseudoMods {
+		higher := true
+		For j, mod in mods {
+			; check if its a parent mod
+			isParentMod := false
+			For k, simplifiedName in tempMod.possibleParentSimplifiedNames {
+				If (mod.simplifiedName == simplifiedName) {
+					isParentMod := true
+					; TODO: match found we could exit loop here
+				}
+			}
+			If ( isParentMod ) {
+				; check if its a flat damage mod
+				If (mod.values[2]) {
+					mv := (mod.values[1] + mod.values[2]) / 2
+					tv := (tempMod.values[1] + tempMod.values[2]) / 2
+					If (tv <= mv) {
+						higher := false
+					}
+				}
+				Else {
+					If (tempMod.values[1] <= mod.values[1]) {
+						higher := false
+					}
+				}
+			}
+		}
+		; add the tempMod to pseudos if it has greater values, or no parent
+		If (higher){
+			tempMod.isVariable:= false
+			tempMod.type := "pseudo"
+			tempPseudoMods.push(tempMod)
+		}
+	}
+	
+	; 3rd Pass
+	; same logic as above but compare pseudo with other pseudos
+	; remove pseudos that are shadowed by another pseudo
+	; ex ( '25% increased Cold Spell Damage' is shadowed by '%25 increased Spell Damage' )
+	; must also avoid removing itself 
+	
+	pseudoMods := []
+	For i, tempPseudoA in tempPseudoMods {
+		higher := true
+		For j, tempPseudoB in tempPseudoMods {
+			; skip if its the same object
+			if( i != j ) {
+				; check if its a parent mod
+				isParentMod := false
+				For k, simplifiedName in tempPseudoA.possibleParentSimplifiedNames {
+					if (tempPseudoB.simplifiedName == simplifiedName) {
+							isParentMod := true
+							; TODO: match found we could exit loop here
+					}
+				}
+				If ( isParentMod ) {
+					; check if its a flat damage mod
+					If (tempPseudoB.values[2]) {
+						mv := (tempPseudoB.values[1] + tempPseudoB.values[2]) / 2
+						tv := (tempPseudoA.values[1] + tempPseudoA.values[2]) / 2
+						If (tv <= mv) {
+							higher := false
+						}
+					}
+					Else {
+						If (tempPseudoA.values[1] <= tempPseudoB.values[1]) {
+							higher := false
+						}
+					}
+				}
+			}
+		}
+		; add the tempMod to pseudos if it has greater values, or no parent
+		If (higher){
+			tempPseudoA.isVariable:= false
+			tempPseudoA.type := "pseudo"
+			pseudoMods.push(tempPseudoA)
+		}
+	}
+	
+	return pseudoMods
 }
 
+; ### 4GForce - 01/29/2017 - https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/224
+; ### I kept the old function in the code while testing the new one because
+; ### this way its easier to comment/uncomment and quickly reload ahk script, if need be, to comprare some item results
+; ### TODO: Remove this from code once the new CreatePseudoMods() is fully tested and approved
+/* 
 CreatePseudoMods(mods) {
 	tempMods := []
 	resist := 0
@@ -7308,6 +7960,7 @@ CreatePseudoMods(mods) {
 
 	return pseudoMods
 }
+ */
 
 CheckIfTempModExists(needle, mods) {
 	For key, val in mods {
@@ -7637,11 +8290,35 @@ GuiAddDropDownList(Contents, PositionInfo, Selected="", AssocVar="", AssocHwnd="
 	Loop % ListItems.MaxIndex() {
 		Contents .= Trim(ListItems[A_Index]) . "|"
 		; add second | to mark pre-select list item
-		if (Trim(ListItems[A_Index]) == Selected) {
+		If (Trim(ListItems[A_Index]) == Selected) {
 			Contents .= "|"
 		}
 	}
 	GuiAdd("DropDownList", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
+}
+
+GuiUpdateDropdownList(Contents="", Selected="", AssocVar="", Options="", GuiName="") {
+	GuiName := (StrLen(GuiName) > 0) ? Trim(GuiName) . ":" . AssocVar : "" . AssocVar
+	
+	If (StrLen(Contents) > 0) {
+		; usage : add list items as a | delimited string, for example = "item1|item2|item3"
+		ListItems := StrSplit(Contents, "|")
+		; prepend the list with a pipe to re-create the list instead of appending it
+		Contents := "|"
+		Loop % ListItems.MaxIndex() {
+			Contents .= Trim(ListItems[A_Index]) . "|"
+			; add second | to mark pre-select list item
+			If (Trim(ListItems[A_Index]) == Selected) {
+				Contents .= "|"
+			}
+		}
+		GuiControl, , %GuiName%, %Contents%
+	}
+	
+	If (StrLen(Selected)) > 0 {
+		; falls back to "ChooseString" if param3 is not an integer
+		GuiControl, Choose, %GuiName% , %Selected%  	
+	}	
 }
 
 AddToolTip(con, text, Modify=0){
@@ -8171,7 +8848,7 @@ GetContributors(AuthorsPerLine=0)
 	{
 		Authors := Authors . A_LoopReadLine . " "
 		i += 1
-		if (AuthorsPerLine != 0 and mod(i, AuthorsPerLine) == 0) ; every four authors
+		IF (AuthorsPerLine != 0 and mod(i, AuthorsPerLine) == 0) ; every four authors
 		{
 			Authors := Authors . "`r`n"
 		}
@@ -8220,7 +8897,7 @@ ToolTipTimer:
 
 OnClipBoardChange:
 	Global Opts
-	if SuspendPOEItemScript = 0
+	IF SuspendPOEItemScript = 0
 	{
 		If (Opts.OnlyActiveIfPOEIsFront)
 		{
@@ -8520,12 +9197,12 @@ ZeroTrim(number) {
 
 TogglePOEItemScript()
 {
-	if SuspendPOEItemScript = 0
+	IF SuspendPOEItemScript = 0
 	{
 		SuspendPOEItemScript = 1
 		ShowToolTip("Item parsing PAUSED")
 	}
-	else
+	Else
 	{
 		SuspendPOEItemScript = 0
 		ShowToolTip("Item parsing ENABLED")
