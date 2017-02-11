@@ -1,4 +1,5 @@
 ﻿#Include, %A_ScriptDir%\lib\JSON.ahk
+#Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
 
 PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScreenTitle = "") {
 	GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScreenTitle)
@@ -65,31 +66,16 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 		description := LatestRelease.body
 		
 		RegExReplace(releaseTag, "^v", releaseTag)
-          ; works only in x.x.x format (valid semantic versioning)
-		RegExMatch(releaseTag, "(\d+).(\d+).(\d+)(.*)", latestVersion)
-		RegExMatch(ReleaseVersion, "(\d+).(\d+).(\d+)(.*)", currentVersion)
-		
-		If (StrLen(releaseTag) < 1) {
-			MsgBox, 16,, % "Exception thrown! Parsing release information from Github failed."
-		}
-		
+		versions := ParseVersionStringsToObject(releaseTag, ReleaseVersion)
+
 		description := RegExReplace(description, "iU)\\""", """")
 		StringReplace, description, description, \r\n, §, All 
 		StringReplace, description, description, \n, §, All 
 		
-		newRelease := false
-		Loop {			
-			If (not latestVersion%A_Index% and not currentVersion%A_Index%) {
-				break
-			}
-			Else If (latestVersion%A_Index% > currentVersion%A_Index%) {
-				newRelease := true
-			}			
-		}
-
+		newRelease := CompareVersions(versions.latest, versions.current)
 		If (newRelease) {
 			If(SplashScreenTitle) {
-				WinSet, AlwaysOnTop, Off, %SplashScreenTitle%	
+				WinSet, AlwaysOnTop, Off, %SplashScreenTitle%
 			}
 			;Gui, UpdateNotification:Add, Text, cGreen, Update available!
 			boxHeight := isPrerelease ? 80 : 60
@@ -100,11 +86,20 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 			} Else {
 				Gui, UpdateNotification:Add, Text, x20 yp+20, Installed version:
 			}
-
-			Gui, UpdateNotification:Add, Text, x100 yp+0, <%currentVersion%>.
+			
+			currentLabel := versions.current.label
+			latestLabel  := versions.latest.label
+			
+			Gui, UpdateNotification:Font,, Consolas			
+			Gui, UpdateNotification:Add, Text, x100 yp+0,  %currentLabel%			
+			Gui, UpdateNotification:Font,,
+			
 			Gui, UpdateNotification:Add, Link, x+20 yp+0 cBlue, <a href="%releaseURL%">Download it here</a>        
 			Gui, UpdateNotification:Add, Text, x20 y+0, Latest version:
-			Gui, UpdateNotification:Add, Text, x100 yp+0, <%latestVersion%>.			
+			
+			Gui, UpdateNotification:Font,, Consolas	
+			Gui, UpdateNotification:Add, Text, x100 yp+0,  %latestLabel%
+			Gui, UpdateNotification:Font,,
 			
 			Gui, UpdateNotification:Add, Text, x10 cGreen, Update notes:		
 			Loop, Parse, description, §
@@ -123,6 +118,114 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScree
 		MsgBox,,, % "Update-Check failed, Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
 	}
 	Return
+}
+
+CompareVersions(latest, current) {
+	; new release available if latest is higher than current
+	versionHigher 		:= false
+	subVersionHigher 	:= false
+	
+	If (not latest.major and not current.major) {
+		Return false
+	}
+	Else {
+		equal := latest.major . latest.minor . latest.patch . "" == current.major . current.minor . current.patch . ""
+
+		If (RemoveLeadingZeros(latest.major) > RemoveLeadingZeros(current.major)) {
+			versionHigher := true
+		}
+		Else If (RemoveLeadingZeros(latest.minor) > RemoveLeadingZeros(current.minor)) {
+			versionHigher := true
+		}
+		Else If (RemoveLeadingZeros(latest.patch) > RemoveLeadingZeros(current.patch)) {
+			versionHigher := true
+		}
+		
+		If (latest.subVersion.priority or current.subVersion.priority) {
+			If (current.subVersion.priority and latest.fullRelease) {
+				subVersionHigher := false
+			}
+			Else If (latest.subVersion.priority > current.subVersion.priority) {
+				subVersionHigher := true
+			}
+			Else If (RemoveLeadingZeros(latest.subVersion.patch) > RemoveLeadingZeros(current.subVersion.patch)) {
+				subVersionHigher := true
+			}
+		}
+
+		
+		If (equal and latest.fullRelease and not current.fullRelease) {
+			Return true
+		}
+		Else If (equal and not subVersionHigher) {
+			Return false
+		}
+		Else If (versionHigher) {
+			Return true
+		}
+		Else If (subVersionHigher) {
+			Return true
+		}
+		Else {
+			Return false
+		}
+	}
+}
+
+RemoveLeadingZeros(in) {
+	Return LTrim(in, "0")
+}
+
+ParseVersionStringsToObject(latest, current) {
+     ; requires valid semantic versioning
+	; x.x.x
+	; x.x.x-alpha.x
+	; also possible: beta, rc
+	; priority: normal release (no sub version) > rc > beta > alpha
+	RegExMatch(latest, "(\d+).(\d+).(\d+)(.*)", latestVersion)
+	RegExMatch(current, "(\d+).(\d+).(\d+)(.*)", currentVersion)
+
+	If (StrLen(latest) < 1) {
+		MsgBox, 16,, % "Exception thrown! Parsing release information from Github failed."
+	}
+	
+	versions := {}
+	versions.latest  := {}
+	versions.current := {}
+
+	RegExMatch(latestVersion4,  "i)(rc|beta|alpha)(.?(\d+)(.*)?)?", match_latest)
+	RegExMatch(currentVersion4, "i)(rc|beta|alpha)(.?(\d+)(.*)?)?", match_current)
+
+	temp := ["latest", "current"]
+	For key, val in temp {
+		versions[val].major := %val%Version1
+		versions[val].minor := %val%Version2
+		versions[val].patch := %val%Version3
+		versions[val].label := %val%Version
+
+		If (match_%val%) {	
+			versions[val].subVersion := {}
+			versions[val].subVersion.identifier:= match_%val%1
+			versions[val].subVersion.priority	:= GetVersionIdentifierPriority(versions[val].subVersion.identifier)
+			versions[val].subVersion.patch	:= match_%val%3	
+		}
+		
+		versions[val].fullRelease := StrLen(match_%val%) < 1 ? true : false
+	}
+	
+	Return versions
+}
+
+GetVersionIdentifierPriority(identifier) {
+	If (identifier = "rc") {
+		Return 3
+	} Else If (identifier = "beta") {
+		Return 2
+	} Else If (identifier = "alpha") {
+		Return 1
+	} Else {
+		Return 0
+	}
 }
 
 CloseUpdateWindow:
