@@ -198,7 +198,7 @@ class UserOptions {
 									; textual item representations appearing somewhere Else, like in the forums or text files.
 
 	PutResultsOnClipboard := 0      ; Put result text on clipboard (overwriting the textual representation the game put there to begin with)
-
+	ShowUpdateNotifications := 1
 	UpdateSkipSelection := 0
 	UpdateSkipBackup := 0
 
@@ -303,6 +303,7 @@ class UserOptions {
 	{
 		this.OnlyActiveIfPOEIsFront := GuiGet("OnlyActiveIfPOEIsFront")
 		this.PutResultsOnClipboard := GuiGet("PutResultsOnClipboard")
+		this.ShowUpdateNotifications := GuiGet("ShowUpdateNotifications")
 		this.UpdateSkipSelection := GuiGet("UpdateSkipSelection")
 		this.UpdateSkipBackup := GuiGet("UpdateSkipBackup")		
 		this.ShowItemLevel := GuiGet("ShowItemLevel")
@@ -8132,7 +8133,7 @@ CreateSettingsUI()
 	Global
 	
 	; General
-	generalHeight := SkipItemInfoUpdateCall ? "90" : "150"
+	generalHeight := SkipItemInfoUpdateCall ? "90" : "180"
 	GuiAddGroupBox("General", "x7 y+15 w260 h" generalHeight " Section")
 
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
@@ -8142,11 +8143,13 @@ CreateSettingsUI()
 	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 ys50 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
 	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")	
 	If (!SkipItemInfoUpdateCall) {
-		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys50 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+		GuiAddCheckbox("Update: Show Notifications", "xs10 ys80 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
+		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")		
+		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys110 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
 		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")	
-		GuiAddCheckbox("Update: Skip backup", "xs10 ys50 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+		GuiAddCheckbox("Update: Skip backup", "xs10 ys140 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
 		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
-	}	
+	}
 
 	; Display
 
@@ -8184,7 +8187,8 @@ CreateSettingsUI()
 	; Display - Affixes
 
 	; This groupbox is positioned relative to the last control (first column), this is not optimal but makes it possible to wrap these groupboxes in Tabs without further repositing.
-	GuiAddGroupBox("Display - Affixes", "xs270 yp-415 w260 h360 Section")
+	displayAffixesPos := SkipItemInfoUpdateCall ? "415" : "505"
+	GuiAddGroupBox("Display - Affixes", "xs270 yp-" displayAffixesPos " w260 h360 Section")
 
 	GuiAddCheckbox("Show affix totals", "xs10 ys20 w210 h30", Opts.ShowAffixTotals, "ShowAffixTotals", "ShowAffixTotalsH")
 	AddToolTip(ShowAffixTotalsH, "Show a statistic how many prefixes and suffixes`nthe item has")
@@ -8246,6 +8250,7 @@ UpdateSettingsUI()
 	GuiControl,, OnlyActiveIfPOEIsFront, % Opts.OnlyActiveIfPOEIsFront
 	GuiControl,, PutResultsOnClipboard, % Opts.PutResultsOnClipboard
 	If (!SkipItemInfoUpdateCall) {
+		GuiControl,, ShowUpdateNotifications, % Opts.ShowUpdateNotifications
 		GuiControl,, UpdateSkipSelection, % Opts.UpdateSkipSelection
 		GuiControl,, UpdateSkipBackup, % Opts.UpdateSkipBackup
 	}
@@ -8445,6 +8450,7 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 
 		Opts.OnlyActiveIfPOEIsFront := IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
 		Opts.PutResultsOnClipboard := IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
+		Opts.ShowUpdateNotifications := IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
 		Opts.UpdateSkipSelection := IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
 		Opts.UpdateSkipBackup := IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
 
@@ -8504,6 +8510,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 
 	IniWrite(Opts.OnlyActiveIfPOEIsFront, ConfigPath, "General", "OnlyActiveIfPOEIsFront")
 	IniWrite(Opts.PutResultsOnClipboard, ConfigPath, "General", "PutResultsOnClipboard")
+	IniWrite(Opts.ShowUpdateNotifications, ConfigPath, "General", "ShowUpdateNotifications")
 	IniWrite(Opts.UpdateSkipSelection, ConfigPath, "General", "UpdateSkipSelection")
 	IniWrite(Opts.UpdateSkipBackup, ConfigPath, "General", "UpdateSkipBackup")
 
@@ -8866,13 +8873,13 @@ CheckForUpdates:
 		globalUpdateInfo.repo := Globals.Get("GithubRepo")
 		globalUpdateInfo.user := Globals.Get("GithubUser")
 		globalUpdateInfo.releaseVersion	:= Globals.Get("ReleaseVersion")
-		globalUpdateInfo.skipSelection	:= Opt.UpdateSkipSelection
-		globalUpdateInfo.skipBackup		:= Opt.UpdateSkipBackup
+		globalUpdateInfo.skipSelection	:= Opts.UpdateSkipSelection
+		globalUpdateInfo.skipBackup		:= Opts.UpdateSkipBackup
+		globalUpdateInfo.skipUpdateCheck	:= Opts.ShowUpdateNotifications
 		SplashScreenTitle := "PoE-ItemInfo"
 	}
 	
-	ShowUpdateNotification := 1
-	hasUpdate := PoEScripts_Update(globalUpdateInfo.user, globalUpdateInfo.repo, globalUpdateInfo.releaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, globalUpdateInfo.skipSelection, globalUpdateInfo.skipBackup)
+	hasUpdate := PoEScripts_Update(globalUpdateInfo.user, globalUpdateInfo.repo, globalUpdateInfo.releaseVersion, globalUpdateInfo.skipUpdateCheck, userDirectory, isDevVersion, globalUpdateInfo.skipSelection, globalUpdateInfo.skipBackup)
 	If (hasUpdate = "no update" and not firstUpdateCheck) {
 		SplashTextOn, , , No update available
 		Sleep 2000
