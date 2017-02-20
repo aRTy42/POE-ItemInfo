@@ -19,7 +19,7 @@ Never completely trust any price checking tool. Inform yourself about what this 
 1. Install AHK (http://ahkscript.org)
 2. Download the [latest release](https://github.com/POE-TradeMacro/POE-TradeMacro/releases/latest) and extract the zip-file. 
 3. Make sure to run PoE in (borderless) windowed mode. Otherwise it won't work!
-4. Run **_Run_Only_This.ahk_** or (`Run_without_Admin_Elevation.ahk` if you don't need and want it).
+4. Run **_Run_TradeMacro.ahk_** or (`Run_TradeMacro_no_Admin_Elevation.ahk` if you don't need and want it).
 5. Default league is set to `tmpstandard` (Softcore Temp-League).
 6. A lot of options, including the league can be changed by opening the settings window or editing `config_trade.ini`.   
 
