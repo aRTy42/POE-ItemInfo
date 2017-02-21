@@ -128,6 +128,7 @@ RunTests := False
 #SingleInstance force
 #NoEnv ; Recommended for performance and compatibility with future AutoHotkey releases.
 #Persistent ; Stay open in background
+SetWorkingDir, %A_ScriptDir%
 SendMode Input ; Recommended for new scripts due to its superior speed and reliability.
 
 ;Define exe names for the regular and steam version, for later use at the very end of the script. This needs to be done early, in the "auto-execute section".
@@ -136,7 +137,7 @@ GroupAdd, PoEexe, ahk_exe PathOfExileSteam.exe
 GroupAdd, PoEexe, ahk_exe PathOfExile_x64.exe
 GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 
-#Include %A_ScriptDir%\resources\Version.txt
+#Include, %A_ScriptDir%\resources\Version.txt
 #Include, %A_ScriptDir%\lib\JSON.ahk
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
@@ -178,19 +179,15 @@ Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
 Globals.Set("ScriptList", [A_ScriptDir "\POE-ItemInfo"])
 Globals.Set("UpdateNoteFileList", [[A_ScriptDir "\resources\updates.txt","ItemInfo"]])
-
-; Set ProjectName to create user settings folder in A_MyDocuments.
-; Don't set variable "UseExternalProjectName" in this script.
-; Only set it in an external script when including ItemInfo (for example PoE-TradeMacro).
-If (UseExternalProjectName) {
-    Globals.Set("ProjectName", UseExternalProjectName)
-}
-Else {
-    Globals.Set("ProjectName", "PoE-ItemInfo")    
-}
-;FilesToCopyToUserFolder := [A_ScriptDir . "\resources\default_config.ini", A_ScriptDir . "\data\AdditionalMacros.txt"]
-;PoEScripts_UserSettings(Globals.Get("ProjectName"), UseExternalProjectName, FilesToCopyToUserFolder)
-
+argumentProjectName		= %1%
+argumentUserDirectory	= %2%
+argumentIsDevVersion	= %3%
+argumentOverwrittenFiles = %4%
+Globals.Set("ProjectName", argumentProjectName)
+; make sure not to overwrite these variables if set from another script
+global userDirectory		:= userDirectory ? userDirectory : argumentUserDirectory
+global isDevVersion			:= isDevVersion  ? isDevVersion  : argumentIsDevVersion
+global overwrittenUserFiles	:= overwrittenUserFiles ? overwrittenUserFiles : argumentOverwrittenFiles
 
 global SuspendPOEItemScript = 0
 
@@ -201,6 +198,9 @@ class UserOptions {
 									; textual item representations appearing somewhere Else, like in the forums or text files.
 
 	PutResultsOnClipboard := 0      ; Put result text on clipboard (overwriting the textual representation the game put there to begin with)
+	ShowUpdateNotifications := 1
+	UpdateSkipSelection := 0
+	UpdateSkipBackup := 0
 
 	ShowItemLevel := 1              ; Show item level and the item type's base level (enabled by default change to 0 to disable)
 	ShowMaxSockets := 1             ; Show the max sockets based on ilvl and type
@@ -303,6 +303,9 @@ class UserOptions {
 	{
 		this.OnlyActiveIfPOEIsFront := GuiGet("OnlyActiveIfPOEIsFront")
 		this.PutResultsOnClipboard := GuiGet("PutResultsOnClipboard")
+		this.ShowUpdateNotifications := GuiGet("ShowUpdateNotifications")
+		this.UpdateSkipSelection := GuiGet("UpdateSkipSelection")
+		this.UpdateSkipBackup := GuiGet("UpdateSkipBackup")		
 		this.ShowItemLevel := GuiGet("ShowItemLevel")
 		this.ShowMaxSockets := GuiGet("ShowMaxSockets")
 		this.ShowDamageCalculations := GuiGet("ShowDamageCalculations")
@@ -334,18 +337,6 @@ class UserOptions {
 	}
 }
 Opts := new UserOptions()
-
-; Under no circumstance set the variable "SkipItemInfoUpdateCall" in this script
-; This code block should only be called when ItemInfo runs by itself, not when it's included in other scripts like PoE-TradeMacro
-; "SkipItemInfoUpdateCall" should be set outside by other scripts
-If (!SkipItemInfoUpdateCall) {
-	; file "PoEScripts_Update.ahk" has to exist in "%A_ScriptDir%\lib\"
-	repo := Globals.Get("GithubRepo")
-	user := Globals.Get("GithubUser")
-	ReleaseVersion := Globals.Get("ReleaseVersion")
-	ShowUpdateNotification := 1
-	PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification)
-}
 
 class Fonts {
 
@@ -497,6 +488,7 @@ class Item_ {
 		This.IsMirrored 	:= False
 		This.IsMapFragment 	:= False
 		This.IsEssence		:= False
+		This.IsRelic		:= False
 	}
 }
 Global Item := new Item_
@@ -556,36 +548,52 @@ class AffixLines_ {
 }
 AffixLines := new AffixLines_()
 
-IfNotExist, %A_ScriptDir%\config.ini
+IfNotExist, %userDirectory%\config.ini
 {
 	CopyDefaultConfig()
 }
 
 ; Windows system tray icon
 ; possible values: poe.ico, poe-bw.ico, poe-web.ico, info.ico
-; set before creating the settings UI so it gets used for the settigns dialog as well
+; set before creating the settings UI so it gets used for the settings dialog as well
 Menu, Tray, Icon, %A_ScriptDir%\resources\images\poe-bw.ico
 
 ReadConfig()
 Sleep, 100
+
+; Use some variables to skip the update check or enable/disable update check feedback.
+; The first call on script start shouldn't have any feedback and including ItemInfo in other scripts should call the update once from that other script.
+; Under no circumstance set the variable "SkipItemInfoUpdateCall" in this script.
+; This code block should only be called when ItemInfo runs by itself, not when it's included in other scripts like PoE-TradeMacro.
+; "SkipItemInfoUpdateCall" should be set outside by other scripts.
+global firstUpdateCheck := true
+If (!SkipItemInfoUpdateCall) {
+	GoSub, CheckForUpdates
+}
+firstUpdateCheck := false
+
 CreateSettingsUI()
+If (StrLen(overwrittenUserFiles)) {
+	ShowChangedUserFiles()
+}
 GoSub, FetchCurrencyData
 
-Menu, TextFiles, Add, User Settings Folder, EditOpenUserSettings
 Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
-Menu, TextFiles, Add, Currency Rates, EditCurrencyRates
-
 
 ; Menu tooltip
 RelVer := Globals.Get("ReleaseVersion")
 Menu, Tray, Tip, Path of Exile Item Info %RelVer%
 
 Menu, Tray, NoStandard
+Menu, Tray, Add, Reload Script (Use only this), ReloadScript
+Menu, Tray, Add ; Separator
 Menu, Tray, Add, About..., MenuTray_About
 Menu, Tray, Add, % Globals.Get("SettingsUITitle", "PoE Item Info Settings"), ShowSettingsUI
+Menu, Tray, Add, Check for updates, CheckForUpdates
 Menu, Tray, Add, Update Notes, ShowUpdateNotes
 Menu, Tray, Add ; Separator
 Menu, Tray, Add, Edit, :TextFiles
+Menu, Tray, Add, Open User Folder, EditOpenUserSettings
 Menu, Tray, Add ; Separator
 Menu, Tray, Standard
 Menu, Tray, Default, % Globals.Get("SettingsUITitle", "PoE Item Info Settings")
@@ -644,9 +652,9 @@ OpenCreateDataTextFile(Filename)
 
 }
 
-OpenMainDirFile(Filename)
+OpenUserDirFile(Filename)
 {
-	Filepath := A_ScriptDir . "\" . Filename
+	Filepath := userDirectory . "\" . Filename
 	IfExist, % Filepath
 	{
 		Run, % Filepath
@@ -663,7 +671,7 @@ OpenMainDirFile(Filename)
 OpenUserSettingsFolder(ProjectName, Dir = "")
 {	
     If (!StrLen(Dir)) {
-        Dir := A_MyDocuments . "\" . ProjectName
+        Dir := userDirectory
     }
 
     If (!InStr(FileExist(Dir), "D")) {
@@ -935,6 +943,16 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		{
 			BaseType = Jewel
 			SubType = Prismatic Jewel
+			return
+		}
+		
+		; Leaguestones
+		IfInString, LoopField, Leaguestone
+		{
+			RegexMatch(LoopField, "i)(.*)Leaguestone", match)
+			RegexReplace(Trim(match1), "i)\b(\w+)\W*$", match) ; match last word
+			BaseType = Leaguestone
+			SubType := %match1% " Leaguestone"
 			return
 		}
 
@@ -6525,7 +6543,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsJewel := (Item.BaseType == "Jewel")
 	Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
 	Item.IsEssence := Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
-	Item.Note := Globals.Get("ItemNote")
+	Item.Note := Globals.Get("ItemNote")	
+	If (RarityLevel = 4) {
+		Item.IsRelic := 
+	}
 
 	TempStr := ItemData.PartsLast
 	Loop, Parse, TempStr, `n, `r
@@ -8126,14 +8147,23 @@ CreateSettingsUI()
 	Global
 	
 	; General
-	GuiAddGroupBox("General", "x7 y+15 w260 h90 Section")
+	generalHeight := SkipItemInfoUpdateCall ? "90" : "180"
+	GuiAddGroupBox("General", "x7 y+15 w260 h" generalHeight " Section")
 
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 
 	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 ys20 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "If checked the script does nothing if the`nPath of Exile window isn't the frontmost")
 	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 ys50 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
-	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")
+	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")	
+	If (!SkipItemInfoUpdateCall) {
+		GuiAddCheckbox("Update: Show Notifications", "xs10 ys80 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
+		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")		
+		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys110 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")	
+		GuiAddCheckbox("Update: Skip backup", "xs10 ys140 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
+	}
 
 	; Display
 
@@ -8171,7 +8201,8 @@ CreateSettingsUI()
 	; Display - Affixes
 
 	; This groupbox is positioned relative to the last control (first column), this is not optimal but makes it possible to wrap these groupboxes in Tabs without further repositing.
-	GuiAddGroupBox("Display - Affixes", "xs270 yp-415 w260 h360 Section")
+	displayAffixesPos := SkipItemInfoUpdateCall ? "415" : "505"
+	GuiAddGroupBox("Display - Affixes", "xs270 yp-" displayAffixesPos " w260 h360 Section")
 
 	GuiAddCheckbox("Show affix totals", "xs10 ys20 w210 h30", Opts.ShowAffixTotals, "ShowAffixTotals", "ShowAffixTotalsH")
 	AddToolTip(ShowAffixTotalsH, "Show a statistic how many prefixes and suffixes`nthe item has")
@@ -8232,6 +8263,11 @@ UpdateSettingsUI()
 
 	GuiControl,, OnlyActiveIfPOEIsFront, % Opts.OnlyActiveIfPOEIsFront
 	GuiControl,, PutResultsOnClipboard, % Opts.PutResultsOnClipboard
+	If (!SkipItemInfoUpdateCall) {
+		GuiControl,, ShowUpdateNotifications, % Opts.ShowUpdateNotifications
+		GuiControl,, UpdateSkipSelection, % Opts.UpdateSkipSelection
+		GuiControl,, UpdateSkipBackup, % Opts.UpdateSkipBackup
+	}
 	GuiControl,, ShowItemLevel, % Opts.ShowItemLevel
 	GuiControl,, ShowMaxSockets, % Opts.ShowMaxSockets
 	GuiControl,, ShowDamageCalculations, % Opts.ShowDamageCalculations
@@ -8384,6 +8420,24 @@ ShowUpdateNotes()
 	Gui, UpdateNotes:Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
 }
 
+ShowChangedUserFiles()
+{
+	Gui, ChangedUserFiles:Destroy
+	
+	Gui, ChangedUserFiles:Add, Text, , Following user files were changed in the last update and `nwere overwritten (old files were backed up):
+	
+	Loop, Parse, overwrittenUserFiles, `n
+	{
+		If (StrLen(A_Loopfield) > 0) {
+			Gui, ChangedUserFiles:Add, Text, y+5, %A_LoopField%	
+		}		
+	}
+	Gui, ChangedUserFiles:Add, Button, y+10 gChangedUserFilesWindow_Cancel, Close
+	Gui, ChangedUserFiles:Add, Button, x+10 yp+0 gChangedUserFilesWindow_OpenFolder, Open user folder
+	Gui, ChangedUserFiles:Show, w300, Changed User Files
+	ControlFocus, Close, Changed User Files
+}
+
 IniRead(ConfigPath, Section_, Key, Default_)
 {
 	Result := ""
@@ -8396,15 +8450,23 @@ IniWrite(Val, ConfigPath, Section_, Key)
 	IniWrite, %Val%, %ConfigPath%, %Section_%, %Key%
 }
 
-ReadConfig(ConfigPath="config.ini")
+ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 {
 	Global
+	If (StrLen(ConfigDir) < 1) {
+		ConfigDir := userDirectory
+	}
+	ConfigPath := StrLen(ConfigDir) > 0 ? ConfigDir . "\" . ConfigFile : ConfigFile
+
 	IfExist, %ConfigPath%
 	{
 		; General
 
 		Opts.OnlyActiveIfPOEIsFront := IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
 		Opts.PutResultsOnClipboard := IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
+		Opts.ShowUpdateNotifications := IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
+		Opts.UpdateSkipSelection := IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
+		Opts.UpdateSkipBackup := IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
 
 		; Display
 
@@ -8448,15 +8510,23 @@ ReadConfig(ConfigPath="config.ini")
 	}
 }
 
-WriteConfig(ConfigPath="config.ini")
+WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 {
 	Global
+	If (StrLen(ConfigDir) < 1) {
+		ConfigDir := userDirectory
+	}
+	ConfigPath := StrLen(ConfigDir) > 0 ? ConfigDir . "\" . ConfigFile : ConfigFile
+
 	Opts.ScanUI()
 
 	; General
 
 	IniWrite(Opts.OnlyActiveIfPOEIsFront, ConfigPath, "General", "OnlyActiveIfPOEIsFront")
 	IniWrite(Opts.PutResultsOnClipboard, ConfigPath, "General", "PutResultsOnClipboard")
+	IniWrite(Opts.ShowUpdateNotifications, ConfigPath, "General", "ShowUpdateNotifications")
+	IniWrite(Opts.UpdateSkipSelection, ConfigPath, "General", "UpdateSkipSelection")
+	IniWrite(Opts.UpdateSkipBackup, ConfigPath, "General", "UpdateSkipBackup")
 
 	; Display
 
@@ -8508,12 +8578,12 @@ WriteConfig(ConfigPath="config.ini")
 
 CopyDefaultConfig()
 {
-	FileCopy, %A_ScriptDir%\resources\config\default_config.ini, %A_ScriptDir%\config.ini
+	FileCopy, %A_ScriptDir%\resources\config\default_config.ini, %userDirectory%\config.ini
 }
 
 RemoveConfig()
 {
-	FileDelete, %A_ScriptDir%\config.ini
+	FileDelete, %userDirectory%\config.ini
 }
 
 GetContributors(AuthorsPerLine=0)
@@ -8598,6 +8668,15 @@ OnClipBoardChange:
 	
 ShowUpdateNotes:
 	ShowUpdateNotes()
+	return
+
+ChangedUserFilesWindow_Cancel:
+	Gui, ChangedUserFiles:Cancel
+	return
+
+ChangedUserFilesWindow_OpenFolder:
+	Gui, ChangedUserFiles:Cancel
+	GoSub, EditOpenUserSettings
 	return
 
 ShowSettingsUI:
@@ -8774,11 +8853,16 @@ EditOpenUserSettings:
     return
 
 EditAdditionalMacros:
-	OpenMainDirFile("AdditionalMacros.txt")
+	OpenUserDirFile("AdditionalMacros.txt")
 	return
 
 EditCurrencyRates:
 	OpenCreateDataTextFile("CurrencyRates.txt")
+	return
+	
+ReloadScript:
+	scriptName := RegExReplace(Globals.Get("ProjectName"), "i)poe-", "Run_") . ".ahk"
+	Run, "%A_AhkPath%" "%A_ScriptDir%\%scriptName%"
 	return
 
 3GuiClose:
@@ -8794,6 +8878,28 @@ UnhandledDlg_ShowItemText:
 UnhandledDlg_OK:
 	Gui, 3:Submit
 	return
+	
+CheckForUpdates:
+	If (not globalUpdateInfo.repo) {
+		global globalUpdateInfo := {}
+	}
+	If (not SkipItemInfoUpdateCall) {
+		globalUpdateInfo.repo := Globals.Get("GithubRepo")
+		globalUpdateInfo.user := Globals.Get("GithubUser")
+		globalUpdateInfo.releaseVersion	:= Globals.Get("ReleaseVersion")
+		globalUpdateInfo.skipSelection	:= Opts.UpdateSkipSelection
+		globalUpdateInfo.skipBackup		:= Opts.UpdateSkipBackup
+		globalUpdateInfo.skipUpdateCheck	:= Opts.ShowUpdateNotifications
+		SplashScreenTitle := "PoE-ItemInfo"
+	}
+	
+	hasUpdate := PoEScripts_Update(globalUpdateInfo.user, globalUpdateInfo.repo, globalUpdateInfo.releaseVersion, globalUpdateInfo.skipUpdateCheck, userDirectory, isDevVersion, globalUpdateInfo.skipSelection, globalUpdateInfo.skipBackup)
+	If (hasUpdate = "no update" and not firstUpdateCheck) {
+		SplashTextOn, , , No update available
+		Sleep 2000
+		SplashTextOff
+	}
+Return
 	
 FetchCurrencyData:
 	CurrencyDataJSON := {}
@@ -8900,6 +9006,5 @@ F8::
 */
 
 ; ############ (user) macros #############
-#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe
+; macros are being appended here by merge script
 
-#Include %A_ScriptDir%\AdditionalMacros.txt

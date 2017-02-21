@@ -5,42 +5,43 @@
 
 /*
 	用法:
-	WinHttpRequest( URL, ByRef In_POST__Out_Data="", ByRef In_Out_HEADERS="", Options="" )
+	WinHttpRequest( URL, ByRef In_POST__Out_Data="", ByRef In_Out_HEADERS="", Options="", ByRef Out_Headers_Obj)
 	--------------------------------------------------------------------------------------------
-	参数:
+	参数/parameter:
 	URL               - 网址
 	
-	In_POST__Out_Data - POST数据/返回数据。
-	若该变量为空则进行 GET 请求，否则为 POST
+	In_POST__Out_Data - POST数据/返回数据。Data / return data
+	若该变量为空则进行 GET 请求，否则为 POST / If the variable is empty GET Request, otherwise POST
 	
-	In_Out_HEADERS    - 请求头/响应头（多个请求头用换行符分隔）
+	In_Out_HEADERS    - 请求头/响应头（多个请求头用换行符分隔） / Request header / response header (multiple request head separated by newline)
 	
-	Options           - 选项（多个选项用换行符分隔）
+	Options           - 选项（多个选项用换行符分隔） / Option (multiple options separated by newline)
 	
-	NO_AUTO_REDIRECT - 禁止自动重定向
-	Timeout: 秒钟    - 超时（默认为 30 秒）
-	Proxy: IP:端口   - 代理
+	NO_AUTO_REDIRECT - 禁止自动重定向 / Disable automatic redirection
+	Timeout: 秒钟 /seconds    - 超时（默认为 30 秒） / Timeout (default is 30 seconds)
+	Proxy: IP:端口/Port   - 代理 / proxy
 	Codepage: XXX	 - 代码页。例如 Codepage: 65001
-	Charset: 编码	 - 字符集。例如 Charset: UTF-8
-	SaveAs: 文件名   - 下载到文件
-	Compressed       - 向网站请求 GZIP 压缩数据，并解压。
-	（需要文件 gzip.dll -- http://pan.baidu.com/s/1pKqKTzt）
-	Method: 请求方法 - 可以为 GET/POST/HEAD 其中的一个。
+	Charset: 编码 / Coding	 - 字符集。例如 Charset: UTF-8
+	SaveAs: 文件名 / Filename  - 下载到文件 / Download to file
+	Compressed       - 向网站请求 GZIP 压缩数据，并解压。 / Ask the site to request GZIP to compress the data and extract it.
+	（需要文件 / Need documentation gzip.dll -- http://pan.baidu.com/s/1pKqKTzt）
+	Method: 请求方法 - 可以为 Request method - can be GET/POST/HEAD 其中的一个。 one of them
 	这个选项可以省略，除非你需要 HEAD 请求，或者 POST 数据为空时强制使用 POST。
+	This option can be omitted unless you need it HEAD Request, or POST data is forced to use POST.
 	--------------------------------------------------------------------------------------------
-	返回:
-	成功返回 -1, 超时返回 0, 无响应则返回为空
+	返回 / Return:
+	成功返回 / Successful return -1, 超时返回 / Overtime return (timeout?) 0, 无响应则返回为空 / No response returns empty
 	--------------------------------------------------------------------------------------------
-	清除 Cookies 的方法:
+	清除 Cookies 的方法: Clear Cookies
 	WinHttpRequest( [] )
 	--------------------------------------------------------------------------------------------
-	示例:
+	示例 Example:
 	例1 - GET
 	url := "https://www.baidu.com/"
 	
 	WinHttpRequest(url, ioData := "", ioHdr := "")
-			; 也可以简单写成 WinHttpRequest(url, ioData)，
-			; 但是一定要确保 ioData 为空，不然是进行 POST，而不是 GET
+			; 也可以简单写成 Can also be simply written WinHttpRequest(url, ioData)，
+			; 但是一定要确保 But be sure to make sure ioData Is empty, or is to POST, not GET
 	
 	MsgBox, % ioData
 	
@@ -75,7 +76,7 @@
 	; 	2014-7-11 - Fixed a bug in "Charset:"
 */
 
-WinHttpRequest( URL, ByRef In_POST__Out_Data="", ByRef In_Out_HEADERS="", Options="" )
+WinHttpRequest( URL, ByRef In_POST__Out_Data="", ByRef In_Out_HEADERS="", Options="" , ByRef Out_Headers_Obj = "")
 {
 	static nothing := ComObjError(0) ; 禁用 COM 错误提示
 	static oHTTP   := ComObjCreate("WinHttp.WinHttpRequest.5.1")
@@ -191,6 +192,18 @@ WinHttpRequest( URL, ByRef In_POST__Out_Data="", ByRef In_Out_HEADERS="", Option
 	}
 	Else
 		In_POST__Out_Data := IsByRef(In_POST__Out_Data) ? oHTTP.ResponseText : ""
+	
+	
+	Out_Headers_Obj := {} 
+	var := oHTTP.GetAllResponseHeaders()
+	Loop, Parse, var, `n, `r 
+	{
+		RegExMatch(A_LoopField, "i)(.*?):(.*)", match)
+		Out_Headers_Obj[Trim(match1)] := Trim(match2)
+	}
+
+	Out_Headers_Obj.Status 		:= oHTTP.Status
+	Out_Headers_Obj.StatusText 	:= oHTTP.StatusText
 	
 	In_Out_HEADERS := "HTTP/1.1 " oHTTP.Status " " oHTTP.StatusText "`n" oHTTP.GetAllResponseHeaders()
 	

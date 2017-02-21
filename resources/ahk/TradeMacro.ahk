@@ -1362,12 +1362,22 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 	NoOfItemsToCount := 99
 	NoOfItemsSkipped := 0
 	While A_Index <= NoOfItemsToCount {
+		/* Old code, somehow stopeed working
 		TBody         := TradeUtils.StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N, 0, "</tbody>" , 1,23, N )
 		AccountName   := TradeUtils.StrX( TBody,  "data-seller=""",                           1,13, """"       , 1,1,  T )
 		ChaosValue    := TradeUtils.StrX( TBody,  "data-name=""price_in_chaos""",             T, 0, "currency" , 1,1,  T )
 		Currency      := TradeUtils.StrX( TBody,  "currency-",                                T, 0, ">"        , 1,1, T  )
 		CurrencyV     := TradeUtils.StrX( TBody, ">",                                         T, 0, "<"        , 1,1, T  )
+		*/
 		
+		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index """(.*?)<\/tbody>", html)
+		AccountName 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-seller=""(.*?)""")		
+		ChaosValue 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-name=""price_in_chaos""(.*?)>")
+		Currency	 	:= TradeUtils.HtmlParseItemData(ItemBlock, "has-tip.*currency-(.*?)""", rest)
+		CurrencyV	 	:= TradeUtils.HtmlParseItemData(rest, ">(.*?)<", rest)
+		RegExMatch(CurrencyV, "i)\d+(\.|,?\d+)?", match)
+		CurrencyV		:= match
+
 		; skip multiple results from the same account		
 		If (TradeOpts.RemoveMultipleListingsFromSameAccount) {
 			If (TradeUtils.IsInArray(AccountName, accounts)) {
@@ -1378,20 +1388,23 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 				accounts.Push(AccountName)
 			}
 		}		
-		
+
 		If (StrLen(ChaosValue) <= 0) {
 			Continue
 		}  Else { 
 			itemCount++
 		}
 		
+		/*
 		; replace "
 		StringReplace, Currency, Currency, ", , All			; "
 		StringReplace, Currency, Currency, currency-, , All
 		CurrencyName := TradeUtils.Cleanup(Currency)
 		
 		StringReplace, CurrencyV, CurrencyV, >, , All
-		StringReplace, CurrencyV, CurrencyV, �, , All
+		StringReplace, CurrencyV, CurrencyV, �, , All		
+		*/
+		
 		CurrencyValue := TradeUtils.Cleanup(CurrencyV)
 		
 		; add chaos-equivalents (chaos prices) together and count results
@@ -1583,10 +1596,17 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	accounts := []
 	itemsListed := 0
 	While A_Index < NoOfItemsToShow {
-		TBody       := TradeUtils.StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N,0,  "</tbody>", 1,23, N )
-		AccountName := TradeUtils.StrX( TBody,  "data-seller=""",                           1,13, """"  ,     1,1,  T )
-		Buyout      := TradeUtils.StrX( TBody,  "data-buyout=""",                           T,13, """"  ,     1,1,  T )
-		IGN         := TradeUtils.StrX( TBody,  "data-ign=""",                              T,10, """"  ,     1,1     )
+		/* Old code, somehow stopped working
+		ItemBlock		:= TradeUtils.StrX( html,       "<tbody id=""item-container-" . %A_Index%,  N,0,  "</tbody>", 1,23, N )
+		AccountName	:= TradeUtils.StrX( ItemBlock,  "data-seller=""",                           1,13, """"  ,     1,1,  T )
+		Buyout		:= TradeUtils.StrX( ItemBlock,  "data-buyout=""",                           T,13, """"  ,     1,1,  T )
+		IGN			:= TradeUtils.StrX( ItemBlock,  "data-ign=""",                              T,10, """"  ,     1,1     )
+		*/
+		
+		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index """(.*?)<\/tbody>", html)
+		AccountName 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-seller=""(.*?)""")
+		Buyout 		:= TradeUtils.HtmlParseItemData(ItemBlock, "data-buyout=""(.*?)""")
+		IGN			:= TradeUtils.HtmlParseItemData(ItemBlock, "data-ign=""(.*?)""")
 		
 		if(not AccountName){
 			continue
@@ -1606,16 +1626,16 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		}		
 		
 		; get item age
-		Pos := RegExMatch(TBody, "i)class=""found-time-ago"">(.*?)<", Age)
+		Pos := RegExMatch(ItemBlock, "i)class=""found-time-ago"">(.*?)<", Age)
 		
 		If (showItemLevel) {
 			; get item level
-			Pos := RegExMatch(TBody, "i)data-name=""ilvl"">.*: ?(\d+?)<", iLvl, Pos)
+			Pos := RegExMatch(ItemBlock, "i)data-name=""ilvl"">.*: ?(\d+?)<", iLvl, Pos)
 		}		
 		If (Item.IsGem) {
 			; get gem quality and level
-			Pos := RegExMatch(TBody, "i)data-name=""q"".*?data-value=""(.*?)""", Q, Pos)
-			Pos := RegExMatch(TBody, "i)data-name=""level"".*?data-value=""(.*?)""", LVL, Pos)
+			Pos := RegExMatch(ItemBlock, "i)data-name=""q"".*?data-value=""(.*?)""", Q, Pos)
+			Pos := RegExMatch(ItemBlock, "i)data-name=""level"".*?data-value=""(.*?)""", LVL, Pos)
 		}		
 		
 		; trim account and ign
@@ -2918,6 +2938,21 @@ class TradeUtils {
 	; v1.0-196c 21-Nov-2009 www.autohotkey.com/forum/topic51354.html
 	; | by Skan | 19-Nov-2009
 	
+	
+	; ------------------------------------------------------------------------------------------------------------------ ;
+	; TradeUtils.HtmlParseItemData, alternative Function for parsing html with simple regex
+	; ------------------------------------------------------------------------------------------------------------------ ;
+	
+	HtmlParseItemData(ByRef html, regex, ByRef htmlOut = "") {
+		; last capture group captures the remaining string
+		RegExMatch(html, "isO)" . regex . "(.*)", match)
+		
+		If (match.count() >= 2) {
+			htmlOut := match[match.count()]
+		}
+		Return match.value(1)
+	}
+
 	UriEncode(Uri, Enc = "UTF-8")
 	{
 		TradeUtils.StrPutVar(Uri, Var, Enc)
@@ -2977,7 +3012,7 @@ OverwriteSettingsHeightTimer:
 	o := Globals.Get("SettingsUIHeight")
 
 	If (o) {
-		Globals.Set("SettingsUIHeight", 735)
+		Globals.Set("SettingsUIHeight", 795)
 		SetTimer, OverwriteSettingsHeightTimer, Off
 	}	
 Return
@@ -3027,6 +3062,12 @@ OverwriteSettingsNameTimer:
 		}
 		Menu, Tray, UseErrorLevel, off			
 	}	
+Return
+
+OverwriteUpdateOptionsTimer:	
+	If (InititalizedItemInfoUserOptions) {
+		TradeFunc_SyncUpdateSettings()
+	}
 Return
 
 OpenGithubWikiFromMenu:
@@ -3235,7 +3276,7 @@ TradeFunc_ChangeLeague() {
 	
 	TradeFunc_SetLeagueIfSelectedIsInactive()        
 	TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
-	TradeFunc_WriteIniValue(TradeOpts.SearchLeague, "config_trade.ini", "Search", "SearchLeague")
+	TradeFunc_WriteIniValue(TradeOpts.SearchLeague, userDirectory . "\config_trade.ini", "Search", "SearchLeague")
 	GuiUpdateDropdownList("tmpstandard|tmphardcore|standard|hardcore", TradeOpts.SearchLeague, SearchLeague)	
 	
 	; Get currency data only if league was changed while alternate search is active or alternate search was changed from disabled to enabled

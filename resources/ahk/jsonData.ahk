@@ -18,9 +18,6 @@ global TradeModsData := parsedJSON.mods
 
 
 ; Download and parse the current leagues
-global TradeTempDir := A_ScriptDir . "\temp"
-FileRemoveDir, %TradeTempDir%, 1
-FileCreateDir, %TradeTempDir%
 UrlDownloadToFile, http://api.pathofexile.com/leagues?type=main , %A_ScriptDir%\temp\currentLeagues.json
 
 errorMsg := "Parsing the league data (json) from the Path of Exile API failed."

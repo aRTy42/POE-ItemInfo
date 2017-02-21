@@ -1,5 +1,18 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.0.0
+================================================================================================
+Added an auto-update function (Button on update window).
+	Added options to skip folder selection and backuping up the install location when updating. 
+Improved the update window.
+Moved config files and AdditionalMacros.txt to <WindowsUserFolder\Documents\PoE-TradeMacro\> (depends on OS Version).
+	These files are only overwritten by script updates if they have to be (and backed up).
+	No more copy pasting config files from older installations or setting them all up again.
+	You can open this folder via script menu entry (system tray).
+	More details can be found on the Github Wiki FAQ page.
+Renamed macro start scripts.
+Added reload script menu entry (system tray) because the default one won't work.
+
 1.7.3
 ================================================================================================
 Added option to pre-select normal mods (advanced search).

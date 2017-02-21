@@ -1,7 +1,10 @@
 ﻿; TradeMacro Add-on to POE-ItemInfo
 ; IGN: Eruyome, ManicCompression
+#SingleInstance force
+#NoEnv ; Recommended for performance and compatibility with future AutoHotkey releases.
+#Persistent ; Stay open in background
 
-FileRemoveDir, %A_ScriptDir%\temp, 1
+SetWorkingDir, %A_ScriptDir%
 ;https://autohotkey.com/boards/viewtopic.php?f=6&t=53
 #Include, %A_ScriptDir%\lib\JSON.ahk
 ; Console https://autohotkey.com/boards/viewtopic.php?f=6&t=2116
@@ -40,8 +43,6 @@ class TradeGlobals {
 	}
 }
 
-global TradeTempDir := A_ScriptDir . "\temp"
-global TradeDataDir := A_ScriptDir . "\data_trade"
 global SettingsWindowWidth := 845 
 global SavedTradeSettings := false
 
@@ -55,6 +56,9 @@ class TradeUserOptions {
 	DownloadDataFiles := 0			; 
 	DeleteCookies := 1				; Delete Internet Explorer cookies on startup (only poe.trade)
 	CookieSelect := "All"
+	UseGZip := 1
+	UpdateSkipSelection := 0
+	UpdateSkipBackup := 0
 	
 	Debug := 0      				; 
 	
@@ -107,7 +111,43 @@ class TradeUserOptions {
 }
 TradeOpts := new TradeUserOptions()
 
-IfNotExist, %A_ScriptDir%\config_trade.ini
+; Check If Temp-Leagues are active and set defaultLeague accordingly
+TradeGlobals.Set("TempLeagueIsRunning", TradeFunc_CheckIfTempLeagueIsRunning())
+TradeGlobals.Set("DefaultLeague", (tempLeagueIsRunning > 0) ? "tmpstandard" : "standard")
+TradeGlobals.Set("GithubUser", "POE-TradeMacro")
+TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
+TradeGlobals.Set("ReleaseVersion", TradeReleaseVersion)
+global globalUpdateInfo := {}
+globalUpdateInfo.repo := TradeGlobals.Get("GithubRepo")
+globalUpdateInfo.user := TradeGlobals.Get("GithubUser")
+globalUpdateInfo.releaseVersion 	:= TradeGlobals.Get("ReleaseVersion")
+globalUpdateInfo.skipSelection 	:= 0
+globalUpdateInfo.skipBackup 		:= 0
+globalUpdateInfo.skipUpdateCheck 	:= 0
+
+TradeGlobals.Set("SettingsScriptList", ["TradeMacro", "ItemInfo"])
+TradeGlobals.Set("SettingsUITitle", "PoE (Trade) Item Info Settings")
+argumentProjectName		= %1%
+argumentUserDirectory	= %2%
+argumentIsDevVersion	= %3%
+argumentOverwrittenFiles = %4%
+
+; when using the fallback exe we're missing the parameters passed by the merge script
+If (!StrLen(argumentProjectName) > 0) {
+	argumentProjectName		:= "PoE-TradeMacro"
+	FilesToCopyToUserFolder	:= ["\resources\config\default_config_trade.ini", "\resources\config\default_config.ini", "\resources\ahk\default_AdditionalMacros.txt"]
+	argumentOverwrittenFiles	:= PoEScripts_HandleUserSettings(projectName, A_MyDocuments, projectName, FilesToCopyToUserFolder, A_ScriptDir)
+	argumentIsDevVersion	:= PoEScripts_isDevelopmentVersion()
+	argumentUserDirectory	:= A_MyDocuments . "\" . projectName . isDevelopmentVersion
+}
+
+TradeGlobals.Set("ProjectName", argumentProjectName)
+global userDirectory		:= argumentUserDirectory
+global isDevVersion			:= argumentIsDevVersion
+global overwrittenUserFiles	:= argumentOverwrittenFiles
+
+; Create config file if neccessary and read it
+IfNotExist, %userDirectory%\config_trade.ini
 {
 	IfNotExist, %A_ScriptDir%\resources\config\default_config_trade.ini
 	{
@@ -115,23 +155,14 @@ IfNotExist, %A_ScriptDir%\config_trade.ini
 	}
 	CopyDefaultTradeConfig()
 }
-
-; Check If Temp-Leagues are active and set defaultLeague accordingly
-TradeGlobals.Set("TempLeagueIsRunning", TradeFunc_CheckIfTempLeagueIsRunning())
-TradeGlobals.Set("DefaultLeague", (tempLeagueIsRunning > 0) ? "tmpstandard" : "standard")
-TradeGlobals.Set("GithubUser", "POE-TradeMacro")
-TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
-TradeGlobals.Set("ReleaseVersion", TradeReleaseVersion)
-TradeGlobals.Set("SettingsScriptList", ["TradeMacro", "ItemInfo"])
-TradeGlobals.Set("SettingsUITitle", "PoE (Trade) Item Info Settings")
-; set this variable to skip setting the project-name to "PoE-ItemInfo"
-UseExternalProjectName := "PoE-TradeMacro"
-
 ReadTradeConfig()
 Sleep, 100
+
 ; set this variable to skip the update check in "PoE-ItemInfo.ahk"
 SkipItemInfoUpdateCall := 1
+firstUpdateCheck := true
 TradeFunc_ScriptUpdate()
+firstUpdateCheck := false
 
 TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
 SearchLeague := (StrLen(TradeOpts.SearchLeague) > 0) ? TradeOpts.SearchLeague : TradeGlobals.Get("DefaultLeague")
@@ -159,12 +190,17 @@ TradeFunc_StopSplashScreen()
 
 ; ----------------------------------------------------------- Functions ----------------------------------------------------------------
 
-ReadTradeConfig(TradeConfigPath="config_trade.ini")
+ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 {
 	Global
+	If (StrLen(TradeConfigDir) < 1) {
+		TradeConfigDir := userDirectory
+	}
+	TradeConfigPath := StrLen(TradeConfigDir) > 0 ? TradeConfigDir . "\" . TradeConfigFile : TradeConfigFile
+	
 	IfExist, %TradeConfigPath%
 	{
-        ; General 		
+		; General 		
 		TradeOpts.ShowItemResults := TradeFunc_ReadIniValue(TradeConfigPath, "General", "ShowItemResults", TradeOpts.ShowItemResults)
 		TradeOpts.ShowUpdateNotifications := TradeFunc_ReadIniValue(TradeConfigPath, "General", "ShowUpdateNotifications", TradeOpts.ShowUpdateNotifications)
 		TradeOpts.OpenWithDefaultWin10Fix := TradeFunc_ReadIniValue(TradeConfigPath, "General", "OpenWithDefaultWin10Fix", TradeOpts.OpenWithDefaultWin10Fix)
@@ -173,8 +209,11 @@ ReadTradeConfig(TradeConfigPath="config_trade.ini")
 		TradeOpts.DownloadDataFiles := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DownloadDataFiles", TradeOpts.DownloadDataFiles)
 		TradeOpts.DeleteCookies := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DeleteCookies", TradeOpts.DeleteCookies)
 		TradeOpts.CookieSelect := TradeFunc_ReadIniValue(TradeConfigPath, "General", "CookieSelect", TradeOpts.CookieSelect)
+		TradeOpts.UpdateSkipSelection := TradeFunc_ReadIniValue(TradeConfigPath, "General", "UpdateSkipSelection", TradeOpts.UpdateSkipSelection)
+		TradeOpts.UpdateSkipBackup := TradeFunc_ReadIniValue(TradeConfigPath, "General", "UpdateSkipBackup", TradeOpts.UpdateSkipBackup)
+		TradeFunc_SyncUpdateSettings()
 		
-        ; Check If browser path is valid, delete ini-entry If not
+		; Check If browser path is valid, delete ini-entry If not
 		BrowserPath := TradeFunc_ReadIniValue(TradeConfigPath, "General", "BrowserPath", TradeOpts.BrowserPath)
 		If (TradeFunc_CheckBrowserPath(BrowserPath, false)) {
 			TradeOpts.BrowserPath := BrowserPath
@@ -183,10 +222,10 @@ ReadTradeConfig(TradeConfigPath="config_trade.ini")
 			TradeFunc_WriteIniValue("", TradeConfigPath, "General", "BrowserPath")       
 		}
 		
-        ; Debug        
+		; Debug        
 		TradeOpts.Debug := TradeFunc_ReadIniValue(TradeConfigPath, "Debug", "Debug", 0)
 		
-        ; Hotkeys        
+		; Hotkeys        
 		TradeOpts.PriceCheckHotKey := TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "PriceCheckHotKey", TradeOpts.PriceCheckHotKey)
 		TradeOpts.AdvancedPriceCheckHotKey := TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "AdvancedPriceCheckHotKey", TradeOpts.AdvancedPriceCheckHotKey)
 		TradeOpts.OpenWikiHotKey := TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "OpenWiki", TradeOpts.OpenWikiHotKey)
@@ -203,7 +242,7 @@ ReadTradeConfig(TradeConfigPath="config_trade.ini")
 		
 		TradeFunc_AssignAllHotkeys()
 		
-        ; Search     	
+		; Search     	
 		TradeOpts.AccountName := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AccountName", TradeOpts.AccountName)	
 		TradeOpts.SearchLeague := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "SearchLeague", TradeGlobals.Get("DefaultLeague"))	
 		temp := TradeOpts.SearchLeague
@@ -233,10 +272,10 @@ ReadTradeConfig(TradeConfigPath="config_trade.ini")
 		TradeOpts.AlternativeCurrencySearch := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AlternativeCurrencySearch", TradeOpts.AlternativeCurrencySearch)	
 		TradeOpts.AdvancedSearchCheckMods := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckMods", TradeOpts.AdvancedSearchCheckMods)	
 		
-        ; Cache        
+		; Cache        
 		TradeOpts.Expire := TradeFunc_ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
 		
-	   ; Cookies
+		; Cookies
 		TradeOpts.UseManualCookies := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "UseManualCookies", TradeOpts.UseManualCookies)
 		TradeOpts.UserAgent := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "UserAgent", TradeOpts.UserAgent)
 		TradeOpts.CfdUid := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "CfdUid", TradeOpts.CfdUid)
@@ -296,9 +335,13 @@ TradeFunc_AssignAllHotkeys() {
 	}	
 }
 
-WriteTradeConfig(TradeConfigPath="config_trade.ini")
-{  
+WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
+{
 	Global
+	If (StrLen(TradeConfigDir) < 1) {
+		TradeConfigDir := userDirectory
+	}
+	TradeConfigPath := StrLen(TradeConfigDir) > 0 ? TradeConfigDir . "\" . TradeConfigFile : TradeConfigFile
 	
 	ValidBrowserPath := TradeFunc_CheckBrowserPath(BrowserPath, true)
 	
@@ -312,6 +355,9 @@ WriteTradeConfig(TradeConfigPath="config_trade.ini")
 		TradeOpts.DownloadDataFiles := DownloadDataFiles
 		TradeOpts.DeleteCookies := DeleteCookies
 		TradeOpts.CookieSelect := CookieSelect
+		TradeOpts.UpdateSkipSelection := UpdateSkipSelection
+		TradeOpts.UpdateSkipBackup := UpdateSkipBackup
+
 		TradeOpts.Debug := Debug
 		
 		If (ValidBrowserPath) {
@@ -386,6 +432,9 @@ WriteTradeConfig(TradeConfigPath="config_trade.ini")
 	TradeFunc_WriteIniValue(TradeOpts.DownloadDataFiles, TradeConfigPath, "General", "DownloadDataFiles")   
 	TradeFunc_WriteIniValue(TradeOpts.DeleteCookies, TradeConfigPath, "General", "DeleteCookies")   
 	TradeFunc_WriteIniValue(TradeOpts.CookieSelect, TradeConfigPath, "General", "CookieSelect")   
+	TradeFunc_WriteIniValue(TradeOpts.UpdateSkipSelection, TradeConfigPath, "General", "UpdateSkipSelection")   
+	TradeFunc_WriteIniValue(TradeOpts.UpdateSkipBackup, TradeConfigPath, "General", "UpdateSkipBackup")	
+	TradeFunc_SyncUpdateSettings()
 	
 	If (ValidBrowserPath) {
 		TradeFunc_WriteIniValue(TradeOpts.BrowserPath, TradeConfigPath, "General", "BrowserPath")           
@@ -445,14 +494,14 @@ WriteTradeConfig(TradeConfigPath="config_trade.ini")
 
 CopyDefaultTradeConfig()
 {
-	FileCopy, %A_ScriptDir%\resources\config\default_config_trade.ini, %A_ScriptDir%
-	FileMove, %A_ScriptDir%\default_config_trade.ini, %A_ScriptDir%\config_trade.ini
-	FileDelete, %A_ScriptDir%\default_config_trade.ini	
+	FileCopy, %A_ScriptDir%\resources\config\default_config_trade.ini, %userDirectory%
+	FileMove, %userDirectory%\default_config_trade.ini, %userDirectory%\config_trade.ini
+	FileDelete, %userDirectory%\default_config_trade.ini	
 }
 
 RemoveTradeConfig()
 {
-	FileDelete, %A_ScriptDir%\config_trade.ini
+	FileDelete, %userDirectory%\config_trade.ini
 }
 
 CreateDefaultTradeConfig()
@@ -634,12 +683,13 @@ TradeFunc_GetTempLeagueDates(){
 
 ;----------------------- Handle available script updates ---------------------------------------
 TradeFunc_ScriptUpdate() {
-	repo := TradeGlobals.Get("GithubRepo")
-	user := TradeGlobals.Get("GithubUser")
-	ReleaseVersion := TradeGlobals.Get("ReleaseVersion")
-	ShowUpdateNotification := TradeOpts.ShowUpdateNotifications
+	If (firstUpdateCheck) {
+		ShowUpdateNotification := TradeOpts.ShowUpdateNotifications	
+	} Else {
+		ShowUpdateNotification := 1
+	}	
 	SplashScreenTitle := "PoE-TradeMacro"
-	PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, SplashScreenTitle)
+	PoEScripts_Update(globalUpdateInfo.user, globalUpdateInfo.repo, globalUpdateInfo.releaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, globalUpdateInfo.skipSelection, globalUpdateInfo.skipBackup, SplashScreenTitle)
 }
 
 ;----------------------- Trade Settings UI (added onto ItemInfos Settings UI) ---------------------------------------
@@ -655,13 +705,13 @@ CreateTradeSettingsUI()
 	}
 
 	StringTrimRight, TabNames, TabNames, 1
-	Gui, Add, Tab3, Choose1 h730 x0, %TabNames%
+	Gui, Add, Tab3, Choose1 h790 x0, %TabNames%
 
     ; General 
 	
-	GuiAddGroupBox("[TradeMacro] General", "x7 y+7 w260 h260")
+	GuiAddGroupBox("[TradeMacro] General", "x7 y+7 w260 h320")
 	
-    ; Note: window handles (hwnd) are only needed If a UI tooltip should be attached.
+    ; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 	
 	GuiAddText("Show Items:", "x17 yp+28 w160 h20 0x0100", "LblShowItemResults", "LblShowItemResultsH")
 	AddToolTip(LblShowItemResultsH, "Number of items displayed in search results.")
@@ -670,8 +720,14 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("Show Account Name", "x17 yp+24 w210 h30", TradeOpts.ShowAccountName, "ShowAccountName", "ShowAccountNameH")
 	AddToolTip(ShowAccountNameH, "Show sellers account name in search results tooltip.")
 	
-	GuiAddCheckbox("Show Update Notifications", "x17 yp+30 w210 h30", TradeOpts.ShowUpdateNotifications, "ShowUpdateNotifications", "ShowUpdateNotificationsH")
-	AddToolTip(ShowUpdateNotificationsH, "Notifies you when there's a new stable`n release available.")
+	GuiAddCheckbox("Update: Show Notifications", "x17 yp+30 w210 h30", TradeOpts.ShowUpdateNotifications, "ShowUpdateNotifications", "ShowUpdateNotificationsH")
+	AddToolTip(ShowUpdateNotificationsH, "Notifies you when there's a new release available.")
+	
+	GuiAddCheckbox("Update: Skip folder selection", "x17 yp+30 w210 h30", TradeOpts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+	AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")
+	
+	GuiAddCheckbox("Update: Skip backup", "x17 yp+30 w210 h30", TradeOpts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+	AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
 	
 	GuiAddCheckbox("Open browser Win10 fix", "x17 yp+30 w210 h30", TradeOpts.OpenWithDefaultWin10Fix, "OpenWithDefaultWin10Fix", "OpenWithDefaultWin10FixH")
 	AddToolTip(OpenWithDefaultWin10FixH, " If your PC always asks you what program to use to open`n the wiki-link, enable this to let ahk find your default`nprogram from the registry.")
@@ -687,7 +743,7 @@ CreateTradeSettingsUI()
 	AddToolTip(DownloadDataFilesH, "Downloads all data files (mods, enchantments etc) on every script start.`nBy disabling this, these files are only updated with new releases.`nDisabling is not recommended.")
 	
 	GuiAddCheckbox("Delete cookies on start", "x17 yp+30 w150 h30", TradeOpts.DeleteCookies, "DeleteCookies", "DeleteCookiesH")
-	AddToolTip(DeleteCookiesH, "Delete Internet Explorer cookies.`nThe default option (all) is preferred.")	
+	AddToolTip(DeleteCookiesH, "Delete Internet Explorer cookies.`nThe default option (all) is preferred.`n`nThis will be skipped if no cookies are needed to access poe.trade.")	
 	GuiAddDropDownList("All|poe.trade", "x+10 yp+2 w70", TradeOpts.CookieSelect, "CookieSelect", "CookieSelectH")	
 	
     ; Hotkeys
@@ -872,7 +928,10 @@ UpdateTradeSettingsUI()
 	GuiControl,, DownloadDataFiles, % TradeOpts.DownloadDataFiles
 	GuiControl,, DeleteCookies, % TradeOpts.DeleteCookies
 	GuiControl,, CookieSelect, % TradeOpts.CookieSelect
-	GuiUpdateDropdownList("All|poe.trade", TradeOpts.CookieSelect, CookieSelect)	
+	GuiUpdateDropdownList("All|poe.trade", TradeOpts.CookieSelect, CookieSelect)
+	GuiControl,, UpdateSkipSelection, % TradeOpts.UpdateSkipSelection
+	GuiControl,, UpdateSkipBackup, % TradeOpts.UpdateSkipBackup
+	
 	GuiControl,, Debug, % TradeOpts.Debug
 	
 	GuiControl,, PriceCheckHotKey, % TradeOpts.PriceCheckHotKey
@@ -913,6 +972,12 @@ UpdateTradeSettingsUI()
 	GuiControl,, UserAgent, % TradeOpts.UserAgent
 	GuiControl,, CfdUid, % TradeOpts.CfdUid
 	GuiControl,, CfClearance, % TradeOpts.CfClearance
+}
+
+TradeFunc_SyncUpdateSettings(){
+	globalUpdateInfo.skipSelection 	:= TradeOpts.UpdateSkipSelection
+	globalUpdateInfo.skipBackup 		:= TradeOpts.UpdateSkipBackup
+	globalUpdateInfo.skipUpdateCheck 	:= TradeOpts.ShowUpdateNotification
 }
 
 TradeFunc_CreateTradeAboutWindow() {
@@ -1436,5 +1501,6 @@ TradeFunc_StopSplashScreen() {
 	SetTimer, OverwriteAboutWindowSizesTimer, 250
 	SetTimer, OverwriteSettingsNameTimer, 250
 	SetTimer, ChangeScriptListsTimer, 250
+	SetTimer, OverwriteUpdateOptionsTimer, 250
 	GoSub, ReadPoeNinjaCurrencyData
 }
