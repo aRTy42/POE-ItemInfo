@@ -4,8 +4,9 @@
 ; # This is to support using ItemInfo as dependancy for other tools.
 ; ####################################################################################################
 
-FileRemoveDir, %A_ScriptDir%/temp, 1
-#Include, %A_ScriptDir%/resources/Version.txt
+FileRemoveDir, %A_ScriptDir%\temp, 1
+FileCreateDir, %A_ScriptDir%\temp
+#Include, %A_ScriptDir%\resources\Version.txt
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
 If (A_AhkVersion < AHKVersionRequired)
@@ -40,6 +41,8 @@ FileCopy,   %A_ScriptDir%\resources\ahk\POE-ItemInfo.ahk, %A_ScriptDir%\_ItemInf
 FileAppend, %test%		, %A_ScriptDir%\_ItemInfoMain.ahk
 FileAppend, %addMacros%	, %A_ScriptDir%\_ItemInfoMain.ahk
 
+; set script hidden
+FileSetAttrib, +H, %A_ScriptDir%\_ItemInfoMain.ahk
 ; pass some parameters to ItemInfo
 Run "%A_AhkPath%" "%A_ScriptDir%\_ItemInfoMain.ahk" "%projectName%" "%userDirectory%" "%isDevelopmentVersion%" "%overwrittenFiles%"
 
