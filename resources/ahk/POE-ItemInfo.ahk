@@ -6509,11 +6509,14 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		; Don't do this on Divination Cards or this script crashes on trying to do the ParseItemLevel
 		Else If (Not Item.IsCurrency and Not Item.IsDivinationCard)
 		{
-			If (RegExMatch(Item.Name, "i)^Sacrifice At") or RegExMatch(Item.Name, "i)^Fragment of") or RegExMatch(Item.Name, "i)^Mortal ") or RegExMatch(Item.Name, "i)^Offering to ") or RegExMatch(Item.Name, "i)'s Key$"))
-			{
-				Item.IsMapFragment := True
+			regex := ["^Sacrifice At", "^Fragment of", "^Mortal ", "^Offering to ", "'s Key$", "Ancient Reliquary Key"]
+			For key, val in regex {
+				If (RegExMatch(Item.Name, "i)" val "")) {
+					Item.IsMapFragment := True
+					Break
+				}
 			}
-
+			
 			RarityLevel := CheckRarityLevel(ItemData.Rarity)
 			Item.Level := ParseItemLevel(ItemDataText)
 			ItemLevelWord := "Item Level:"
