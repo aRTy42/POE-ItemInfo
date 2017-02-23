@@ -78,11 +78,11 @@
 
 WinHttpRequest( URL, ByRef In_POST__Out_Data="", ByRef In_Out_HEADERS="", Options="" , ByRef Out_Headers_Obj = "")
 {
-	static nothing := ComObjError(0) ; 禁用 COM 错误提示
+	static nothing := ComObjError(0) ; 禁用 COM 错误提示 / Disable COM error messages
 	static oHTTP   := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	static oADO    := ComObjCreate("adodb.stream")
 	
-	If IsObject(URL) ; 如果第一个参数是数组，则重新创建 WinHttp 对象，以便清除 Cookies
+	If IsObject(URL) ; 如果第一个参数是数组，则重新创建 WinHttp 对象，以便清除 Cookies / If the first argument is an array, re-create the WinHttp object to clear Cookies
 		Return oHTTP := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	
 	; Clear cookie
@@ -113,7 +113,7 @@ WinHttpRequest( URL, ByRef In_POST__Out_Data="", ByRef In_Out_HEADERS="", Option
 	If (In_POST__Out_Data != "") && !InStr(In_Out_HEADERS, "Content-Type:")
 		oHTTP.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded")
 	
-	; 解析选项
+	; 解析选项 / Resolution options
 	If Options
 	{
 		Loop, Parse, Options, `n, `r
@@ -137,9 +137,9 @@ WinHttpRequest( URL, ByRef In_POST__Out_Data="", ByRef In_Out_HEADERS="", Option
 	
 	; Send
 	oHTTP.Send(In_POST__Out_Data)
-	retCode := oHTTP.WaitForResponse(Timeout ? Timeout : -1)
-	
-	; 处理返回结果
+	retCode := oHTTP.WaitForResponse(Timeout ? Timeout : -1)	; EMPTY = no response
+
+	; 处理返回结果 / Processing returns the result
 	If InStr(Options, "Compressed")
 	&& (oHTTP.GetResponseHeader("Content-Encoding") = "gzip") {
 		body := oHTTP.ResponseBody
@@ -149,9 +149,9 @@ WinHttpRequest( URL, ByRef In_POST__Out_Data="", ByRef In_Out_HEADERS="", Option
 		DllCall("oleaut32\SafeArrayAccessData", "ptr", ComObjValue(body), "ptr*", pdata)
 		DllCall("RtlMoveMemory", "ptr", &data, "ptr", pdata, "ptr", size)
 		DllCall("oleaut32\SafeArrayUnaccessData", "ptr", ComObjValue(body))
-		
+
 		size := GZIP_DecompressBuffer(data, size)
-		
+
 		; 不可以直接 ComObjValue(oHTTP.ResponseBody)！
 		; 需要先将 oHTTP.ResponseBody 赋值给变量，如 body，然后再 ComObjValue(body)。
 		; 直接 ComObjValue(oHTTP.ResponseBody) 会导致在 XP 系统无法获取 gzip 文件的未压缩大小。
@@ -221,19 +221,20 @@ GZIP_DecompressBuffer( ByRef var, nSz ) { ; 'Microsoft GZIP Compression DLL' SKA
 	static hModule, _
 	static GZIP_InitDecompression, GZIP_CreateDecompression, GZIP_Decompress
      , GZIP_DestroyDecompression, GZIP_DeInitDecompression
+
 	If !hModule {
-		If !hModule := DllCall("LoadLibrary", "Str", "gzip.dll", "Ptr")
-		{
-			MsgBox, 48, 错误, 加载 gzip.dll 失败！程序将退出。
+		If !hModule := DllCall("LoadLibrary", "Str", "gzip.dll", "Ptr")		
+		;If !hModule := DllCall(A_ScriptDir "\lib\gzip.dll", "Str", "gzip.dll", "Ptr")
+		{			
+			MsgBox % "Error: Loading gzip.dll failed! Exiting App."
 			ExitApp
 		}
-		
 		For k, v in ["InitDecompression","CreateDecompression","Decompress","DestroyDecompression","DeInitDecompression"]
 			GZIP_%v% := DllCall("GetProcAddress", Ptr, hModule, "AStr", v, "Ptr")
 		
 		_ := { base: {__Delete: "GZIP_DecompressBuffer"} }
 	}
-	If !_
+	If !_ 
 		Return DllCall("FreeLibrary", "Ptr", hModule)
 	
 	vSz :=  NumGet( var,nsz-4 ), VarSetCapacity( out,vsz,0 )
