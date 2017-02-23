@@ -459,7 +459,7 @@ class Item_ {
 		This.MapLevel 		:= ""
 		This.MaxSockets 	:= ""
 		This.SubType 		:= ""
-		This.Implicit 		:= ""
+		This.Implicit 		:= []
 		
 		This.HasImplicit 	:= False
 		This.HasEffect		:= False
@@ -2095,7 +2095,8 @@ GetAffixTypeFromProcessedLine(PartialAffixString)
 ; that can be used in calculations.
 GetActualValue(ActualValueLine)
 {
-	Result := RegExReplace(ActualValueLine, ".*?\+?(\d+(?: to \d+|\.\d+)?).*", "$1")
+	; support negative values, example "Ventors Gamble"
+	Result := RegExReplace(ActualValueLine, ".*?\+?(-?\d+(?: to -?\d+|\.\d+)?).*", "$1")
 	StringReplace, Result, Result, %A_SPACE%to%A_SPACE%, -
 	return Result
 }
@@ -6548,7 +6549,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsEssence := Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
 	Item.Note := Globals.Get("ItemNote")	
 	If (RarityLevel = 4) {
-		Item.IsRelic := 
+		Item.IsRelic := false ; add parsing/comparison here
 	}
 
 	TempStr := ItemData.PartsLast
@@ -6591,17 +6592,15 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		Else {
 			ItemDataIndexImplicit := ItemData.IndexLast - GetNegativeAffixOffset(Item)
 		}
+		
 		; Check that there is no ":" in the retrieved text = can only be an implicit mod
 		If (!InStr(ItemDataParts%ItemDataIndexImplicit%, ":")) {
-			Item.Implicit := ItemDataParts%ItemDataIndexImplicit%
-			tempImplicit := Item.Implicit
+			tempImplicit	:= ItemDataParts%ItemDataIndexImplicit%
 			Loop, Parse, tempImplicit, `n, `r
 			{
-				If(A_Index = 1) {
-					Item.Implicit := A_LoopField
-				}
+				Item.Implicit.push(A_LoopField)
 			}
-			Item.hasImplicit := True
+			Item.hasImplicit := True	
 		}
 	}
 
@@ -6815,7 +6814,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		}
 	
 		If (Item.hasImplicit and not Item.IsUnique) {
-			Implicit := Item.Implicit
+			Implicit	:= ""
+			maxIndex 	:= Item.Implicit.MaxIndex()
+			Loop, % maxIndex {
+				Implicit .= (A_Index < maxIndex) ? Item.Implicit[A_Index] "`n" : Item.Implicit[A_Index]
+			}
 			TT = %TT%`n--------`n%Implicit%
 		}
 
@@ -6926,14 +6929,15 @@ PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
 	; ### TODO: remove blank lines ( rare cases, maybe from crafted mods )
 
 	mods := []
-	; ### Append Implicit if any
-	If (Implicit) {
-		tempMods := ModStringToObject(Implicit, true)
-		; there should be only one returned mod since its implicit but why risk it
+	; ### Append Implicits if any
+	modStrings := Implicit	
+	For i, modString in modStrings {
+		tempMods := ModStringToObject(modString, true)
 		For i, tempMod in tempMods {
 			mods.push(tempMod)
 		}
-	}
+	}	
+	
 	; ### Convert affix lines to mod objects
 	modStrings := StrSplit(Affixes, "`n")	
 	For i, modString in modStrings {
