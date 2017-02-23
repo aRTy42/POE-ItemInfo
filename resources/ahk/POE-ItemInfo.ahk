@@ -953,7 +953,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			RegexMatch(LoopField, "i)(.*)Leaguestone", match)
 			RegexReplace(Trim(match1), "i)\b(\w+)\W*$", match) ; match last word
 			BaseType = Leaguestone
-			SubType := %match1% " Leaguestone"
+			SubType := match1 " Leaguestone"
 			return
 		}
 
@@ -5853,23 +5853,23 @@ AssembleDamageDetails(FullItemData)
 	Result =
 
 	SetFormat, FloatFast, 5.1
-	PhysDps := ((PhysLo + PhysHi) / 2) * AttackSpeed
-	Result = %Result%`nPhys DPS:   %PhysDps%
+	PhysDps	:= ((PhysLo + PhysHi) / 2) * AttackSpeed
+	Result	= %Result%`nPhys DPS:   %PhysDps%
 
-	EleDps := ((FireLo + FireHi + ColdLo + ColdHi + LighLo + LighHi) / 2) * AttackSpeed
-	MainHEleDps := ((MainHFireLo + MainHFireHi + MainHColdLo + MainHColdHi + MainHLighLo + MainHLighHi) / 2) * AttackSpeed
-	OffHEleDps := ((OffHFireLo + OffHFireHi + OffHColdLo + OffHColdHi + OffHLighLo + OffHLighHi) / 2) * AttackSpeed
-	ChaosDps := ((ChaoLo + ChaoHi) / 2) * AttackSpeed
-	MainHChaosDps := ((MainHChaoLo + MainHChaoHi) / 2) * AttackSpeed
-	OffHChaosDps := ((OffHChaoLo + OffHChaoHi) / 2) * AttackSpeed
+	EleDps		:= ((FireLo + FireHi + ColdLo + ColdHi + LighLo + LighHi) / 2) * AttackSpeed
+	MainHEleDps	:= ((MainHFireLo + MainHFireHi + MainHColdLo + MainHColdHi + MainHLighLo + MainHLighHi) / 2) * AttackSpeed
+	OffHEleDps	:= ((OffHFireLo + OffHFireHi + OffHColdLo + OffHColdHi + OffHLighLo + OffHLighHi) / 2) * AttackSpeed
+	ChaosDps		:= ((ChaoLo + ChaoHi) / 2) * AttackSpeed
+	MainHChaosDps	:= ((MainHChaoLo + MainHChaoHi) / 2) * AttackSpeed
+	OffHChaosDps	:= ((OffHChaoLo + OffHChaoHi) / 2) * AttackSpeed
 
 	If ( MainHEleDps > 0 or OffHEleDps > 0 or MainHChaosDps > 0 or OffHChaosDps > 0 )
 	{
-		twoColDisplay := true
-		TotalMainHEleDps := MainHEleDps + EleDps
-		TotalOffHEleDps := OffHEleDps + EleDps
-		TotalMainHChaosDps := MainHChaosDps + ChaosDps
-		TotalOffHChaosDps := OffHChaosDps + ChaosDps
+		twoColDisplay		:= true
+		TotalMainHEleDps	:= MainHEleDps + EleDps
+		TotalOffHEleDps	:= OffHEleDps + EleDps
+		TotalMainHChaosDps	:= MainHChaosDps + ChaosDps
+		TotalOffHChaosDps	:= OffHChaosDps + ChaosDps
 	}
 	Else twoColDisplay := false
 
@@ -5887,50 +5887,50 @@ AssembleDamageDetails(FullItemData)
 
 	If ( twoColDisplay )
 	{
-		TotalMainHDps := PhysDps + TotalMainHEleDps + TotalMainHChaosDps
-		TotalOffHDps := PhysDps + TotalOffHEleDps + TotalOffHChaosDps
-		Result = %Result%`nTotal DPS:  %TotalMainHDps% MainH | %TotalOffHDps% OffH
+		TotalMainHDps	:= PhysDps + TotalMainHEleDps + TotalMainHChaosDps
+		TotalOffHDps	:= PhysDps + TotalOffHEleDps + TotalOffHChaosDps
+		Result		= %Result%`nTotal DPS:  %TotalMainHDps% MainH | %TotalOffHDps% OffH
 	}
 	Else
 	{
-		TotalDps := PhysDps + EleDps + ChaosDps
-		Result = %Result%`nTotal DPS:  %TotalDps%
+		TotalDps	:= PhysDps + EleDps + ChaosDps
+		Result	= %Result%`nTotal DPS:  %TotalDps%
 	}
 
 	; Only show Q20 values if item is not Q20
 	If (Quality < 20) {
-		TotalPhysMult := (PhysMult + Quality + 100) / 100
-		BasePhysDps := PhysDps / TotalPhysMult
-		Q20Dps := BasePhysDps * ((PhysMult + 120) / 100)
+		TotalPhysMult	:= (PhysMult + Quality + 100) / 100
+		BasePhysDps	:= PhysDps / TotalPhysMult
+		Q20Dps		:= BasePhysDps * ((PhysMult + 120) / 100)
 
 		If ( twoColDisplay )
 		{
-			Q20MainHDps := Q20Dps + TotalMainHEleDps + TotalMainHChaosDps
-			Q20OffHDps := Q20Dps + TotalOffHEleDps + TotalOffHChaosDps
-			Result = %Result%`nQ20 DPS:    %Q20MainHDps% MainH | %Q20OffHDps% OffH
+			Q20MainHDps	:= Q20Dps + TotalMainHEleDps + TotalMainHChaosDps
+			Q20OffHDps	:= Q20Dps + TotalOffHEleDps + TotalOffHChaosDps
+			Result		= %Result%`nQ20 DPS:    %Q20MainHDps% MainH | %Q20OffHDps% OffH
 		}
 		Else
 		{
-			Q20Dps := Q20Dps + EleDps + ChaosDps
-			Result = %Result%`nQ20 DPS:    %Q20Dps%
+			Q20Dps	:= Q20Dps + EleDps + ChaosDps
+			Result	= %Result%`nQ20 DPS:    %Q20Dps%
 		}
 	}
 	
-	Item.DamageDetails := {}
-	Item.DamageDetails.MainHEleDps := MainHEleDps
-	Item.DamageDetails.OffHEleDps := OffHEleDps
-	Item.DamageDetails.MainHChaosDps := MainHChaosDps
-	Item.DamageDetails.OffHChaosDps := OffHChaosDps
-	Item.DamageDetails.TotalMainHDps := TotalMainHDps
-	Item.DamageDetails.TotalOffHDps := TotalOffHDps
-	Item.DamageDetails.TotalMainHEleDps := TotalMainHEleDps
-	Item.DamageDetails.TotalOffHEleDps := TotalOffHEleDps
-	Item.DamageDetails.TotalMainHChaosDps := TotalMainHChaosDps
-	Item.DamageDetails.TotalOffHChaosDps := TotalOffHChaosDps
-	Item.DamageDetails.Q20MainHDps := Q20MainHDps
-	Item.DamageDetails.Q20OffHDps := Q20OffHDps
-	Item.DamageDetails.BasePhysDps := BasePhysDps
-	Item.DamageDetails.TotalPhysMult := TotalPhysMult
+	Item.DamageDetails					:= {}
+	Item.DamageDetails.MainHEleDps		:= MainHEleDps
+	Item.DamageDetails.OffHEleDps			:= OffHEleDps
+	Item.DamageDetails.MainHChaosDps		:= MainHChaosDps
+	Item.DamageDetails.OffHChaosDps		:= OffHChaosDps
+	Item.DamageDetails.TotalMainHDps		:= TotalMainHDps
+	Item.DamageDetails.TotalOffHDps		:= TotalOffHDps
+	Item.DamageDetails.TotalMainHEleDps	:= TotalMainHEleDps
+	Item.DamageDetails.TotalOffHEleDps		:= TotalOffHEleDps
+	Item.DamageDetails.TotalMainHChaosDps	:= TotalMainHChaosDps
+	Item.DamageDetails.TotalOffHChaosDps	:= TotalOffHChaosDps
+	Item.DamageDetails.Q20MainHDps		:= Q20MainHDps
+	Item.DamageDetails.Q20OffHDps			:= Q20OffHDps
+	Item.DamageDetails.BasePhysDps		:= BasePhysDps
+	Item.DamageDetails.TotalPhysMult		:= TotalPhysMult
 
 	Item.DamageDetails.Q20Dps  := Q20Dps
 	Item.DamageDetails.Quality := Quality
@@ -6070,14 +6070,32 @@ ParseSockets(ItemDataText)
 	{
 		IfInString, A_LoopField, Sockets
 		{
-			LinksString := GetColonValue(A_LoopField)
-			before := StrLen(LinksString)
-			LinksString := RegExReplace(LinksString, "[RGBW]", "")
-			after := StrLen(LinksString)
-			SocketsCount := before - after
+			LinksString	:= GetColonValue(A_LoopField)
+			before		:= StrLen(LinksString)
+			LinksString	:= RegExReplace(LinksString, "[RGBW]", "")
+			after		:= StrLen(LinksString)
+			SocketsCount	:= before - after
 		}
 	}
 	return SocketsCount
+}
+
+ParseCharges(stats)
+{
+	charges := {}
+	Loop,  Parse, stats, `n, `r 
+	{
+		RegExMatch(A_LoopField, "i)Consumes (\d+) of (\d+) Charges on Use.*", max)
+		RegExMatch(A_LoopField, "i)Currently has (\d+) Charges.*", current)
+		If (max) {
+			charges.usage	:= max1
+			charges.max	:= max2
+		}
+		If (current) {
+			charges.current:= current1
+		}
+	}	
+	return charges
 }
 
 ; Converts a currency stack to Chaos by looking up the
@@ -6086,13 +6104,13 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 {
 	If (InStr(ItemName, "Shard"))
 	{
-		IsShard := True
-		ItemName := "Orb of " . SubStr(ItemName, 1, -StrLen(" Shard"))
+		IsShard	:= True
+		ItemName	:= "Orb of " . SubStr(ItemName, 1, -StrLen(" Shard"))
 	}
 	If (InStr(ItemName, "Fragment"))
 	{
-		IsFragment := True
-		ItemName := "Scroll of Wisdom"
+		IsFragment:= True
+		ItemName	:= "Scroll of Wisdom"
 	}
 	StackSize := SubStr(ItemStats, StrLen("Stack Size:  "))
 	StringSplit, StackSizeParts, StackSize, /
@@ -6108,8 +6126,8 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 	}
 	
 	; Update currency rates from poe.ninja
-	last := Globals.Get("LastCurrencyUpdate")
-	diff  := A_NowUTC
+	last	:= Globals.Get("LastCurrencyUpdate")
+	diff	:= A_NowUTC
 	EnvSub, diff, %last%, Minutes
 	If (diff > 180 or !last) {
 		; no data or older than 3 hours
@@ -6117,18 +6135,18 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 	}
 	
 	; Use downloaded currency rates if they exist, otherwise use hardcoded fallback 
-	fallback   := A_ScriptDir . "\data\CurrencyRates.txt"
-	ninjaRates := [A_ScriptDir . "\temp\CurrencyRates_tmpstandard.txt", A_ScriptDir . "\temp\CurrencyRates_tmphardcore.txt", A_ScriptDir . "\temp\CurrencyRates_Standard.txt", A_ScriptDir . "\temp\CurrencyRates_Hardcore.txt"]
-	result := []
+	fallback		:= A_ScriptDir . "\data\CurrencyRates.txt"
+	ninjaRates	:= [A_ScriptDir . "\temp\CurrencyRates_tmpstandard.txt", A_ScriptDir . "\temp\CurrencyRates_tmphardcore.txt", A_ScriptDir . "\temp\CurrencyRates_Standard.txt", A_ScriptDir . "\temp\CurrencyRates_Hardcore.txt"]
+	result		:= []
 	
 	Loop, % ninjaRates.Length() 
 	{
 		dataSource := "Currency rates powered by poe.ninja`n`n"
 		If (FileExist(ninjaRates[A_Index])) 
 		{
-			ValueInChaos := 0
-			leagueName := ""
-			file := ninjaRates[A_Index]
+			ValueInChaos	:= 0
+			leagueName	:= ""
+			file			:= ninjaRates[A_Index]
 			Loop, Read, %file%
 			{			
 				Line := Trim(A_LoopReadLine)
@@ -6141,10 +6159,10 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 				IfInString, Line, %ItemName%
 				{
 					StringSplit, LineParts, Line, |
-					ChaosRatio := LineParts2
+					ChaosRatio	:= LineParts2
 					StringSplit, ChaosRatioParts,ChaosRatio, :
-					ChaosMult := ChaosRatioParts2 / ChaosRatioParts1
-					ValueInChaos := (ChaosMult * StackSize)
+					ChaosMult		:= ChaosRatioParts2 / ChaosRatioParts1
+					ValueInChaos	:= (ChaosMult * StackSize)
 				}
 			}
 			
@@ -6157,9 +6175,9 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 	
 	; fallback - condition : no results found so far
 	If (!result.Length()) {
-		ValueInChaos := 0
-		dataSource := "Fallback <\data\CurrencyRates.txt>`n`n"
-		leagueName := "Hardcoded rates: "
+		ValueInChaos	:= 0
+		dataSource	:= "Fallback <\data\CurrencyRates.txt>`n`n"
+		leagueName	:= "Hardcoded rates: "
 
 		Loop, Read, %fallback%
 		{
@@ -6171,10 +6189,10 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 			IfInString, Line, %ItemName%
 			{
 				StringSplit, LineParts, Line, |
-				ChaosRatio := LineParts2
+				ChaosRatio	:= LineParts2
 				StringSplit, ChaosRatioParts,ChaosRatio, :
-				ChaosMult := ChaosRatioParts2 / ChaosRatioParts1
-				ValueInChaos := (ChaosMult * StackSize)
+				ChaosMult		:= ChaosRatioParts2 / ChaosRatioParts1
+				ValueInChaos	:= (ChaosMult * StackSize)
 			}
 		}
 		
@@ -6416,9 +6434,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	StringReplace, TempResult, ItemDataText, `r`n--------`r`n, ``, All
 	StringSplit, ItemDataParts, TempResult, ``,
 
-	ItemData.NamePlate := ItemDataParts1
-	ItemData.Stats := ItemDataParts2
-
+	ItemData.NamePlate	:= ItemDataParts1
+	ItemData.Stats		:= ItemDataParts2
+	
 	ItemDataIndexLast := ItemDataParts0
 	ItemDataPartsLast := ItemDataParts%ItemDataIndexLast%
 
@@ -6437,8 +6455,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		return
 	}
-	Item.Name := ItemName
-	Item.TypeName := ItemTypeName
+	Item.Name		:= ItemName
+	Item.TypeName	:= ItemTypeName
 
 	IfInString, ItemDataText, Unidentified
 	{
@@ -6452,11 +6470,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
 	; This function should return the second part of the "Rarity: ..." line
 	; in the case of "Rarity: Unique" it should return "Unique"
-	ItemData.Rarity := ParseRarity(ItemData.NamePlate)
+	ItemData.Rarity	:= ParseRarity(ItemData.NamePlate)
 
-	ItemData.Links := ParseLinks(ItemDataText)
-	ItemData.Sockets := ParseSockets(ItemDataText)
-
+	ItemData.Links		:= ParseLinks(ItemDataText)
+	ItemData.Sockets	:= ParseSockets(ItemDataText)
+	
+	Item.Charges		:= ParseCharges(ItemData.Stats)
+	
 	Item.IsUnique := False
 	If (InStr(ItemData.Rarity, "Unique"))
 	{
@@ -6476,8 +6496,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		Item.BaseType := "Divination Card"
 	}
 
-	Item.IsGem := (InStr(ItemData.Rarity, "Gem"))
-	Item.IsCurrency := (InStr(ItemData.Rarity, "Currency"))
+	Item.IsGem	:= (InStr(ItemData.Rarity, "Gem"))
+	Item.IsCurrency:= (InStr(ItemData.Rarity, "Currency"))
 
 	If (Not (InStr(ItemDataText, "Itemlevel:") or InStr(ItemDataText, "Item Level:")) and Not Item.IsGem and Not Item.IsCurrency and Not Item.IsDivinationCard)
 	{
@@ -6486,18 +6506,17 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
 	If (Item.IsGem)
 	{
-		RarityLevel := 0
-		Item.Level := ParseGemLevel(ItemDataText, "Level:")
-		ItemLevelWord := "Gem Level:"
-		Item.BaseType := "Gem"
+		RarityLevel	:= 0
+		Item.Level	:= ParseGemLevel(ItemDataText, "Level:")
+		ItemLevelWord	:= "Gem Level:"
+		Item.BaseType	:= "Gem"
 	}
 	Else
 	{
-
 		If (Item.IsCurrency and Opts.ShowCurrencyValueInChaos == 1)
 		{
-			dataSource := ""
-			ValueInChaos := ConvertCurrency(Item.Name, ItemData.Stats, dataSource)
+			dataSource	:= ""
+			ValueInChaos	:= ConvertCurrency(Item.Name, ItemData.Stats, dataSource)
 			If (ValueInChaos.Length() and not Item.Name == "Chaos Orb")
 			{
 				CurrencyDetails := "`n" . dataSource
@@ -6519,38 +6538,38 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 				}
 			}
 			
-			RarityLevel := CheckRarityLevel(ItemData.Rarity)
-			Item.Level := ParseItemLevel(ItemDataText)
-			ItemLevelWord := "Item Level:"
+			RarityLevel	:= CheckRarityLevel(ItemData.Rarity)
+			Item.Level	:= ParseItemLevel(ItemDataText)
+			ItemLevelWord	:= "Item Level:"
 			ParseItemType(ItemData.Stats, ItemData.NamePlate, ItemBaseType, ItemSubType, ItemGripType, Item.IsMapFragment, RarityLevel)
-			Item.BaseType := ItemBaseType
-			Item.SubType := ItemSubType
-			Item.GripType := ItemGripType
+			Item.BaseType	:= ItemBaseType
+			Item.SubType	:= ItemSubType
+			Item.GripType	:= ItemGripType
 		}
 	}
 
-	Item.RarityLevel := RarityLevel
+	Item.RarityLevel	:= RarityLevel
 
-	Item.IsBow := (Item.SubType == "Bow")
-	Item.IsFlask := (Item.SubType == "Flask")
-	Item.IsBelt := (Item.SubType == "Belt")
-	Item.IsRing := (Item.SubType == "Ring")
-	Item.IsUnsetRing := (Item.IsRing and InStr(ItemData.NamePlate, "Unset Ring"))
-	Item.IsAmulet := (Item.SubType == "Amulet")
-	Item.IsTalisman := (Item.IsAmulet and InStr(ItemData.NamePlate, "Talisman") and !InStr(ItemData.NamePlate, "Amulet"))
-	Item.IsSingleSocket := (IsUnsetRing)
-	Item.IsFourSocket := (Item.SubType == "Gloves" or Item.SubType == "Boots" or Item.SubType == "Helmet")
-	Item.IsThreeSocket := (Item.GripType == "1H" or Item.SubType == "Shield")
-	Item.IsQuiver := (Item.SubType == "Quiver")
-	Item.IsWeapon := (Item.BaseType == "Weapon")
-	Item.IsArmour := (Item.BaseType == "Armour")
-	Item.IsMap := (Item.BaseType == "Map")
-	Item.IsJewel := (Item.BaseType == "Jewel")
-	Item.IsMirrored := (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
-	Item.IsEssence := Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
-	Item.Note := Globals.Get("ItemNote")	
+	Item.IsBow		:= (Item.SubType == "Bow")
+	Item.IsFlask		:= (Item.SubType == "Flask")
+	Item.IsBelt		:= (Item.SubType == "Belt")
+	Item.IsRing		:= (Item.SubType == "Ring")
+	Item.IsUnsetRing	:= (Item.IsRing and InStr(ItemData.NamePlate, "Unset Ring"))
+	Item.IsAmulet		:= (Item.SubType == "Amulet")
+	Item.IsTalisman	:= (Item.IsAmulet and InStr(ItemData.NamePlate, "Talisman") and !InStr(ItemData.NamePlate, "Amulet"))
+	Item.IsSingleSocket	:= (IsUnsetRing)
+	Item.IsFourSocket	:= (Item.SubType == "Gloves" or Item.SubType == "Boots" or Item.SubType == "Helmet")
+	Item.IsThreeSocket	:= (Item.GripType == "1H" or Item.SubType == "Shield")
+	Item.IsQuiver		:= (Item.SubType == "Quiver")
+	Item.IsWeapon		:= (Item.BaseType == "Weapon")
+	Item.IsArmour		:= (Item.BaseType == "Armour")
+	Item.IsMap		:= (Item.BaseType == "Map")
+	Item.IsJewel		:= (Item.BaseType == "Jewel")
+	Item.IsMirrored	:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
+	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
+	Item.Note			:= Globals.Get("ItemNote")	
 	If (RarityLevel = 4) {
-		Item.IsRelic := false ; add parsing/comparison here
+		Item.IsRelic	:= false ; add parsing/comparison here
 	}
 
 	TempStr := ItemData.PartsLast
@@ -6615,9 +6634,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		ParseAffixes(ItemData.Affixes, Item)
 	}
-	NumPrefixes := AffixTotals.NumPrefixes
-	NumSuffixes := AffixTotals.NumSuffixes
-	TotalAffixes := NumPrefixes + NumSuffixes
+	NumPrefixes	:= AffixTotals.NumPrefixes
+	NumSuffixes	:= AffixTotals.NumSuffixes
+	TotalAffixes	:= NumPrefixes + NumSuffixes
 	AffixTotals.NumTotals := TotalAffixes
 
 	; We need to call this function a second time because now we know the AffixCount.
@@ -6625,7 +6644,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.TypeName := ItemTypeName
 
 	pseudoMods := PreparePseudoModCreation(ItemData.Affixes, Item.Implicit, RarityLevel, Item.isMap)
-	
+
 	; Start assembling the text for the tooltip
 	TT := Item.Name
 	If (Item.TypeName && (Item.TypeName != Item.Name))
