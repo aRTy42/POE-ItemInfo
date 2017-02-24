@@ -1,0 +1,85 @@
+<<<<<<< HEAD:AdditionalMacros.txt
+   Pause::TogglePOEItemScript()		;pause item parsing with the pause key (other macros remain). key bind enabled by default.
+   #D::WinMinimize, A				;Winkey+D minimizes the active PoE window (PoE stays minimized this way)
+;   ^Escape::CloseScripts()			;Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
+  
+
+;   F5::SendInput {Enter}/hideout{Enter}		; go to hideout with F5
+;   ^WheelUp::SendInput {Left}					; Ctrl+mouse wheel up toggles stash tabs left
+;   ^WheelDown::SendInput {Right}				; Ctrl+mouse wheel down toggles stash tabs right	
+;   ^RButton::SendInput ^c						; Ctrl+right mouse button sends ctrl+c
+;   F2::^c										; binds ctrl+c to F2 key (in addition, not instead)
+;   F9::SendInput {Enter}/remaining{Enter}		; mobs remaining with F9
+;   F10::SendInput {Enter}/global 820{Enter}	; join a channel with F10
+;   F11::setAfkMessage()						; pastes afk message to your chat and marks "X" so you can type in the estimated time
+
+setAfkMessage(){		
+	T1 := A_Now
+	T2 := A_NowUTC
+	EnvSub, T1, %T2%, M
+	TZD := "UTC +" Round( T1/60, 2 )
+	FormatTime, currentTime, A_NowUTC, HH:mm
+	clipboard := "/afk AFK for about X minutes, since " currentTime " (" TZD "). Leave a message and I'll reply."
+	
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		SendInput {Enter} ^{v} {Home}
+		Pos := RegExMatch(clipboard, " X ")
+		If (Pos) {
+			Loop {
+				SendInput {Right}
+				If (A_Index > Pos) {
+					Break
+				}
+			}
+			Send {Shift Down} 
+			Sleep 100
+			Send {Right} 
+			Sleep 100
+			Send {Shift Up} 
+		}
+	}		
+}
+=======
+   Pause::TogglePOEItemScript()		;pause item parsing with the pause key (other macros remain). key bind enabled by default.
+;   #D::WinMinimize, A				;Winkey+D minimizes the active PoE window (PoE stays minimized this way)
+;   ^Escape::CloseScripts()			;Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
+  
+
+;   F5::SendInput {Enter}/hideout{Enter}		; go to hideout with F5
+;   ^WheelUp::SendInput {Left}					; Ctrl+mouse wheel up toggles stash tabs left
+;   ^WheelDown::SendInput {Right}				; Ctrl+mouse wheel down toggles stash tabs right	
+;   ^RButton::SendInput ^c						; Ctrl+right mouse button sends ctrl+c
+;   F2::^c										; binds ctrl+c to F2 key (in addition, not instead)
+;   F9::SendInput {Enter}/remaining{Enter}		; mobs remaining with F9
+;   F10::SendInput {Enter}/global 820{Enter}	; join a channel with F10
+;   F11::setAfkMessage()						; pastes afk message to your chat and marks "X" so you can type in the estimated time
+
+setAfkMessage(){		
+	T1 := A_Now
+	T2 := A_NowUTC
+	EnvSub, T1, %T2%, M
+	TZD := "UTC +" Round( T1/60, 2 )
+	FormatTime, currentTime, A_NowUTC, HH:mm
+	clipboard := "/afk AFK for about X minutes, since " currentTime " (" TZD "). Leave a message and I'll reply."
+	
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		SendInput {Enter} ^{v} {Home}
+		Pos := RegExMatch(clipboard, " X ")
+		If (Pos) {
+			Loop {
+				SendInput {Right}
+				If (A_Index > Pos) {
+					Break
+				}
+			}
+			Send {Shift Down} 
+			Sleep 100
+			Send {Right} 
+			Sleep 100
+			Send {Shift Up} 
+		}
+	}		
+}
+>>>>>>> refs/remotes/origin/devEru:resources/ahk/default_AdditionalMacros.txt
