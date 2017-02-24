@@ -10,6 +10,10 @@ FileRead, JSONFile, %A_ScriptDir%\data_trade\uniques.json
 parsedJSON := JSON.Load(JSONFile)
 global TradeUniqueData := parsedJSON.uniques
 
+; Parse the unique relic items data
+FileRead, JSONFile, %A_ScriptDir%\data_trade\relics.json
+parsedJSON := JSON.Load(JSONFile)
+global TradeRelicData := parsedJSON.relics
 
 ; Parse the poe.trade mods
 FileRead, JSONFile, %A_ScriptDir%\data_trade\mods.json

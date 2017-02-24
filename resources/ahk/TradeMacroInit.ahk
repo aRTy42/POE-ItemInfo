@@ -172,6 +172,7 @@ If (TradeOpts.AlternativeCurrencySearch) {
 	GoSub, ReadPoeNinjaCurrencyData
 }
 TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
+TradeGlobals.Set("VariableRelicData",  TradeRelicData)
 TradeGlobals.Set("ModsData", TradeModsData)
 TradeGlobals.Set("CraftingData", TradeFunc_ReadCraftingBases())
 TradeGlobals.Set("EnchantmentData", TradeFunc_ReadEnchantments())
@@ -1115,7 +1116,7 @@ TradeFunc_DownloadDataFiles() {
 	url   := "https://raw.githubusercontent.com/" . owner . "/" . repo . "/master/data_trade/"
 	dir = %A_ScriptDir%\data_trade
 	bakDir = %A_ScriptDir%\data_trade\old_data_files
-	files := ["boot_enchantment_mods.txt","crafting_bases.txt","glove_enchantment_mods.txt","helmet_enchantment_mods.txt","item_corrupted_mods.txt","mods.json","uniques.json"]		
+	files := ["boot_enchantment_mods.txt","crafting_bases.txt","glove_enchantment_mods.txt","helmet_enchantment_mods.txt","item_corrupted_mods.txt","mods.json","uniques.json", "relics.json"]		
 	
 	; create .bak files and download (overwrite) data files
 	; if downlaoded file exists move .bak-file to backup folder, otherwise restore .bak-file 

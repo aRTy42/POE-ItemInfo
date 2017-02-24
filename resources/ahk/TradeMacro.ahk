@@ -197,7 +197,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	If (Item.IsUnique) {		
 		; returns mods with their ranges of the searched item If it is unique and has variable mods
 		uniqueWithVariableMods :=
-		uniqueWithVariableMods := TradeFunc_FindUniqueItemIfItHasVariableRolls(Name)
+		uniqueWithVariableMods := TradeFunc_FindUniqueItemIfItHasVariableRolls(Name, Item.IsRelic)
 		
 		; Return If the advanced search was used but the checked item doesn't have variable mods
 		if(!uniqueWithVariableMods and isAdvancedPriceCheck and not Enchantment and not Corruption) {
@@ -205,19 +205,23 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			return
 		}
 		
-		UniqueStats := TradeFunc_GetUniqueStats(Name)
+		UniqueStats := TradeFunc_GetUniqueStats(Name, Item.IsRelic)
 		If (uniqueWithVariableMods) {
 			Gui, SelectModsGui:Destroy
 			
 			preparedItem :=
-			preparedItem := TradeFunc_GetItemsPoeTradeUniqueMods(uniqueWithVariableMods)	
-			preparedItem.maxSockets := Item.maxSockets
+			preparedItem := TradeFunc_GetItemsPoeTradeUniqueMods(uniqueWithVariableMods)
+			preparedItem := TradeFunc_RemoveAlternativeVersionsMods(preparedItem, ItemData.Affixes)
+			preparedItem.maxSockets 	:= Item.maxSockets
+			preparedItem.isCorrupted	:= Item.isCorrupted
+			preparedItem.isRelic	:= Item.isRelic
 			Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
 			
 			; open TradeFunc_AdvancedPriceCheckGui to select mods and their min/max values
 			If (isAdvancedPriceCheck) {
 				UniqueStats := TradeFunc_GetUniqueStats(Name)
+				
 				If (Enchantment) {
 					TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Enchantment)
 				}
@@ -394,7 +398,13 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	} Else {
 		RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
 		Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType
-	}			
+	}
+	
+	If (Item.BaseType == "Leaguestone") {
+		; not implemented yet, no idea if supported by poe.trade
+		;RequestParams.charges 	:= Item.Charges.current
+		;Item.UsedInSearch.Charges:= "Charges " Item.Charges.current "/" Item.Charges.max
+	}
 	
 	If (TradeOpts.debug) {
 		uniq := Item.IsUnique ? "Yes" : "No"
@@ -796,7 +806,7 @@ TradeFunc_CalculateQ20(base, affixFlat, affixPercent){
 TradeFunc_ParseItemOffenseStats(Stats, mods){
 	Global ItemData
 	iStats := {}
-	debugOutput :=
+	debugOutput := 
 	
 	RegExMatch(ItemData.Stats, "i)Physical Damage ?:.*?(\d+)-(\d+)", match)
 	physicalDamageLow := match1
@@ -846,7 +856,7 @@ TradeFunc_ParseItemOffenseStats(Stats, mods){
 						min_affixFlat%dmgType1%Hi     := mod.ranges[1][2] 
 						max_affixFlat%dmgType1%Low    := mod.ranges[2][1] 
 						max_affixFlat%dmgType1%Hi     := mod.ranges[2][2] 						
-					}		
+					}
 					debugOutput .= affix "`nflat " dmgType1 " : " min_affixFlat%dmgType1%Low " - " min_affixFlat%dmgType1%Hi " to " max_affixFlat%dmgType1%Low " - " max_affixFlat%dmgType1%Hi "`n`n"					
 				}
 				If (RegExMatch(affix, "i)Adds.*(\d+) to #.*(Lightning) Damage", match)) {
@@ -954,8 +964,8 @@ TradeFunc_CompareGemNames(name) {
 	}
 }
 
-TradeFunc_GetUniqueStats(name){
-	items := TradeGlobals.Get("VariableUniqueData")
+TradeFunc_GetUniqueStats(name, isRelic = false) {
+	items := isRelic ? TradeGlobals.Get("VariableRelicData") : TradeGlobals.Get("VariableUniqueData")
 	For i, uitem in items {
 		If (name = uitem.name) {
 			Return uitem.stats
@@ -1044,7 +1054,40 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	UserAgent   := TradeGlobals.Get("UserAgent")
 	cfduid      := TradeGlobals.Get("cfduid")
 	cfClearance := TradeGlobals.Get("cfClearance")
-	
+
+	/* Not working yet, no response
+	postData := payload
+	payLength:= StrLen(payload)
+	reqHeaders =
+		(LTrim
+			Content-type: application/html
+			Host: poe.trade
+			Connection: keep-alive
+			Content-Length: %payLength%
+			Cache-Control: max-age=0
+			Origin: http://poe.trade
+			Upgrade-Insecure-Requests: 1
+			Content-type: application/x-www-form-urlencoded
+			Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+			Referer: http://poe.trade/
+		)
+	If (StrLen(UserAgent)) {
+		options .= "`nUser-Agent: " UserAgent
+		options .= "`nCookie: __cfduid= " cfduid "; cf_clearance= " cfClearance
+	}
+	options =
+		(LTrim
+			Charset: UTF-8
+			Method: POST
+		)
+	If (openSearchInBrowser) {
+		options .= "`nNO_AUTO_REDIRECT" 
+	}
+
+	html := ""
+	html := PoEScripts_Download("http://poe.trade/search", ioData := postData, ioHdr := reqHeaders, options, false)
+	*/
+		
 	ComObjError(0)
 	Encoding := "utf-8"
     ;Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
@@ -1475,7 +1518,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	LeagueName := TradeGlobals.Get("LeagueName")
 	
 	; Target HTML Looks like the ff:
-    ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
+     ;<tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
 	
 	If (not Item.IsGem and not Item.IsDivinationCard and not Item.IsJewel and not Item.IsCurrency and not Item.IsMap) {
 		showItemLevel := true
@@ -1542,7 +1585,8 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 			Else {
 				Title .= (Item.UsedInSearch.iLvl.min) ? "| iLvl (>=" . Item.UsedInSearch.iLvl.min . ") " : ""
 				Title .= (Item.UsedInSearch.iLvl.max) ? "| iLvl (<=" . Item.UsedInSearch.iLvl.max . ") " : ""
-			}		
+			}			
+			;Title .= (StrLen(Item.UsedInSearch.Charges)) ? "| " Item.UsedInSearch.Charges " " : ""
 			Title .= (Item.UsedInSearch.FullName and ShowFullNameNote) ? "| Full Name " : ""
 			Title .= (Item.UsedInSearch.Corruption and not Item.IsMapFragment and not Item.IsDivinationCard and not Item.IsCurrency)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ") " : ""
 			Title .= (Item.UsedInSearch.Type)     ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
@@ -1790,14 +1834,52 @@ class RequestParams_ {
 	buyout_currency:= ""
 	crafted		:= ""
 	enchanted 	:= ""
+	;relic		:= ""
+	;charges		:= ""
 	
-	ToPayload() 
+	ToPayload()
 	{
 		modGroupStr := this.modGroup.ToPayload()
 		
-		p := "league=" this.league "&type=" this.xtype "&base=" this.xbase "&name=" this.name "&dmg_min=" this.dmg_min "&dmg_max=" this.dmg_max "&aps_min=" this.aps_min "&aps_max=" this.aps_max "&crit_min=" this.crit_min "&crit_max=" this.crit_max "&dps_min=" this.dps_min "&dps_max=" this.dps_max "&edps_min=" this.edps_min "&edps_max=" this.edps_max "&pdps_min=" this.pdps_min "&pdps_max=" this.pdps_max "&armour_min=" this.armour_min "&armour_max=" this.armour_max "&evasion_min=" this.evasion_min "&evasion_max=" this.evasion_max "&shield_min=" this.shield_min "&shield_max=" this.shield_max "&block_min=" this.block_min "&block_max=" this.block_max "&sockets_min=" this.sockets_min "&sockets_max=" this.sockets_max "&link_min=" this.link_min "&link_max=" this.link_max "&sockets_r=" this.sockets_r "&sockets_g=" this.sockets_g "&sockets_b=" this.sockets_b "&sockets_w=" this.sockets_w "&linked_r=" this.linked_r "&linked_g=" this.linked_g "&linked_b=" this.linked_b "&linked_w=" this.linked_w "&rlevel_min=" this.rlevel_min "&rlevel_max=" this.rlevel_max "&rstr_min=" this.rstr_min "&rstr_max=" this.rstr_max "&rdex_min=" this.rdex_min "&rdex_max=" this.rdex_max "&rint_min=" this.rint_min "&rint_max=" this.rint_max modGroupStr "&q_min=" this.q_min "&q_max=" this.q_max "&level_min=" this.level_min "&level_max=" this.level_max "&ilvl_min=" this.ilvl_min "&ilvl_max=" this.ilvl_max "&rarity=" this.rarity "&seller=" this.seller "&thread=" this.xthread "&identified=" this.identified "&corrupted=" this.corrupted "&online=" this.online "&has_buyout=" this.buyout "&altart=" this.altart "&capquality=" this.capquality "&buyout_min=" this.buyout_min "&buyout_max=" this.buyout_max "&buyout_currency=" this.buyout_currency "&crafted=" this.crafted "&enchanted=" this.enchanted
+		p := "league=" this.league "&type=" this.xtype "&base=" this.xbase "&name=" this.name "&dmg_min=" this.dmg_min "&dmg_max=" this.dmg_max "&aps_min=" this.aps_min "&aps_max=" this.aps_max 
+		p .= "&crit_min=" this.crit_min "&crit_max=" this.crit_max "&dps_min=" this.dps_min "&dps_max=" this.dps_max "&edps_min=" this.edps_min "&edps_max=" this.edps_max "&pdps_min=" this.pdps_min 
+		p .= "&pdps_max=" this.pdps_max "&armour_min=" this.armour_min "&armour_max=" this.armour_max "&evasion_min=" this.evasion_min "&evasion_max=" this.evasion_max "&shield_min=" this.shield_min 
+		p .= "&shield_max=" this.shield_max "&block_min=" this.block_min "&block_max=" this.block_max "&sockets_min=" this.sockets_min "&sockets_max=" this.sockets_max "&link_min=" this.link_min 
+		p .= "&link_max=" this.link_max "&sockets_r=" this.sockets_r "&sockets_g=" this.sockets_g "&sockets_b=" this.sockets_b "&sockets_w=" this.sockets_w "&linked_r=" this.linked_r 
+		p .= "&linked_g=" this.linked_g "&linked_b=" this.linked_b "&linked_w=" this.linked_w "&rlevel_min=" this.rlevel_min "&rlevel_max=" this.rlevel_max "&rstr_min=" this.rstr_min 
+		p .= "&rstr_max=" this.rstr_max "&rdex_min=" this.rdex_min "&rdex_max=" this.rdex_max "&rint_min=" this.rint_min "&rint_max=" this.rint_max modGroupStr "&q_min=" this.q_min 
+		p .= "&q_max=" this.q_max "&level_min=" this.level_min "&level_max=" this.level_max "&ilvl_min=" this.ilvl_min "&ilvl_max=" this.ilvl_max "&rarity=" this.rarity "&seller=" this.seller 
+		p .= "&thread=" this.xthread "&identified=" this.identified "&corrupted=" this.corrupted "&online=" this.online "&has_buyout=" this.buyout "&altart=" this.altart "&capquality=" this.capquality 
+		p .= "&buyout_min=" this.buyout_min "&buyout_max=" this.buyout_max "&buyout_currency=" this.buyout_currency "&crafted=" this.crafted "&enchanted=" this.enchanted
+		;p .= "&relic=" this.relic
+		;p .= "&charges=" this.charges
+		
+		temp := p
+		temp := CleanPayload(temp)
+		; not used yet
+		;console.log(temp)
+		
 		Return p
 	}
+}
+
+CleanPayload(payload) {
+	StringSplit, parameters, payload, `&
+	params 	:= []
+	i 		:= 1
+	While (parameters%i%) {
+		RegExMatch(parameters%i%, "=$", match)
+		If (!match) {
+			params.push(parameters%i%)
+		}	
+		i++
+	}
+	
+	payload := ""
+	For key, val in params {
+		payload .= val "&"
+	}
+	return payload
 }
 
 class _ParamModGroup {
@@ -1839,9 +1921,9 @@ class _ParamMod {
 }
 
 ; Return unique item with its variable mods and mod ranges If it has any
-TradeFunc_FindUniqueItemIfItHasVariableRolls(name)
-{
-	data := TradeGlobals.Get("VariableUniqueData")
+TradeFunc_FindUniqueItemIfItHasVariableRolls(name, isRelic = false)
+{	
+	data := isRelic ? TradeGlobals.Get("VariableRelicData") : TradeGlobals.Get("VariableUniqueData")
 	For index, uitem in data {		
 		If (uitem.name = name) {
 			Loop % uitem.mods.Length() {
@@ -1855,18 +1937,48 @@ TradeFunc_FindUniqueItemIfItHasVariableRolls(name)
 	Return 0
 }
 
+TradeFunc_RemoveAlternativeVersionsMods(Item, Affixes) {
+	Affixes	:= StrSplit(Affixes, "`n")
+	i 		:= 0
+	tempMods	:= []
+
+	For k, v in Item.mods {
+		modFound := false
+		For key, val in Affixes {
+			; remove negative sign also
+			t := TradeUtils.CleanUp(RegExReplace(val, "i)-?[\d\.]+\s?to\s?-?[\d\.]+|-?[\d\.]+", "#"))
+			n := TradeUtils.CleanUp(v.name)
+			; match with optional positive sign to match for example "-7% to cold resist" with "+#% to cold resist"
+			RegExMatch(n, "i)(\+?" . t . ")", match)
+			If (match) {			
+				modFound := true
+			}
+		}
+		
+		If (modFound) {
+			tempMods.push(v)
+		}
+	}
+	
+	Item.mods := tempMods
+	
+	return Item
+}
+
 ; Return items mods and ranges
 TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = false, Corruption = false, isMap = false) {
-	Affixes := StrSplit(Affixes, "`n")
-	mods := []
-	i := 0
+	Affixes	:= StrSplit(Affixes, "`n")
+	mods		:= []
+	i		:= 0
 	
-	If (Implicit and not Enchantment and not Corruption) {
-		temp := ModStringToObject(Implicit, true)
-		For key, val in temp {
-			mods.push(val)
-			i++
-		}		
+	If (Implicit.maxIndex() and not Enchantment and not Corruption) {
+		modStrings := Implicit	
+		For i, modString in modStrings {
+			tempMods := ModStringToObject(modString, true)
+			For i, tempMod in tempMods {
+				mods.push(tempMod)
+			}
+		}
 	}	
 
 	For key, val in Affixes {
@@ -2064,11 +2176,17 @@ TradeFunc_FindInModGroup(modgroup, needle) {
 TradeFunc_GetCorruption(_item) {
 	mods     := TradeGlobals.Get("ModsData")	
 	corrMods := TradeGlobals.Get("CorruptedModsData")
-	RegExMatch(_item.Implicit, "i)([-.0-9]+)", value)
+	
+	If (_item.implicit.maxIndex() > 1) {
+		; there are no corruptions when the item has multiple implicits
+		Return 0
+	}
+	
+	RegExMatch(_item.Implicit[1], "i)([-.0-9]+)", value)
 	If (RegExMatch(imp, "i)Limited to:")) {
 		;return false
 	}
-	imp      := RegExReplace(_item.Implicit, "i)([-.0-9]+)", "#")
+	imp      := RegExReplace(_item.Implicit[1], "i)([-.0-9]+)", "#")
 	
 	corrMod  := {}
 	For i, corr in corrMods {	
@@ -2077,7 +2195,7 @@ TradeFunc_GetCorruption(_item) {
 				match := Trim(RegExReplace(mod, "i)\(implicit\)", ""))					
 				If (match = corr) {
 					corrMod.param := mod
-					corrMod.name  := _item.implicit
+					corrMod.name  := _item.implicit[1]
 				}
 			}
 		}
@@ -2104,7 +2222,7 @@ TradeFunc_GetCorruption(_item) {
 TradeFunc_GetEnchantment(_item, type) {
 	mods     := TradeGlobals.Get("ModsData")	
 	enchants := TradeGlobals.Get("EnchantmentData")	
-	
+
 	group := 
 	If (type = "Boots") {
 		group := enchants.boots
@@ -2116,8 +2234,13 @@ TradeFunc_GetEnchantment(_item, type) {
 		group := enchants.helmet
 	} 
 
-	RegExMatch(_item.implicit, "i)([.0-9]+)(%? to ([.0-9]+))?", values)
-	imp      := RegExReplace(_item.implicit, "i)([.0-9]+)", "#")
+	If (_item.implicit.maxIndex() > 1) {
+		; there are no enchantments when the item has multiple implicits
+		Return 0
+	}
+	
+	RegExMatch(_item.implicit[1], "i)([.0-9]+)(%? to ([.0-9]+))?", values)
+	imp      := RegExReplace(_item.implicit[1], "i)([.0-9]+)", "#")
 
 	enchantment := {}	
 	If (group.length()) {	
@@ -2127,7 +2250,7 @@ TradeFunc_GetEnchantment(_item, type) {
 					match := Trim(RegExReplace(mod, "i)\(enchant\)", ""))					
 					If (match = enchant) {
 						enchantment.param := mod
-						enchantment.name  := _item.implicit
+						enchantment.name  := _item.implicit[1]
 					}
 				}
 			}
@@ -2185,13 +2308,14 @@ TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 			; handle single value
 			Else {
 				CurrValues.Push(CurrValue)
-				ModStr := StrReplace(A_LoopField, CurrValue, "#")		
+				ModStr := StrReplace(A_LoopField, CurrValue, "#")
 			}			
 			
+			; remove negative sign since poe.trade mods are always positive
+			ModStr := RegExReplace(ModStr, "^-#", "#")			
 			ModStr := StrReplace(ModStr, "+")
 			; replace multi spaces with a single one
 			ModStr := RegExReplace(ModStr, " +", " ")			
-			;MsgBox % "Loop: " A_LoopField "`nCurr: " CurrValue "`nModStr: " ModStr "`ntradeMod: " poeTradeMod
 			
 			IfInString, poeTradeMod, % ModStr
 			{
@@ -2206,8 +2330,8 @@ TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 		ErrorMsg := "Mod not found on poe.trade!"
 		Return ErrorMsg
 	}
-	CurrValue := ""
-	CurrValues := []
+	CurrValue	:= ""
+	CurrValues:= []
 	CurrValue := GetActualValue(itemModifiers.name_orig)
 	If (CurrValue ~= "\d+") {
 		
@@ -2323,7 +2447,25 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	Gui, SelectModsGui:Destroy    
 	Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values: 
 	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRangeMin "`% / " ValueRangeMax "`%" (lowered for non-unique items)
-	Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the (unique) item's mods difference between their min and max value as 100`%.			
+	Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the (unique) item's mods difference between their min and max value as 100`%.
+	
+	line :=
+	Loop, 500 {
+		line := line . "-"
+	}
+
+	If (advItem.isUnique) {
+		itemName := advItem.name
+		Gui, SelectModsGui:Add, Text, x0 w700 yp+13, %line%
+		Gui, SelectModsGui:Add, Text, x14 yp+15 cAF5F1C, %itemName%
+		If (advItem.isRelic) {
+			Gui, SelectModsGui:Add, Text, x+10 yp+0 cGreen, Relic
+		}
+		If (advItem.isCorrupted) {
+			Gui, SelectModsGui:Add, Text, x+10 yp+0 cD20000, (Corrupted)
+		}
+		Gui, SelectModsGui:Add, Text, x0 w700 yp+13 cc9cacd, %line%	
+	}
 	
 	ValueRangeMin := ValueRangeMin / 100 	
 	ValueRangeMax := ValueRangeMax / 100 	
@@ -2359,7 +2501,8 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	
 	boxRows := modCount * 3 + statCount * 3
 	
-	Gui, SelectModsGui:Add, Text, x14 y+10 w%modGroupBox%, Mods
+	modGroupYPos := advItem.isUnique ? 4 : 10
+	Gui, SelectModsGui:Add, Text, x14 y+%modGroupYPos% w%modGroupBox%, Mods
 	Gui, SelectModsGui:Add, Text, x+10 yp+0 w90, min
 	Gui, SelectModsGui:Add, Text, x+10 yp+0 w45, current
 	Gui, SelectModsGui:Add, Text, x+10 yp+0 w90, max
@@ -2518,7 +2661,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	If (ChangedImplicit) {
 		Gui, SelectModsGui:Add, Text, x0 w700 yp+18 cc9cacd, %line% 
 	}	
-	
+
 	;add mods	
 	l := 1
 	p := 1
@@ -2561,13 +2704,13 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		SetFormat, FloatFast, 5.2
 		ErrorMsg := 
 		If (advItem.IsUnique) {
-			modValues := TradeFunc_GetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)	
+			modValues := TradeFunc_GetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)
 		}
 		Else {
 			modValues := TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(advItem.mods[A_Index], advItem.mods[A_Index].param)	
 		}
 		If (modValues.Length() > 1) {
-			modValue := (modValues[1] + modValues[2]) / 2			
+			modValue := (modValues[1] + modValues[2]) / 2		
 		}
 		Else {
 			If (StrLen(modValues) > 10) {
@@ -2577,20 +2720,21 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			}
 			modValue := modValues[1]			
 		}	
-		
+
 		; calculate values to prefill min/max fields		
 		; assume the difference between the theoretical max and min value as 100%
 		If (advItem.mods[A_Index].ranges[1]) {
+		
 			modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMin)
-			modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMax)	
+			modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMax)
 		}
 		Else {
 			modValueMin := modValue - (modValue * valueRangeMin)
 			modValueMax := modValue + (modValue * valueRangeMax)
 		}		
-		; floor values only If greater than 2, in case of leech/regen mods
-		modValueMin := (modValueMin > 2) ? Floor(modValueMin) : modValueMin
-		modValueMax := (modValueMax > 2) ? Floor(modValueMax) : modValueMax
+		; floor values only if greater than 2, in case of leech/regen mods, use Abs() to support negative numbers
+		modValueMin := (Abs(modValueMin) > 2) ? Floor(modValueMin) : modValueMin
+		modValueMax := (Abs(modValueMax) > 2) ? Floor(modValueMax) : modValueMax
 		
 		; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
 		If (advItem.mods[A_Index].ranges[1]) {

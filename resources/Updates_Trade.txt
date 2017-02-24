@@ -3,7 +3,7 @@ The following is a list of what has been updated, starting with 1.1.0
 2.0.0
 ================================================================================================
 Added an auto-update function (Button on update window).
-	Added options to skip folder selection and backuping up the install location when updating. 
+	Added options to skip folder selection and backing up the install location when updating. 
 Improved the update window.
 Moved config files and AdditionalMacros.txt to <WindowsUserFolder\Documents\PoE-TradeMacro\> (depends on OS Version).
 	These files are only overwritten by script updates if they have to be (and backed up).
@@ -12,6 +12,9 @@ Moved config files and AdditionalMacros.txt to <WindowsUserFolder\Documents\PoE-
 	More details can be found on the Github Wiki FAQ page.
 Renamed macro start scripts.
 Added reload script menu entry (system tray) because the default one won't work.
+Fixed an issue with negative mod values and the advanced search GUI (Ventors Gamble for example).
+Legacy League (2.6) support, subject to testing/changes.
+Added support for multiple implicit mods to ItemInfo and TradeMacro (Talismans for example).
 
 1.7.3
 ================================================================================================

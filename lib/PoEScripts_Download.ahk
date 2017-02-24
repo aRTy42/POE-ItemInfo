@@ -10,7 +10,7 @@
 		critical	= exit macro if download fails
 		binaryDL	= file download (zip for example)
 	*/
-	
+
 	e := {}
 	Try {
 		WinHttpRequest(url, ioData, ioHdr, options, Out_Headers_Obj)
@@ -23,8 +23,10 @@
 		; Use fallback download if WinHttpRequest fails
 		If ((StrLen(html) < 1 or not html or e.what) and useFallback) {
 			DownloadFallback(url, html, e)
-		} Else If ((StrLen(html) < 1 or not html or e.what)) {
+		} Else If ((StrLen(html) < 1 or not html) and e.what) {
 			ThrowError(e)
+		} Else If ((StrLen(html) < 1 or not html)) {
+			
 		}
 	}
 	; handle binary file downloads

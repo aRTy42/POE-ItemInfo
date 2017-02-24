@@ -25,6 +25,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 		(LTrim
 			Charset: UTF-8
 			Codepage: 65001
+			Method: GET
 		)
 	
 	Try  {
@@ -457,6 +458,7 @@ DownloadRelease(url, project, ByRef savePath) {
 			Charset: UTF-8
 			Codepage: 65001
 			SaveAs: %savePath%
+			Method: GET
 		)	
 	response := PoEScripts_Download(url, ioData := postData, ioHdr := reqHeaders, options, true, true, true)
 	SplashTextOff
