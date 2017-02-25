@@ -3983,9 +3983,13 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				ValueRange := LookupAffixData("data\ToMaxESHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
+			Else If (ItemSubType == "Shield")
+			{
+				ValueRange := LookupAffixData("data\ToMaxESShield.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
 			Else
 			{
-				ValueRange := LookupAffixData("data\ToMaxESArmourandShield.txt", ItemLevel, CurrValue, "", CurrTier)
+				ValueRange := LookupAffixData("data\ToMaxESArmour.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
 			NumPrefixes += 1
