@@ -11,12 +11,12 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 	If (ShowUpdateNotification = 0) {
 		return
 	}
-	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	url := "https://api.github.com/repos/" . user . "/" . repo . "/releases"
-	downloadUrl := "https://github.com/" . user . "/" . repo . "/releases"
-	html := ""
+	HttpObj		:= ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	url			:= "https://api.github.com/repos/" . user . "/" . repo . "/releases"
+	downloadUrl	:= "https://github.com/" . user . "/" . repo . "/releases"
+	html			:= ""
 	
-	postData := ""
+	postData		:= ""
 	reqHeaders =
 		(LTrim
 			Content-type: application/html
@@ -29,14 +29,21 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 		)
 	
 	Try  {
-		html := PoEScripts_Download(url, ioData := postData, ioHdr := reqHeaders, options, true, true)
-
-		parsedJSON := JSON.Load(html)
-		LatestRelease := {}
-		LastXReleases := []
-		updateNotes := ""
+		errorMsg	:= "Update check failed. Please check manually on the Github page for updates.`nThe script will now continue."
+		html 	:= PoEScripts_Download(url, ioData := postData, ioHdr := reqHeaders, options, true, false, false, errorMsg)
+		
+		If (StrLen(html) < 1) {	
+			; all download errors should have been catched and handled by the download functions
+			; exit the update check to skip all additional error handling
+			return
+		}	
+		
+		parsedJSON	:= JSON.Load(html)
+		LatestRelease	:= {}
+		LastXReleases	:= []
+		updateNotes	:= ""
 		i := 0
-		showReleases  := 5
+		showReleases	:= 5
 		For key, val in parsedJSON {
 			i++
 			If (i <= showReleases) {
@@ -125,7 +132,8 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 			Return s
 		}
 	} Catch e {
-		MsgBox,,, % "Update-Check failed, Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
+		SplashTextOff
+		MsgBox,,, % "Update-Check failed, Exception thrown!`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
 	}
 	
 	Return

@@ -1425,7 +1425,7 @@ AssembleValueRangeFields(BracketRange, BracketLevel, MaxRange="", MaxLevel=0)
 	return FinalRange
 }
 
-ParseRarity(ItemData_NamePlate)
+ParseRarity(ItemData_NamePlate, ByRef Variation = "")
 {
 	Loop, Parse, ItemData_NamePlate, `n, `r
 	{
@@ -1436,6 +1436,12 @@ ParseRarity(ItemData_NamePlate)
 			Break
 		}
 	}
+	; parse item variations like relics (variation of it's unique counterpart)
+	; subject to changes
+	If (RegExMatch(ItemData_NamePlate, "i)Variation\s?+:\s?+(.*)", match)) {
+		Variation := match1
+	}
+	
 	return RarityParts%RarityParts%2
 }
 
@@ -3977,9 +3983,13 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				ValueRange := LookupAffixData("data\ToMaxESHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
+			Else If (ItemSubType == "Shield")
+			{
+				ValueRange := LookupAffixData("data\ToMaxESShield.txt", ItemLevel, CurrValue, "", CurrTier)
+			}
 			Else
 			{
-				ValueRange := LookupAffixData("data\ToMaxESArmourandShield.txt", ItemLevel, CurrValue, "", CurrTier)
+				ValueRange := LookupAffixData("data\ToMaxESArmour.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
 			NumPrefixes += 1
@@ -6412,6 +6422,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	BaseLevel =
 	RarityLevel =
 	TempResult =
+	Variation =
 
 	Item.Init()
 	ItemData.Init()
@@ -6470,7 +6481,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
 	; This function should return the second part of the "Rarity: ..." line
 	; in the case of "Rarity: Unique" it should return "Unique"
-	ItemData.Rarity	:= ParseRarity(ItemData.NamePlate)
+	ItemData.Rarity	:= ParseRarity(ItemData.NamePlate, Variation)
 
 	ItemData.Links		:= ParseLinks(ItemDataText)
 	ItemData.Sockets	:= ParseSockets(ItemDataText)
@@ -6569,7 +6580,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
 	Item.Note			:= Globals.Get("ItemNote")	
 	If (RarityLevel = 4) {
-		Item.IsRelic	:= false ; add parsing/comparison here
+		Item.IsRelic	:= RegExMatch(Variant, "i)relic")
 	}
 
 	TempStr := ItemData.PartsLast
@@ -6634,6 +6645,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		ParseAffixes(ItemData.Affixes, Item)
 	}
+
 	NumPrefixes	:= AffixTotals.NumPrefixes
 	NumSuffixes	:= AffixTotals.NumSuffixes
 	TotalAffixes	:= NumPrefixes + NumSuffixes
@@ -6671,7 +6683,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			;;Item.BaseLevel := CheckBaseLevel(Item.TypeName)
 
 			;;Hixxie: fixed! Shows base level for any item rarity, rings/jewelry, etc
-			If(Item.RarityLevel < 3)
+			If (Item.RarityLevel < 3)
 			{
 				Item.BaseLevel := CheckBaseLevel(Item.Name)
 			}
@@ -6714,15 +6726,15 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			Item.MaxSockets := 2
 		}
 
-		If(Item.IsFourSocket and Item.MaxSockets > 4)
+		If (Item.IsFourSocket and Item.MaxSockets > 4)
 		{
 			Item.MaxSockets := 4
 		}
-		Else If(Item.IsThreeSocket and Item.MaxSockets > 3)
+		Else If (Item.IsThreeSocket and Item.MaxSockets > 3)
 		{
 			Item.MaxSockets := 3
 		}
-		Else If(Item.IsSingleSocket)
+		Else If (Item.IsSingleSocket)
 		{
 			Item.MaxSockets := 1
 		}
@@ -6793,7 +6805,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	If (RarityLevel > 1 and RarityLevel < 4)
 	{
 		; Append affix info if rarity is greater than normal (white)
-		; Affix total statistic
+		; Affix total statistic		
 		If (Opts.ShowAffixTotals = 1)
 		{
 			If (NumPrefixes = 1)
@@ -8685,7 +8697,6 @@ OnClipBoardChange:
 			{
 				ParseClipBoardChanges()
 			}
-			ParseClipBoardChanges()
 		}
 		Else
 		{

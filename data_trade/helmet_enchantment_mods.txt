@@ -8,6 +8,9 @@ Ancestral Protector Totem deals #% increased Damage
 #% increased Ancestral Warchief Totem Damage
 Ancestral Warchief Totem grants #% increased Melee Damage while Active
 #% increased Ancestral Warchief Totem Radius
+Ancestral Blademaster Totem grants #% of Physical Damage as Extra Fire Damage while Active
+#% increased Ancestral Blademaster Totem Damage
+#% increased Ancestral Blademaster Totem Radius
 #% reduced Anger Mana Reservation
 Animated Guardians deal #% increased Damage
 +#% to Animated Guardian Elemental Resistances
@@ -306,6 +309,7 @@ Righteous Fire grants #% increased Spell Damage
 #% increased Searing Bond Totem Placement Speed
 #% increased Shield Charge Attack Speed
 #% increased Shield Charge Damage
+#% increased Shield Charge Damage per Enemy Hit
 #% increased Shock Nova Damage
 Shock Nova ring deals #% increased Damage
 #% increased Shock Nova Radius

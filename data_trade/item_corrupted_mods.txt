@@ -1,6 +1,5 @@
 
 Adds # to # Chaos Damage to Attacks
-Adds # Chaos Damage to Attacks
 #% increased Radius of Area Skills
 Adds an additional Arrow
 Enemies can have # additional Curse
@@ -52,7 +51,7 @@ Grants level # Hatred Skill
 #% increased Skill Effect Duration
 #% increased Life Leeched per second per equipped Corrupted Item
 #% of Lightning Damage Leeched as Life
-Adds # Chaos Damage
+Adds # to # Chaos Damage
 +# to Weapon range
 #% increased Mana Leeched per second per equipped Corrupted Item
 +# Mana gained for each Enemy hit by your Attacks

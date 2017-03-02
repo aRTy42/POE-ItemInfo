@@ -12,5 +12,5 @@ Regenerate #% of Life and Mana per second if you were Hit Recently
 Adds # to # Lightning Damage if you haven't Killed Recently
 #% reduced Mana Cost of Skills if you've been Hit Recently
 #% increased Movement Speed if you haven't been Hit Recently
-#% chance to Dodge Spell Damage if you'vetaken Spell Damage Recently
+#% chance to Dodge Spell Damage if you've taken Spell Damage Recently
 #% chance to Avoid being Stunned if you've Killed Recently

@@ -162,9 +162,11 @@ Sleep, 100
 SkipItemInfoUpdateCall := 1
 firstUpdateCheck := true
 TradeFunc_ScriptUpdate()
+
 firstUpdateCheck := false
 
 TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
+TradeFunc_SetLeagueIfSelectedIsInactive()
 SearchLeague := (StrLen(TradeOpts.SearchLeague) > 0) ? TradeOpts.SearchLeague : TradeGlobals.Get("DefaultLeague")
 TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[SearchLeague])
 
@@ -174,6 +176,7 @@ If (TradeOpts.AlternativeCurrencySearch) {
 TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
 TradeGlobals.Set("VariableRelicData",  TradeRelicData)
 TradeGlobals.Set("ModsData", TradeModsData)
+
 TradeGlobals.Set("CraftingData", TradeFunc_ReadCraftingBases())
 TradeGlobals.Set("EnchantmentData", TradeFunc_ReadEnchantments())
 TradeGlobals.Set("CorruptedModsData", TradeFunc_ReadCorruptions())
@@ -515,6 +518,7 @@ TradeFunc_SetLeagueIfSelectedIsInactive()
 {	
 	; Check If league from Ini is set to an inactive league and change it to the corresponding active one, for example tmpstandard to standard	
 	If (InStr(TradeOpts.SearchLeague, "tmp") && TradeGlobals.Get("TempLeagueIsRunning") = 0) {
+		
 		If (InStr(TradeOpts.SearchLeague, "standard")) {
 			TradeOpts.SearchLeague := "standard"
 		}
