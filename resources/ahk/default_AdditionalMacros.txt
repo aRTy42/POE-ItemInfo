@@ -1,5 +1,5 @@
    Pause::TogglePOEItemScript()		;pause item parsing with the pause key (other macros remain). key bind enabled by default.
-;   #D::WinMinimize, A				;Winkey+D minimizes the active PoE window (PoE stays minimized this way)
+   #D::WinMinimize, A				;Winkey+D minimizes the active PoE window (PoE stays minimized this way)
 ;   ^Escape::CloseScripts()			;Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
   
 

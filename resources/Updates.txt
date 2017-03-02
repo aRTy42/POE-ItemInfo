@@ -1,6 +1,30 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.5.06
+================================
+from Eruyome, 4GForce, aRTy42
+
+New features: Auto-updater and global user settings. (by Eruyome)
+	The update notification window now comes with a button "update". This feature allows the script to download the new files
+		from GitHub and extract them to a folder of your choosing. In the right click menu "PoE Item Info Settings" you can tick
+		options to skip the folder selection (and thus always using the default generic folder "POE-ItemInfo") aswell as
+		not creating and asking about a backup folder (which occurs when overwriting an existing folder with the update).
+		If you are not interested in keeping old versions and basically want the update with ask few clicks as possible,
+		you probably want to tick both options.
+	Global user settings means that the script no longer stores its config files and the AdditionalMacros file in the script folder
+		itself, but instead creates and uses files at "<MyDocuments>\PoE-ItemInfo\". This means that the script will no longer
+		overwrite your settings and AdditionalMacro file with the defaults with every update. By using file hashes the updater will
+		detect when an update introduced changes to the defaults and only then update the user files. In that case your former
+		user files will also be backed up in that case so you can easily copy modifications into the new file again if you want to.
+
+Made several fixes and changes to pseudo-mods. (by 4GForce and Eruyome)
+Added a new default command to the AdditionalMacros: Winkey+D will now minimize PoE to the taskbar. Contrary to tabbing out or similar
+	commands this will make PoE stay minimized while using other windows, instead of having it pop-up again behind them.
+Fixed the tiers for the flat ES mod for shields. The legacy tier "136-145" was still being used as T1, which is now fixed so
+	that "107-135" is considered T1.
+Made some adjustments to the handling of Implicits. (by Eruyome)
+	
 2.5.05
 ================================
 from aRTy42, Eruyome, 4GForce
