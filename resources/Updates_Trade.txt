@@ -13,7 +13,7 @@ Moved config files and AdditionalMacros.txt to <WindowsUserFolder\Documents\PoE-
 Renamed macro start scripts.
 Added reload script menu entry (system tray) because the default one won't work.
 Fixed an issue with negative mod values and the advanced search GUI (Ventors Gamble for example).
-Legacy League (2.6) support, subject to testing/changes.
+Legacy League (2.6) support, subject to testing/changes when the league has started.
 Added support for multiple implicit mods to ItemInfo and TradeMacro (Talismans for example).
 
 1.7.3
