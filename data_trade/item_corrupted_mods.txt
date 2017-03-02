@@ -1,0 +1,99 @@
+
+Adds # to # Chaos Damage to Attacks
+#% increased Radius of Area Skills
+Adds an additional Arrow
+Enemies can have # additional Curse
+Can have up to # additional Trap placed at a time
+Grants level # Anger Skill
+#% increased Attack Speed
+#% chance to Avoid being Shocked
+#% Chance to Block
+You can catch Corrupted Fish
+Cannot be Knocked Back
+Enemies Cannot Leech Life From You
+#% increased Cast Speed
+#% chance to Avoid being Frozen
+#% chance to Avoid being Ignited
+#% additional Chance to receive a Critical Strike
+#% chance to Dodge Attacks
+#% chance to Cause Monsters to Flee
+#% increased Chaos Damage per equipped Corrupted Item
++#% to Chaos Resistance
+Grants level # Clarity Skill
+#% of Cold Damage Leeched as Life
+Grants level # Conductivity Skill
+Grants level # Assassin's Mark Skill
+Culling Strike
+Curse Enemies with level # Elemental Weakness on Hit
+Curse Enemies with level # Temporal Chains on Hit
+Curse Enemies with level # Vulnerability on Hit
+#% of Physical Damage Converted to Cold Damage
+#% of Physical Damage Converted to Fire Damage
+#% of Physical Damage Converted to Lightning Damage
+-# Physical Damage taken from Attacks
+When Hit, #% of Damage is taken from Mana before Life
+#% increased Damage while Dead
+Grants level # Determination Skill
+Grants level # Discipline Skill
+#% additional Block Chance while Dual Wielding
+Grants level # Elemental Weakness Skill
+#% of Fire Damage Leeched as Life
+#% increased Quantity of Fish Caught
+#% increased Rarity of Fish Caught
+Grants level # Flammability Skill
+Grants level # Frostbite Skill
++# to Level of Socketed Gems
+#% chance of Projectiles Piercing
+Grants level # Grace Skill
+Grants level # Haste Skill
+Grants level # Hatred Skill
+#% increased Endurance, Frenzy and Power Charge Duration
+#% increased Skill Effect Duration
+#% increased Life Leeched per second per equipped Corrupted Item
+#% of Lightning Damage Leeched as Life
+Adds # to # Chaos Damage
++# to Weapon range
+#% increased Mana Leeched per second per equipped Corrupted Item
++# Mana gained for each Enemy hit by your Attacks
+#% of Damage taken gained as Mana when Hit
++# to Maximum Frenzy Charges
++# to Maximum Power Charges
++# to Maximum Endurance Charges
++#% to all maximum Resistances
+Minions deal #% increased Damage
+#% increased Movement Speed
+#% chance of Arrows Piercing
+Grants level # Projectile Weakness Skill
+Grants level # Purity of Ice Skill
+Grants level # Purity of Fire Skill
+Grants level # Purity of Lightning Skill
+Grants level # Purity of Elements Skill
+#% reduced Character Size
+#% reduced Chill Duration on You
+#% reduced Freeze Duration on You
+#% reduced Ignite Duration on You
+#% reduced Shock Duration on You
+You cannot be Cursed with Silence
+Socketed Skill Gems get a #% Mana Multiplier
++# to Level of Socketed Vaal Gems
+#% Chance to Block Spells
+Socketed Gems are supported by level # Additional Accuracy
+Socketed Gems are Supported by level # Added Fire Damage
+Socketed Gems are Supported by level # Increased Area of Effect
+Socketed Gems are supported by level # Cast On Crit
+Socketed Gems are supported by level # Cast when Stunned
+Socketed Gems are supported by level # Increased Critical Damage
+Socketed Gems are Supported by level # Elemental Proliferation
+Socketed Gems are Supported by Level # Faster Casting
+Socketed Gems are supported by level # Fork
+Socketed Gems are supported by level # Life Leech
+Socketed Gems are supported by level # Melee Splash
+Socketed Gems are supported by level # Multistrike
+Socketed Gems are supported by level # Stun
+Socketed Gems are supported by level # Weapon Elemental Damage
+Grants level # Temporal Chains Skill
+#% increased Vaal Skill Damage
+Grants level # Vitality Skill
+Grants level # Vulnerability Skill
+#% increased Elemental Damage with Weapons
+Grants level # Wrath Skill

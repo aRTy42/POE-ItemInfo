@@ -1,0 +1,399 @@
+
+#% increased Abyssal Cry Damage
+#% increased Abyssal Cry Duration
+Ancestral Protector Totem grants #% increased Attack Speed while Active
+Ancestral Protector Totem deals #% increased Damage
++#% to Ancestral Protector Totem Elemental Resistances
+#% increased Ancestral Protector Totem Placement Speed
+#% increased Ancestral Warchief Totem Damage
+Ancestral Warchief Totem grants #% increased Melee Damage while Active
+#% increased Ancestral Warchief Totem Radius
+Ancestral Blademaster Totem grants #% of Physical Damage as Extra Fire Damage while Active
+#% increased Ancestral Blademaster Totem Damage
+#% increased Ancestral Blademaster Totem Radius
+#% reduced Anger Mana Reservation
+Animated Guardians deal #% increased Damage
++#% to Animated Guardian Elemental Resistances
+#% chance to create an additional Animate Weapon copy
+Animated Weapons deal #% increased Damage
+#% increased Animate Weapon Duration
+#% increased Arc Damage
+Arc Chains an additional # times
+Arc has +#% chance to Shock
+#% increased Arctic Armour Buff Effect
+#% reduced Arctic Armour Mana Reservation
+#% increased Arctic Breath Damage
+#% increased Arctic Breath Duration
+#% increased Arctic Breath Radius
+#% increased Assassin's Mark Curse Effect
+#% increased Assassin's Mark Duration
+#% increased Ball Lightning Damage
+#% reduced Ball Lightning Projectile Speed
+#% increased Ball Lightning Radius
+#% increased Barrage Attack Speed
+#% increased Barrage Damage
+# additional Barrage Projectile
+# additional Barrage Projectiles
+#% increased Bear Trap Cooldown Recovery Speed
+#% increased Bear Trap Damage
+#% increased Blade Vortex Damage
+#% increased Blade Vortex Duration
+#% increased Blade Vortex Radius
+#% increased Bladefall Critical Strike Chance
+#% increased Bladefall Damage
+#% increased Bladefall Radius
+Blast Rain has a #% chance for an additional blast
+#% increased Blast Rain Damage
+#% increased Blast Rain Radius
+#% increased Blight Damage
+#% increased Blight Radius
+#% increased Secondary Blight Effect Duration
+Blink Arrow and Blink Arrow Clones have #% increased Attack Speed
+#% increased Blink Arrow Cooldown Recovery Speed
+Blink Arrow and Blink Arrow Clones have #% increased Damage
+Blood Rage grants additional #% increased Attack Speed
+Blood Rage grants additional #% chance to gain a Frenzy Charge on Kill
+Bone Offering grants an additional +#% Block Chance
+#% increased Bone Offering Duration
+#% increased Burning Arrow Damage
+Burning Arrow has +#% chance to Ignite
+#% of Burning Arrow Physical Damage gained as Extra Fire Damage
+#% increased Caustic Arrow Damage
+#% increased Caustic Arrow Duration
+#% increased Caustic Arrow Radius
++#% to Chaos Golem Elemental Resistances
+#% increased Effect of the Buff granted by your Chaos Golems
+#% increased Blade Flurry Damage
+#% chance to Dodge Attacks at Maximum Blade Flurry stages
+#% increased Blade Flurry Radius
+#% reduced Clarity Mana Reservation
+#% increased Cleave Attack Speed
+#% increased Cleave Damage
+#% increased Cleave Radius
+#% increased Cold Snap Cooldown Recovery Speed
+#% increased Cold Snap Damage
+#% increased Cold Snap Radius
+#% increased Conductivity Curse Effect
+#% increased Conductivity Duration
+#% increased Contagion Damage
+#% increased Contagion Duration
+#% increased Contagion Radius
+#% increased Conversion Trap Cooldown Recovery Speed
+Converted Enemies have #% increased Damage
+#% increased Convocation Cooldown Recovery Speed
+#% increased Convocation Buff Effect
+#% increased Cyclone Attack Speed
+#% increased Cyclone Damage
+#% increased Decoy Totem Life
+#% increased Decoy Totem Radius
+Desecrate summons # additional corpses
+#% increased Desecrate Cooldown Recovery Speed
+#% reduced Determination Mana Reservation
+#% increased Detonate Dead Damage
+Detonate Dead has a #% chance to detonate an additional Corpse
+#% increased Detonate Dead Radius
+#% increased Devouring Totem Leech per second
+#% increased Chance to consume an additional Corpse with Devouring Totem
+#% chance for Discharge not to consume Charges
+#% increased Discharge Damage
+#% increased Discharge Radius
+#% reduced Discipline Mana Reservation
+#% increased Dominating Blow Damage
+#% increased Dominating Blow Duration
+Dominated Minions deal #% increased Damage
+#% increased Lacerate Critical Strike Chance
+#% increased Lacerate Damage
+#% increased Lacerate Radius
+#% increased Double Strike Attack Speed
+#% increased Double Strike Critical Strike Chance
+#% increased Double Strike Damage
+#% increased Dual Strike Attack Speed
+#% increased Dual Strike Critical Strike Chance
+#% increased Dual Strike Damage
+#% increased Earthquake Damage
+#% reduced Earthquake Duration
+#% increased Earthquake Radius
+#% increased Elemental Hit Attack Speed
+Elemental Hit has +#% chance to Freeze, Shock and Ignite
+#% increased Elemental Hit Damage
+#% increased Elemental Weakness Curse Effect
+#% increased Elemental Weakness Duration
+#% increased Enduring Cry Cooldown Recovery Speed
+#% increased Enduring Cry Buff Effect
+#% increased Enfeeble Curse Effect
+#% increased Enfeeble Duration
+#% increased Essence Drain Damage
+#% increased Essence Drain Duration
+#% increased Ethereal Knives Damage
+#% increased Ethereal Knives Projectile Speed
+#% increased Explosive Arrow Attack Speed
+#% increased Explosive Arrow Damage
+#% increased Explosive Arrow Radius
+#% increased Scorching Ray Cast Speed
+#% increased Scorching Ray Damage
+#% increased Scorching Ray beam length
+#% increased Fire Nova Cast Speed
+#% increased Fire Nova Mine Damage
+Fire Nova Mine repeats an additional # times
+#% increased Firestorm Damage
+#% increased Fire Trap Burning Damage
+#% increased Fire Trap Cooldown Recovery Speed
+#% increased Fire Trap Damage
+#% increased Fireball Cast Speed
+#% increased Fireball Damage
+Fireball has +#% chance to Ignite
+#% increased Firestorm Duration
+#% increased Firestorm explosion Area of Effect
+#% increased Flame Dash Cooldown Recovery Speed
+#% increased Flame Dash Damage
++#% to increased Flame Golem Elemental Resistances
+#% increased Effect of the Buff granted by your Flame Golems
+#% increased Flame Surge Critical Strike Chance
+#% increased Flame Surge Damage
+#% increased Flame Surge Damage against Burning Enemies
+#% increased Flame Totem Damage
+# additional Flame Totem Projectile
+# additional Flame Totem Projectiles
+#% increased Flame Totem Projectile Speed
+#% increased Flameblast Critical Strike Chance
+#% increased Flameblast Damage
+#% increased Flameblast Radius
+#% increased Flammability Curse Effect
+#% increased Flammability Duration
+Flesh Offering grants an additional #% increased Attack Speed
+#% increased Flesh Offering Duration
+#% increased Flicker Strike Cooldown Recovery Speed
+#% increased Flicker Strike Damage
+#% increased Flicker Strike Damage per Frenzy Charge
+Freeze Mine causes Enemies to lose an additional #% Cold Resistance while Frozen
+#% increased Freeze Mine Radius
+#% increased Freezing Pulse Cast Speed
+#% increased Freezing Pulse Damage
+#% increased Freezing Pulse Projectile Speed
+#% increased Frenzy Damage
+#% increased Frenzy Damage per Frenzy Charge
+#% Chance on Frenzy to gain an additional Frenzy Charge
+#% increased Frost Blades Damage
+#% increased Frost Blades Projectile Speed
+#% increased Frostbolt Cast Speed
+#% increased Frostbolt Damage
+Frostbolt has +#% chance to Freeze
+#% increased Frost Bomb Cooldown Recovery Speed
+#% increased Frost Bomb Damage
+#% increased Frost Bomb Radius
+#% increased Frost Wall Cooldown Recovery Speed
+#% increased Frost Wall Duration
+#% increased Frostbite Curse Effect
+#% increased Frostbite Duration
+#% increased Glacial Cascade Damage
+#% of Glacial Cascade Physical Damage converted to Cold Damage
+#% increased Glacial Cascade Radius
+#% increased Glacial Hammer Damage
+Glacial Hammer has +#% chance to Freeze
+#% of Glacial Hammer Physical Damage gained as Extra Cold Damage
+#% reduced Grace Mana Reservation
+Ground Slam has a #% increased angle
+#% increased Ground Slam Damage
+#% increased Ground Slam Radius
+#% reduced Haste Mana Reservation
+#% reduced Hatred Mana Reservation
+#% increased Heavy Strike Attack Speed
+#% increased Heavy Strike Damage
+Heavy Strike has a #% chance to deal Double Damage
+#% increased Herald of Ash Damage
+#% reduced Herald of Ash Mana Reservation
+#% increased Herald of Ice Damage
+#% reduced Herald of Ice Mana Reservation
+#% increased Herald of Thunder Damage
+#% reduced Herald of Thunder Mana Reservation
+#% increased Ice Crash Damage
+#% of Ice Crash Physical Damage gained as Extra Cold Damage
+#% increased Ice Crash Radius
++#% to Ice Golem Elemental Resistances
+#% increased Effect of the Buff granted by your Ice Golems
+#% increased Ice Nova Damage
+Ice Nova has +#% chance to Freeze
+#% increased Ice Nova Radius
+#% increased Ice Shot Damage
+#% increased Ice Shot Duration
+#% increased Ice Shot Radius
+#% increased Ice Spear Damage
+#% Chance to gain a Power Charge on Critical Strike with Ice Spear
+#% increased Ice Spear Critical Strike Chance in second form
+#% increased Ice Trap Cooldown Recovery Speed
+#% increased Ice Trap Damage
+#% increased Ice Trap Radius
+#% increased Immortal Call Duration
+#% chance for Immortal Call to not consume Endurance Charges
+#% increased Incinerate Damage
+#% increased Incinerate Damage for each stage
+#% increased Incinerate Projectile Speed
+#% increased Infernal Blow Damage
+#% of Infernal Blow Physical Damage gained as Extra Fire Damage
+#% increased Infernal Blow Radius
+#% increased Kinetic Blast Damage
+Kinetic Blast has a #% chance for an additional explosion
+#% increased Kinetic Blast Radius
+#% increased Leap Slam Attack Speed
+#% increased Leap Slam Damage
+#% increased Leap Slam Radius
+#% increased Lightning Arrow Damage
+Lightning Arrow hits an additional Enemy
+Lightning Arrow hits # additional Enemies
+#% increased Lightning Arrow Radius
++#% to Lightning Golem Elemental Resistances
+#% increased Effect of the Buff granted by your Lightning Golems
+#% increased Lightning Strike Damage
+# additional Lightning Strike Projectiles
++#% to Lightning Strike Pierce Chance
+#% increased Lightning Tendrils Critical Strike Chance
+#% increased Lightning Tendrils Damage
+#% increased Lightning Tendrils Radius
+#% increased Lightning Trap Cooldown Recovery Speed
+#% increased Lightning Trap Damage
++#% Lightning Trap Pierce Chance
+#% increased Lightning Warp Cast Speed
+#% increased Lightning Warp Damage
+#% reduced Lightning Warp Duration
+#% increased Magma Orb Damage
+Magma Orb Chains an additional time
+Magma Orb Chains an additional # times
+#% increased Magma Orb Radius
+Mirror Arrow and Mirror Arrow Clones have #% increased Attack Speed
+#% increased Mirror Arrow Cooldown Recovery Speed
+Mirror Arrow and Mirror Arrow Clones deal #% increased Damage
+#% increased Molten Shell Buff Effect
+#% increased Molten Shell Damage
+#% increased Molten Strike Damage
+# additional Molten Strike Projectiles
+#% increased Molten Strike Radius
+#% increased Orb of Storms Damage
+#% increased Phase Run Duration
+#% chance for Phase Run to not consume Frenzy Charges
+#% increased Poacher's Mark Curse Effect
+#% increased Poacher's Mark Duration
+#% increased Power Siphon Attack Speed
+#% increased Power Siphon Damage
+#% Chance to gain an additional Power Charge on Kill with Power Siphon
+#% increased Projectile Weakness Curse Effect
+#% increased Projectile Weakness Duration
+#% increased Puncture Damage
+#% increased Puncture Duration
+#% Chance for Puncture to Maim on hit
+#% increased Punishment Curse Effect
+#% increased Punishment Duration
+#% reduced Purity of Elements Mana Reservation
+#% reduced Purity of Fire Mana Reservation
+#% reduced Purity of Ice Mana Reservation
+#% reduced Purity of Lightning Mana Reservation
+#% increased Rain of Arrows Attack Speed
+#% increased Rain of Arrows Damage
+#% increased Rain of Arrows Radius
+Spectres have #% increased Damage
+Zombies deal #% increased Damage
+#% increased Rallying Cry Buff Effect
+#% increased Rallying Cry Duration
+#% increased Reave Damage
+#% increased Reave Radius
+#% increased Reckoning Cooldown Recovery Speed
+#% increased Reckoning Damage
+#% increased Rejuvenation Totem Aura Effect
+#% of Rejuvenation Totem Life Regeneration added as Mana Regeneration
+#% increased Righteous Fire Damage
+#% increased Righteous Fire Radius
+Righteous Fire grants #% increased Spell Damage
+#% increased Riposte Cooldown Recovery Speed
+#% increased Riposte Damage
+#% increased Searing Bond Damage
+#% increased Searing Bond Totem Elemental Resistances
+#% increased Searing Bond Totem Placement Speed
+#% increased Shield Charge Attack Speed
+#% increased Shield Charge Damage
+#% increased Shield Charge Damage per Enemy Hit
+#% increased Shock Nova Damage
+Shock Nova ring deals #% increased Damage
+#% increased Shock Nova Radius
+#% increased Shockwave Totem Cast Speed
+#% increased Shockwave Totem Damage
+#% increased Shockwave Totem Radius
+#% increased Shrapnel Shot Damage
+#% of Shrapnel Shot Physical damage added as Lightning Damage
+#% increased Shrapnel Shot Radius
+#% increased Siege Ballista Attack Speed
+#% increased Siege Ballista Damage
+#% increased Siege Ballista Totem Placement Speed
+#% increased Smoke Mine Duration
+Smoke Mine grants additional #% increased Movement Speed
+#% increased Spark Damage
+# additional Spark Projectiles
+#% increased Spark Projectile Speed
+#% increased Spectral Throw Damage
+#% reduced Spectral Throw Projectile Deceleration
+#% increased Spectral Throw Projectile Speed
+Spectres have #% increased Attack and Cast Speed
++#% to Raised Spectre Elemental Resistances
+#% increased Spirit Offering Duration
+Spirit Offering grants +#% of Physical Damage as Extra Chaos Damage
+#% increased Split Arrow Critical Strike Chance
+#% increased Split Arrow Damage
+# additional Split Arrow Projectiles
+#% increased Static Strike Damage
+#% reduced Static Strike Duration
+#% increased Static Strike Radius
++#% to Stone Golem Elemental Resistances
+#% increased Effect of the Buff granted by your Stone Golems
+#% increased Storm Call Damage
+#% reduced Storm Call Duration
+#% increased Storm Call Radius
+#% increased Orb of Storms Critical Strike Chance
+#% increased Orb of Storms Radius
+Flame Golems have #% increased Damage
+Ice Golems deal #% increased Damage
+Lightning Golems deal #% increased Damage
+Raging Spirits have #% increased Damage
+Skeletons deal #% increased Damage
+Summon # additional Skeleton Warrior with Summon Skeletons
+Summon # additional Skeleton Warriors with Summon Skeletons
+Stone Golems deal #% increased Damage
+Summon Raging Spirit has #% chance to summon an extra Minion
+#% increased Summon Raging Spirit Duration
+Chaos Golems deal #% increased Damage
+#% increased Sunder Attack Speed
+#% increased Sunder Damage
+#% increased Sunder Radius
+#% increased Sweep Damage
++#% Sweep Knockback Chance
+#% increased Sweep Radius
+#% increased Tempest Shield Damage
+Tempest Shield chains an additional # times
+#% increased Temporal Chains Curse Effect
+#% increased Temporal Chains Duration
+#% increased Tornado Shot Critical Strike Chance
+#% increased Tornado Shot Damage
+# secondary Tornado Shot Projectile
+# secondary Tornado Shot Projectiles
+#% increased Vengeance Cooldown Recovery Speed
+#% increased Vengeance Damage
+#% increased Vigilant Strike Damage
+#% increased Vigilant Strike Fortify Duration
+#% increased Viper Strike Critical Strike Chance
+#% increased Viper Strike Damage
+#% increased Viper Strike Duration
+#% reduced Vitality Mana Reservation
+#% increased Vortex Damage
+#% increased Vortex Duration
+#% increased Vortex Radius
+#% increased Vulnerability Curse Effect
+#% increased Vulnerability Duration
+#% increased Warlord's Mark Curse Effect
+#% increased Warlord's Mark Duration
+#% increased Whirling Blades Attack Speed
+#% increased Whirling Blades Damage
+#% increased Wild Strike Damage
+Wild Strike Chains an additional # times
+#% increased Wild Strike Radius
+#% increased Wither Duration
+#% increased Wither Radius
+#% reduced Wrath Mana Reservation
+Zombies have #% increased Attack Speed
++#% to Raised Zombie Elemental Resistances

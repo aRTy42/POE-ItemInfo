@@ -1,72 +1,64 @@
-Introduction
-------------
+[Discord](https://discord.gg/taKZqWw)   
 
-**PoE Item Info** is a heavily extended version of the PoE Item Level and DPS Revealer script.
+Welcome to POE-TradeMacro!
 
-The script has been added to substantially to enable the following features in addition to
-item level and weapon DPS reveal:
+**PoE TradeMacro** is an Autohotkey (AHK) script that provides several convenient QoL features for Path of Exile Trading.
 
-- total affix statistic for rare items
-- possible min-max ranges for all affixes on rare items
-- affix ranges for uniques
-- maps: infos such as the 3->1 vendor recipe result, bosses, layout and possible divination cards
-- divination cards: drop locations
-- gems: display the quality effect
-- has the ability to convert currency items to chaos orbs with ratios fetched from http://poe.ninja/
-- optional macros for fast hideout travel (via chat command), faster stash tab selection and more
-- adds a system tray icon and proper system tray description tooltip
-
-All of these features are user-adjustable by using a "database" of text files which come
-with the script and are easy to edit by non developers. See header comments in those files
-for format infos and data sources.
-
-Please note that the PoE Item Level and DPS Revealer script and PoE Item Info have been merged
-into this version.
-
-PoE Forums Thread
------------------
-
-https://www.pathofexile.com/forum/view-thread/1678678
-
-Requirements
-------------
-
-AutoHotkey v1.1.24 or newer. You can get AutoHotkey from http://ahkscript.org/
+This builds on top of [PoE-ItemInfo](https://github.com/aRTy42/POE-ItemInfo) which provides very useful item information on **ctrl+c**.
+With TradeMacro, price checking is added via **ctrl+d**, **ctrl+alt+d** or **ctrl+i**. You can also open the items wiki page via **ctrl+w** or open the item search on poe.trade instead via **ctrl+q**.   
+TradeMacro will be updated to always have the latest PoE-ItemInfo code, you don't have to run their script since it's included here.
 
 
-Known Issues
-------------
+#### Warning   
 
-The script is not always right. Take it as a helper, not as dead certainty.
+Never completely trust any price checking tool. Inform yourself about what this tool can do and what not (FAQ for example). Use the tools average and median prices to quickly judge if the first results could be accurate or totally wrong. When in doubt ask other people or do some manual checks.
 
-Even though there have been lots of tests made on composite affix combinations, I expect there
-to be odd edge cases still that may return an invalid or not found affix bracket. In general,
-be alert when it comes to composite affixes.
+####Usage / Instructions####
 
-You can see these entries in the affix detail lines if they have the text `n/a` (not available)
-somewhere in them or if you see an empty range ` - *`.
+1. Install AHK (http://ahkscript.org)
+2. Download the [latest release](https://github.com/POE-TradeMacro/POE-TradeMacro/releases/latest) and extract the zip-file. 
+3. Make sure to run PoE in (borderless) windowed mode. Otherwise it won't work!
+4. Run **_Run_TradeMacro.ahk_** or (`Run_TradeMacro_no_Admin_Elevation.ahk` if you don't need and want it).
+5. Default league is set to `tmpstandard` (Softcore Temp-League).
+6. A lot of options, including the league can be changed by opening the settings window or editing `config_trade.ini`.   
 
-The star, by the way, marks ranges that have been added together for a guessed attempt as to the
-composition of a possible compound affix.
+> **Right-click the script icon in your system tray and select `PoE Item Info Settings` to open the settings window and to edit both `PoE-ItemInfos` and `PoE-TradeMacros` settings.**
 
-If you see this star, take a closer look for a moment to check if the projection is correct.
-I expect these edge cases to be properly dealt with over time as the script matures.
 
-See start of script for some more background info on these issues.
+####Shortcuts####
 
-Contributors
-------------
 
-See AUTHORS.txt for contributor info.
+|Shortcut|Description|
+|---	|---	|
+| ctrl+c      | See item info (via PoE-ItemInfo). 
+| ctrl+d      | Search item on poe.trade.
+| ctrl+alt+d  | Advanced item search. 
+| ctrl+i      | Opens a text input where you can type an item name to search for.
+| ctrl+w      | Open the items wiki page. 
+| ctrl+q      | Open the item search on poe.trade instead of showing a tooltip with results.
+| ctrl+e      | Show item age (own listed items).
+| ctrl+l      | Switch leagues.
 
-Attribution
------------
+####Additional Macros####
 
-Created by Nipper4369 and original authors.  
-Created by hazydoc / IGN: Sadou
-Updated/Curated by Slinkston and Bahnzo from Oct 2015 - Apr 2016
-currently Updated/Curated by aRTy42
+`AdditionalMacros.txt` allows you to add your own macros to be included in the script or to use some of the already created macros. Simply remove the comment by deleting the `;` in front of a line.
 
-Supersedes the POE_iLVL_DPS-Revealer script.
+See the following pages for more information.
 
-See http://www.pathofexile.com/forum/view-thread/594346 for original author info.
+[Go to: FAQ](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/FAQ)
+
+[Go to: Options](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options)
+
+[Go to: Troubleshooting](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Troubleshooting)
+
+####Forum####
+
+[Path of Exile Forum Thread](https://www.pathofexile.com/forum/view-thread/1757730)
+
+####Screenshots####
+
+![screenshot](http://i.imgur.com/Zw2frfP.png)   
+
+![screenshot](http://i.imgur.com/Q3V9ODC.png)   
+
+![screenshot](http://i.imgur.com/ThuzbtI.png)
