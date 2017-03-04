@@ -605,7 +605,7 @@ TradeFunc_GetLeagues(){
      ;Loop over league info and get league names    
 	leagues := []
 	For key, val in LeaguesData {
-		If (!val.event)  {
+		If (!val.event and not RegExMatch(val.id, "i)^SSF"))  {
 			If (val.id = "Standard") {
 				leagues["standard"] := val.id			
 			}

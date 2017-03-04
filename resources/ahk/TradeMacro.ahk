@@ -1137,7 +1137,7 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	}
 	
 	If A_LastError
-		MsgBox % A_LastError	
+		MsgBox % A_LastError
 	
 	Return, html
 }
@@ -1412,9 +1412,9 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 		Currency      := TradeUtils.StrX( TBody,  "currency-",                                T, 0, ">"        , 1,1, T  )
 		CurrencyV     := TradeUtils.StrX( TBody, ">",                                         T, 0, "<"        , 1,1, T  )
 		*/
-		
-		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index """(.*?)<\/tbody>", html)
-		AccountName 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-seller=""(.*?)""")		
+
+		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index - 1 """(.*?)<\/tbody>", html)
+		AccountName 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-seller=""(.*?)""")
 		ChaosValue 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-name=""price_in_chaos""(.*?)>")
 		Currency	 	:= TradeUtils.HtmlParseItemData(ItemBlock, "has-tip.*currency-(.*?)""", rest)
 		CurrencyV	 	:= TradeUtils.HtmlParseItemData(rest, ">(.*?)<", rest)
@@ -1647,7 +1647,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		IGN			:= TradeUtils.StrX( ItemBlock,  "data-ign=""",                              T,10, """"  ,     1,1     )
 		*/
 		
-		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index """(.*?)<\/tbody>", html)
+		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index - 1 """(.*?)<\/tbody>", html)	
 		AccountName 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-seller=""(.*?)""")
 		Buyout 		:= TradeUtils.HtmlParseItemData(ItemBlock, "data-buyout=""(.*?)""")
 		IGN			:= TradeUtils.HtmlParseItemData(ItemBlock, "data-ign=""(.*?)""")
@@ -2365,6 +2365,7 @@ TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 ; Create custom search GUI
 TradeFunc_CustomSearchGui() {
 	Global
+	Gui, CustomSearch:Destroy 
 	customSearchItemTypes := TradeGlobals.Get("ItemTypeList")
 	
 	CustomSearchTypeList := ""		
@@ -2670,7 +2671,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	PreCheckNormalMods := TradeOpts.AdvancedSearchCheckMods ? "Checked" : ""
 	Loop % advItem.mods.Length() {
 		hidePseudo := advItem.mods[A_Index].hideForTradeMacro ? true : false
-		If ((!advItem.mods[A_Index].isVariable and advItem.IsUnique) or hidePseudo) {
+		If ((!advItem.mods[A_Index].isVariable and advItem.IsUnique) or hidePseudo or not StrLen(advItem.mods[A_Index].name)) {
 			continue
 		}
 		xPosMin := modGroupBox + 25			

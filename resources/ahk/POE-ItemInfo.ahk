@@ -1425,7 +1425,7 @@ AssembleValueRangeFields(BracketRange, BracketLevel, MaxRange="", MaxLevel=0)
 	return FinalRange
 }
 
-ParseRarity(ItemData_NamePlate, ByRef Variation = "")
+ParseRarity(ItemData_NamePlate)
 {
 	Loop, Parse, ItemData_NamePlate, `n, `r
 	{
@@ -1435,11 +1435,6 @@ ParseRarity(ItemData_NamePlate, ByRef Variation = "")
 			StringSplit, RarityParts, RarityReplace, :
 			Break
 		}
-	}
-	; parse item variations like relics (variation of it's unique counterpart)
-	; subject to changes
-	If (RegExMatch(ItemData_NamePlate, "i)Variation\s?+:\s?+(.*)", match)) {
-		Variation := match1
 	}
 	
 	return RarityParts%RarityParts%2
@@ -6481,7 +6476,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
 	; This function should return the second part of the "Rarity: ..." line
 	; in the case of "Rarity: Unique" it should return "Unique"
-	ItemData.Rarity	:= ParseRarity(ItemData.NamePlate, Variation)
+	ItemData.Rarity	:= ParseRarity(ItemData.NamePlate)
 
 	ItemData.Links		:= ParseLinks(ItemDataText)
 	ItemData.Sockets	:= ParseSockets(ItemDataText)
@@ -6579,9 +6574,6 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsMirrored	:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
 	Item.Note			:= Globals.Get("ItemNote")	
-	If (RarityLevel = 4) {
-		Item.IsRelic	:= RegExMatch(Variant, "i)relic")
-	}
 
 	TempStr := ItemData.PartsLast
 	Loop, Parse, TempStr, `n, `r
@@ -6589,6 +6581,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		RegExMatch(Trim(A_LoopField), "i)^Has ", match)
 		If (match) {
 			Item.HasEffect := True
+		}		
+		; parse item variations like relics (variation of it's unique counterpart)		
+		If (RegExMatch(Trim(A_LoopField), "i)Relic Unique", match)) {
+			Item.IsRelic := true
 		}
 	}
 

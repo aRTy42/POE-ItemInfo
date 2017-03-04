@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.0.1
+================================================================================================
+Fixed league parsing by excluding SSF.
+Added relic parsing to ItemInfo.
+
 2.0.0
 ================================================================================================
 Added an auto-update function (Button on update window).
