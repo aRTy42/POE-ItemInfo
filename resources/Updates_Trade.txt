@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.0.2
+================================================================================================
+Added relic rarity/flag to searches now that poe.trade supports it.
+Added more robust download for league data (from GGG's API).
+
 2.0.1
 ================================================================================================
 Fixed league parsing by excluding SSF.

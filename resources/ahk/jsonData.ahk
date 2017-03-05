@@ -22,7 +22,21 @@ global TradeModsData := parsedJSON.mods
 
 
 ; Download and parse the current leagues
-UrlDownloadToFile, http://api.pathofexile.com/leagues?type=main , %A_ScriptDir%\temp\currentLeagues.json
+postData	:= ""
+reqHeaders =
+	(LTrim
+		Content-type: application/html
+	)
+options =
+	(LTrim
+		Charset: UTF-8
+		Codepage: 65001
+		Method: GET
+	)
+parsedLeagueJSON := PoEScripts_Download("http://api.pathofexile.com/leagues?type=main", ioData := postData, ioHdr := reqHeaders, options, true, true, false)
+FileDelete, %A_ScriptDir%\temp\currentLeagues.json, 1
+FileAppend, %parsedLeagueJSON%, %A_ScriptDir%\temp\currentLeagues.json
+;UrlDownloadToFile, http://api.pathofexile.com/leagues?type=main , %A_ScriptDir%\temp\currentLeagues.json
 
 errorMsg := "Parsing the league data (json) from the Path of Exile API failed."
 errorMsg .= "`nThis should only happen when the servers are down for maintenance." 
@@ -43,5 +57,3 @@ Try {
 	MsgBox, 16, PoE-TradeMacro - Error, %errorMsg%	
 	ExitApp
 }
-
-

@@ -126,6 +126,10 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		return
 	}
 	
+	If (Item.IsRelic) {
+		Item.IsUnique := true
+	}
+	
 	If (Opts.ShowMaxSockets != 1) {
 		TradeFunc_SetItemSockets()
 	}
@@ -150,6 +154,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	If (Item.RarityLevel > 0 and Item.RarityLevel < 4 and (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet)) {
 		IgnoreName := true
 	}
+	If (Item.IsRelic) {
+		IgnoreName := false
+	}
 	
 	; check If the item implicit mod is an enchantment or corrupted. retrieve this mods data.
 	Enchantment := false
@@ -170,7 +177,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		hasAdvancedSearch := true
 	}
 
-	If (!Item.IsUnique) {		
+	If (!Item.IsUnique) {	
 		preparedItem  := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)	
 		preparedItem.maxSockets := Item.maxSockets
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
@@ -360,8 +367,12 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	
 	; remove "Superior" from item name to exclude it from name search
-	If (!IgnoreName) {
-		RequestParams.name   := Trim(StrReplace(Name, "Superior", ""))		
+	If (!IgnoreName) {		
+		RequestParams.name   := Trim(StrReplace(Name, "Superior", ""))	
+		If (Item.IsRelic) {
+			RequestParams.rarity := "relic"
+		}
+		Item.UsedInSearch.Rarity := "Relic"
 		Item.UsedInSearch.FullName := true
 	} Else If (!Item.isUnique and AdvancedPriceCheckItem.mods.length() <= 0) {
 		isCraftingBase         := TradeFunc_CheckIfItemIsCraftingBase(Item.TypeName)
@@ -522,7 +533,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		RequestParams.seller      := TradeOpts.AccountName
 		RequestParams.q_min       := Item.Quality
 		RequestParams.q_max       := Item.Quality
-		RequestParams.rarity      := Item.Rarity
+		RequestParams.rarity      := Item.IsRelic ? "relic" : Item.Rarity
 		RequestParams.link_min    := ItemData.Links ? ItemData.Links : ""
 		RequestParams.link_max    := ItemData.Links ? ItemData.Links : ""
 		RequestParams.sockets_min := ItemData.Sockets ? ItemData.Sockets : ""
@@ -1588,6 +1599,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 			}			
 			;Title .= (StrLen(Item.UsedInSearch.Charges)) ? "| " Item.UsedInSearch.Charges " " : ""
 			Title .= (Item.UsedInSearch.FullName and ShowFullNameNote) ? "| Full Name " : ""
+			Title .= (Item.UsedInSearch.Rarity) ? "(" Item.UsedInSearch.Rarity ") " : ""
 			Title .= (Item.UsedInSearch.Corruption and not Item.IsMapFragment and not Item.IsDivinationCard and not Item.IsCurrency)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ") " : ""
 			Title .= (Item.UsedInSearch.Type)     ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
 			Title .= (Item.UsedInSearch.ItemBase and ShowFullNameNote) ? "| Base (" . Item.UsedInSearch.ItemBase . ") " : ""
@@ -1834,7 +1846,6 @@ class RequestParams_ {
 	buyout_currency:= ""
 	crafted		:= ""
 	enchanted 	:= ""
-	;relic		:= ""
 	;charges		:= ""
 	
 	ToPayload()
@@ -1850,8 +1861,7 @@ class RequestParams_ {
 		p .= "&rstr_max=" this.rstr_max "&rdex_min=" this.rdex_min "&rdex_max=" this.rdex_max "&rint_min=" this.rint_min "&rint_max=" this.rint_max modGroupStr "&q_min=" this.q_min 
 		p .= "&q_max=" this.q_max "&level_min=" this.level_min "&level_max=" this.level_max "&ilvl_min=" this.ilvl_min "&ilvl_max=" this.ilvl_max "&rarity=" this.rarity "&seller=" this.seller 
 		p .= "&thread=" this.xthread "&identified=" this.identified "&corrupted=" this.corrupted "&online=" this.online "&has_buyout=" this.buyout "&altart=" this.altart "&capquality=" this.capquality 
-		p .= "&buyout_min=" this.buyout_min "&buyout_max=" this.buyout_max "&buyout_currency=" this.buyout_currency "&crafted=" this.crafted "&enchanted=" this.enchanted
-		;p .= "&relic=" this.relic
+		p .= "&buyout_min=" this.buyout_min "&buyout_max=" this.buyout_max "&buyout_currency=" this.buyout_currency "&crafted=" this.crafted "&enchanted=" this.enchanted	
 		;p .= "&charges=" this.charges
 		
 		temp := p
