@@ -1,6 +1,6 @@
 
 Adds # to # Chaos Damage to Attacks
-#% increased Radius of Area Skills
+#% increased Area of Effect of Area Skills
 Adds an additional Arrow
 Enemies can have # additional Curse
 Can have up to # additional Trap placed at a time

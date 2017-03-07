@@ -6,5 +6,5 @@
 }
 
 SplitPath, A_AhkPath,, AhkDir
-RunWait %comspec% /c ""%AhkDir%"\Compiler\Ahk2Exe.exe /in "_TradeMacroMain.ahk" /out "Fallback.exe" /icon "resources\images\poe-trade-bl.ico""
+RunWait %comspec% /c ""%AhkDir%"\Compiler\Ahk2Exe.exe /in "_TradeMacroMain.ahk" /out "Fallback.exe" /icon "resources\images\fb.ico""
 ExitApp

@@ -3,9 +3,6 @@
 ; # We also have to set some global variables and pass them to the ItemInfo/TradeMacroInit scripts. 
 ; # This is to support using ItemInfo as dependancy for TradeMacro.
 ; #####################################################################################################################
-
-FileRemoveDir, %A_ScriptDir%\temp, 1
-FileCreateDir, %A_ScriptDir%\temp
 #Include, %A_ScriptDir%\resources\VersionTrade.txt
 
 TradeMsgWrongAHKVersion := "AutoHotkey v" . TradeAHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
@@ -13,6 +10,10 @@ If (A_AhkVersion < TradeAHKVersionRequired)
 {
     MsgBox, 16, Wrong AutoHotkey Version, % TradeMsgWrongAHKVersion
     ExitApp
+}
+
+If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-TradeMacro")) {
+	ExitApp	
 }
 StartSplashScreen()
 
@@ -24,6 +25,8 @@ FilesToCopyToUserFolder	:= ["\resources\config\default_config_trade.ini", "\reso
 overwrittenFiles 		:= PoEScripts_HandleUserSettings(projectName, A_MyDocuments, projectName, FilesToCopyToUserFolder, A_ScriptDir)
 isDevelopmentVersion	:= PoEScripts_isDevelopmentVersion()
 userDirectory			:= A_MyDocuments . "\" . projectName . isDevelopmentVersion
+
+PoEScripts_CompareUserFolderWithScriptFolder(userDirectory, A_ScriptDir, projectName)
 
 /*	 
 	merge all scripts into `_TradeMacroMain.ahk` and execute it.

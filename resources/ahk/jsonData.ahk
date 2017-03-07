@@ -5,6 +5,13 @@
 
 #Include, %A_ScriptDir%\lib\JSON.ahk
 
+; when using the fallback exe we're missing the parameters passed by the merge script and missed clearing the temp folder
+argumentIsMergedScript = %5%
+If (argumentIsMergedScript != "isMergedScript") {
+	FileRemoveDir, %A_ScriptDir%\temp, 1
+	FileCreateDir, %A_ScriptDir%\temp
+}
+
 ; Parse the unique items data
 FileRead, JSONFile, %A_ScriptDir%\data_trade\uniques.json
 parsedJSON := JSON.Load(JSONFile)
@@ -19,7 +26,6 @@ global TradeRelicData := parsedJSON.relics
 FileRead, JSONFile, %A_ScriptDir%\data_trade\mods.json
 parsedJSON := JSON.Load(JSONFile)
 global TradeModsData := parsedJSON.mods
-
 
 ; Download and parse the current leagues
 postData	:= ""
@@ -36,7 +42,6 @@ options =
 parsedLeagueJSON := PoEScripts_Download("http://api.pathofexile.com/leagues?type=main", ioData := postData, ioHdr := reqHeaders, options, true, true, false)
 FileDelete, %A_ScriptDir%\temp\currentLeagues.json, 1
 FileAppend, %parsedLeagueJSON%, %A_ScriptDir%\temp\currentLeagues.json
-;UrlDownloadToFile, http://api.pathofexile.com/leagues?type=main , %A_ScriptDir%\temp\currentLeagues.json
 
 errorMsg := "Parsing the league data (json) from the Path of Exile API failed."
 errorMsg .= "`nThis should only happen when the servers are down for maintenance." 

@@ -51,10 +51,11 @@ Cast Word of Thunder on Kill
 Cast Edict of Thunder on Kill
 Cast Decree of Thunder on Kill
 Cast Commandment of Thunder on Kill
-Cast Word of War on Kill
-Cast Edict of War on Kill
+Attack with Word of War on Kill
+Attack with Edict of War on Kill
 Cast Decree of War on Kill
-Cast Commandment of War on Kill
+Attack with Decree of War on Kill
+Attack with Commandment of War on Kill
 Cast Word of Winter when Hit
 Cast Edict of Winter when Hit
 Cast Decree of Winter when Hit

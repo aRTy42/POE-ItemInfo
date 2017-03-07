@@ -139,6 +139,11 @@ If (!StrLen(argumentProjectName) > 0) {
 	argumentOverwrittenFiles	:= PoEScripts_HandleUserSettings(projectName, A_MyDocuments, projectName, FilesToCopyToUserFolder, A_ScriptDir)
 	argumentIsDevVersion	:= PoEScripts_isDevelopmentVersion()
 	argumentUserDirectory	:= A_MyDocuments . "\" . projectName . isDevelopmentVersion
+	
+	If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-TradeMacro")) {
+		ExitApp	
+	}
+	PoEScripts_CompareUserFolderWithScriptFolder(argumentUserDirectory, A_ScriptDir, argumentProjectName)
 }
 
 TradeGlobals.Set("ProjectName", argumentProjectName)
@@ -639,7 +644,7 @@ TradeFunc_CheckIfTempLeagueIsRunning() {
 
 	UTCTimestamp := TradeFunc_GetTimestampUTC()
 	UTCFormatStr := "yyyy-MM-dd'T'HH:mm:ss'Z'"
-	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr%
+	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr% LSys
 	
 	timeDiffStart := TradeFunc_DateParse(TimeStr) - TradeFunc_DateParse(tempLeagueDates["start"])
 	timeDiffEnd   := TradeFunc_DateParse(TimeStr) - TradeFunc_DateParse(tempLeagueDates["end"])

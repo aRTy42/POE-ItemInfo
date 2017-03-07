@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.0.3
+================================================================================================
+Made sure it's not possible anymore to run the script from or install it to the user settings folder which caused the script to fail.
+Added error handling in case the script can't create the "temp" folder which caused the script to fail.
+Updated some data (poe.trade mods, renamed enchantments, uniques).
+
 2.0.2
 ================================================================================================
 Added relic rarity/flag to searches now that poe.trade supports it.
