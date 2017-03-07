@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.0.4
+================================================================================================
+Hotfix - messed up the league parsing in the last update causing searches to default to standard/hardcore.
+
 2.0.3
 ================================================================================================
 Made sure it's not possible anymore to run the script from or install it to the user settings folder which caused the script to fail.

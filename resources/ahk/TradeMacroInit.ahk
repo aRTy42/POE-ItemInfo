@@ -644,7 +644,7 @@ TradeFunc_CheckIfTempLeagueIsRunning() {
 
 	UTCTimestamp := TradeFunc_GetTimestampUTC()
 	UTCFormatStr := "yyyy-MM-dd'T'HH:mm:ss'Z'"
-	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr% LSys
+	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr%
 	
 	timeDiffStart := TradeFunc_DateParse(TimeStr) - TradeFunc_DateParse(tempLeagueDates["start"])
 	timeDiffEnd   := TradeFunc_DateParse(TimeStr) - TradeFunc_DateParse(tempLeagueDates["end"])
