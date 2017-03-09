@@ -133,7 +133,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	If (Opts.ShowMaxSockets != 1) {
 		TradeFunc_SetItemSockets()
 	}
-	
+
 	Stats := {}
 	Stats.Quality := Item.Quality
 	DamageDetails := Item.DamageDetails
@@ -148,7 +148,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	RequestParams.buyout := "1"
 	
 	; ignore item name in certain cases
-	If (!Item.IsJewel and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask or (Item.IsJewel and isAdvancedPriceCheckRedirect)) {
+	If (!Item.IsJewel and !Item.IsLeaguestone and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask or (Item.IsJewel and isAdvancedPriceCheckRedirect)) {
 		IgnoreName := true
 	}
 	If (Item.RarityLevel > 0 and Item.RarityLevel < 4 and (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet)) {
@@ -371,8 +371,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		RequestParams.name   := Trim(StrReplace(Name, "Superior", ""))	
 		If (Item.IsRelic) {
 			RequestParams.rarity := "relic"
-		}
-		Item.UsedInSearch.Rarity := "Relic"
+			Item.UsedInSearch.Rarity := "Relic"
+		}		
 		Item.UsedInSearch.FullName := true
 	} Else If (!Item.isUnique and AdvancedPriceCheckItem.mods.length() <= 0) {
 		isCraftingBase         := TradeFunc_CheckIfItemIsCraftingBase(Item.TypeName)
@@ -411,7 +411,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType
 	}
 	
-	If (Item.BaseType == "Leaguestone") {
+	If (Item.isLeagueStone) {
 		; not implemented yet, no idea if supported by poe.trade
 		;RequestParams.charges 	:= Item.Charges.current
 		;Item.UsedInSearch.Charges:= "Charges " Item.Charges.current "/" Item.Charges.max

@@ -482,6 +482,7 @@ class Item_ {
 		This.IsMap		:= False
 		This.IsTalisman 	:= False
 		This.IsJewel 		:= False
+		This.IsLeaguestone	:= False
 		This.IsDivinationCard := False
 		This.IsUnique 		:= False
 		This.IsRare 		:= False
@@ -951,9 +952,9 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		IfInString, LoopField, Leaguestone
 		{
 			RegexMatch(LoopField, "i)(.*)Leaguestone", match)
-			RegexReplace(Trim(match1), "i)\b(\w+)\W*$", match) ; match last word
+			RegexMatch(Trim(match1), "i)\b(\w+)\W*$", match) ; match last word
 			BaseType = Leaguestone
-			SubType := match1 " Leaguestone"
+			SubType := Trim(match1) " Leaguestone"
 			return
 		}
 
@@ -6570,6 +6571,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsWeapon		:= (Item.BaseType == "Weapon")
 	Item.IsArmour		:= (Item.BaseType == "Armour")
 	Item.IsMap		:= (Item.BaseType == "Map")
+	Item.IsLeaguestone	:= (Item.BaseType == "Leaguestone")
 	Item.IsJewel		:= (Item.BaseType == "Jewel")
 	Item.IsMirrored	:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
