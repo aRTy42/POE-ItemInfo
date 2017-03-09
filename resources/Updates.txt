@@ -1,6 +1,13 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.6.00
+================================
+from aRTy42
+
+Updated Uniques, Divination Cards and Maps with the current wiki info.
+	(Be still attentive when checking uniques since the wiki is not fully updated yet)
+
 2.5.06
 ================================
 from Eruyome, 4GForce, aRTy42
