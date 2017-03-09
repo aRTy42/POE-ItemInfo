@@ -1036,7 +1036,7 @@ TradeFunc_GetContributors(AuthorsPerLine=0)
 	return Authors
 }
 
-TradeFunc_ReadCraftingBases(){
+TradeFunc_ReadCraftingBases() {
 	bases := []
 	Loop, Read, %A_ScriptDir%\data_trade\crafting_bases.txt
 	{
@@ -1045,7 +1045,7 @@ TradeFunc_ReadCraftingBases(){
 	Return bases    
 }
 
-TradeFunc_ReadEnchantments(){
+TradeFunc_ReadEnchantments() {
 	enchantments := {}
 	enchantments.boots   := []
 	enchantments.helmet  := []
@@ -1072,7 +1072,7 @@ TradeFunc_ReadEnchantments(){
 	Return enchantments    
 }
 
-TradeFunc_ReadCorruptions(){
+TradeFunc_ReadCorruptions() {
 	mods := []    
 	
 	Loop, read, %A_ScriptDir%\data_trade\item_corrupted_mods.txt
@@ -1084,7 +1084,7 @@ TradeFunc_ReadCorruptions(){
 	Return mods
 }
 
-TradeFunc_CheckBrowserPath(path, showMsg){
+TradeFunc_CheckBrowserPath(path, showMsg) {
 	If (StrLen(path) > 1) {
 		path := RegExReplace(path, "i)\/", "\")
 		AttributeString := FileExist(path)
