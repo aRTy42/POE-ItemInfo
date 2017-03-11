@@ -84,7 +84,7 @@ mapList["Acid Lakes Map"] := "Tier: 4, Level: 71, Atlas position: top left`nTile
 
 mapList["Shaped Acid Lakes Map"] := "Tier: 9, Level: 76, Atlas position: top left`nTileset: `n`nUpgrades to: Terrace Map`n`nInfos from Acid Lakes Map:`n`nBoss: Mirage of Bones (based on: Nightwane)`nReal one shoots black arrows and moves,`nthe fake ones stand still`n`nDifficulty: 3/5, Layout: A"
 
-mapList["Dungeon Map"] := "Tier: 4, Level: 71, Atlas position: top right`nTileset: Prison`n`nProduced by: Arid Lake Map`nUpgrades to: Dunes Map`n`nDivination cards:`n- The Gambler`n- Her Mask`n- The Summoner`n- The Warden`n`nBoss: Penitentiary Incarcerator (based on: Brutus, Lord Incarcerator)`nHits Hard`n`nDifficulty: 4/5, Layout: C"
+mapList["Dungeon Map"] := "Tier: 4, Level: 71, Atlas position: top right`nTileset: Prison`n`nProduced by: Arid Lake Map`nUpgrades to: Dunes Map`nConnected to: Arid Lake Map, Grotto Map, Dunes Map`n`nDivination cards:`n- The Gambler`n- Her Mask`n- The Summoner`n- The Warden`n`nBoss: Penitentiary Incarcerator (based on: Brutus, Lord Incarcerator)`nHits Hard`n`nDifficulty: 4/5, Layout: C"
 
 mapList["Shaped Dungeon Map"] := "Tier: 9, Level: 76, Atlas position: top right`nTileset: Prison`n`nUpgrades to: ?`n`nInfos from Dungeon Map:`n`nBoss: Penitentiary Incarcerator (based on: Brutus, Lord Incarcerator)`nHits Hard`n`nDifficulty: 4/5, Layout: C"
 
