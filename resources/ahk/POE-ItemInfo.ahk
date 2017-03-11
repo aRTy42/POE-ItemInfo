@@ -613,6 +613,9 @@ IfNotExist, %A_ScriptDir%\data
 ; paulcdejean: Since this file will be maintained by the user, we include it in the base directory.
 #Include %A_ScriptDir%\UserMaps.txt
 
+; paulcdejean: This will maybe store more metadata than just connected maps in the future?
+#Include %A_ScriptDir%\data\MapGraph.txt
+
 
 Fonts.Init(Opts.FontSize, 9)
 
@@ -6403,7 +6406,7 @@ ItemIsMirrored(ItemDataText)
 ;
 ParseItemData(ItemDataText, ByRef RarityLevel="")
 {
-	Global AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList, mapCompletion
+	Global AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList, userMaps, mapGraph
 
 	ItemDataPartsIndexLast =
 	ItemDataPartsIndexAffixes =
@@ -6788,10 +6791,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			MapDescription := mapList[Item.SubType]
 		}
 		
-		; paulcdejean: mapCompletion for now just stores if the map is completed or not.
-		; paulcdejean := "Hello include!"
+		; paulcdejean: userMaps for now just stores if the map is completed or not.
 		
-		If (mapCompletion[Item.SubType])
+		If (userMaps[Item.SubType])
 		{
 			CompleteStatus := "Completion: completed"
 		}
@@ -6799,8 +6801,30 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		{
 			CompleteStatus := "Completion: incomplete"
 		}
+		
+		AdjacentComplete := "Adjacent complete: "
+		AdjacentIncomplete := "Adjacent incomplete: "
+		
+		for k, v in mapGraph[Item.SubType] {
+			If (userMaps[v])
+			{
+				AdjacentComplete := AdjacentComplete . v
+				If (k < mapGraph[Item.SubType].Length())
+				{
+					AdjacentComplete := AdjacentComplete . ", "
+				}
+			}
+			Else
+			{
+				AdjacentIncomplete := AdjacentIncomplete . v
+				If (k < mapGraph[Item.SubType].Length())
+				{
+					AdjacentIncomplete := AdjacentIncomplete . ", "
+				}
+			}
+		}
 
-		TT = %TT%`n%CompleteStatus%`n%MapDescription%
+		TT = %TT%`n%CompleteStatus%`n%AdjacentComplete%`n%AdjacentIncomplete%`n`n%MapDescription%
 	}
 
 	If (Item.IsGem)
