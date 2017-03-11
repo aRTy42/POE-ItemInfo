@@ -610,6 +610,9 @@ IfNotExist, %A_ScriptDir%\data
 #Include %A_ScriptDir%\data\DivinationCardList.txt
 #Include %A_ScriptDir%\data\GemQualityList.txt
 
+; paulcdejean: Since this file will be maintained by the user, we include it in the base directory.
+#Include %A_ScriptDir%\UserMaps.txt
+
 
 Fonts.Init(Opts.FontSize, 9)
 
@@ -6400,7 +6403,7 @@ ItemIsMirrored(ItemDataText)
 ;
 ParseItemData(ItemDataText, ByRef RarityLevel="")
 {
-	Global AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList
+	Global AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList, mapCompletion
 
 	ItemDataPartsIndexLast =
 	ItemDataPartsIndexAffixes =
@@ -6784,8 +6787,20 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		{
 			MapDescription := mapList[Item.SubType]
 		}
+		
+		; paulcdejean: mapCompletion for now just stores if the map is completed or not.
+		; paulcdejean := "Hello include!"
+		
+		If (mapCompletion[Item.SubType])
+		{
+			CompleteStatus := "Completion: completed"
+		}
+		Else
+		{
+			CompleteStatus := "Completion: incomplete"
+		}
 
-		TT = %TT%`n%MapDescription%
+		TT = %TT%`n%CompleteStatus%`n%MapDescription%
 	}
 
 	If (Item.IsGem)
