@@ -1,16 +1,16 @@
 mapGraph := Object()
 
-;mapGraph["Abyss Map"] := false
-;mapGraph["Academy Map"] := false
-;mapGraph["Acid Lakes Map"] := false
-;mapGraph["Acton's Nightmare"] := false
-;mapGraph["Arachnid Nest Map"] := false
-;mapGraph["Arachnid Tomb Map"] := false
-;mapGraph["Arcade Map"] := false
-;mapGraph["Arena Map"] := false
-;mapGraph["Arid Lake Map"] := false
-;mapGraph["Armoury Map"] := false
-;mapGraph["Arsenal Map"] := false
+mapGraph["Abyss Map"] := ["Maze of the Minotaur Map", "Mineral Pools Map", "Shrine Map"]
+mapGraph["Academy Map"] := ["Graveyard Map", "Spider Lair Map"]
+;mapGraph["Acid Lakes Map"] := ["Pit Map", "Channel Map", "Mesa Map"]
+;mapGraph["Acton's Nightmare"] := ["Overgrown Shrine Map"]
+;mapGraph["Arachnid Nest Map"] := ["Ashen Wood Map", "Cells Map"]
+;mapGraph["Arachnid Tomb Map"] := ["Shore Map", "Vaal City Map", "Tropical Island Map"]
+;mapGraph["Arcade Map"] := ["Ghetto Map"]
+;mapGraph["Arena Map"] := ["Armoury Map", "Orchard Map"]
+;mapGraph["Arid Lake Map"] := ["Oasis Map", "Dungeon Map"]
+;mapGraph["Armoury Map"] := ["Arena Map", "Atoll Map", "Pier Map"]
+;mapGraph["Arsenal Map"] := ["Chateau Map", "Crypt Map"]
 ;mapGraph["Ashen Wood Map"] := false
 ;mapGraph["Atoll Map"] := false
 ;mapGraph["Barrows Map"] := false
