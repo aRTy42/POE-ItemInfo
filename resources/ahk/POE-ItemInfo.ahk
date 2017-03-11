@@ -6805,22 +6805,27 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		AdjacentComplete := "Adjacent complete: "
 		AdjacentIncomplete := "Adjacent incomplete: "
 		
+		FirstComplete := true
+		FirstIncomplete := true
+		
 		for k, v in mapGraph[Item.SubType] {
 			If (userMaps[v])
 			{
-				AdjacentComplete := AdjacentComplete . v
-				If (k < mapGraph[Item.SubType].Length())
+				If (not FirstComplete)
 				{
 					AdjacentComplete := AdjacentComplete . ", "
 				}
+				AdjacentComplete := AdjacentComplete . v
+				FirstComplete := false
 			}
 			Else
 			{
-				AdjacentIncomplete := AdjacentIncomplete . v
-				If (k < mapGraph[Item.SubType].Length())
+				If (not FirstIncomplete)
 				{
-					AdjacentIncomplete := AdjacentIncomplete . ", "
+					AdjacentIncomplete := AdjacentIncomplete . ", " 
 				}
+				AdjacentIncomplete := AdjacentIncomplete . v
+				FirstIncomplete := false
 			}
 		}
 
