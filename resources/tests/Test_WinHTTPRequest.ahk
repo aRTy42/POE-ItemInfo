@@ -13,26 +13,53 @@ FileCreateDir, %A_ScriptDir%\test_temp
 Class_Console("console",0,335,600,900,,,,9)
 console.show()
 
-HttpObj 	:= ComObjCreate("WinHttp.WinHttpRequest.5.1")
-url 		:= "https://api.github.com/repos/PoE-TradeMacro/PoE-TradeMacro/releases"
-downloadUrl := "https://github.com/PoE-TradeMacro/PoE-TradeMacro/releases"
+urls := ["https://api.github.com/repos/PoE-TradeMacro/PoE-TradeMacro/releases", "http://poe.trade"]
 
-UrlDownloadToFile, %url%, %A_ScriptDir%\test_temp\urlDownloadToFile_output.txt
-If (!ErrorLevel) {
-	console.log("Testing UrlDownloadToFile: No errors.`n Output saved in: " A_ScriptDir "\test_temp\urlDownloadToFile_output.txt")
-} Else {
-	console.log("Testing UrlDownloadToFile: Failed.`nTried saving output to " A_ScriptDir "\test_temp\urlDownloadToFile_output.txt")
-}
+Loop, 2 {
+	HttpObj 	:= ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	url			:= urls[A_Index]
+	
+	console.log("Download test with url : " url)
+	
+	UrlDownloadToFile, %url%, %A_ScriptDir%\test_temp\urlDownloadToFile%A_Index%_output.txt
+	If (!ErrorLevel) {
+		FileRead, file, %A_ScriptDir%\test_temp\urlDownloadToFile%A_Index%_output.txt
+		console.log("Testing UrlDownloadToFile: No errors.`n Output saved in: " A_ScriptDir "\test_temp\urlDownloadToFile_output.txt" "`nContent Length: " StrLen(file))
+	} Else {
+		console.log("Testing UrlDownloadToFile: Failed.`nTried saving output to " A_ScriptDir "\test_temp\urlDownloadToFile_output.txt")
+	}
+	Encoding := "utf-8"
 
-Encoding := "utf-8"
-HttpObj.Open("GET",url)
-HttpObj.SetRequestHeader("Content-type","application/html")
-HttpObj.Send("")
-HttpObj.WaitForResponse()
 
+	HttpObj.Open("GET",url)
+	HttpObj.SetRequestHeader("Content-type","application/html")
+	HttpObj.Send("")
+	HttpObj.WaitForResponse()
 
-; Test with catching errors
-Try {				
+	; Test with catching errors
+	Try {				
+		If Encoding {
+			oADO          := ComObjCreate("adodb.stream")
+			oADO.Type     := 1
+			oADO.Mode     := 3
+			oADO.Open()
+			oADO.Write(HttpObj.ResponseBody)
+			oADO.Position := 0
+			oADO.Type     := 2
+			oADO.Charset  := Encoding
+			html := oADO.ReadText()
+			oADO.Close()
+		}
+		If (StrLen(html) > 0) {
+			console.log("First test downloading to variable using WinHTTP adodb.stream successful." "`nContent Length: " StrLen(html))
+		} Else {
+			console.log("First test downloading to variable using WinHTTP adodb.stream returned empty string.")
+		}
+	} Catch e {
+		console.log("Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra)
+	}
+
+	; Test without catching errors
 	If Encoding {
 		oADO          := ComObjCreate("adodb.stream")
 		oADO.Type     := 1
@@ -45,31 +72,11 @@ Try {
 		html := oADO.ReadText()
 		oADO.Close()
 	}
+
 	If (StrLen(html) > 0) {
-		console.log("First test downloading to variable using WinHTTP adodb.stream successful.")	
+		console.log("Second test downloading to variable using WinHTTP adodb.stream successful." "`nContent Length: " StrLen(html))	
 	} Else {
-		console.log("First test downloading to variable using WinHTTP adodb.stream returned empty string.")
+		console.log("Second test downloading to variable using WinHTTP adodb.stream returned empty string.")
 	}
-} Catch e {
-	console.log("Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra)
-}
-
-; Test without catching errors
-If Encoding {
-	oADO          := ComObjCreate("adodb.stream")
-	oADO.Type     := 1
-	oADO.Mode     := 3
-	oADO.Open()
-	oADO.Write(HttpObj.ResponseBody)
-	oADO.Position := 0
-	oADO.Type     := 2
-	oADO.Charset  := Encoding
-	html := oADO.ReadText()
-	oADO.Close()
-}
-
-If (StrLen(html) > 0) {
-	console.log("Second test downloading to variable using WinHTTP adodb.stream successful.")	
-} Else {
-	console.log("Second test downloading to variable using WinHTTP adodb.stream returned empty string.")
+	console.log("-----------------------------------------")
 }

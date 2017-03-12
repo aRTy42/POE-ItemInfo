@@ -14,9 +14,11 @@ updateScriptPath	= %2%
 installPath		= %3%
 projectName		= %4%
 
-FileMoveDir, %updateScriptPath%, %installPath%, 2
-If (ErrorLevel) {
-	MsgBox Error while copying new files to %installPath%. Update failed.
+Try {
+	PoEScripts_RunAsAdmin()
+	FileMoveDir, %updateScriptPath%, %installPath%, 2
+} Catch e {
+	MsgBox,,, % "Exception thrown while copying new files to " installPath ". Update failed!`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
 	ExitApp
 }
 
