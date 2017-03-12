@@ -25,7 +25,7 @@
 			msg .= "You can also move the script location to somewhere else on your pc, for example " A_ProgramFiles ". This should solve all issues and is considered the best solution."
 			msg .=  "`n`nPlease also check if" ScriptDir "or " ScriptDir "\temp are set to read-only. This shouldn't be the case and will cause the script to fail."
 			
-			MsgBox, 5, PoE-TradeMacro, % msg
+			MsgBox, 5, %project%, % msg
 			IfMsgBox, Cancel
 			{
 				SplashTextOn, , 20, %project%, Exiting script...
