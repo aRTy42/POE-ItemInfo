@@ -16,7 +16,6 @@ RunAsAdmin()
 If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-TradeMacro")) {
 	ExitApp	
 }
-StartSplashScreen()
 
 /*	 
 	Set ProjectName to create user settings folder in A_MyDocuments
