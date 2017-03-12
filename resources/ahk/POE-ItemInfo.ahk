@@ -864,7 +864,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			SubType = Belt
 			return
 		}
-		If (InStr(LoopField, "Amulet") or InStr(LoopField, "Talisman"))
+		If (InStr(LoopField, "Amulet") or (InStr(LoopField, "Talisman") and not InStr(LoopField, "Leaguestone")))
 		{
 			BaseType = Item
 			SubType = Amulet

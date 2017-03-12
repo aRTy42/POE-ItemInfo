@@ -644,7 +644,7 @@ TradeFunc_CheckIfTempLeagueIsRunning() {
 
 	UTCTimestamp := TradeFunc_GetTimestampUTC()
 	UTCFormatStr := "yyyy-MM-dd'T'HH:mm:ss'Z'"
-	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr%
+	FormatTime, TimeStr, %UTCTimestamp% L0x0407, %UTCFormatStr%
 	
 	timeDiffStart := TradeFunc_DateParse(TimeStr) - TradeFunc_DateParse(tempLeagueDates["start"])
 	timeDiffEnd   := TradeFunc_DateParse(TimeStr) - TradeFunc_DateParse(tempLeagueDates["end"])
@@ -1425,10 +1425,60 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 		TradeFunc_ParseSearchFormOptions()		
 		Return 1
 	}
+	Else If (!StrLen(html)) {
+		TradeFunc_HandleWinHttpFailure()
+	}
 	Else {
 		FileDelete, %A_ScriptDir%\temp\poe_trade_gem_names.txt
 		Return 0
 	}
+}
+
+TradeFunc_HandleWinHttpFailure(){
+	dhw := A_DetectHiddenWindows
+	DetectHiddenWindows On
+	Run "%ComSpec%" /k,, Hide, pid
+	While !(hConsole := WinExist("ahk_pid" pid))
+		Sleep 10
+	DllCall("AttachConsole", "UInt", pid)
+	DetectHiddenWindows %dhw%
+	objShell := ComObjCreate("WScript.Shell")
+	objExec := objShell.Exec("cmd /c netsh winhttp show proxy")
+	While !objExec.Status
+	    Sleep 100
+	strLine := objExec.StdOut.ReadAll() ;read the output at once
+	DllCall("FreeConsole")
+	Process Exist, %pid%
+	If (ErrorLevel == pid)
+		Process Close, %pid%
+	
+	output := ""
+	Loop, Parse, strLine, `n,  `r
+	{
+		If (StrLen(A_LoopField)) {
+			output .= A_LoopField "`n"
+		}
+	}
+	
+	SplashTextOff
+	
+	Gui, WinHttpFailure:Add, Text, cRed, WinHttpRequest to poe.trade failed!
+	Gui, WinHttpFailure:Add, Text, , The correct winhttp setting is: "Direct access (no proxy)"
+	
+	Gui, WinHttpFailure:Add, Text, cGray, % output
+	
+	Gui, WinHttpFailure:Add, Text, y+5, If your settings are different you can  
+	Gui, WinHttpFailure:Add, Link, x+5 yp+0 cBlue, <a href="https://superuser.com/questions/558070/how-to-turn-off-winhttp-proxy">reset this proxy</a>.
+	
+	Gui, WinHttpFailure:Add, Button, y+10 x10 gResetWinHttpProxy, Reset Proxy
+	
+	Gui, WinHttpFailure:Show, w450 xCenter yCenter, Connection Failure
+	ControlFocus, Reset Proxy, Connection Failure
+	WinWaitClose, Connection Failure
+	
+	SplashTextOn, 300, 20, PoE-TradeMacro, No poe.trade connection possible, exiting script...
+	Sleep, 3000
+	ExitApp
 }
 
 TradeFunc_ClearWebHistory() {

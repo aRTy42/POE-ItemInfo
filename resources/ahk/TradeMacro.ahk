@@ -456,7 +456,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	; handle corruption
 	If (Item.IsCorrupted and TradeOpts.CorruptedOverride and not Item.IsDivinationCard) {
 		If (TradeOpts.Corrupted = "Either") {
-			RequestParams.corrupted := "x"
+			RequestParams.corrupted := ""
 			Item.UsedInSearch.Corruption := "Either"
 		}
 		Else If (TradeOpts.Corrupted = "Yes") {
@@ -471,6 +471,10 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	Else If (Item.IsCorrupted and not Item.IsDivinationCard) {
 		RequestParams.corrupted := "1"
 		Item.UsedInSearch.Corruption := "Yes"
+	}
+	Else If (TradeOpts.Corrupted = "Either") {
+		RequestParams.corrupted := ""
+		Item.UsedInSearch.Corruption := "Either"
 	}
 	Else {
 		RequestParams.corrupted := "0"
@@ -569,7 +573,6 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		;console.show()
 	}
 	Payload := RequestParams.ToPayload()
-	
 	ShowToolTip("Running search...")
 	
 	If (Item.IsCurrency and !Item.IsEssence) {
@@ -3443,3 +3446,10 @@ TradeFunc_ChangeLeague() {
 		ShowToolTip("Changed league to " . TradeOpts.SearchLeague . " (" . TradeGlobals.Get("LeagueName") . ").", true)
 	}
 }
+
+ResetWinHttpProxy:
+	PoEScripts_RunAsAdmin()
+	RunWait %comspec% /c netsh winhttp reset proxy ,,Hide
+	Run, "%A_AhkPath%" "%A_ScriptDir%\Run_TradeMacro.ahk"
+	ExitApp
+Return

@@ -15,19 +15,12 @@ installPath		= %3%
 projectName		= %4%
 
 Try {
+	PoEScripts_RunAsAdmin()
 	FileMoveDir, %updateScriptPath%, %installPath%, 2
 } Catch e {
 	MsgBox,,, % "Exception thrown while copying new files to " installPath ". Update failed!`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
 	ExitApp
 }
-
-/*
-FileMoveDir, %updateScriptPath%, %installPath%, 2
-If (ErrorLevel) {
-	MsgBox Error while copying new files to %installPath%. Update failed.
-	ExitApp
-}
-*/
 
 ; remove 'PoE-' from project name since th start files are named 'Run_ItemInfo/Run_TradeMacro'
 scriptStartFile := RegExReplace(projectName, "i).*-", "Run_") . ".ahk"
