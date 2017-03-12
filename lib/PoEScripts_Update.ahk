@@ -367,7 +367,7 @@ UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, 
 				; try to run the script and exit the app
 				; this needs to be done so that we can overwrite the current scripts directory
 				If (FileExist(externalScript)) {
-					Run "%A_AhkPath%" "%externalScript%" "%A_ScriptDir%" "%folderName%" "%InstallPath%" "%project%"
+					Run "%A_AhkPath%" "%externalScript%" "%A_ScriptDir%" "%folderName%" "%InstallPath%" "%project%" "%A_ScriptName%"
 					If (ErrorLevel) {
 						MsgBox Update failed, couldn't launch 'FinishUpdate' script. File not found.
 					}
