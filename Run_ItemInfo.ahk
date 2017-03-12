@@ -13,7 +13,7 @@ If (A_AhkVersion < AHKVersionRequired)
 }
 
 RunAsAdmin()
-If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-TradeMacro")) {
+If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-ItemInfo")) {
 	ExitApp	
 }
 
