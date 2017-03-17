@@ -32,7 +32,7 @@ Try {
 	renamedUpdatePath	:= updateParentDir1 "\" installFolder
 	installParentDir	:= installParentDir1
 
-	RunWait, "copyUpdate.bat" "%updateScriptPath%" "%installPath%" "%installFolder%" "%installPath%_tempInstall" "%installFolder%_tempInstall", , 
+	RunWait, "copyUpdate.bat" "%updateScriptPath%" "%installPath%" "%installFolder%" "%installPath%_tempInstall" "%installFolder%_tempInstall", , hide
 	If (FileExist("exitCode.txt")) {
 		FileRead, exitCode, exitCode.txt
 		code := ""
