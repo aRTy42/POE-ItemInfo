@@ -7473,8 +7473,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	If (meleePhysDmgGlobal_Percent > 0) {
 		temp := {}
 		temp.values := [meleePhysDmgGlobal_Percent]
-		temp.name_orig := "+" . meleePhysDmgGlobal_Percent . "% Melee Physical Damage"
-		temp.name     := "+#% Melee Physical Damage"
+		temp.name_orig := meleePhysDmgGlobal_Percent . "% increased Melee Physical Damage"
+		temp.name     := "#% increased Melee Physical Damage"
 		temp.simplifiedName := "xIncreasedMeleePhysicalDamage"
 		temp.possibleParentSimplifiedNames := ["xIncreasedMeleePhysicalDamage"]
 		temp.hideForTradeMacro := true
@@ -7483,8 +7483,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	If (energyShieldPercentGlobal > 0) {
 		temp := {}
 		temp.values := [energyShieldPercentGlobal]
-		temp.name_orig := "+" . energyShieldPercentGlobal . "% Energy Shield (Global)"
-		temp.name     := "+#% Energy Shield (Global)"
+		temp.name_orig := energyShieldPercentGlobal . "% increased Energy Shield (Global)"
+		temp.name     := "#% increased Energy Shield (Global)"
 		temp.simplifiedName := "xIncreasedEnergyShieldPercentGlobal"
 		temp.possibleParentSimplifiedNames := ["xIncreasedEnergyShieldPercentGlobal"]
 		temp.hideForTradeMacro := true
@@ -7493,8 +7493,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	If (evasionRatingPercentGlobal > 0) {
 		temp := {}
 		temp.values := [evasionRatingPercentGlobal]
-		temp.name_orig := "+" . evasionRatingPercentGlobal . "% Evasion (Global)"
-		temp.name     := "+#% Evasion (Global)"
+		temp.name_orig := evasionRatingPercentGlobal . "% increased Evasion (Global)"
+		temp.name     := "#% increased Evasion (Global)"
 		temp.simplifiedName := "xIncreasedEvasionRatingPercentGlobal"
 		temp.possibleParentSimplifiedNames := ["xIncreasedEvasionRatingPercentGlobal"]
 		temp.hideForTradeMacro := true
@@ -7515,8 +7515,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	If (spellDmg_Percent > 0) {
 		temp := {}
 		temp.values := [spellDmg_Percent]
-		temp.name_orig := "+" . spellDmg_Percent . "% increased Spell Damage"
-		temp.name     := "+#% increased Spell Damage"
+		temp.name_orig := spellDmg_Percent . "% increased Spell Damage"
+		temp.name     := "#% increased Spell Damage"
 		temp.simplifiedName := "xIncreasedSpellDamage"
 		temp.possibleParentSimplifiedNames := ["xIncreasedSpellDamage"]
 		tempMods.push(temp)
