@@ -5,6 +5,8 @@ The following is a list of what has been updated, starting with 1.1.0
 Fixed option to override corruption state and use "either".
 Fixed talisman leaguestones being parsed as talismans.
 Added more fallbacks/error handling for issues with poe.trade connection (WinHttpRequest issues).
+Fixed some recently occuring permission issues with the updater. If it doesn't work for you in the old version just manually update to this version.
+Minor fixes.
 
 2.0.6
 ================================================================================================

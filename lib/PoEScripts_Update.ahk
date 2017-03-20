@@ -339,7 +339,7 @@ UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, 
 					If (InStr(FileExist(InstallPath "_backup"), "D")) {
 						FileRemoveDir, %InstallPath%_backup, 1
 					}
-					FileMoveDir, %InstallPath%, %InstallPath%_backup, R  ; Simple rename.
+					FileCopyDir, %InstallPath%, %InstallPath%_backup, 1  ; Simple rename.
 				}
 				IfMsgBox No 
 				{
@@ -362,6 +362,7 @@ UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, 
 				; copy script to %A_Temp%\%Project%
 				SplitPath, savePath, , saveDir
 				externalScript := saveDir . "\PoEScripts_FinishUpdate.ahk"
+				FileCopy, %A_ScriptDir%\lib\copyUpdate.bat, %saveDir%\copyUpdate.bat, 1
 				FileCopy, %A_ScriptDir%\lib\PoEScripts_FinishUpdate.ahk, %externalScript%, 1
 				
 				; try to run the script and exit the app

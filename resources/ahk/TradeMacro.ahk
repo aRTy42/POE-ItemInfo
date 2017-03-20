@@ -472,7 +472,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		RequestParams.corrupted := "1"
 		Item.UsedInSearch.Corruption := "Yes"
 	}
-	Else If (TradeOpts.Corrupted = "Either") {
+	Else If (TradeOpts.Corrupted = "Either" and TradeOpts.CorruptedOverride) {
 		RequestParams.corrupted := ""
 		Item.UsedInSearch.Corruption := "Either"
 	}
