@@ -39,7 +39,7 @@ Never completely trust any price checking tool. Inform yourself about what this 
 | ctrl+e      | Show item age (own listed items).
 | ctrl+l      | Switch leagues.
 
-####Additional Macros####
+#### Additional Macros ####
 
 `AdditionalMacros.txt` allows you to add your own macros to be included in the script or to use some of the already created macros. Simply remove the comment by deleting the `;` in front of a line.
 
