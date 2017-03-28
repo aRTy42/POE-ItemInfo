@@ -460,7 +460,8 @@ class Item_ {
 		This.MaxSockets 	:= ""
 		This.SubType 		:= ""
 		This.Implicit 		:= []
-		This.Charges 		:= ""
+		This.Charges 		:= []
+		This.AreaMonsterLevelReq := []
 		
 		This.HasImplicit 	:= False
 		This.HasEffect		:= False
@@ -6087,17 +6088,46 @@ ParseCharges(stats)
 	charges := {}
 	Loop,  Parse, stats, `n, `r 
 	{
-		RegExMatch(A_LoopField, "i)Consumes (\d+) of (\d+) Charges on Use.*", max)
-		RegExMatch(A_LoopField, "i)Currently has (\d+) Charges.*", current)
+		LoopField := RegExReplace(A_Loopfield, "i)\s\(augmented\)", "")
+		; Flasks
+		RegExMatch(LoopField, "i)Consumes (\d+) of (\d+) Charges on use.*", max)		
 		If (max) {
 			charges.usage	:= max1
 			charges.max	:= max2
-		}
+		}		
+		RegExMatch(LoopField, "i)Currently has (\d+) Charges.*", current)
 		If (current) {
 			charges.current:= current1
 		}
-	}	
+		
+		; Leaguestones	
+		RegExMatch(LoopField, "i)Currently has (\d+) of (\d+) Charges.*", max)
+		If (max) {
+			charges.usage	:= 1
+			charges.max	:= max2
+			charges.current:= max1
+		}		
+	}
 	return charges
+}
+
+ParseAreaMonsterLevelRequirement(stats)
+{
+	requirements := {}
+	Loop,  Parse, stats, `n, `r 
+	{
+		RegExMatch(A_LoopField, "i)Can only be used in Areas with Monster Level(.*)", req)
+		RegExMatch(req1, "i)(\d+).*", lvl)
+		RegExMatch(req1, "i)below|above|higher|lower", logicalOperator)
+		
+		If (lvl) {
+			requirements.lvl	:= Trim(lvl1)
+		}
+		If (logicalOperator) {
+			requirements.logicalOperator := Trim(logicalOperator)
+		}
+	}	
+	return requirements
 }
 
 ; Converts a currency stack to Chaos by looking up the
@@ -6573,6 +6603,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
 	Item.Note			:= Globals.Get("ItemNote")	
 
+	If (Item.IsLeaguestone) {		
+		Item.AreaMonsterLevelReq	:= ParseAreaMonsterLevelRequirement(ItemData.Stats)
+	}
+
 	TempStr := ItemData.PartsLast
 	Loop, Parse, TempStr, `n, `r
 	{
@@ -6603,6 +6637,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		; ItemDataParts doesn't have the parts/text we need. Bail.
 		; This might be because the clipboard is completely empty.
 		return
+	}
+	If (Item.IsLeagueStone) {
+		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
 	ItemData.Affixes := ItemDataParts%ItemDataIndexAffixes%
 	ItemData.IndexAffixes := ItemDataIndexAffixes
@@ -6639,7 +6676,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		ParseAffixes(ItemData.Affixes, Item)
 	}
-
+	
 	NumPrefixes	:= AffixTotals.NumPrefixes
 	NumSuffixes	:= AffixTotals.NumSuffixes
 	TotalAffixes	:= NumPrefixes + NumSuffixes
@@ -7052,7 +7089,7 @@ ModStringToObject(string, isImplicit) {
 		Matches[2] := resist ? "+#% to Lightning Resistance" : "+# to Intelligence"
 		Matches[3] := resist ? "+#% to Cold Resistance" : "+# to Dexterity"
 	}
-
+	
 	; Use original mod-string if no combination is found
 	Matches[1] := Matches.Length() > 0 ? Matches[1] : val
 
