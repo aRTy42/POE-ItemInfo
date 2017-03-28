@@ -1,6 +1,14 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.6.01
+================================
+from aRTy42
+
+Updated Uniques, Divination Cards and Maps with the current wiki info.
+Fixed Atlas info: Grotto Map and Dungeon Map now list each other as connected. (with thanks to "paulcdejean" on GitHub)
+Fixed a bug that only occured when ItemInfo was used via the TradeMacro: The predicted Q20Dps was off due to a rounding error.
+
 2.6.00
 ================================
 from aRTy42
