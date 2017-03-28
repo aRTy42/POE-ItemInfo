@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.0.8
+================================================================================================
+Searching leaguestones now uses current charges and monster area level by default.
+Fixed average/median price calculations (they were broken in some cases).
+
 2.0.7
 ================================================================================================
 Fixed option to override corruption state and use "either".
