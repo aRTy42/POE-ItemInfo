@@ -5906,9 +5906,7 @@ AssembleDamageDetails(FullItemData)
 
 	; Only show Q20 values if item is not Q20
 	If (Quality < 20) {
-		TotalPhysMult	:= (PhysMult + Quality + 100) / 100
-		BasePhysDps	:= PhysDps / TotalPhysMult
-		Q20Dps         := PhysDps * (PhysMult + 120) / (PhysMult + Quality + 100)
+		Q20Dps		:= PhysDps * (PhysMult + 120) / (PhysMult + Quality + 100)
 		
 		If ( twoColDisplay )
 		{
@@ -5936,8 +5934,6 @@ AssembleDamageDetails(FullItemData)
 	Item.DamageDetails.TotalOffHChaosDps	:= TotalOffHChaosDps
 	Item.DamageDetails.Q20MainHDps		:= Q20MainHDps
 	Item.DamageDetails.Q20OffHDps			:= Q20OffHDps
-	Item.DamageDetails.BasePhysDps		:= BasePhysDps
-	Item.DamageDetails.TotalPhysMult		:= TotalPhysMult
 
 	Item.DamageDetails.Q20Dps  := Q20Dps
 	Item.DamageDetails.Quality := Quality
