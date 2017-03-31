@@ -5755,6 +5755,7 @@ ParseClipBoardChanges()
 
 AssembleDamageDetails(FullItemData)
 {
+	SetFormat, FloatFast, 5.1
 	Quality := 0
 	AttackSpeed := 0
 	PhysMult := 0
@@ -5859,7 +5860,6 @@ AssembleDamageDetails(FullItemData)
 
 	Result =
 
-	SetFormat, FloatFast, 5.1
 	PhysDps	:= ((PhysLo + PhysHi) / 2) * AttackSpeed
 	Result	= %Result%`nPhys DPS:   %PhysDps%
 
@@ -5908,8 +5908,8 @@ AssembleDamageDetails(FullItemData)
 	If (Quality < 20) {
 		TotalPhysMult	:= (PhysMult + Quality + 100) / 100
 		BasePhysDps	:= PhysDps / TotalPhysMult
-		Q20Dps		:= BasePhysDps * ((PhysMult + 120) / 100)
-
+		Q20Dps         := PhysDps * (PhysMult + 120) / (PhysMult + Quality + 100)
+		
 		If ( twoColDisplay )
 		{
 			Q20MainHDps	:= Q20Dps + TotalMainHEleDps + TotalMainHChaosDps
@@ -6121,11 +6121,12 @@ ParseAreaMonsterLevelRequirement(stats)
 	Loop,  Parse, stats, `n, `r 
 	{
 		RegExMatch(A_LoopField, "i)Can only be used in Areas with Monster Level(.*)", req)
-		RegExMatch(req1, "i)(\d+).*", lvl)
-		RegExMatch(req1, "i)below|above|higher|lower", logicalOperator)
+		RegExMatch(req1, "i)(\d+) and (\d+)|(\d+).*", lvl)
+		RegExMatch(req1, "i)below|above|between", logicalOperator)
 		
 		If (lvl) {
-			requirements.lvl	:= Trim(lvl1)
+			requirements.lvl_upper	:= Trim(lvl1)
+			requirements.lvl_lower	:= lvl2 ? Trim(lvl2) : Trim(lvl3)				
 		}
 		If (logicalOperator) {
 			requirements.logicalOperator := Trim(logicalOperator)

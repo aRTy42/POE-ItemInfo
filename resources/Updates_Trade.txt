@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.0.9
+================================================================================================
+Vastly improved the leaguestone search.
+Minor fixes.
+
 2.0.8
 ================================================================================================
 Searching leaguestones now uses current charges and monster area level by default.

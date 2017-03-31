@@ -1541,9 +1541,9 @@ TradeFunc_StartSplashScreen() {
 TradeFunc_StopSplashScreen() {
 	SplashTextOff 
 	
-	If(TradeOpts.Debug) {
+	If (TradeOpts.Debug) {
 		MsgBox % "Debug mode enabled! Disable in settings-menu unless you're developing!"
-		Class_Console("console",0,335,600,900,,,,9)
+		Class_Console("console",0,335,650,900,,,,9)
 		console.show()
 		
 		gemList := TradeGlobals.Get("GemNameList")

@@ -293,7 +293,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 				modParam.mod_name := s.mods[A_Index].param
 				modParam.mod_min := s.mods[A_Index].min
 				modParam.mod_max := s.mods[A_Index].max
-				RequestParams.modGroup.AddMod(modParam)
+				RequestParams.modGroups[1].AddMod(modParam)
 			}	
 		}
 		Loop % s.stats.Length() {
@@ -376,7 +376,10 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		If (Item.IsRelic) {
 			RequestParams.rarity := "relic"
 			Item.UsedInSearch.Rarity := "Relic"
-		}		
+		} Else If (Item.IsUnique) {
+			RequestParams.rarity := "unique"
+			RequestParams.xbase  := Item.TypeName
+		}
 		Item.UsedInSearch.FullName := true
 	} Else If (!Item.isUnique and AdvancedPriceCheckItem.mods.length() <= 0) {
 		isCraftingBase         := TradeFunc_CheckIfItemIsCraftingBase(Item.TypeName)
@@ -398,13 +401,13 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			modParam.mod_name := Enchantment.param
 			modParam.mod_min  := Enchantment.min
 			modParam.mod_max  := Enchantment.max
-			RequestParams.modGroup.AddMod(modParam)	
+			RequestParams.modGroups[1].AddMod(modParam)	
 			Item.UsedInSearch.Enchantment := true
 		} Else If (Corruption.param and not isAdvancedPriceCheckRedirect) {			
 			modParam := new _ParamMod()
 			modParam.mod_name := Corruption.param
 			modParam.mod_min  := (Corruption.min) ? Corruption.min : ""
-			RequestParams.modGroup.AddMod(modParam)	
+			RequestParams.modGroups[1].AddMod(modParam)	
 			Item.UsedInSearch.CorruptedMod := true
 		} Else {
 			RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
@@ -416,38 +419,63 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	
 	; league stones
-	If (Item.IsLeagueStone){
-		If (Item.AreaMonsterLevelReq.lvl) {
-			modParam := new _ParamMod()
-			modParam.mod_name := "(leaguestone) Can only be used in Areas with Monster Level # or below"			
-			modParam.mod_min  := Item.AreaMonsterLevelReq.lvl - 10
-			modParam.mod_max  := Item.AreaMonsterLevelReq.lvl			
-			RequestParams.modGroup.AddMod(modParam)
-			Item.UsedInSearch.AreaMonsterLvl := "Area Level: " modParam.mod_min " - " modParam.mod_max
+	If (Item.IsLeagueStone) {
+		; only manually add these mods if they don't already exist (created by advanced search)
+		temp_name := "(leaguestone) Can only be used in Areas with Monster Level # or below"
+		If (not TradeFunc_FindModInRequestParams(RequestParams, temp_name)) {
+			; mod does not exist on poe.trade: "Can only be used in Areas with Monster Level # or above"
+			If (Item.AreaMonsterLevelReq.logicalOperator = "above") {
+				; do nothing, min (above) requirement has no correlation with item level, only with the mods spawned on the stone
+				; stones with the same name should have the same "above" requirement so we ignore it
+			} Else If (Item.AreaMonsterLevelReq.logicalOperator = "between") {
+				; stones with the same name should have the same "above" requirement so we ignore it
+				; the upper limit value ("below") depends on the item level, it should be limit = (ilvl + 11)
+				; so we could use the max item level parameter with some buffer (not sure about the + 11).
+				RequestParams.ilvl_max := Item.AreaMonsterLevelReq.lvl_upper + 15
+				Item.UsedInSearch.iLvl.min := RequestParams.ilvl_max
+			} Else {
+				modParam := new _ParamMod()
+				modParam.mod_name := temp_name
+				
+				If (Item.AreaMonsterLevelReq.lvl) {		
+					modParam.mod_min  := Item.AreaMonsterLevelReq.lvl_upper - 10
+					modParam.mod_max  := Item.AreaMonsterLevelReq.lvl_upper
+					RequestParams.modGroups[1].AddMod(modParam)
+					Item.UsedInSearch.AreaMonsterLvl := "Area Level: " modParam.mod_min " - " modParam.mod_max
+				} Else {
+					; add second mod group to exclude area restrictions
+					RequestParams.AddModGroup("Not", 1)
+					RequestParams.modGroups[RequestParams.modGroups.MaxIndex()].AddMod(modParam)
+					Item.UsedInSearch.AreaMonsterLvl := "Area Level: no restriction"
+				}	
+			}			
 		}
 		
-		modParam := new _ParamMod()
-		modParam.mod_name := "(leaguestone) Currently has # Charges"
-		modParam.mod_min  := Item.Charges.Current
-		modParam.mod_max  := Item.Charges.Current
-		RequestParams.modGroup.AddMod(modParam)
-		Item.UsedInSearch.Charges:= "Charges: " Item.Charges.Current
+		temp_name := "(leaguestone) Currently has # Charges"
+		If (not TradeFunc_FindModInRequestParams(RequestParams, temp_name)) {
+			modParam := new _ParamMod()
+			modParam.mod_name := "(leaguestone) Currently has # Charges"
+			modParam.mod_min  := Item.Charges.Current
+			modParam.mod_max  := Item.Charges.Current
+			RequestParams.modGroups[1].AddMod(modParam)
+			Item.UsedInSearch.Charges:= "Charges: " Item.Charges.Current
+		}
 	}
 	
 	If (TradeOpts.debug) {
 		uniq := Item.IsUnique ? "Yes" : "No"
-		console.log("Is unique: " uniq)
+		;console.log("Is unique: " uniq)
 		ench := Enchantment.param ? "Yes" : "No"
-		console.log("Has enchantment: " ench " - " Enchantment.param)
+		;console.log("Has enchantment: " ench " - " Enchantment.param)
 		If (ench == "Yes") {
 			enchused := Item.UsedInSearch.Enchantment ? "Yes" : "No"
-			console.log("Enchantment used in search: " enchused)	
+			;console.log("Enchantment used in search: " enchused)	
 		}
 		corr := Corruption.param ? "Yes" : "No"
-		console.log("Has corruption: " corr " - " Corruption.param)
+		;console.log("Has corruption: " corr " - " Corruption.param)
 		If (corr == "Yes") {
 			corrused := Item.UsedInSearch.CorruptedMod ? "Yes" : "No"
-			console.log("Enchantment used in search: " corrused)	
+			;console.log("Enchantment used in search: " corrused)	
 		}
 	}
 	
@@ -1148,14 +1176,15 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	HttpObj.SetRequestHeader("Content-type","application/x-www-form-urlencoded")
 	HttpObj.SetRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
 	HttpObj.SetRequestHeader("Referer","http://poe.trade/")
-		
+
 	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
     ;HttpObj.SetRequestHeader("Accept-Encoding","gzip;q=0,deflate;q=0") ; disables compression
     ;HttpObj.SetRequestHeader("Accept-Encoding","gzip, deflate")
     ;HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")    
 	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
 	HttpObj.Send(payload)
-	HttpObj.WaitForResponse()
+	retCode := HttpObj.WaitForResponse()	; EMPTY = no response
+	
 
 	Try {				
 		If Encoding {
@@ -1179,6 +1208,13 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	
 	If A_LastError
 		MsgBox % A_LastError
+	
+	If (TradeOpts.Debug) {
+		FileDelete, %A_ScriptDir%\temp\DebugSearchOutput.txt
+		FileAppend, %html%, %A_ScriptDir%\temp\DebugSearchOutput.txt		
+		Out_HEADERS := "Search Finished.`n`n Return Code: " retCode "`n Content Length: " StrLen(html) "`n`nHTTP/1.1 " HttpObj.Status " " HttpObj.StatusText "`n" HttpObj.GetAllResponseHeaders()	
+		console.log(Out_HEADERS)
+	}
 	
 	Return, html
 }
@@ -1239,6 +1275,12 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	If (init) {
 		TradeFunc_ParseCurrencyIDs(html)
 		Return
+	}
+	
+	If (TradeOpts.Debug) {
+		FileDelete, %A_ScriptDir%\temp\DebugSearchOutput.txt
+		FileAppend, %html%, %A_ScriptDir%\temp\DebugSearchOutput.txt
+		console.log("Search finished. Returned content length: " StrLen(html))
 	}
 	
 	Return, html
@@ -1486,7 +1528,7 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 		CurrencyName := TradeUtils.Cleanup(Currency)
 		
 		StringReplace, CurrencyV, CurrencyV, >, , All
-		StringReplace, CurrencyV, CurrencyV, �, , All		
+		StringReplace, CurrencyV, CurrencyV, ?, , All		
 		*/
 		
 		CurrencyName := TradeUtils.Cleanup(Currency)
@@ -1852,8 +1894,7 @@ class RequestParams_ {
 	rdex_max 		:= ""
 	rint_min 		:= ""
 	rint_max 		:= ""
-	; For future development, change this to array to provide multi mod groups
-	modGroup 	:= new _ParamModGroup()
+	modGroups		:= [new _ParamModGroup()]
 	q_min 		:= ""
 	q_max 		:= ""
 	level_min 	:= ""
@@ -1874,11 +1915,12 @@ class RequestParams_ {
 	buyout_currency:= ""
 	crafted		:= ""
 	enchanted 	:= ""
-	;charges		:= ""
 	
-	ToPayload()
-	{
-		modGroupStr := this.modGroup.ToPayload()
+	ToPayload() {
+		modGroupStr := ""
+		Loop, % this.modGroups.MaxIndex() {
+			modGroupStr .= this.modGroups[A_Index].ToPayload()	
+		}
 		
 		p := "league=" this.league "&type=" this.xtype "&base=" this.xbase "&name=" this.name "&dmg_min=" this.dmg_min "&dmg_max=" this.dmg_max "&aps_min=" this.aps_min "&aps_max=" this.aps_max 
 		p .= "&crit_min=" this.crit_min "&crit_max=" this.crit_max "&dps_min=" this.dps_min "&dps_max=" this.dps_max "&edps_min=" this.edps_min "&edps_max=" this.edps_max "&pdps_min=" this.pdps_min 
@@ -1886,18 +1928,23 @@ class RequestParams_ {
 		p .= "&shield_max=" this.shield_max "&block_min=" this.block_min "&block_max=" this.block_max "&sockets_min=" this.sockets_min "&sockets_max=" this.sockets_max "&link_min=" this.link_min 
 		p .= "&link_max=" this.link_max "&sockets_r=" this.sockets_r "&sockets_g=" this.sockets_g "&sockets_b=" this.sockets_b "&sockets_w=" this.sockets_w "&linked_r=" this.linked_r 
 		p .= "&linked_g=" this.linked_g "&linked_b=" this.linked_b "&linked_w=" this.linked_w "&rlevel_min=" this.rlevel_min "&rlevel_max=" this.rlevel_max "&rstr_min=" this.rstr_min 
-		p .= "&rstr_max=" this.rstr_max "&rdex_min=" this.rdex_min "&rdex_max=" this.rdex_max "&rint_min=" this.rint_min "&rint_max=" this.rint_max modGroupStr "&q_min=" this.q_min 
-		p .= "&q_max=" this.q_max "&level_min=" this.level_min "&level_max=" this.level_max "&ilvl_min=" this.ilvl_min "&ilvl_max=" this.ilvl_max "&rarity=" this.rarity "&seller=" this.seller 
+		p .= "&rstr_max=" this.rstr_max "&rdex_min=" this.rdex_min "&rdex_max=" this.rdex_max "&rint_min=" this.rint_min "&rint_max=" this.rint_max 
+		p .= modGroupStr	
+		p .= "&q_min=" this.q_min  "&q_max=" this.q_max "&level_min=" this.level_min "&level_max=" this.level_max "&ilvl_min=" this.ilvl_min "&ilvl_max=" this.ilvl_max "&rarity=" this.rarity "&seller=" this.seller 
 		p .= "&thread=" this.xthread "&identified=" this.identified "&corrupted=" this.corrupted "&online=" this.online "&has_buyout=" this.buyout "&altart=" this.altart "&capquality=" this.capquality 
 		p .= "&buyout_min=" this.buyout_min "&buyout_max=" this.buyout_max "&buyout_currency=" this.buyout_currency "&crafted=" this.crafted "&enchanted=" this.enchanted	
-		;p .= "&charges=" this.charges
-		
+
+		; not used yet
 		temp := p
 		temp := CleanPayload(temp)
-		; not used yet
 		;console.log(temp)
 		
 		Return p
+	}
+	
+	AddModGroup(type, count, min = "", max = "") {
+		this.modGroups.push(new _ParamModGroup())
+		this.modGroups[this.modGroups.MaxIndex()].SetGroupOptions(type, count, min, max)
 	}
 }
 
@@ -1927,8 +1974,7 @@ class _ParamModGroup {
 	group_max := ""
 	group_count := 1
 	
-	ToPayload() 
-	{
+	ToPayload() {
 		p := ""
 		
 		If (this.ModArray.Length() = 0) {
@@ -1940,8 +1986,26 @@ class _ParamModGroup {
 		p .= "&group_type=" this.group_type "&group_min=" this.group_min "&group_max=" this.group_max "&group_count=" this.group_count
 		Return p
 	}
+	
 	AddMod(paraModObj) {
 		this.ModArray.Push(paraModObj)
+	}
+	
+	SetGroupOptions(type, count, min = "", max = "") {
+		this.group_type	:= type
+		this.group_count	:= count
+		this.group_min		:= min
+		this.group_max		:= max
+	}
+	SetGroupType(type) {
+		this.group_type := type 
+	}
+	SetGroupMinMax(min = "", max = "") {
+		this.group_min := min
+		this.group_max := max
+	}
+	SetGroupCount(count) {
+		this.group_count := count
 	}
 }
 
@@ -1956,6 +2020,17 @@ class _ParamMod {
 		p := "&mod_name=" this.mod_name "&mod_min=" this.mod_min "&mod_max=" this.mod_max
 		Return p
 	}
+}
+	
+TradeFunc_FindModInRequestParams(RequestParams, name) {
+	For gkey, gval in RequestParams.modGroups {
+		For mkey, mval in gval.ModArray {
+			If (mval.mod_name == name) {
+				Return true
+			}
+		}
+	}
+	Return False
 }
 
 ; Return unique item with its variable mods and mod ranges If it has any

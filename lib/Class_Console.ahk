@@ -20,7 +20,7 @@ If(A_ScriptName="Class_Console.ahk")
 	ExitApp
 }
 
-Class_Console(Name,x,y,w,h,GuiTitle:="",Timestamp:=1,HTML:="",Font:="Courier New",FontSize:=10)
+Class_Console(Name,x,y,w,h,GuiTitle:="",Timestamp:=1,HTML:="",Font:="Lucida Console",FontSize:=11)
 {	return new console(Name,x,y,w,h,GuiTitle,Timestamp,HTML,Font,FontSize)
 }
 Desc_Console()
@@ -41,7 +41,7 @@ Methods_Console()
 	return T
 }
 class console
-{	__new(ObjVar,x,y,w,h,GuiTitle:="",Timestamp:=1,HTML:="",Font:="Courier New",FontSize:=10)
+{	__new(ObjVar,x,y,w,h,GuiTitle:="",Timestamp:=1,HTML:="",Font:="Lucida Console",FontSize:=11)
 	{	global
 		static _,__,$,@,@@
 		local Name2,MatchList,Check,Temp_,Temp_2,Gui,Gui_B,cmd,cmd2,Assign1,Assign2,Assign3,debugprev,DHW,textO,Check2,tc,Console_Help1,Console_Help2,Console_Help3
