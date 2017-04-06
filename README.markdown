@@ -20,7 +20,8 @@ Never completely trust any price checking tool. Inform yourself about what this 
 3. Make sure to run PoE in (borderless) windowed mode. Otherwise it won't work!
 4. Run **_Run_TradeMacro.ahk_**.
 5. Default league is set to `tmpstandard` (Softcore Temp-League).
-6. A lot of options, including the league can be changed by opening the settings window or editing `config_trade.ini`.   
+6. A lot of options, including the league can be changed by opening the settings window or editing `config_trade.ini`.
+7. Make sure to play Path of Exile in english, if you're using a different language it probably won't work.
 
 > **Right-click the script icon in your system tray and select `PoE Item Info Settings` to open the settings window and to edit both `PoE-ItemInfos` and `PoE-TradeMacros` settings.**
 
