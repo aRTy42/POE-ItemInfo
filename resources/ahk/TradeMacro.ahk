@@ -1306,19 +1306,23 @@ TradeFunc_OpenUrlInBrowser(Url){
 
 ; Parse currency.poe.trade to get all available currencies and their IDs
 TradeFunc_ParseCurrencyIDs(html){
-	RegExMatch(html, "is)id=""currency-want"">(.*?)input", match)	
+	RegExMatch(html, "is)id=""currency-want"">(.*?)input", match)
+	startString := "<div data-tooltip"	
 	Currencies := {}
 	
-	Loop {
-		Div          := TradeUtils.StrX( match1, "<div data-tooltip",  N, 0, "<img" , 1,4, N )
-		CurrencyName := TradeUtils.StrX( Div,  "title=""",             1, 7, """"   , 1,1, T )
-		CurrencyID   := TradeUtils.StrX( Div,  "data-id=""",           1, 9, """"   , 1,1    )			
+	Loop {		
+		CurrencyBlock 	:= TradeUtils.HtmlParseItemData(match1, startString . "(.*?)>", html)
+		CurrencyName 	:= TradeUtils.HtmlParseItemData(CurrencyBlock, "title=""(.*?)""")
+		CurrencyID 	:= TradeUtils.HtmlParseItemData(CurrencyBlock, "data-id=""(.*?)""")
 		CurrencyName := StrReplace(CurrencyName, "&#39;", "'")
-		
+			
 		If (!CurrencyName) {			
 			TradeGlobals.Set("CurrencyIDs", Currencies)
 			break
-		}
+		}		
+		
+		match1 := match1
+		match1 := SubStr(match1, StrLen(CurrencyBlock))
 		
 		Currencies[CurrencyName] := CurrencyID  
 		TradeGlobals.Set("CurrencyIDs", Currencies)
@@ -1326,7 +1330,7 @@ TradeFunc_ParseCurrencyIDs(html){
 }
 
 ; Parse currency.poe.trade to display tooltip with first X listings
-TradeFunc_ParseCurrencyHtml(html, payload){
+TradeFunc_ParseCurrencyHtml(html, payload) {
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
 	
@@ -3207,13 +3211,17 @@ class TradeUtils {
 	; TradeUtils.HtmlParseItemData, alternative Function for parsing html with simple regex
 	; ------------------------------------------------------------------------------------------------------------------ ;
 	
-	HtmlParseItemData(ByRef html, regex, ByRef htmlOut = "") {
+	HtmlParseItemData(ByRef html, regex, ByRef htmlOut = "", leftOffset = 0) {
 		; last capture group captures the remaining string
-		RegExMatch(html, "isO)" . regex . "(.*)", match)
+		Pos := RegExMatch(html, "isO)" . regex . "(.*)", match)
 		
 		If (match.count() >= 2) {
 			htmlOut := match[match.count()]
 		}
+		If (Pos and leftOffset) {
+			offset  := SubStr(html, Pos - leftOffset, leftOffset)
+			htmlOut := offset . htmlOut
+		}		
 		Return match.value(1)
 	}
 

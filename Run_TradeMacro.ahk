@@ -12,7 +12,11 @@ If (A_AhkVersion < TradeAHKVersionRequired)
     ExitApp
 }
 
-RunAsAdmin()
+arguments	= %1%
+If (!InStr(arguments, "-noelevation", 0)) {
+	RunAsAdmin()
+}
+
 If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-TradeMacro")) {
 	ExitApp	
 }

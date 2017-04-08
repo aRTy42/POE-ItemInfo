@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.0.10
+================================================================================================
+Fixed currency search which was broken and caused the script to crash/freeze. This issue was probably caused by recent poe.trade changes.
+
 2.0.9
 ================================================================================================
 Vastly improved the leaguestone search.
