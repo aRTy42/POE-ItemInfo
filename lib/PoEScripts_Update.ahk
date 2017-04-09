@@ -281,6 +281,12 @@ GetVersionIdentifierPriority(identifier) {
 }
 
 UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, userDirectory) {	
+	DriveSpaceFree, freeSpace, %A_Temp%
+	If (freeSpace < 30) {
+		MsgBox You don't have enough free space available on your system drive (at least 30MB). Update will be cancelled. 
+		Return
+	}	
+	
 	prompt := "Please select the folder you want to install/extract " project " to.`n"
 	prompt .= "Selecting an existing folder will ask for confirmation and will back up that folder, for example 'MyFolder_backup'."
 	
@@ -328,8 +334,31 @@ UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, 
 			Return
 		}
 
-		; check if install folder is empty 
+		; check if install folder is empty
 		If (not IsEmpty(InstallPath)) {
+			folderSize := GetFileFolderSize(InstallPath)
+			folderSize := Round(folderSize / 1024 / 1024, 2)
+			DriveSpaceFree, freeSpace, %InstallPath%
+			
+			; use some higher number to make sure there's enough space for the backup and update process
+			spaceNeeded := Round(folderSize * 3, 2)
+			If (freeSpace < spaceNeeded) {
+				MsgBox You don't have enough free space on this drive to make a backup of %InstallPath% (Size: %folderSize%MB).`n`nYou should have at least %spaceNeeded%MB of space available to make sure the update will succeed. Update will be cancelled.
+				Return
+			}
+			
+			If (folderSize > 30) {
+				MsgBox, 4,, Folder (%InstallPath%) has a size of %folderSize%MB. That's an unusual size for %project%, are you sure that you have the right folder selected and want to continue overwriting it?
+				IfMsgBox Yes 
+				{			
+					
+				}
+				IfMsgBox No 
+				{
+					Return
+				}
+			}			
+
 			If (not skipBackup) {
 				MsgBox, 4,, Folder (%InstallPath%) is not empty, overwrite it after making a backup?
 				IfMsgBox Yes 
@@ -360,7 +389,7 @@ UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, 
 			If (StrLen(folderName)) {
 				; successfully downloaded and extracted release.zip to %A_Temp%\%Project%\ext
 				; copy script to %A_Temp%\%Project%
-				SplitPath, savePath, , saveDir
+				SplitPath, savePath, , saveDir				
 				externalScript := saveDir . "\PoEScripts_FinishUpdate.ahk"
 				FileCopy, %A_ScriptDir%\lib\copyUpdate.bat, %saveDir%\copyUpdate.bat, 1
 				FileCopy, %A_ScriptDir%\lib\PoEScripts_FinishUpdate.ahk, %externalScript%, 1
@@ -528,6 +557,19 @@ ExtractRelease(file, project) {
 	}
 	
 	Return folderName
+}
+
+GetFileFolderSize(fPath="") {
+	If InStr( FileExist( fPath ), "D" ) {
+		Loop, %fPath%\*.*, 1, 1
+		FolderSize += %A_LoopFileSize%
+		Return FolderSize ? FolderSize : 0
+	} Else If ( FileExist( fPath ) <> "" ) {
+		FileGetSize, FileSize, %fPath%
+		Return FileSize ? FileSize : 0
+	} Else {
+		Return -1
+	}
 }
 
 IsEmpty(Dir){
