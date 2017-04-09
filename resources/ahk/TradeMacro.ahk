@@ -620,9 +620,14 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	Payload := RequestParams.ToPayload()
 	ShowToolTip("Running search...")
 	
+	ParsingError := ""
+	currencyUrl := ""
 	If (Item.IsCurrency and !Item.IsEssence) {
 		If (!TradeOpts.AlternativeCurrencySearch) {
-			Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser)	
+			Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser, 0, currencyUrl, error)	
+			If (error) {
+				ParsingError := Html
+			}
 		}
 		Else {
 			; Update currency data if last update is older than 30min
@@ -641,20 +646,24 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	If (openSearchInBrowser) {
 		; redirect was prevented to get the url and open the search on poe.trade instead
 		If (Item.isCurrency and !Item.IsEssence) {
-			IDs := TradeGlobals.Get("CurrencyIDs")
-			Have:= TradeOpts.CurrencySearchHave
-			ParsedUrl1 := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[Name] . "&have=" . IDs[Have]
+			ParsedUrl1 := currencyUrl
 		}
 		Else {
 			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
-		}		
-		TradeFunc_OpenUrlInBrowser(ParsedUrl1)
-		SetClipboardContents("")
+		}
+		
+		If (StrLen(ParsingError)) {
+			ShowToolTip("")
+			ShowToolTip(ParsingError)
+		} Else {			
+			TradeFunc_OpenUrlInBrowser(ParsedUrl1)
+			SetClipboardContents("")
+		}
 	}
 	Else If (Item.isCurrency and !Item.IsEssence) {
 		; Default currency search
 		If (!TradeOpts.AlternativeCurrencySearch) {
-			ParsedData := TradeFunc_ParseCurrencyHtml(Html, Payload)
+			ParsedData := TradeFunc_ParseCurrencyHtml(Html, Payload, ParsingError)
 		}
 		; Alternative currency search (poeninja)
 		Else {
@@ -1219,9 +1228,19 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	Return, html
 }
 
+TradeFunc_MapCurrencyNameToID(name) {
+	; map the actual ingame name of the currency to the one used on poe.trade and get the corresponding ID
+	name := RegExReplace(name, "i) ", "_")
+	name := RegExReplace(name, "i)'", "")
+	mappedName := TradeCurrencyNames.eng[name]
+	ID := TradeGlobals.Get("CurrencyIDs")[mappedName]
+	
+	Return ID
+}
+
 ; Get currency.poe.trade html
 ; Either at script start to parse the currency IDs or when searching to get currency listings
-TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init = false) {
+TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init = false, ByRef currencyURL = "", ByRef error = 0) {
 	UserAgent   := TradeGlobals.Get("UserAgent")
 	cfduid      := TradeGlobals.Get("cfduid")
 	cfClearance := TradeGlobals.Get("cfClearance")
@@ -1239,8 +1258,20 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	Else {
 		LeagueName := TradeGlobals.Get("LeagueName")
 		IDs := TradeGlobals.Get("CurrencyIDs")
-		Have:= TradeOpts.CurrencySearchHave
-		Url := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . IDs[currencyName] . "&have=" . IDs[Have]
+		Have:= TradeOpts.CurrencySearchHave		
+		
+		idWant := TradeFunc_MapCurrencyNameToID(currencyName)
+		idHave := TradeFunc_MapCurrencyNameToID(TradeOpts.CurrencySearchHave)
+
+		If (idWant and idHave) {
+			Url := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . idWant . "&have=" . idHave
+			currencyURL := Url
+		} Else {
+			;MsgBox Couldn't find currency "%currencyname%" on poe.trade's currency search.`n`nThis search needs to know the currency names used on poe.trades currency page.`n`nEither this item doesn't exist on that page or parsing and mapping the poe.trade names to the actual names failed. Please report this issue.
+			errorMsg = Couldn't find currency "%currencyname%" on poe.trade's currency search.`n`nThis search needs to know the currency names used on poe.trades currency page.`n`nEither this item doesn't exist on that page or parsing and mapping the poe.trade`nnames to the actual names failed. Please report this issue.
+			error := 1
+			Return, errorMsg
+		}
 	}
 	
 	HttpObj.Open("GET",Url)
@@ -1305,18 +1336,23 @@ TradeFunc_OpenUrlInBrowser(Url){
 }
 
 ; Parse currency.poe.trade to get all available currencies and their IDs
-TradeFunc_ParseCurrencyIDs(html){
+TradeFunc_ParseCurrencyIDs(html) {
+	; remove linebreaks and replace multiple spaces with a single one
+	StringReplace, html,html, `r,, All
+	StringReplace, html,html, `n,, All
+	html := RegExReplace(html,"\s+"," ")
+	
 	RegExMatch(html, "is)id=""currency-want"">(.*?)input", match)
 	startString := "<div data-tooltip"	
 	Currencies := {}
 	
-	Loop {		
+	Loop {
 		CurrencyBlock 	:= TradeUtils.HtmlParseItemData(match1, startString . "(.*?)>", html)
 		CurrencyName 	:= TradeUtils.HtmlParseItemData(CurrencyBlock, "title=""(.*?)""")
 		CurrencyID 	:= TradeUtils.HtmlParseItemData(CurrencyBlock, "data-id=""(.*?)""")
 		CurrencyName := StrReplace(CurrencyName, "&#39;", "'")
-			
-		If (!CurrencyName) {			
+		
+		If (!CurrencyName) {
 			TradeGlobals.Set("CurrencyIDs", Currencies)
 			break
 		}		
@@ -1327,12 +1363,18 @@ TradeFunc_ParseCurrencyIDs(html){
 		Currencies[CurrencyName] := CurrencyID  
 		TradeGlobals.Set("CurrencyIDs", Currencies)
 	}
+	;debugprintarray(TradeGlobals.Get("CurrencyIDs"))
+	;debugprintarray(TradeCurrencyNames)
 }
 
 ; Parse currency.poe.trade to display tooltip with first X listings
-TradeFunc_ParseCurrencyHtml(html, payload) {
+TradeFunc_ParseCurrencyHtml(html, payload, ParsingError = "") {
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
+	
+	If (StrLen(ParsingError)) {
+		Return, ParsingError
+	}
 	
 	Title := Item.Name
 	Title .= " (" LeagueName ")"
@@ -1481,25 +1523,18 @@ TradeFunc_ParseAlternativeCurrencySearch(name, payload) {
 }
 
 ; Calculate average and median price of X listings
-TradeFunc_GetMeanMedianPrice(html, payload){
+TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = ""){
 	itemCount := 1
 	prices := []
 	average := 0
 	Title := ""
+	error := 0
 	
 	; loop over the first 99 results If possible, otherwise over as many as are available
 	accounts := []
 	NoOfItemsToCount := 99
 	NoOfItemsSkipped := 0
 	While A_Index <= NoOfItemsToCount {
-		/* Old code, somehow stopeed working
-		TBody         := TradeUtils.StrX( html,   "<tbody id=""item-container-" . %A_Index%,  N, 0, "</tbody>" , 1,23, N )
-		AccountName   := TradeUtils.StrX( TBody,  "data-seller=""",                           1,13, """"       , 1,1,  T )
-		ChaosValue    := TradeUtils.StrX( TBody,  "data-name=""price_in_chaos""",             T, 0, "currency" , 1,1,  T )
-		Currency      := TradeUtils.StrX( TBody,  "currency-",                                T, 0, ">"        , 1,1, T  )
-		CurrencyV     := TradeUtils.StrX( TBody, ">",                                         T, 0, "<"        , 1,1, T  )
-		*/
-
 		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index - 1 """(.*?)<\/tbody>", html)
 		AccountName 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-seller=""(.*?)""")
 		ChaosValue 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-name=""price_in_chaos""(.*?)>")
@@ -1525,16 +1560,6 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 			itemCount++
 		}
 		
-		/*
-		; replace "
-		StringReplace, Currency, Currency, ", , All			; "
-		StringReplace, Currency, Currency, currency-, , All
-		CurrencyName := TradeUtils.Cleanup(Currency)
-		
-		StringReplace, CurrencyV, CurrencyV, >, , All
-		StringReplace, CurrencyV, CurrencyV, ?, , All		
-		*/
-		
 		CurrencyName := TradeUtils.Cleanup(Currency)
 		CurrencyValue := TradeUtils.Cleanup(CurrencyV)
 		
@@ -1544,19 +1569,40 @@ TradeFunc_GetMeanMedianPrice(html, payload){
 		If (StrLen(CurrencyValue) > 0) {
 			SetFormat, float, 6.2
 			chaosEquivalent := 0
-
-			For key, val in ChaosEquivalents {
-				haystack := RegExReplace(key, "i)'", "")
-				If (InStr(haystack, CurrencyName)) {
-					chaosEquivalent := val * CurrencyValue
+			
+			; map poe.trade currency names to actual ingame names
+			mappedCurrencyName := ""
+			For key, val in TradeCurrencyNames.eng {
+				If (val = CurrencyName) {
+					mappedCurrencyName := RegExReplace(key, "i)_", " ")
 				}
+			}
+			
+			; if mapping the exact name failed try to map it a bit less strict (example, poe.trade uses "chrome" for currencies and "chromatic" for items)
+			If (!StrLen(mappedCurrencyName)) {
+				For key, val in TradeCurrencyNames.eng {
+					tempKey := RegExReplace(key, "i)_", " ")
+					If (InStr(tempKey, val, 0)) {
+						mappedCurrencyName := tempKey
+					}
+				}
+			}
+			
+			chaosEquivalentSingle := ChaosEquivalents[mappedCurrencyName]
+			chaosEquivalent := CurrencyValue * chaosEquivalentSingle
+			If (!chaosEquivalentSingle) {
+				error++
 			}
 			
 			StringReplace, FloatNumber, chaosEquivalent, ., `,, 1
 			average += chaosEquivalent
 			prices[itemCount-1] := chaosEquivalent
 		}
-	}
+	}	
+	
+	If (error) {
+		errorMsg := "Couldn't find the chaos equiv. value for " error " item(s). Please report this."	
+	}	
 
 	; calculate average and median prices
 	If (prices.MaxIndex() > 0) {
@@ -1685,7 +1731,10 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	
 	; add average and median prices to title	
 	If (not isItemAgeRequest) {
-		Title .= TradeFunc_GetMeanMedianPrice(html, payload)
+		Title .= TradeFunc_GetMeanMedianPrice(html, payload, error)
+		If (StrLen(error)) {
+			Title .= error "`n`n" 
+		}
 	} Else {
 		Title .= "`n"
 	}	
@@ -3401,6 +3450,7 @@ ReadPoeNinjaCurrencyData:
 	
 	global ChaosEquivalents := {}
 	For key, val in CurrencyHistoryData {
+		currencyTypeName := RegexReplace(val.currencyTypeName, "i)'", "")
 		ChaosEquivalents[val.currencyTypeName] := val.chaosEquivalent		
 	}
 	ChaosEquivalents["Chaos Orb"] := 1

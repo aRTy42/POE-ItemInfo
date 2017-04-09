@@ -918,8 +918,15 @@ CreateTradeSettingsUI()
 TradeFunc_GetDelimitedCurrencyListString() {
 	CurrencyList := ""
 	CurrencyTemp := TradeGlobals.Get("CurrencyIDs")	
-	For currName, currID in CurrencyTemp {   
-		CurrencyList .= "|" . currName
+	CurrencyTemp := TradeCurrencyNames.eng
+	
+	For currName, currID in CurrencyTemp {
+		name := RegExReplace(currName,  "i)_", " ")
+		; only use real currency items here
+		RegExMatch(name, "i)fragment| set|essence| key|breachstone|mortal|sacrifice|remnant|splinter|blessing|offering", skip)
+		If (!skip) {
+			CurrencyList .= "|" . name	
+		}		
 	}
 	Return CurrencyList
 }

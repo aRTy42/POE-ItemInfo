@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.0.11
+================================================================================================
+Fixed currency search again which was broken by the recent poe.trade changes.
+Fixed ItemInfo crashes/freezes on parsing some leaguestones.
+Improved updater.
+
 2.0.10
 ================================================================================================
 Fixed currency search which was broken and caused the script to crash/freeze. This issue was probably caused by recent poe.trade changes.

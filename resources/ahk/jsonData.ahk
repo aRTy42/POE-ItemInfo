@@ -27,6 +27,11 @@ FileRead, JSONFile, %A_ScriptDir%\data_trade\mods.json
 parsedJSON := JSON.Load(JSONFile)
 global TradeModsData := parsedJSON.mods
 
+; Parse currency names (in-game names mapped to poe.trade names)
+FileRead, JSONFile, %A_ScriptDir%\data_trade\currencyNames.json
+parsedJSON := JSON.Load(JSONFile)
+global TradeCurrencyNames := parsedJSON.currencyNames
+
 ; Download and parse the current leagues
 postData	:= ""
 reqHeaders =

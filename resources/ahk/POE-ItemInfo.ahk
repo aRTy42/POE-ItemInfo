@@ -2420,6 +2420,10 @@ LookupRemainingAffixBracket(Filename, ItemLevel, CurrValue, Bracket, ByRef Brack
 	return RemainderBracket
 }
 
+ParseLeagueStoneAffixes(ItemDataAffixes, Item) {
+	; Placeholder
+}
+
 ParseAffixes(ItemDataAffixes, Item)
 {
 	Global Globals, Opts, AffixTotals, AffixLines
@@ -5755,7 +5759,6 @@ ParseClipBoardChanges()
 
 AssembleDamageDetails(FullItemData)
 {
-	SetFormat, FloatFast, 5.1
 	Quality := 0
 	AttackSpeed := 0
 	PhysMult := 0
@@ -5860,6 +5863,7 @@ AssembleDamageDetails(FullItemData)
 
 	Result =
 
+	SetFormat, FloatFast, 5.1
 	PhysDps	:= ((PhysLo + PhysHi) / 2) * AttackSpeed
 	Result	= %Result%`nPhys DPS:   %PhysDps%
 
@@ -5907,7 +5911,7 @@ AssembleDamageDetails(FullItemData)
 	; Only show Q20 values if item is not Q20
 	If (Quality < 20) {
 		Q20Dps		:= PhysDps * (PhysMult + 120) / (PhysMult + Quality + 100)
-		
+
 		If ( twoColDisplay )
 		{
 			Q20MainHDps	:= Q20Dps + TotalMainHEleDps + TotalMainHChaosDps
@@ -6117,12 +6121,11 @@ ParseAreaMonsterLevelRequirement(stats)
 	Loop,  Parse, stats, `n, `r 
 	{
 		RegExMatch(A_LoopField, "i)Can only be used in Areas with Monster Level(.*)", req)
-		RegExMatch(req1, "i)(\d+) and (\d+)|(\d+).*", lvl)
-		RegExMatch(req1, "i)below|above|between", logicalOperator)
+		RegExMatch(req1, "i)(\d+).*", lvl)
+		RegExMatch(req1, "i)below|above|higher|lower", logicalOperator)
 		
 		If (lvl) {
-			requirements.lvl_upper	:= Trim(lvl1)
-			requirements.lvl_lower	:= lvl2 ? Trim(lvl2) : Trim(lvl3)				
+			requirements.lvl	:= Trim(lvl1)
 		}
 		If (logicalOperator) {
 			requirements.logicalOperator := Trim(logicalOperator)
@@ -6673,11 +6676,14 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		ParseFlaskAffixes(ItemData.Affixes)
 	}
-	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = False)  ; Code added by Bahnzo to avoid maps showing affixes
+	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = False and not Item.IsLeaguestone)  ; Code added by Bahnzo to avoid maps showing affixes
 	{
 		ParseAffixes(ItemData.Affixes, Item)
 	}
-	
+	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsLeaguestone) {
+		ParseLeagueStoneAffixes(ItemData.Affixes, Item)
+	}
+
 	NumPrefixes	:= AffixTotals.NumPrefixes
 	NumSuffixes	:= AffixTotals.NumSuffixes
 	TotalAffixes	:= NumPrefixes + NumSuffixes
