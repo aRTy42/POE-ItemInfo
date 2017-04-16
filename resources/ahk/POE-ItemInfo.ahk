@@ -7209,6 +7209,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		ParseAffixes(ItemData.Affixes, Item)
 	}
+	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = True)
+	{
+		ParseMapAffixes(ItemData.Affixes)
+	}
 	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsLeaguestone)
 	{
 		ParseLeagueStoneAffixes(ItemData.Affixes, Item)
