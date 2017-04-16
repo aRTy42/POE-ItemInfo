@@ -6,8 +6,8 @@ Current Script Caretaker: aRTy42
 from aRTy42 and Eruyome
 
 New feature: Map affix parsing which includes mod counting, so you no longer have to guesstimate 8-mods. Since this was a big chunk of code and
-	is probably not completely bug-free yet, this is a beta-release. If you want to test it: Please do! (and report any oddities you find).
-Included some Leaguestone fixes and further Updater Optimizations. (by Eruyome)
+	is probably not completely bug-free yet this is a beta-release. If you want to test it: Please do! (and report any oddities you find).
+Included some Leaguestone fixes and further updater optimizations. (by Eruyome)
 Updated Uniques and Maps with wiki info (with thanks to cirf for updating all the articles about shaped maps).
 
 2.6.01
