@@ -2420,6 +2420,10 @@ LookupRemainingAffixBracket(Filename, ItemLevel, CurrValue, Bracket, ByRef Brack
 	return RemainderBracket
 }
 
+ParseLeagueStoneAffixes(ItemDataAffixes, Item) {
+	; Placeholder
+}
+
 ParseAffixes(ItemDataAffixes, Item)
 {
 	Global Globals, Opts, AffixTotals, AffixLines
@@ -6672,11 +6676,14 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		ParseFlaskAffixes(ItemData.Affixes)
 	}
-	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = False)  ; Code added by Bahnzo to avoid maps showing affixes
+	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = False and not Item.IsLeaguestone)  ; Code added by Bahnzo to avoid maps showing affixes
 	{
 		ParseAffixes(ItemData.Affixes, Item)
 	}
-	
+	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsLeaguestone) {
+		ParseLeagueStoneAffixes(ItemData.Affixes, Item)
+	}
+
 	NumPrefixes	:= AffixTotals.NumPrefixes
 	NumSuffixes	:= AffixTotals.NumSuffixes
 	TotalAffixes	:= NumPrefixes + NumSuffixes
