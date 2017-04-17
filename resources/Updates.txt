@@ -1,7 +1,14 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
-2.6.02-beta
+2.6.03
+================================
+from aRTy42
+
+Map mod parsing improved. Includes mod warnings for unpopular or difficult mods.
+Map data: Tooltip now includes "Boss Arena: Yes/No". Updated most difficulty and layout ratings with the wiki's map article.
+
+2.6.03-beta
 ================================
 from aRTy42 and Eruyome
 
@@ -9,6 +16,10 @@ New feature: Map affix parsing which includes mod counting, so you no longer hav
 	is probably not completely bug-free yet this is a beta-release. If you want to test it: Please do! (and report any oddities you find).
 Included some Leaguestone fixes and further updater optimizations. (by Eruyome)
 Updated Uniques and Maps with wiki info (with thanks to cirf for updating all the articles about shaped maps).
+
+2.6.02-beta
+================================
+(deleted because bugged)
 
 2.6.01
 ================================

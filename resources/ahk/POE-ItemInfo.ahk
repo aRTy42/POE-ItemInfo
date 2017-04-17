@@ -2461,6 +2461,14 @@ ParseMapAffixes(ItemDataAffixes)
 	Index_PlayerBlockArmour :=
 	Index_CannotLeech :=
 	Index_MonstMoveAttCastSpeed :=
+	
+	Flag_ExtraEledmg := False
+	String_ResMod := ""
+	
+	Flag_Vulnerability := False
+	String_DoT_List := ""
+		
+	MapAffixWarnings := ""
 
 	Loop, Parse, ItemDataAffixes, `n, `r
 	{
@@ -2483,14 +2491,28 @@ ParseMapAffixes(ItemDataAffixes)
 
 		If (RegExMatch(A_LoopField, "Monsters deal \d+% extra Damage as (Fire|Cold|Lightning)"))
 		{
+			Flag_ExtraEledmg := True
+			
 			MapAffixCount += 1
 			NumPrefixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
 			Continue
 		}
 		
-		If (RegExMatch(A_LoopField, "Monsters reflect \d+% of (Elemental Damage|Physical Damage)"))
+		If (RegExMatch(A_LoopField, "Monsters reflect \d+% of Elemental Damage"))
 		{
+			MapAffixWarnings := MapAffixWarnings . "Ele reflect`n"
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters reflect \d+% of Physical Damage"))
+		{
+			MapAffixWarnings := MapAffixWarnings . "Phys reflect`n"
+			
 			MapAffixCount += 1
 			NumPrefixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2546,7 +2568,18 @@ ParseMapAffixes(ItemDataAffixes)
 		}
 		
 		
-		If (RegExMatch(A_LoopField, "Players are Cursed with (Elemental Weakness|Enfeeble|Temporal Chains|Vulnerability)"))
+		
+		If (RegExMatch(A_LoopField, "Players are Cursed with Elemental Weakness"))
+		{
+			String_ResMod := String_ResMod . " & Ele Weakness"
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players are Cursed with Enfeeble"))
 		{
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2554,8 +2587,38 @@ ParseMapAffixes(ItemDataAffixes)
 			Continue
 		}
 		
-		If (RegExMatch(A_LoopField, "Area has patches of (desecrated|burning|chilled|shocking) ground"))
+		If (RegExMatch(A_LoopField, "Players are Cursed with Temporal Chains"))
 		{
+			MapAffixWarnings := MapAffixWarnings . "Temp chains`n"
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players are Cursed with Vulnerability"))
+		{
+			Flag_Vulnerability := True
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Area has patches of (burning|chilled|shocking) ground"))
+		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Area has patches of desecrated ground"))
+		{
+			String_DoT_List := String_DoT_List . " & desecrated ground"
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2612,14 +2675,36 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "-\d+% maximum Player Resistances"))
 		{
+			String_ResMod := String_ResMod . " & -Max Res"
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
 			Continue
 		}
 
-		If (RegExMatch(A_LoopField, "Players have Elemental Equilibrium|Players have Point Blank|Monsters Poison on Hit|Players cannot Regenerate Life, Mana or Energy Shield"))
+		If (RegExMatch(A_LoopField, "Players have Elemental Equilibrium|Players have Point Blank"))
 		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters Poison on Hit"))
+		{
+			String_DoT_List := String_DoT_List . " & Poison"
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players cannot Regenerate Life, Mana or Energy Shield"))
+		{
+			MapAffixWarnings := MapAffixWarnings . "No Regen`n"
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2789,6 +2874,8 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_CannotLeech)
 			{
+				MapAffixWarnings := MapAffixWarnings . "No Leech`n"
+				
 				MapAffixCount += 1
 				Index_CannotLeech := MapAffixCount
 				NumSuffixes += 1
@@ -2907,9 +2994,20 @@ ParseMapAffixes(ItemDataAffixes)
 			}
 		}
 	}
+	
+	If (Flag_ExtraEledmg and String_ResMod)
+	{
+		MapAffixWarnings := MapAffixWarnings . "Added Ele dmg" . String_ResMod . "`n"
+	}
+	If (Flag_Vulnerability and String_DoT_List)
+	{
+		MapAffixWarnings := MapAffixWarnings . "Vulnerability" . String_DoT_List . "`n"
+	}	
 
 	AffixTotals.NumPrefixes := NumPrefixes
 	AffixTotals.NumSuffixes := NumSuffixes
+	
+	return MapAffixWarnings
 }
 
 ; Try looking up the remainder bracket based on Bracket
@@ -7171,7 +7269,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		; This might be because the clipboard is completely empty.
 		return
 	}
-		If (Item.IsLeagueStone) {
+	
+	If (Item.IsLeagueStone) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
 	ItemData.Affixes := ItemDataParts%ItemDataIndexAffixes%
@@ -7211,7 +7310,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = True)
 	{
-		ParseMapAffixes(ItemData.Affixes)
+		MapAffixWarnings := ParseMapAffixes(ItemData.Affixes)
 	}
 	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsLeaguestone)
 	{
@@ -7362,7 +7461,16 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		{
 			AffixDetails := AssembleMapAffixes()
 			MapAffixCount := AffixTotals.NumPrefixes + AffixTotals.NumSuffixes
-			TT = %TT%`n`n-----------`nAffixes (%MapAffixCount%):%AffixDetails%
+			TT = %TT%`n`n-----------`nMods (%MapAffixCount%):%AffixDetails%
+			
+			If (MapAffixWarnings)
+			{
+				TT = %TT%`n`nMod warnings:`n%MapAffixWarnings%
+			}
+			Else
+			{
+				TT = %TT%`n`nMod warnings:`nnone
+			}
 		}
 	}
 
