@@ -166,9 +166,9 @@ mapList["Shaped Strand Map"] := "Tier: 11, Level: 78, Atlas position: top right`
 ;Whakawairua Tuahu
 uniqueMapList["Strand Map"] := "Tier: 6, Level: 73, Atlas position: top right`nTileset: Twilight Strand (Outdoors)`n`nThis map applies a debuff named Creeping Darkness on the player. `nHis Light Radius, Item Rarity and Item Quantity slowly decrease over time. `nWhen the player kills an enemy, those stats increase.`n`nBoss: Tormented Temptress`n`nDifficulty: 5/5"
 
-mapList["Thicket Map"] := "Tier: 6, Level: 73, Atlas position: right`nTileset: Dread Thicket (Indoors)`n`nUpgrades to: Mud Geyser Map`nConnected to: Peninsula Map`n`nDivination cards:`n- The Explorer`n- The Gambler`n- Her Mask`n`nBoss: The Primal One (based on: Blood Chieftan)`nSunder`n`nDifficulty: 1/5, Layout: B"
+mapList["Thicket Map"] := "Tier: 6, Level: 73, Atlas position: right`nTileset: Dread Thicket (Indoors)`n`nUpgrades to: Mud Geyser Map`nConnected to: Peninsula Map`n`nDivination cards:`n- The Explorer`n- The Gambler`n- Her Mask`n`nBoss: The Primal One (based on: Blood Chieftain)`nSunder`n`nDifficulty: 1/5, Layout: B"
 
-mapList["Shaped Thicket Map"] := "Tier: 11, Level: 78, Atlas position: right`nTileset: Dread Thicket`n`nUpgrades to: Necropolis Map`n`nInfos from Thicket Map:`n`nBoss: The Primal One (based on: Blood Chieftan)`nSunder`n`nDifficulty: 1/5, Layout: B"
+mapList["Shaped Thicket Map"] := "Tier: 11, Level: 78, Atlas position: right`nTileset: Dread Thicket`n`nUpgrades to: Necropolis Map`n`nInfos from Thicket Map:`n`nBoss: The Primal One (based on: Blood Chieftain)`nSunder`n`nDifficulty: 1/5, Layout: B"
 
 mapList["Vaal City Map"] := "Tier: 6, Level: 73, Atlas position: left`nTileset: Travincal (Outdoors)`n`nProduced by: Burial Chambers Map`nUpgrades to: Catacombs Map`nConnected to: Arachnid Tomb Map`n`nDivination cards:`n- The Gambler`n- Her Mask`n`nBoss: Lady Stormflay (based on: Whipping Miscreation)`nLightning Projectiles`n`nDifficulty: 4/5, Layout: "
 
@@ -213,9 +213,9 @@ mapList["Arachnid Nest Map"] := "Tier: 8, Level: 75, Atlas position: top left`nT
 
 mapList["Shaped Arachnid Nest Map"] := "Tier: 13, Level: 80, Atlas position: top left`nTileset: The Weaver's Chambers`n`nUpgrades to: Palace Map`n`nInfos from Arachnid Nest Map:`n`nBoss: Spinner of False Hope (based on: The Weaver)`n`nDifficulty: 3/5, Layout: B"
 
-mapList["Arena Map"] := "Tier: 8, Level: 75, Atlas position: bottom right`nTileset: The Grand Arena (Indoors / Outdoors)`n`nUpgrades to: Orchard Map`nConnected to: Armoury Map`n`nDivination cards:`n- The Arena Champion`n- The Gambler`n- The Gladiator`n- The Trial`n- The Visionary`n`nBosses: Avatar of the Forge, Avatar of the Huntress, Avatar of the Skies`n(based on: Grand Arena Trio)`nPunture Trapper from archer`n`nDifficulty: 3/5, Layout: C"
+mapList["Arena Map"] := "Tier: 8, Level: 75, Atlas position: bottom right`nTileset: The Grand Arena (Indoors / Outdoors)`n`nUpgrades to: Orchard Map`nConnected to: Armoury Map`n`nDivination cards:`n- The Arena Champion`n- The Gambler`n- The Gladiator`n- The Trial`n- The Visionary`n`nBosses: Avatar of the Forge, Avatar of the Huntress, Avatar of the Skies`n(based on: Grand Arena Trio)`nPuncture Trapper from archer`n`nDifficulty: 3/5, Layout: C"
 
-mapList["Shaped Arena Map"] := "Tier: 13, Level: 80, Atlas position: bottom right`nTileset: The Grand Arena`n`nUpgrades to: Shrine Map`n`nInfos from Arena Map:`n`nBosses: Avatar of the Forge, Avatar of the Huntress, Avatar of the Skies`n(based on: Grand Arena Trio)`nPunture Trapper from archer`n`nDifficulty: 3/5, Layout: C"
+mapList["Shaped Arena Map"] := "Tier: 13, Level: 80, Atlas position: bottom right`nTileset: The Grand Arena`n`nUpgrades to: Shrine Map`n`nInfos from Arena Map:`n`nBosses: Avatar of the Forge, Avatar of the Huntress, Avatar of the Skies`n(based on: Grand Arena Trio)`nPuncture Trapper from archer`n`nDifficulty: 3/5, Layout: C"
 
 mapList["Atoll Map"] := "Tier: 8, Level: 75, Atlas position: right`nTileset: The Ledge (Outdoors)`n`nProduced by: Armoury Map, Pier Map (same tier, not connected)`nUpgrades to: Temple Map`n`nUnique version of map: Maelström of Chaos`n`nDivination cards:`n- The Gambler`n- The Trial`n`nBoss: Puruna, the Challenger (based on: Kuduku)`nFrost Bolt, Ice Wave, Ice Nova. Ice Nova can one shot.`n`nDifficulty: 5/5, Layout: A"
 
@@ -244,9 +244,9 @@ mapList["Shore Map"] := "Tier: 8, Level: 75, Atlas position: bottom left`nTilese
 
 mapList["Shaped Shore Map"] := "Tier: 13, Level: 80, Atlas position: bottom left`nTileset: The Coast`n`nUpgrades to: Maze Map`n`nInfos from Shore Map:`n`nBoss: Belcer, Pirate Lord (based on: Fairgraves Eternal)`n`nDifficulty: 3/5, Layout: B"
 
-mapList["Tropical Island Map"] := "Tier: 8, Level: 75, Atlas position: bottom left`nTileset: The Southern Forest (Outdoors)`n`nProduced by: Arachnid Tomb Map`nUpgrades to: Coves Map`nConnected to: Reef Map`n`nDivination cards:`n- The Flora's Gift`n- The Gambler`n- The Pack Leader`n- The Trial`n`nBoss: Blood Progenitor (based on: Chieftan)`n`nDifficulty: 1/5, Layout: A"
+mapList["Tropical Island Map"] := "Tier: 8, Level: 75, Atlas position: bottom left`nTileset: The Southern Forest (Outdoors)`n`nProduced by: Arachnid Tomb Map`nUpgrades to: Coves Map`nConnected to: Reef Map`n`nDivination cards:`n- The Flora's Gift`n- The Gambler`n- The Pack Leader`n- The Trial`n`nBoss: Blood Progenitor (based on: Chieftain)`n`nDifficulty: 1/5, Layout: A"
 
-mapList["Shaped Tropical Island Map"] := "Tier: 13, Level: 80, Atlas position: bottom left`nTileset: The Southern Forest`n`nUpgrades to: Maze Map`n`nInfos from Tropical Island Map:`n`nBoss: Blood Progenitor (based on: Chieftan)`n`nDifficulty: 1/5, Layout: A"
+mapList["Shaped Tropical Island Map"] := "Tier: 13, Level: 80, Atlas position: bottom left`nTileset: The Southern Forest`n`nUpgrades to: Maze Map`n`nInfos from Tropical Island Map:`n`nBoss: Blood Progenitor (based on: Chieftain)`n`nDifficulty: 1/5, Layout: A"
 
 mapList["Coves Map"] := "Tier: 9, Level: 76, Atlas position: bottom left`nTileset: The Coves (Outdoors)`n`nProduced by: Shore Map, Tropical Island Map`nUpgrades to: Quay Map`n`nDivination cards:`n- The Formless Sea`n- The Gambler`n- The Mercenary`n- Scholar of the Seas`n- The Trial`n- The Vast`n`nBoss: Telvar, the Inebriated (based on: Stone Golem)`nPhys Damage`n`nDifficulty: 4/5, Layout: B"
 
@@ -306,9 +306,9 @@ mapList["Colonnade Map"] := "Tier: 10, Level: 77, Atlas position: top left`nTile
 
 mapList["Shaped Colonnade Map"] := "Tier: 15, Level: 82, Atlas position: top left`nTileset: Battlefront`n`nUpgrades to: Lair of the Hydra Map`n`nInfos from Colonnade Map:`n`nBoss: Tyrant (based on: General Gravicius)`nHigh ES`n`nDifficulty: 4/5, Layout: A"
 
-mapList["Courtyard Map"] := "Tier: 10, Level: 77, Atlas position: top`nTileset: The Imperial Gardens (Outdoors)`n`nProduced by: Museum Map`nUpgrades to: Wasteland Map`nConnected to: Colonnade Map, Arsenal Map`n`nUnique version of map: The Vinktar Square`n`nDivination cards:`n- The Carrion Crow`n- Emperor's Luck`n- The Gambler`n- Thunderous Skies`n- The Trial`n`nBosses: Oriath's Vengence, Oriath's Vigil, Oriath's Virtue`n(based on: Imperator Stantinus Bitterblade, Draconarius Wilhelm Flamebrand, Compulsor Octavia Sparkfist)`nDominus' Human Guards`n`nDifficulty: 2/5, Layout: B"
+mapList["Courtyard Map"] := "Tier: 10, Level: 77, Atlas position: top`nTileset: The Imperial Gardens (Outdoors)`n`nProduced by: Museum Map`nUpgrades to: Wasteland Map`nConnected to: Colonnade Map, Arsenal Map`n`nUnique version of map: The Vinktar Square`n`nDivination cards:`n- The Carrion Crow`n- Emperor's Luck`n- The Gambler`n- Thunderous Skies`n- The Trial`n`nBosses: Oriath's Vengeance, Oriath's Vigil, Oriath's Virtue`n(based on: Imperator Stantinus Bitterblade, Draconarius Wilhelm Flamebrand, Compulsor Octavia Sparkfist)`nDominus' Human Guards`n`nDifficulty: 2/5, Layout: B"
 
-mapList["Shaped Courtyard Map"] := "Tier: 15, Level: 82, Atlas position: top`nTileset: The Imperial Gardens`n`nUpgrades to: Forge of the Phoenix Map`n`nInfos from Courtyard Map:`n`nUnique version of map: The Vinktar Square`n`nBosses: Oriath's Vengence, Oriath's Vigil, Oriath's Virtue`n(based on: Imperator Stantinus Bitterblade, Draconarius Wilhelm Flamebrand, Compulsor Octavia Sparkfist)`nDominus' Human Guards`n`nDifficulty: 2/5, Layout: B"
+mapList["Shaped Courtyard Map"] := "Tier: 15, Level: 82, Atlas position: top`nTileset: The Imperial Gardens`n`nUpgrades to: Forge of the Phoenix Map`n`nInfos from Courtyard Map:`n`nUnique version of map: The Vinktar Square`n`nBosses: Oriath's Vengeance, Oriath's Vigil, Oriath's Virtue`n(based on: Imperator Stantinus Bitterblade, Draconarius Wilhelm Flamebrand, Compulsor Octavia Sparkfist)`nDominus' Human Guards`n`nDifficulty: 2/5, Layout: B"
 
 ;The Vinktar Square
 uniqueMapList["Courtyard Map"] := "Tier: 10, Level: 77, Atlas position: top`nTileset: Battlefront (Outdoors)`n`nDivination cards:`n- The Gambler`n- Thunderous Skies`n`nThe shape of the map is a large square. In each corner, there is a guardian boss of a cardinal direction.`nAfter all four guardians are killed, a gate in the center of the map will open.`nThe gate leads to a room with the final boss, the Avatar of Thunder.`n`nDifficulty: 4/5"
@@ -391,7 +391,7 @@ mapList["Maze Map"] := "Tier: 14, Level: 81, Atlas position: bottom left`nTilese
 
 mapList["Mineral Pools Map"] := "Tier: 14, Level: 81, Atlas position: bottom right`nTileset:  (Outdoors)`n`nProduced by: Lair Map`nUpgrades to: Abyss Map`n`nDivination cards:`n- The Gambler`n- The Lover`n- The Siren`n`nBoss: Merveil, the Reflection (based on: Merveil, the Siren)`nBoth Phases`n`nDifficulty: ?/5, Layout: ?"
 
-mapList["Palace Map"] := "Tier: 14, Level: 81, Atlas position: left`nTileset: The Upper Sceptre (Indoors)`n`nProduced by: High Gardens Map`nUpgrades to: Dark Forest Map`nConnected to: Waterways Map`n`nDivination cards:`n- The Conduit`n- The Gambler`n- Light and Truth`n- The Sephirot`n- The Tower`n- The_Twins`n`nBoss: God's Chosen, The Hallowed Husk (based on: Dominous (both Phases))`n`nDifficulty: 5/5, Layout: C"
+mapList["Palace Map"] := "Tier: 14, Level: 81, Atlas position: left`nTileset: The Upper Sceptre (Indoors)`n`nProduced by: High Gardens Map`nUpgrades to: Dark Forest Map`nConnected to: Waterways Map`n`nDivination cards:`n- The Conduit`n- The Gambler`n- Light and Truth`n- The Sephirot`n- The Tower`n- The_Twins`n`nBoss: God's Chosen, The Hallowed Husk (based on: Dominus (both Phases))`n`nDifficulty: 5/5, Layout: C"
 
 mapList["Shrine Map"] := "Tier: 14, Level: 81, Atlas position: bottom`nTileset: Lunaris Temple (Indoors)`n`nProduced by: Gorge Map`nUpgrades to: Abyss Map`n`nDivination cards:`n- Lingering Remnants`n- The Fiend`n- The Gambler`n- The Thaumaturgist`n- The Twins`n- The Lunaris Priestess`n`nBoss: Piety the Empyrian (based on: Piety)`n`nDifficulty: 4/5, Layout: B"
 
