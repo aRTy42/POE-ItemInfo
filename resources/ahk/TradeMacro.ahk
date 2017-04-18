@@ -1601,7 +1601,7 @@ TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = ""){
 			prices[itemCount-1] := chaosEquivalent
 		}
 	}	
-	
+
 	If (error) {
 		errorMsg := "Couldn't find the chaos equiv. value for " error " item(s). Please report this."	
 	}	
@@ -3445,8 +3445,8 @@ ReadPoeNinjaCurrencyData:
 	
 	global ChaosEquivalents := {}
 	For key, val in CurrencyHistoryData {
-		currencyTypeName := RegexReplace(val.currencyTypeName, "i)'", "")
-		ChaosEquivalents[val.currencyTypeName] := val.chaosEquivalent		
+		currencyTypeName := RegexReplace(val.currencyTypeName, "[^a-z A-Z]", "")
+		ChaosEquivalents[currencyTypeName] := val.chaosEquivalent		
 	}
 	ChaosEquivalents["Chaos Orb"] := 1
 	
