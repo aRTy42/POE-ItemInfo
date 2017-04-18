@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.0.12
+================================================================================================
+Fixed currency search again which was broken by the recent poe.trade changes (again).
+
 2.0.11
 ================================================================================================
 Fixed currency search again which was broken by the recent poe.trade changes.
