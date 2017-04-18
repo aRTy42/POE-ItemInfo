@@ -1770,6 +1770,13 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier)
 	return Line
 }
 
+MakeMapAffixLine(AffixLine, MapAffixCount)
+{
+	Line := AffixLine . "|" . MapAffixCount
+	return Line
+}
+
+
 AppendAffixInfo(Line, AffixPos)
 {
 	Global AffixLines
@@ -1876,6 +1883,40 @@ AssembleAffixDetails()
 				ProcessedLine := ProcessedLine . TierString . Delim
 			}
 			ProcessedLine := ProcessedLine . AffixType . Delim
+		}
+		Else
+		{
+			ProcessedLine := "   Unprocessed Essence Mod or unknown Mod"
+		}
+		
+		Result := Result . "`n" . ProcessedLine
+	}
+	return Result
+}
+
+AssembleMapAffixes()
+{
+	Global Opts, AffixLines
+
+	AffixLine =
+	NumAffixLines := AffixLines.MaxIndex()
+	AffixLineParts := 0
+	Loop, %NumAffixLines%
+	{
+		CurLine := AffixLines[A_Index]
+		; Any empty line is considered as an Unprocessed Mod
+		IF CurLine
+		{
+			ProcessedLine =
+			Loop, %AffixLineParts0%
+			{
+				AffixLineParts%A_Index% =
+			}
+			StringSplit, AffixLineParts, CurLine, |
+			AffixLine := AffixLineParts1
+			MapAffixCount := AffixLineParts2
+			
+			ProcessedLine := Format("{1: 2s}) {2:s}", MapAffixCount, AffixLine)
 		}
 		Else
 		{
@@ -2383,6 +2424,590 @@ ParseFlaskAffixes(ItemDataAffixes)
 
 	AffixTotals.NumPrefixes := NumPrefixes
 	AffixTotals.NumSuffixes := NumSuffixes
+}
+
+ParseMapAffixes(ItemDataAffixes)
+{
+	Global Globals, Opts, AffixTotals, AffixLines
+
+	ItemDataChunk	:= ItemDataAffixes
+
+	ItemBaseType	:= Item.BaseType
+	ItemSubType		:= Item.SubType
+
+
+	; Reset the AffixLines "array" and other vars
+	ResetAffixDetailVars()
+
+	IfInString, ItemDataChunk, Unidentified
+	{
+		return ; Not interested in unidentified items
+	}
+	
+	NumPrefixes := 0
+	NumSuffixes := 0
+	MapAffixCount := 0
+	TempAffixCount := 0
+	
+	Index_RareMonst :=
+	Index_MonstSlowedTaunted :=
+	Index_BossDamageAttackCastSpeed :=
+	Index_BossLifeAoE :=
+	Index_MonstChaosEleRes :=
+	Index_MonstStunLife :=
+	Index_MagicMonst :=
+	Index_MonstCritChanceMult :=
+	Index_PlayerDodgeMonstAccu :=
+	Index_PlayerBlockArmour :=
+	Index_CannotLeech :=
+	Index_MonstMoveAttCastSpeed :=
+	
+	Flag_ExtraEledmg := False
+	String_ResMod := ""
+	
+	Flag_Vulnerability := False
+	String_DoT_List := ""
+		
+	MapAffixWarnings := ""
+
+	Loop, Parse, ItemDataAffixes, `n, `r
+	{
+		If StrLen(A_LoopField) = 0
+		{
+			Continue ; Not interested in blank lines
+		}
+
+		
+		; --- ONE LINE AFFIXES ---
+
+		
+		If (RegExMatch(A_LoopField, "Area is inhabited by (Abominations|Humanoids|Goatmen|Demons|ranged monsters|Animals|Skeletons|Sea Witches and their Spawn|Undead)"))
+		{
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+
+		If (RegExMatch(A_LoopField, "Monsters deal \d+% extra Damage as (Fire|Cold|Lightning)"))
+		{
+			Flag_ExtraEledmg := True
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters reflect \d+% of Elemental Damage"))
+		{
+			MapAffixWarnings := MapAffixWarnings . "Ele reflect`n"
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters reflect \d+% of Physical Damage"))
+		{
+			MapAffixWarnings := MapAffixWarnings . "Phys reflect`n"
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "\+\d+% Monster Physical Damage Reduction"))
+		{
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+
+		If (RegExMatch(A_LoopField, "\d+% less effect of Curses on Monsters"))
+		{
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+
+		If (RegExMatch(A_LoopField, "Monsters have a \d+% chance to avoid Poison, Blind, and Bleed"))
+		{
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+
+		If (RegExMatch(A_LoopField, "Monsters have a \d+% chance to cause Status Ailments"))
+		{
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+
+		If (RegExMatch(A_LoopField, "\d+% increased Monster Damage"))
+		{
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Area is inhabited by 2 additional Rogue Exiles|Area has increased monster variety|Area contains many Totems|Monsters' skills Chain 2 additional times|All Monster Damage from Hits always Ignites|Slaying Enemies close together can attract monsters from Beyond|Area contains two Unique Bosses|Monsters are Hexproof|Monsters fire 2 additional Projectiles"))
+		{
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		
+		
+		If (RegExMatch(A_LoopField, "Players are Cursed with Elemental Weakness"))
+		{
+			String_ResMod := String_ResMod . " & Ele Weakness"
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players are Cursed with Enfeeble"))
+		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players are Cursed with Temporal Chains"))
+		{
+			MapAffixWarnings := MapAffixWarnings . "Temp chains`n"
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players are Cursed with Vulnerability"))
+		{
+			Flag_Vulnerability := True
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Area has patches of (burning|chilled|shocking) ground"))
+		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Area has patches of desecrated ground"))
+		{
+			String_DoT_List := String_DoT_List . " & desecrated ground"
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players gain \d+% reduced Flask Charges"))
+		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters have \d+% increased Area of Effect"))
+		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players have \d+% less Area of Effect"))
+		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters have \d+% chance to Avoid Elemental Status Ailments"))
+		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players have \d+% less Recovery Rate of Life and Energy Shield"))
+		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters take \d+% reduced Extra Damage from Critical Strikes"))
+		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "-\d+% maximum Player Resistances"))
+		{
+			String_ResMod := String_ResMod . " & -Max Res"
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+
+		If (RegExMatch(A_LoopField, "Players have Elemental Equilibrium|Players have Point Blank"))
+		{
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters Poison on Hit"))
+		{
+			String_DoT_List := String_DoT_List . " & Poison"
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players cannot Regenerate Life, Mana or Energy Shield"))
+		{
+			MapAffixWarnings := MapAffixWarnings . "No Regen`n"
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+
+		
+		; --- SIMPLE TWO LINE AFFIXES ---
+		
+		
+		If (RegExMatch(A_LoopField, "Rare Monsters each have a Nemesis Mod|\d+% more Rare Monsters"))
+		{
+			If (Not Index_RareMonst)
+			{
+				MapAffixCount += 1
+				Index_RareMonst := MapAffixCount
+				NumPrefixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_RareMonst . "b"), A_Index)
+				Continue
+			}
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters cannot be slowed below base speed|Monsters cannot be Taunted"))
+		{
+			If (Not Index_MonstSlowedTaunted)
+			{
+				MapAffixCount += 1
+				Index_MonstSlowedTaunted := MapAffixCount
+				NumPrefixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_MonstSlowedTaunted . "b"), A_Index)
+				Continue
+			}
+		}
+		
+		If (RegExMatch(A_LoopField, "Unique Boss deals \d+% increased Damage|Unique Boss has \d+% increased Attack and Cast Speed"))
+		{
+			If (Not Index_BossDamageAttackCastSpeed)
+			{
+				MapAffixCount += 1
+				Index_BossDamageAttackCastSpeed := MapAffixCount
+				NumPrefixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_BossDamageAttackCastSpeed . "b"), A_Index)
+				Continue
+			}
+		}
+		
+		If (RegExMatch(A_LoopField, "Unique Boss has \d+% increased Life|Unique Boss has \d+% increased Area of Effect"))
+		{
+			If (Not Index_BossLifeAoE)
+			{
+				MapAffixCount += 1
+				Index_BossLifeAoE := MapAffixCount
+				NumPrefixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_BossLifeAoE . "b"), A_Index)
+				Continue
+			}
+		}
+		
+		If (RegExMatch(A_LoopField, "\+\d+% Monster Chaos Resistance|\+\d+% Monster Elemental Resistance"))
+		{
+			If (Not Index_MonstChaosEleRes)
+			{
+				MapAffixCount += 1
+				Index_MonstChaosEleRes := MapAffixCount
+				NumPrefixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_MonstChaosEleRes . "b"), A_Index)
+				Continue
+			}
+		}
+
+		
+		
+		If (RegExMatch(A_LoopField, "\d+% more Magic Monsters|Magic Monster Packs each have a Bloodline Mod"))
+		{
+			If (Not Index_MagicMonst)
+			{
+				MapAffixCount += 1
+				Index_MagicMonst := MapAffixCount
+				NumSuffixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_MagicMonst . "b"), A_Index)
+				Continue
+			}
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters have \d+% increased Critical Strike Chance|\+\d+% to Monster Critical Strike Multiplier"))
+		{
+			If (Not Index_MonstCritChanceMult)
+			{
+				MapAffixCount += 1
+				Index_MonstCritChanceMult := MapAffixCount
+				NumSuffixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_MonstCritChanceMult . "b"), A_Index)
+				Continue
+			}
+		}
+		
+		If (RegExMatch(A_LoopField, "Player Dodge chance is Unlucky|Monsters have \d+% increased Accuracy Rating"))
+		{
+			If (Not Index_PlayerDodgeMonstAccu)
+			{
+				MapAffixCount += 1
+				Index_PlayerDodgeMonstAccu := MapAffixCount
+				NumSuffixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_PlayerDodgeMonstAccu . "b"), A_Index)
+				Continue
+			}
+		}
+		
+		If (RegExMatch(A_LoopField, "Players have \d+% reduced Block Chance|Players have \d+% less Armour"))
+		{
+			If (Not Index_PlayerBlockArmour)
+			{
+				MapAffixCount += 1
+				Index_PlayerBlockArmour := MapAffixCount
+				NumSuffixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_PlayerBlockArmour . "b"), A_Index)
+				Continue
+			}
+		}
+		
+		If (RegExMatch(A_LoopField, "Cannot Leech Life from Monsters|Cannot Leech Mana from Monsters"))
+		{
+			If (Not Index_CannotLeech)
+			{
+				MapAffixWarnings := MapAffixWarnings . "No Leech`n"
+				
+				MapAffixCount += 1
+				Index_CannotLeech := MapAffixCount
+				NumSuffixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_CannotLeech . "b"), A_Index)
+				Continue
+			}
+		}
+		
+		; Second part of this affix is further below under complex affixes
+		If (RegExMatch(A_LoopField, "Monsters cannot be Stunned"))
+		{
+			If (Not Index_MonstStunLife)
+			{
+				MapAffixCount += 1
+				Index_MonstStunLife := MapAffixCount
+				NumPrefixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+				Continue
+			}
+			Else
+			{
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_MonstStunLife . "b"), A_Index)
+				Continue
+			}
+		}
+		
+		; --- SIMPLE THREE LINE AFFIXES ---
+
+		
+		If (RegExMatch(A_LoopField, "\d+% increased Monster Movement Speed|\d+% increased Monster Attack Speed|\d+% increased Monster Cast Speed"))
+		{
+			If (Not Index_MonstMoveAttCastSpeed)
+			{
+				MapAffixCount += 1
+				Index_MonstMoveAttCastSpeed := MapAffixCount . "a"
+				NumPrefixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_MonstMoveAttCastSpeed), A_Index)
+				Continue
+			}
+			Else If InStr (Index_MonstMoveAttCastSpeed, "a")
+			{
+				Index_MonstMoveAttCastSpeed := StrReplace(Index_MonstMoveAttCastSpeed, "a", "b")
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_MonstMoveAttCastSpeed), A_Index)
+				Continue
+			}
+			Else If InStr (Index_MonstMoveAttCastSpeed, "b")
+			{
+				Index_MonstMoveAttCastSpeed := StrReplace(Index_MonstMoveAttCastSpeed, "b", "")
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_MonstMoveAttCastSpeed . "c"), A_Index)
+				Continue
+			}
+		}
+		
+		
+		; --- COMPLEX AFFIXES ---
+		
+		; Pure life:  (20-29)/(30-39)/(40-49)% more Monster Life
+		; Hybrid mod: (15-19)/(20-24)/(25-30)% more Monster Life, Monsters cannot be Stunned
+		
+		If (RegExMatch(A_LoopField, "(\d+)% more Monster Life", RegExMonsterLife))
+		{
+			RegExMatch(ItemData.FullText, "Map Tier: (\d+)", RegExMapTier)
+			
+			; only hybrid mod
+			If ((RegExMapTier1 >= 11 and RegExMonsterLife1 <= 30) or (RegExMapTier1 >= 6 and RegExMonsterLife1 <= 24) or RegExMonsterLife <= 19)
+			{
+				If (Not Index_MonstStunLife)
+				{
+					MapAffixCount += 1
+					Index_MonstStunLife := MapAffixCount
+					NumPrefixes += 1
+					AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount . "a"), A_Index)
+					Continue
+				}
+				Else
+				{
+					AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_MonstStunLife . "b"), A_Index)
+					Continue
+				}
+			}
+			
+			; pure life mod
+			Else If ((RegExMapTier1 >= 11 and RegExMonsterLife1 <= 49) or (RegExMapTier1 >= 6 and RegExMonsterLife1 <= 39) or RegExMonsterLife <= 29)
+			{
+				MapAffixCount += 1
+				NumPrefixes += 1
+				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+				Continue			
+			}
+			
+			; both mods
+			Else
+			{			
+				If (Not Index_MonstStunLife)
+				{
+					TempAffixCount := MapAffixCount + 1
+					MapAffixCount += 2
+					Index_MonstStunLife := TempAffixCount
+					NumPrefixes += 2
+					AppendAffixInfo(MakeMapAffixLine(A_LoopField, TempAffixCount . "a+" . MapAffixCount), A_Index)
+					Continue
+				}
+				Else
+				{
+					MapAffixCount += 1
+					NumPrefixes += 1
+					AppendAffixInfo(MakeMapAffixLine(A_LoopField, Index_MonstStunLife . "b+" . MapAffixCount), A_Index)
+					Continue
+				}
+
+			}
+		}
+	}
+	
+	If (Flag_ExtraEledmg and String_ResMod)
+	{
+		MapAffixWarnings := MapAffixWarnings . "Added Ele dmg" . String_ResMod . "`n"
+	}
+	If (Flag_Vulnerability and String_DoT_List)
+	{
+		MapAffixWarnings := MapAffixWarnings . "Vulnerability" . String_DoT_List . "`n"
+	}	
+
+	AffixTotals.NumPrefixes := NumPrefixes
+	AffixTotals.NumSuffixes := NumSuffixes
+	
+	return MapAffixWarnings
 }
 
 ; Try looking up the remainder bracket based on Bracket
@@ -6095,11 +6720,13 @@ ParseCharges(stats)
 		LoopField := RegExReplace(A_Loopfield, "i)\s\(augmented\)", "")
 		; Flasks
 		RegExMatch(LoopField, "i)Consumes (\d+) of (\d+) Charges on use.*", max)		
+
 		If (max) {
 			charges.usage	:= max1
 			charges.max	:= max2
 		}		
 		RegExMatch(LoopField, "i)Currently has (\d+) Charges.*", current)
+
 		If (current) {
 			charges.current:= current1
 		}
@@ -6642,6 +7269,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		; This might be because the clipboard is completely empty.
 		return
 	}
+	
 	If (Item.IsLeagueStone) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
@@ -6680,7 +7308,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		ParseAffixes(ItemData.Affixes, Item)
 	}
-	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsLeaguestone) {
+	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = True)
+	{
+		MapAffixWarnings := ParseMapAffixes(ItemData.Affixes)
+	}
+	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsLeaguestone)
+	{
 		ParseLeagueStoneAffixes(ItemData.Affixes, Item)
 	}
 
@@ -6822,8 +7455,23 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		{
 			MapDescription := mapList[Item.SubType]
 		}
-
 		TT = %TT%`n%MapDescription%
+		
+		If (RarityLevel > 1 and RarityLevel < 4 and Not Item.IsUnidentified)
+		{
+			AffixDetails := AssembleMapAffixes()
+			MapAffixCount := AffixTotals.NumPrefixes + AffixTotals.NumSuffixes
+			TT = %TT%`n`n-----------`nMods (%MapAffixCount%):%AffixDetails%
+			
+			If (MapAffixWarnings)
+			{
+				TT = %TT%`n`nMod warnings:`n%MapAffixWarnings%
+			}
+			Else
+			{
+				TT = %TT%`n`nMod warnings:`nnone
+			}
+		}
 	}
 
 	If (Item.IsGem)
@@ -6876,7 +7524,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			}
 
 			AffixStats =
-			If (TotalAffixes > 0 and Not Item.IsUnidentified)
+			If (TotalAffixes > 0 and Not Item.IsUnidentified and Not Item.IsMap)
 			{
 				AffixStats = Affixes (%TotalAffixes%):%PrefixLine%%SuffixLine%
 				TT = %TT%`n--------`n%AffixStats%
@@ -6901,6 +7549,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 				TT = %TT%`n--------%AffixDetails%
 		   }
 		}
+		
 	}
 	Else If (ItemData.Rarity == "Unique")
 	{
