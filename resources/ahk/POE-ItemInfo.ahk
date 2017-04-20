@@ -7439,9 +7439,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
 	If (Item.IsMap)
 	{
-		/*
+		
 		Item.MapLevel := ParseMapLevel(ItemDataText)
-
+		/*
 		;;hixxie fixed
 		MapLevelText := Item.MapLevel
 		TT = %TT%`nMap Level: %MapLevelText%
@@ -9360,6 +9360,71 @@ CloseScripts() {
 		}
 	}
 	ExitApp
+}
+
+HighlightItems() {
+	; Highlights items via stash search (also in vendor search)
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		Global Item, Opts, Globals
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^{sc02E}	; ^{c}
+		Sleep 250
+		
+		CBContents := GetClipboardContents()
+		CBContents := PreProcessContents(CBContents)
+		
+		Globals.Set("ItemText", CBContents)
+		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)
+		
+		ParsedData := ParseItemData(CBContents)
+		
+		If (Item.Name) {
+			rarity := ""
+			If (Item.RarityLevel = 2) {
+				rarity := "magic"
+			} Else If (Item.RarityLevel = 3) {
+				rarity := "rare"
+			} Else If (Item.RarityLevel = 4) {
+				rarity := "unique"
+			}
+		
+			terms := []
+			If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard) {
+				terms.push(Item.Name)
+			} Else If (Item.IsCurrency) {
+				terms.push("Currency")		
+			} Else If (Item.IsMap) {
+				terms.push(Item.SubType)
+				terms.push("tier:" Item.MapLevel - 67)
+			} Else If (Item.IsFlask) {
+				terms.push(Item.TypeName)			
+			} Else If (Item.IsLeaguestone) {
+				terms.push(Item.SubType)
+			} Else If (Item.IsJewel) {
+				terms.push(Item.TypeName)
+				terms.push(rarity)
+			} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
+				terms.push(Item.Name)
+			} Else {
+				terms.push(Item.BaseType)
+			}
+		}
+
+		If (terms.length() > 0) {
+			SendInput ^{sc021}
+			For key, val in terms {
+				SendInput "%val%"
+			}
+			SendInput ^{sc02f}{Enter} ; sc021 = f  sc02f = v
+		} Else {
+			; send ctrl + f in case we don't have information to input
+			SendInput ^{sc021}
+		}
+
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+		SetClipboardContents("")
+	}
 }
 
 ; ########### TIMERS ############
