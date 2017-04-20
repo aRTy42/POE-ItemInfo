@@ -1,6 +1,7 @@
    Pause::TogglePOEItemScript()		;pause item parsing with the pause key (other macros remain). key bind enabled by default.
    #D::WinMinimize, A				;Winkey+D minimizes the active PoE window (PoE stays minimized this way)
 ;   ^F::HighlightItems()				;Fills the search field in your stash or vendor screens with information about the item you're hovering over.
+;   ^!F::HighlightItems(true)				;Uses much broader search terms for the highlight function.
 ;   ^Escape::CloseScripts()			;Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
   
 
