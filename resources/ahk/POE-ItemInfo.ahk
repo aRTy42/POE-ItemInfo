@@ -139,6 +139,7 @@ GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 
 #Include, %A_ScriptDir%\resources\Version.txt
 #Include, %A_ScriptDir%\lib\JSON.ahk
+#Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
 If (A_AhkVersion <= AHKVersionRequired)
@@ -457,6 +458,7 @@ class Item_ {
 		This.GripType 		:= ""
 		This.Level		:= ""
 		This.MapLevel 		:= ""
+		This.MapTier 		:= ""
 		This.MaxSockets 	:= ""
 		This.SubType 		:= ""
 		This.Implicit 		:= []
@@ -7753,10 +7755,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 
 	If (Item.IsMap)
-	{
-		/*
+	{		
 		Item.MapLevel := ParseMapLevel(ItemDataText)
-
+		Item.MapTier  := Item.MapLevel - 67
+		
+		/*
 		;;hixxie fixed
 		MapLevelText := Item.MapLevel
 		TT = %TT%`nMap Level: %MapLevelText%
@@ -9675,6 +9678,161 @@ CloseScripts() {
 		}
 	}
 	ExitApp
+}
+
+HighlightItems(broadTerms = false) {
+	; Highlights items via stash search (also in vendor search)
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		Global Item, Opts, Globals, ItemData
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^{sc02E}	; ^{c}
+		Sleep 100
+		
+		CBContents := GetClipboardContents()
+		CBContents := PreProcessContents(CBContents)
+		
+		Globals.Set("ItemText", CBContents)
+		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)
+		
+		ParsedData := ParseItemData(CBContents)
+		
+		If (Item.Name) {
+			rarity := ""
+			If (Item.RarityLevel = 2) {
+				rarity := "magic"
+			} Else If (Item.RarityLevel = 3) {
+				rarity := "rare"
+			} Else If (Item.RarityLevel = 4) {
+				rarity := "unique"
+			}
+		
+			terms := []
+			; uniques / gems / div cards
+			If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard) {
+				If (broadTerms) {
+					If (Item.IsUnique) {
+						terms.push("Rarity: Unique")
+					} Else {
+						terms.push("Rarity: " Item.BaseType)
+					}					
+				} Else {
+					terms.push(Item.Name)
+				}
+			}
+			; essences
+			Else If (Item.IsEssence) {
+				If (broadTerms) {
+					terms.push("Rarity: Currency")
+					terms.push("Essence")
+				} Else {
+					terms.push(Item.Name)
+				}
+			}
+			; currency
+			Else If (Item.IsCurrency) {
+				If (broadTerms) {
+					terms.push("Currency")
+				} Else {
+					terms.push(Item.Name)
+				}
+			}
+			; maps
+			Else If (Item.IsMap) {				
+				If (broadTerms) {
+					terms.push(" Map")
+				} Else {
+					terms.push(Item.SubType)
+					terms.push("tier:" Item.MapTier)
+				}
+			}
+			; flasks
+			Else If (Item.IsFlask) {
+				If (broadTerms) {
+					terms.push(Item.SubType)
+				} Else {
+					terms.push(Item.TypeName)
+				}		
+			}
+			; leaguestones
+			Else If (Item.IsLeaguestone) {
+				If (broadTerms) {
+					terms.push(Item.BaseType)
+				} Else {
+					terms.push(Item.SubType)
+				}				
+			}
+			; jewels
+			Else If (Item.IsJewel) {
+				If (broadTerms) {
+					terms.push(Item.BaseType)
+				} Else {					
+					terms.push(Item.TypeName)
+					terms.push(rarity)
+				}	
+			}
+			; offerings / sacrifice and mortal fragments / guardian fragments / council keys / breachstones 
+			Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone") or RegExMatch(Item.Name, "i)Reliquary Key")) {				
+				If (broadTerms) {
+					tmpName := RegExReplace(Item.Name, "i)(Sacrifice At).*|(Fragment of).*|(Mortal).*|.*('s Key)|.*(Breachstone)|(Reliquary Key)", "$1$2$3$4$5$6") 
+					terms.push(tmpName)
+				} Else {
+					terms.push(Item.Name)
+				}
+			} 
+			; other items (weapons, armour pieces, jewelry etc)
+			Else {			
+				If (broadTerms) {
+					If (Item.IsWeapon or Item.IsAmulet or Item.IsRing or Item.IsBelt or InStr(Item.SubType, "Shield")) {
+						; add the term "Chance to Block" to remove items with "Energy Shield" from "Shield" searches
+						If (InStr(Item.SubType, "Shield")) {
+							terms.push("Chance to Block")
+						}
+						
+						; add grip type to differentiate 1 and 2 handed weapons
+						If (Item.GripType == "1H" and RegExMatch(Item.Subtype, "i)Sword|Mace|Axe")) {
+							prefix := "One Handed"
+						} Else If (Item.GripType == "2H") {
+							prefix := "Two Handed"
+						}
+						; add a space since all these terms have a preceding one, this reduces the chance of accidental matches
+						; for example "Ring" found in "Voidbringers" or "during Flask effect"
+						terms.push(prefix " " Item.SubType)	
+					} 
+					; armour pieces are a bit special, the ingame information doesn't include "armour/body armour" or something alike. 
+					; we can use the item defenses though to match armour pieces with the same defense types (can't differentiate between "Body Armour" and "Helmet").
+					Else If (InStr(Item.BaseType, "Armour")) {
+						For key, val in ItemData.Parts {
+							If (RegExMatch(val, "i)(Energy Shield:)|(Armour:)|(Evasion Rating:)", match)) {
+								Loop, 3 {
+									If (StrLen(match%A_Index%)) {
+										terms.push(match%A_Index%)
+									}
+								}
+							}
+						}
+					}
+				} Else {
+					terms.push(Item.TypeName)
+				}
+			}
+		}
+
+		If (terms.length() > 0) {
+			SendInput ^{sc021}
+			For key, val in terms {
+				SendInput "%val%"
+				SendInput {Space}
+			}
+			SendInput ^{sc02f}{Enter} ; sc021 = f  sc02f = v
+		} Else {
+			; send ctrl + f in case we don't have information to input
+			SendInput ^{sc021}
+		}
+
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+		SetClipboardContents("")
+	}
 }
 
 ; ########### TIMERS ############
