@@ -9425,7 +9425,7 @@ HighlightItems(broadTerms = false) {
 			; maps
 			Else If (Item.IsMap) {				
 				If (broadTerms) {
-					terms.push(Item.TypeName)
+					terms.push(" Map")
 				} Else {
 					terms.push(Item.SubType)
 					terms.push("tier:" Item.MapTier)
