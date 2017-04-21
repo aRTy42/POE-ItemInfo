@@ -1,0 +1,56 @@
+{
+"enable_Warnings": 1
+
+,"PhysReflect": 1
+,"EleReflect": 1
+,"NoLeech": 1
+,"NoRegen": 1
+,"LessRecovery": 0
+
+,"TempChains": 1
+,"EleWeakness": 0
+,"Vulnerability": 0
+,"Enfeeble": 0
+
+,"Beyond": 0
+,"ManyTotems": 0
+,"DesecratedGround": 0
+,"BurningGround": 0
+,"ChilledGround": 0
+,"ShockingGround": 0
+
+,"PlayerReducedMaxRes": 0
+,"PlayerReducedFlaskCharge": 0
+,"PlayerLessAoE": 0
+,"PlayerEleEquilibrium": 0
+,"PlayerPointBlank": 0
+,"PlayerDodgeMonstAccu": 0
+,"PlayerReducedBlockLessArmour": 0
+
+,"BossTwinned": 0
+,"BossDmgAtkCastSpeed": 0
+,"BossLifeAoE": 0
+
+,"MonstExtraEleDmg": 0
+,"MonstCritChanceMult": 0
+,"MonstHexproof": 0
+,"MonstLessCurse": 0
+,"MonstChaosEleRes": 0
+,"MonstPhysDmgReduction": 0
+,"MonstTakeReducedCritDmg": 0
+,"MonstAvoidPoisonBlindBleed": 0
+,"MonstAvoidStatusAilments": 0
+,"MonstCauseStatusAilments": 0
+,"MonstTwoAdditionalProj": 0
+,"MonstSkillsChain": 0
+,"MonstHitsPoison": 0
+,"MonstHitsIgnite": 0
+,"MonstIncrDmg": 0
+,"MonstIncrAoE": 0
+,"MonstMoveAtkCastSpeed": 0
+,"MonstMoreLife": 0
+,"MonstNotStunned": 0
+,"MonstNotSlowedTaunted": 0
+,"MonstRareNemesis": 0
+,"MonstMagicBloodlines": 0
+}
