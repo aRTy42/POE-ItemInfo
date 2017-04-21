@@ -26,7 +26,7 @@ StartSplashScreen()
 	Set ProjectName to create user settings folder in A_MyDocuments
 */
 projectName			:= "PoE-TradeMacro"
-FilesToCopyToUserFolder	:= ["\resources\config\default_config_trade.ini", "\resources\config\default_config.ini", "\resources\ahk\default_AdditionalMacros.txt"]
+FilesToCopyToUserFolder	:= ["\resources\config\default_config_trade.ini", "\resources\config\default_config.ini", "\resources\ahk\default_AdditionalMacros.txt", "\resources\ahk\default_MapModWarnings.txt"]
 overwrittenFiles 		:= PoEScripts_HandleUserSettings(projectName, A_MyDocuments, projectName, FilesToCopyToUserFolder, A_ScriptDir)
 isDevelopmentVersion	:= PoEScripts_isDevelopmentVersion()
 userDirectory			:= A_MyDocuments . "\" . projectName . isDevelopmentVersion

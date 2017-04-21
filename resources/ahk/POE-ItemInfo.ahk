@@ -139,6 +139,7 @@ GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 
 #Include, %A_ScriptDir%\resources\Version.txt
 #Include, %A_ScriptDir%\lib\JSON.ahk
+#Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
 If (A_AhkVersion <= AHKVersionRequired)
@@ -457,6 +458,7 @@ class Item_ {
 		This.GripType 		:= ""
 		This.Level		:= ""
 		This.MapLevel 		:= ""
+		This.MapTier 		:= ""
 		This.MaxSockets 	:= ""
 		This.SubType 		:= ""
 		This.Implicit 		:= []
@@ -582,6 +584,7 @@ If (StrLen(overwrittenUserFiles)) {
 GoSub, FetchCurrencyData
 
 Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
+Menu, TextFiles, Add, Map Mod Warnings, EditMapModWarnings
 
 ; Menu tooltip
 RelVer := Globals.Get("ReleaseVersion")
@@ -2430,6 +2433,9 @@ ParseMapAffixes(ItemDataAffixes)
 {
 	Global Globals, Opts, AffixTotals, AffixLines
 
+	FileRead, File_MapModWarn, %userDirectory%\MapModWarnings.txt
+	MapModWarn := JSON.Load(File_MapModWarn)
+	
 	ItemDataChunk	:= ItemDataAffixes
 
 	ItemBaseType	:= Item.BaseType
@@ -2462,13 +2468,13 @@ ParseMapAffixes(ItemDataAffixes)
 	Index_CannotLeech :=
 	Index_MonstMoveAttCastSpeed :=
 	
-	Flag_ExtraEledmg := False
-	String_ResMod := ""
+	Count_DmgMod := 0
+	String_DmgMod := ""
 	
-	Flag_Vulnerability := False
-	String_DoT_List := ""
-		
-	MapAffixWarnings := ""
+	Flag_TwoAdditionalProj := 0
+	Flag_SkillsChain := 0
+	
+	MapModWarnings := ""
 
 	Loop, Parse, ItemDataAffixes, `n, `r
 	{
@@ -2491,7 +2497,13 @@ ParseMapAffixes(ItemDataAffixes)
 
 		If (RegExMatch(A_LoopField, "Monsters deal \d+% extra Damage as (Fire|Cold|Lightning)"))
 		{
-			Flag_ExtraEledmg := True
+			If (MapModWarn.MonstExtraEleDmg)
+			{
+				MapModWarnings := MapModWarnings . "`nExtra Ele Damage"
+			}			
+			
+			Count_DmgMod += 1
+			String_DmgMod := String_DmgMod . ", Extra Ele"
 			
 			MapAffixCount += 1
 			NumPrefixes += 1
@@ -2501,7 +2513,10 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Monsters reflect \d+% of Elemental Damage"))
 		{
-			MapAffixWarnings := MapAffixWarnings . "Ele reflect`n"
+			If (MapModWarn.EleReflect)
+			{
+				MapModWarnings := MapModWarnings . "`nEle reflect"
+			}
 			
 			MapAffixCount += 1
 			NumPrefixes += 1
@@ -2511,7 +2526,10 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Monsters reflect \d+% of Physical Damage"))
 		{
-			MapAffixWarnings := MapAffixWarnings . "Phys reflect`n"
+			If (MapModWarn.PhysReflect)
+			{
+				MapModWarnings := MapModWarnings . "`nPhys reflect"
+			}
 			
 			MapAffixCount += 1
 			NumPrefixes += 1
@@ -2521,6 +2539,11 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "\+\d+% Monster Physical Damage Reduction"))
 		{
+			If (MapModWarn.MonstPhysDmgReduction)
+			{
+				MapModWarnings := MapModWarnings . "`nPhys Damage Reduction"
+			}
+			
 			MapAffixCount += 1
 			NumPrefixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2529,6 +2552,11 @@ ParseMapAffixes(ItemDataAffixes)
 
 		If (RegExMatch(A_LoopField, "\d+% less effect of Curses on Monsters"))
 		{
+			If (MapModWarn.MonstLessCurse)
+			{
+				MapModWarnings := MapModWarnings . "`nLess Curse Effect"
+			}
+			
 			MapAffixCount += 1
 			NumPrefixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2537,6 +2565,11 @@ ParseMapAffixes(ItemDataAffixes)
 
 		If (RegExMatch(A_LoopField, "Monsters have a \d+% chance to avoid Poison, Blind, and Bleed"))
 		{
+			If (MapModWarn.MonstAvoidPoisonBlindBleed)
+			{
+				MapModWarnings := MapModWarnings . "`nAvoid Poison/Blind/Bleed"
+			}
+			
 			MapAffixCount += 1
 			NumPrefixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2545,6 +2578,11 @@ ParseMapAffixes(ItemDataAffixes)
 
 		If (RegExMatch(A_LoopField, "Monsters have a \d+% chance to cause Status Ailments"))
 		{
+			If (MapModWarn.MonstCauseStatusAilments)
+			{
+				MapModWarnings := MapModWarnings . "`nCause Status Ailments"
+			}
+			
 			MapAffixCount += 1
 			NumPrefixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2553,25 +2591,126 @@ ParseMapAffixes(ItemDataAffixes)
 
 		If (RegExMatch(A_LoopField, "\d+% increased Monster Damage"))
 		{
+			If (MapModWarn.MonstIncrDmg)
+			{
+				MapModWarnings := MapModWarnings . "`nIncreased Damage"
+			}
+			
 			MapAffixCount += 1
 			NumPrefixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
 			Continue
 		}
 		
-		If (RegExMatch(A_LoopField, "Area is inhabited by 2 additional Rogue Exiles|Area has increased monster variety|Area contains many Totems|Monsters' skills Chain 2 additional times|All Monster Damage from Hits always Ignites|Slaying Enemies close together can attract monsters from Beyond|Area contains two Unique Bosses|Monsters are Hexproof|Monsters fire 2 additional Projectiles"))
+		If (RegExMatch(A_LoopField, "Area is inhabited by 2 additional Rogue Exiles|Area has increased monster variety"))
 		{
 			MapAffixCount += 1
 			NumPrefixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
 			Continue
 		}
+		
+		If (RegExMatch(A_LoopField, "Area contains many Totems"))
+		{
+			If (MapModWarn.ManyTotems)
+			{
+				MapModWarnings := MapModWarnings . "`nTotems"
+			}
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters' skills Chain 2 additional times"))
+		{
+			If (MapModWarn.MonstSkillsChain)
+			{
+				MapModWarnings := MapModWarnings . "`nSkills Chain"
+			}
+			Flag_SkillsChain := 1
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "All Monster Damage from Hits always Ignites"))
+		{
+			If (MapModWarn.MonstHitsIgnite)
+			{
+				MapModWarnings := MapModWarnings . "`nHits Ignite"
+			}
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Slaying Enemies close together can attract monsters from Beyond"))
+		{
+			If (MapModWarn.Beyond)
+			{
+				MapModWarnings := MapModWarnings . "`nBeyond"
+			}
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Area contains two Unique Bosses"))
+		{
+			If (MapModWarn.BossTwinned)
+			{
+				MapModWarnings := MapModWarnings . "`nTwinned Boss"
+			}
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters are Hexproof"))
+		{
+			If (MapModWarn.MonstHexproof)
+			{
+				MapModWarnings := MapModWarnings . "`nHexproof"
+			}
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Monsters fire 2 additional Projectiles"))
+		{
+			If (MapModWarn.MonstTwoAdditionalProj)
+			{
+				MapModWarnings := MapModWarnings . "`nAdditional Projectiles"
+			}
+			Flag_TwoAdditionalProj := 1
+			
+			MapAffixCount += 1
+			NumPrefixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}		
 		
 		
 		
 		If (RegExMatch(A_LoopField, "Players are Cursed with Elemental Weakness"))
 		{
-			String_ResMod := String_ResMod . " & Ele Weakness"
+			If (MapModWarn.EleWeakness)
+			{
+				MapModWarnings := MapModWarnings . "`nEle Weakness"
+			}
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2581,6 +2720,11 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Players are Cursed with Enfeeble"))
 		{
+			If (MapModWarn.Enfeeble)
+			{
+				MapModWarnings := MapModWarnings . "`nEnfeeble"
+			}
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2589,8 +2733,11 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Players are Cursed with Temporal Chains"))
 		{
-			MapAffixWarnings := MapAffixWarnings . "Temp chains`n"
-			
+			If (MapModWarn.TempChains)
+			{
+				MapModWarnings := MapModWarnings . "`nTemp Chains"
+			}
+
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2599,7 +2746,13 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Players are Cursed with Vulnerability"))
 		{
-			Flag_Vulnerability := True
+			If (MapModWarn.Vulnerability)
+			{
+				MapModWarnings := MapModWarnings . "`nVulnerability"
+			}
+			
+			Count_DmgMod += 0.5
+			String_DmgMod := String_DmgMod . ", Vuln"
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2607,8 +2760,42 @@ ParseMapAffixes(ItemDataAffixes)
 			Continue
 		}
 		
-		If (RegExMatch(A_LoopField, "Area has patches of (burning|chilled|shocking) ground"))
+		If (RegExMatch(A_LoopField, "Area has patches of burning ground"))
 		{
+			If (MapModWarn.BurningGround)
+			{
+				MapModWarnings := MapModWarnings . "`nBurning ground"
+			}
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Area has patches of chilled ground"))
+		{
+			If (MapModWarn.ChilledGround)
+			{
+				MapModWarnings := MapModWarnings . "`nChilled ground"
+			}
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Area has patches of shocking ground"))
+		{
+			If (MapModWarn.ShockingGround)
+			{
+				MapModWarnings := MapModWarnings . "`nShocking ground"
+			}
+			
+			Count_DmgMod += 0.5
+			String_DmgMod := String_DmgMod . ", Shocking"
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2617,7 +2804,10 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Area has patches of desecrated ground"))
 		{
-			String_DoT_List := String_DoT_List . " & desecrated ground"
+			If (MapModWarn.DesecratedGround)
+			{
+				MapModWarnings := MapModWarnings . "`nDesecrated ground"
+			}
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2627,6 +2817,11 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Players gain \d+% reduced Flask Charges"))
 		{
+			If (MapModWarn.PlayerReducedFlaskCharge)
+			{
+				MapModWarnings := MapModWarnings . "`nReduced Flask Charges"
+			}
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2635,6 +2830,11 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Monsters have \d+% increased Area of Effect"))
 		{
+			If (MapModWarn.MonstIncrAoE)
+			{
+				MapModWarnings := MapModWarnings . "`nIncreased Monster AoE"
+			}
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2643,6 +2843,11 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Players have \d+% less Area of Effect"))
 		{
+			If (MapModWarn.PlayerLessAoE)
+			{
+				MapModWarnings := MapModWarnings . "`nLess Player AoE"
+			}
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2651,6 +2856,11 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Monsters have \d+% chance to Avoid Elemental Status Ailments"))
 		{
+			If (MapModWarn.MonstAvoidStatusAilments)
+			{
+				MapModWarnings := MapModWarnings . "`nMonsters Avoid Elemental Status Ailments"
+			}
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2659,6 +2869,11 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Players have \d+% less Recovery Rate of Life and Energy Shield"))
 		{
+			If (MapModWarn.LessRecovery)
+			{
+				MapModWarnings := MapModWarnings . "`nLess Recovery"
+			}
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2667,6 +2882,11 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Monsters take \d+% reduced Extra Damage from Critical Strikes"))
 		{
+			If (MapModWarn.MonstTakeReducedCritDmg)
+			{
+				MapModWarnings := MapModWarnings . "`nReduced Crit Damage"
+			}
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2675,7 +2895,13 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "-\d+% maximum Player Resistances"))
 		{
-			String_ResMod := String_ResMod . " & -Max Res"
+			If (MapModWarn.PlayerReducedMaxRes)
+			{
+				MapModWarnings := MapModWarnings . "`n-Max Res"
+			}
+			
+			Count_DmgMod += 0.5
+			String_DmgMod := String_DmgMod . ", -Max Res"
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2683,8 +2909,26 @@ ParseMapAffixes(ItemDataAffixes)
 			Continue
 		}
 
-		If (RegExMatch(A_LoopField, "Players have Elemental Equilibrium|Players have Point Blank"))
+		If (RegExMatch(A_LoopField, "Players have Elemental Equilibrium"))
 		{
+			If (MapModWarn.PlayerEleEquilibrium)
+			{
+				MapModWarnings := MapModWarnings . "`nEle Equilibrium"
+			}
+			
+			MapAffixCount += 1
+			NumSuffixes += 1
+			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
+			Continue
+		}
+		
+		If (RegExMatch(A_LoopField, "Players have Point Blank"))
+		{
+			If (MapModWarn.PlayerPointBlank)
+			{
+				MapModWarnings := MapModWarnings . "`nPoint Blank"
+			}
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2693,7 +2937,10 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Monsters Poison on Hit"))
 		{
-			String_DoT_List := String_DoT_List . " & Poison"
+			If (MapModWarn.MonstHitsPoison)
+			{
+				MapModWarnings := MapModWarnings . "`nHits Poison"
+			}
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2703,7 +2950,10 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "Players cannot Regenerate Life, Mana or Energy Shield"))
 		{
-			MapAffixWarnings := MapAffixWarnings . "No Regen`n"
+			If (MapModWarn.NoRegen)
+			{
+				MapModWarnings := MapModWarnings . "`nNo Regen"
+			}
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2719,6 +2969,11 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_RareMonst)
 			{
+				If (MapModWarn.MonstRareNemesis)
+				{
+					MapModWarnings := MapModWarnings . "`nNemesis"
+				}
+			
 				MapAffixCount += 1
 				Index_RareMonst := MapAffixCount
 				NumPrefixes += 1
@@ -2736,6 +2991,11 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_MonstSlowedTaunted)
 			{
+				If (MapModWarn.MonstNotSlowedTaunted)
+				{
+					MapModWarnings := MapModWarnings . "`nNot Slowed/Taunted"
+				}
+				
 				MapAffixCount += 1
 				Index_MonstSlowedTaunted := MapAffixCount
 				NumPrefixes += 1
@@ -2753,6 +3013,11 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_BossDamageAttackCastSpeed)
 			{
+				If (MapModWarn.BossDmgAtkCastSpeed)
+				{
+					MapModWarnings := MapModWarnings . "`nBoss Damage & Attack/Cast Speed"
+				}
+				
 				MapAffixCount += 1
 				Index_BossDamageAttackCastSpeed := MapAffixCount
 				NumPrefixes += 1
@@ -2770,6 +3035,11 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_BossLifeAoE)
 			{
+				If (MapModWarn.BossLifeAoE)
+				{
+					MapModWarnings := MapModWarnings . "`nBoss Life & AoE"
+				}
+				
 				MapAffixCount += 1
 				Index_BossLifeAoE := MapAffixCount
 				NumPrefixes += 1
@@ -2787,6 +3057,11 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_MonstChaosEleRes)
 			{
+				If (MapModWarn.MonstChaosEleRes)
+				{
+					MapModWarnings := MapModWarnings . "`nChaos/Ele Res"
+				}
+				
 				MapAffixCount += 1
 				Index_MonstChaosEleRes := MapAffixCount
 				NumPrefixes += 1
@@ -2806,6 +3081,11 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_MagicMonst)
 			{
+				If (MapModWarn.MonstMagicBloodlines)
+				{
+					MapModWarnings := MapModWarnings . "`nBloodlines"
+				}
+				
 				MapAffixCount += 1
 				Index_MagicMonst := MapAffixCount
 				NumSuffixes += 1
@@ -2823,6 +3103,14 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_MonstCritChanceMult)
 			{
+				If (MapModWarn.MonstCritChanceMult)
+				{
+					MapModWarnings := MapModWarnings . "`nCrit Chance & Multiplier"
+				}
+				
+				Count_DmgMod += 1
+				String_DmgMod := String_DmgMod . ", Crit"
+			
 				MapAffixCount += 1
 				Index_MonstCritChanceMult := MapAffixCount
 				NumSuffixes += 1
@@ -2840,6 +3128,11 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_PlayerDodgeMonstAccu)
 			{
+				If (MapModWarn.PlayerDodgeMonstAccu)
+				{
+					MapModWarnings := MapModWarnings . "`nDodge unlucky / Monster Accuracy"
+				}
+				
 				MapAffixCount += 1
 				Index_PlayerDodgeMonstAccu := MapAffixCount
 				NumSuffixes += 1
@@ -2857,6 +3150,11 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_PlayerBlockArmour)
 			{
+				If (MapModWarn.PlayerReducedBlockLessArmour)
+				{
+					MapModWarnings := MapModWarnings . "`nReduced Block / Less Armour"
+				}
+				
 				MapAffixCount += 1
 				Index_PlayerBlockArmour := MapAffixCount
 				NumSuffixes += 1
@@ -2874,7 +3172,10 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_CannotLeech)
 			{
-				MapAffixWarnings := MapAffixWarnings . "No Leech`n"
+				If (MapModWarn.NoLeech)
+				{
+					MapModWarnings := MapModWarnings . "`nNo Leech"
+				}
 				
 				MapAffixCount += 1
 				Index_CannotLeech := MapAffixCount
@@ -2894,6 +3195,11 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_MonstStunLife)
 			{
+				If (MapModWarn.MonstNotStunned)
+				{
+					MapModWarnings := MapModWarnings . "`nNot Stunned"
+				}
+				
 				MapAffixCount += 1
 				Index_MonstStunLife := MapAffixCount
 				NumPrefixes += 1
@@ -2914,6 +3220,14 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			If (Not Index_MonstMoveAttCastSpeed)
 			{
+				If (MapModWarn.MonstMoveAtkCastSpeed)
+				{
+					MapModWarnings := MapModWarnings . "`nMove/Attack/Cast Speed"
+				}
+				
+				Count_DmgMod += 0.5
+				String_DmgMod := String_DmgMod . ", Move/Attack/Cast"
+				
 				MapAffixCount += 1
 				Index_MonstMoveAttCastSpeed := MapAffixCount . "a"
 				NumPrefixes += 1
@@ -2942,6 +3256,11 @@ ParseMapAffixes(ItemDataAffixes)
 		
 		If (RegExMatch(A_LoopField, "(\d+)% more Monster Life", RegExMonsterLife))
 		{
+			If (MapModWarn.MonstMoreLife)
+			{
+				MapModWarnings := MapModWarnings . "`nMore Life"
+			}
+				
 			RegExMatch(ItemData.FullText, "Map Tier: (\d+)", RegExMapTier)
 			
 			; only hybrid mod
@@ -2995,19 +3314,26 @@ ParseMapAffixes(ItemDataAffixes)
 		}
 	}
 	
-	If (Flag_ExtraEledmg and String_ResMod)
-	{
-		MapAffixWarnings := MapAffixWarnings . "Added Ele dmg" . String_ResMod . "`n"
-	}
-	If (Flag_Vulnerability and String_DoT_List)
-	{
-		MapAffixWarnings := MapAffixWarnings . "Vulnerability" . String_DoT_List . "`n"
-	}	
-
 	AffixTotals.NumPrefixes := NumPrefixes
 	AffixTotals.NumSuffixes := NumSuffixes
 	
-	return MapAffixWarnings
+	If (Flag_TwoAdditionalProj and Flag_SkillsChain)
+	{
+		MapModWarnings := MapModWarnings . "`nAdditional Projectiles & Skills Chain"
+	}
+	
+	If (Count_DmgMod >= 1.5)
+	{
+		String_DmgMod := SubStr(String_DmgMod, 3)
+		MapModWarnings := MapModWarnings . "`nMulti Damage: " . String_DmgMod
+	}
+		
+	If (Not MapModWarn.enable_Warnings)
+	{
+		MapModWarnings := " disabled"
+	}
+	
+	return MapModWarnings
 }
 
 ; Try looking up the remainder bracket based on Bracket
@@ -7310,7 +7636,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = True)
 	{
-		MapAffixWarnings := ParseMapAffixes(ItemData.Affixes)
+		MapModWarnings := ParseMapAffixes(ItemData.Affixes)
 	}
 	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsLeaguestone)
 	{
@@ -7438,10 +7764,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 
 	If (Item.IsMap)
-	{
-		/*
+	{		
 		Item.MapLevel := ParseMapLevel(ItemDataText)
-
+		Item.MapTier  := Item.MapLevel - 67
+		
+		/*
 		;;hixxie fixed
 		MapLevelText := Item.MapLevel
 		TT = %TT%`nMap Level: %MapLevelText%
@@ -7463,9 +7790,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			MapAffixCount := AffixTotals.NumPrefixes + AffixTotals.NumSuffixes
 			TT = %TT%`n`n-----------`nMods (%MapAffixCount%):%AffixDetails%
 			
-			If (MapAffixWarnings)
+			If (MapModWarnings)
 			{
-				TT = %TT%`n`nMod warnings:`n%MapAffixWarnings%
+				TT = %TT%`n`nMod warnings:%MapModWarnings%
 			}
 			Else
 			{
@@ -9362,6 +9689,161 @@ CloseScripts() {
 	ExitApp
 }
 
+HighlightItems(broadTerms = false) {
+	; Highlights items via stash search (also in vendor search)
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		Global Item, Opts, Globals, ItemData
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		Send ^{sc02E}	; ^{c}
+		Sleep 100
+		
+		CBContents := GetClipboardContents()
+		CBContents := PreProcessContents(CBContents)
+		
+		Globals.Set("ItemText", CBContents)
+		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)
+		
+		ParsedData := ParseItemData(CBContents)
+		
+		If (Item.Name) {
+			rarity := ""
+			If (Item.RarityLevel = 2) {
+				rarity := "magic"
+			} Else If (Item.RarityLevel = 3) {
+				rarity := "rare"
+			} Else If (Item.RarityLevel = 4) {
+				rarity := "unique"
+			}
+		
+			terms := []
+			; uniques / gems / div cards
+			If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard) {
+				If (broadTerms) {
+					If (Item.IsUnique) {
+						terms.push("Rarity: Unique")
+					} Else {
+						terms.push("Rarity: " Item.BaseType)
+					}					
+				} Else {
+					terms.push(Item.Name)
+				}
+			}
+			; essences
+			Else If (Item.IsEssence) {
+				If (broadTerms) {
+					terms.push("Rarity: Currency")
+					terms.push("Essence")
+				} Else {
+					terms.push(Item.Name)
+				}
+			}
+			; currency
+			Else If (Item.IsCurrency) {
+				If (broadTerms) {
+					terms.push("Currency")
+				} Else {
+					terms.push(Item.Name)
+				}
+			}
+			; maps
+			Else If (Item.IsMap) {				
+				If (broadTerms) {
+					terms.push(" Map")
+				} Else {
+					terms.push(Item.SubType)
+					terms.push("tier:" Item.MapTier)
+				}
+			}
+			; flasks
+			Else If (Item.IsFlask) {
+				If (broadTerms) {
+					terms.push(Item.SubType)
+				} Else {
+					terms.push(Item.TypeName)
+				}		
+			}
+			; leaguestones
+			Else If (Item.IsLeaguestone) {
+				If (broadTerms) {
+					terms.push(Item.BaseType)
+				} Else {
+					terms.push(Item.SubType)
+				}				
+			}
+			; jewels
+			Else If (Item.IsJewel) {
+				If (broadTerms) {
+					terms.push(Item.BaseType)
+				} Else {					
+					terms.push(Item.TypeName)
+					terms.push(rarity)
+				}	
+			}
+			; offerings / sacrifice and mortal fragments / guardian fragments / council keys / breachstones 
+			Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone") or RegExMatch(Item.Name, "i)Reliquary Key")) {				
+				If (broadTerms) {
+					tmpName := RegExReplace(Item.Name, "i)(Sacrifice At).*|(Fragment of).*|(Mortal).*|.*('s Key)|.*(Breachstone)|(Reliquary Key)", "$1$2$3$4$5$6") 
+					terms.push(tmpName)
+				} Else {
+					terms.push(Item.Name)
+				}
+			} 
+			; other items (weapons, armour pieces, jewelry etc)
+			Else {			
+				If (broadTerms) {
+					If (Item.IsWeapon or Item.IsAmulet or Item.IsRing or Item.IsBelt or InStr(Item.SubType, "Shield")) {
+						; add the term "Chance to Block" to remove items with "Energy Shield" from "Shield" searches
+						If (InStr(Item.SubType, "Shield")) {
+							terms.push("Chance to Block")
+						}
+						
+						; add grip type to differentiate 1 and 2 handed weapons
+						If (Item.GripType == "1H" and RegExMatch(Item.Subtype, "i)Sword|Mace|Axe")) {
+							prefix := "One Handed"
+						} Else If (Item.GripType == "2H") {
+							prefix := "Two Handed"
+						}
+						; add a space since all these terms have a preceding one, this reduces the chance of accidental matches
+						; for example "Ring" found in "Voidbringers" or "during Flask effect"
+						terms.push(prefix " " Item.SubType)	
+					} 
+					; armour pieces are a bit special, the ingame information doesn't include "armour/body armour" or something alike. 
+					; we can use the item defenses though to match armour pieces with the same defense types (can't differentiate between "Body Armour" and "Helmet").
+					Else If (InStr(Item.BaseType, "Armour")) {
+						For key, val in ItemData.Parts {
+							If (RegExMatch(val, "i)(Energy Shield:)|(Armour:)|(Evasion Rating:)", match)) {
+								Loop, 3 {
+									If (StrLen(match%A_Index%)) {
+										terms.push(match%A_Index%)
+									}
+								}
+							}
+						}
+					}
+				} Else {
+					terms.push(Item.TypeName)
+				}
+			}
+		}
+
+		If (terms.length() > 0) {
+			SendInput ^{sc021}
+			For key, val in terms {
+				SendInput "%val%"
+				SendInput {Space}
+			}
+			SendInput ^{sc02f}{Enter} ; sc021 = f  sc02f = v
+		} Else {
+			; send ctrl + f in case we don't have information to input
+			SendInput ^{sc021}
+		}
+
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+		SetClipboardContents("")
+	}
+}
+
 ; ########### TIMERS ############
 
 ; Tick every 100 ms
@@ -9589,6 +10071,10 @@ EditAdditionalMacros:
 	OpenUserDirFile("AdditionalMacros.txt")
 	return
 
+EditMapModWarnings:
+	OpenUserDirFile("MapModWarnings.txt")
+	return
+
 EditCurrencyRates:
 	OpenCreateDataTextFile("CurrencyRates.txt")
 	return
@@ -9727,16 +10213,6 @@ TogglePOEItemScript()
 		ShowToolTip("Item parsing ENABLED")
 	}
 }
-
-; ### For development. Usual parsing is invoked via clipboard change while PoE is running. ###
-/*
-F8::
-	clipboard =   ;clear the clipboard
-	Send ^c
-	Sleep, 50
-	ParseClipBoardChanges()
-	return
-*/
 
 ; ############ (user) macros #############
 ; macros are being appended here by merge script
