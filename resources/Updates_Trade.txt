@@ -1,5 +1,12 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.1.0
+================================================================================================
+Updated ItemInfo - map mod parsing can now be configured, you can open the file for this via system tray menu -> Edit -> MapModWarnings. Just set the value 1 to enable a mod or 0 to disable it.
+Added item highlight function to AdditionalMacros - this uses ItemInfo to fill the search/highlight boxes in stash and vendor menus for you. It has a hotkey modifier to fill in broader terms, for example "Strand Tier:6" versus "Map" or "Voidbringers" versus "Unique". Activated by default.
+Added more stash scrolling hotkeys to AdditionalMacros - Now RightMouseButton + ScrollWheel also works in addition to Control + ScrollWheel, both are activated by default.
+Removed some accidental debug output left in Fallback.exe.
+
 2.0.12
 ================================================================================================
 Fixed currency search again which was broken by the recent poe.trade changes (again).
