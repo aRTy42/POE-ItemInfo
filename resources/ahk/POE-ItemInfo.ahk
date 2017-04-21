@@ -458,6 +458,7 @@ class Item_ {
 		This.GripType 		:= ""
 		This.Level		:= ""
 		This.MapLevel 		:= ""
+		This.MapTier 		:= ""
 		This.MaxSockets 	:= ""
 		This.SubType 		:= ""
 		This.Implicit 		:= []
@@ -7439,9 +7440,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 
 	If (Item.IsMap)
-	{
-		
+	{		
 		Item.MapLevel := ParseMapLevel(ItemDataText)
+		Item.MapTier  := Item.MapLevel - 67
+		
 		/*
 		;;hixxie fixed
 		MapLevelText := Item.MapLevel
@@ -9426,7 +9428,7 @@ HighlightItems(broadTerms = false) {
 					terms.push(Item.TypeName)
 				} Else {
 					terms.push(Item.SubType)
-					terms.push("tier:" Item.MapLevel - 67)
+					terms.push("tier:" Item.MapTier)
 				}
 			}
 			; flasks
