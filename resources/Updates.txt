@@ -1,6 +1,17 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+2.6.04
+================================
+from aRTy42, Eruyome, Nightblade
+
+Map parsing: MapModWarnings can now be customized. Like AdditionalMacros the file is put into the user folder and 
+	can be accessed via the context menu "Edit -> Map Mod Warnings".
+New feature: Item highlighting (by Nightblade & Eruyome). The AdditionalMacros now come with a function that fills the search bar at
+	your stash or at vendors. While hovering over an item, use Ctrl+F for a specific or Ctrl+Alt+F for a broad search term.
+	Jumping into the search bar with Ctrl+F while not hovering over an item is unaffected.
+AdditionalMacros: Added more functions and enabled more functions by default.
+
 2.6.03
 ================================
 from aRTy42

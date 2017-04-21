@@ -2468,12 +2468,12 @@ ParseMapAffixes(ItemDataAffixes)
 	Index_CannotLeech :=
 	Index_MonstMoveAttCastSpeed :=
 	
-	Flag_ExtraEledmg := False
-	String_ResMod := ""
+	Count_DmgMod := 0
+	String_DmgMod := ""
 	
-	Flag_Vulnerability := False
-	String_DoT_List := ""
-		
+	Flag_TwoAdditionalProj := 0
+	Flag_SkillsChain := 0
+	
 	MapModWarnings := ""
 
 	Loop, Parse, ItemDataAffixes, `n, `r
@@ -2502,7 +2502,8 @@ ParseMapAffixes(ItemDataAffixes)
 				MapModWarnings := MapModWarnings . "`nExtra Ele Damage"
 			}			
 			
-			Flag_ExtraEledmg := True
+			Count_DmgMod += 1
+			String_DmgMod := String_DmgMod . ", Extra Ele"
 			
 			MapAffixCount += 1
 			NumPrefixes += 1
@@ -2628,6 +2629,7 @@ ParseMapAffixes(ItemDataAffixes)
 			{
 				MapModWarnings := MapModWarnings . "`nSkills Chain"
 			}
+			Flag_SkillsChain := 1
 			
 			MapAffixCount += 1
 			NumPrefixes += 1
@@ -2693,6 +2695,7 @@ ParseMapAffixes(ItemDataAffixes)
 			{
 				MapModWarnings := MapModWarnings . "`nAdditional Projectiles"
 			}
+			Flag_TwoAdditionalProj := 1
 			
 			MapAffixCount += 1
 			NumPrefixes += 1
@@ -2708,8 +2711,6 @@ ParseMapAffixes(ItemDataAffixes)
 			{
 				MapModWarnings := MapModWarnings . "`nEle Weakness"
 			}
-			
-			String_ResMod := String_ResMod . " & Ele Weakness"
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2750,7 +2751,8 @@ ParseMapAffixes(ItemDataAffixes)
 				MapModWarnings := MapModWarnings . "`nVulnerability"
 			}
 			
-			Flag_Vulnerability := True
+			Count_DmgMod += 0.5
+			String_DmgMod := String_DmgMod . ", Vuln"
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2791,6 +2793,9 @@ ParseMapAffixes(ItemDataAffixes)
 				MapModWarnings := MapModWarnings . "`nShocking ground"
 			}
 			
+			Count_DmgMod += 0.5
+			String_DmgMod := String_DmgMod . ", Shocking"
+			
 			MapAffixCount += 1
 			NumSuffixes += 1
 			AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
@@ -2803,8 +2808,6 @@ ParseMapAffixes(ItemDataAffixes)
 			{
 				MapModWarnings := MapModWarnings . "`nDesecrated ground"
 			}
-			
-			String_DoT_List := String_DoT_List . " & desecrated ground"
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2897,7 +2900,8 @@ ParseMapAffixes(ItemDataAffixes)
 				MapModWarnings := MapModWarnings . "`n-Max Res"
 			}
 			
-			String_ResMod := String_ResMod . " & -Max Res"
+			Count_DmgMod += 0.5
+			String_DmgMod := String_DmgMod . ", -Max Res"
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -2937,8 +2941,6 @@ ParseMapAffixes(ItemDataAffixes)
 			{
 				MapModWarnings := MapModWarnings . "`nHits Poison"
 			}
-			
-			String_DoT_List := String_DoT_List . " & Poison"
 			
 			MapAffixCount += 1
 			NumSuffixes += 1
@@ -3106,6 +3108,9 @@ ParseMapAffixes(ItemDataAffixes)
 					MapModWarnings := MapModWarnings . "`nCrit Chance & Multiplier"
 				}
 				
+				Count_DmgMod += 1
+				String_DmgMod := String_DmgMod . ", Crit"
+			
 				MapAffixCount += 1
 				Index_MonstCritChanceMult := MapAffixCount
 				NumSuffixes += 1
@@ -3220,6 +3225,9 @@ ParseMapAffixes(ItemDataAffixes)
 					MapModWarnings := MapModWarnings . "`nMove/Attack/Cast Speed"
 				}
 				
+				Count_DmgMod += 0.5
+				String_DmgMod := String_DmgMod . ", Move/Attack/Cast"
+				
 				MapAffixCount += 1
 				Index_MonstMoveAttCastSpeed := MapAffixCount . "a"
 				NumPrefixes += 1
@@ -3306,19 +3314,20 @@ ParseMapAffixes(ItemDataAffixes)
 		}
 	}
 	
-	
-	If (Flag_ExtraEledmg and String_ResMod)
-	{
-		MapModWarnings := MapModWarnings . "`nAdded Ele dmg" . String_ResMod
-	}
-	If (Flag_Vulnerability and String_DoT_List)
-	{
-		MapModWarnings := MapModWarnings . "`nVulnerability" . String_DoT_List
-	}
-
 	AffixTotals.NumPrefixes := NumPrefixes
 	AffixTotals.NumSuffixes := NumSuffixes
 	
+	If (Flag_TwoAdditionalProj and Flag_SkillsChain)
+	{
+		MapModWarnings := MapModWarnings . "`nAdditional Projectiles & Skills Chain"
+	}
+	
+	If (Count_DmgMod >= 1.5)
+	{
+		String_DmgMod := SubStr(String_DmgMod, 3)
+		MapModWarnings := MapModWarnings . "`nMulti Damage: " . String_DmgMod
+	}
+		
 	If (Not MapModWarn.enable_Warnings)
 	{
 		MapModWarnings := " disabled"
