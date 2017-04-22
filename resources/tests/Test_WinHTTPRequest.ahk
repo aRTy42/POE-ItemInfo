@@ -13,20 +13,20 @@ FileCreateDir, %A_ScriptDir%\test_temp
 Class_Console("console",0,335,600,900,,,,9)
 console.show()
 
-urls := ["https://api.github.com/repos/PoE-TradeMacro/PoE-TradeMacro/releases", "http://poe.trade"]
+urls := ["https://api.github.com/repos/PoE-TradeMacro/PoE-TradeMacro/releases", "http://poe.trade", "http://poe.trade/search/seridonomosure"]
 
-Loop, 2 {
+Loop, % urls.MaxIndex() {
 	HttpObj 	:= ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	url			:= urls[A_Index]
 	
-	console.log("Download test with url : " url)
+	console.log("---------------------------------------------------`nDownload test with url : " url)
 	
 	UrlDownloadToFile, %url%, %A_ScriptDir%\test_temp\urlDownloadToFile%A_Index%_output.txt
 	If (!ErrorLevel) {
 		FileRead, file, %A_ScriptDir%\test_temp\urlDownloadToFile%A_Index%_output.txt
-		console.log("Testing UrlDownloadToFile: No errors.`n Output saved in: " A_ScriptDir "\test_temp\urlDownloadToFile_output.txt" "`nContent Length: " StrLen(file))
+		console.log("Testing UrlDownloadToFile: No errors.`n Output saved in: " A_ScriptDir "\test_temp\urlDownloadToFile" A_Index "_output.txt" "`nContent Length: " StrLen(file))
 	} Else {
-		console.log("Testing UrlDownloadToFile: Failed.`nTried saving output to " A_ScriptDir "\test_temp\urlDownloadToFile_output.txt")
+		console.log("Testing UrlDownloadToFile: Failed.`nTried saving output to " A_ScriptDir "\test_temp\urlDownloadToFile" A_Index "_output.txt")
 	}
 	Encoding := "utf-8"
 
@@ -51,13 +51,14 @@ Loop, 2 {
 			oADO.Close()
 		}
 		If (StrLen(html) > 0) {
-			console.log("First test downloading to variable using WinHTTP adodb.stream successful." "`nContent Length: " StrLen(html))
+			console.log("First test downloading to variable using WinHTTP adodb.stream successful. (Catching Errors)" "`nContent Length: " StrLen(html))
 		} Else {
-			console.log("First test downloading to variable using WinHTTP adodb.stream returned empty string.")
+			console.log("First test downloading to variable using WinHTTP adodb.stream returned an empty string.")
 		}
 	} Catch e {
 		console.log("Exception thrown!`n`nwhat: " e.what "`nfile: " e.file	"`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra)
 	}
+
 
 	; Test without catching errors
 	If Encoding {
@@ -74,9 +75,9 @@ Loop, 2 {
 	}
 
 	If (StrLen(html) > 0) {
-		console.log("Second test downloading to variable using WinHTTP adodb.stream successful." "`nContent Length: " StrLen(html))	
+		console.log("Second test downloading to variable using WinHTTP adodb.stream successful. (Not catching Errors)" "`nContent Length: " StrLen(html))	
 	} Else {
-		console.log("Second test downloading to variable using WinHTTP adodb.stream returned empty string.")
+		console.log("Second test downloading to variable using WinHTTP adodb.stream returned an empty string.")
 	}
 	console.log("-----------------------------------------")
 }
