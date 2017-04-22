@@ -2331,60 +2331,8 @@ ParseFlaskAffixes(ItemDataAffixes)
 			}
 		}
 		
-		/*
-		IfInString, A_LoopField, Dispels
-		{
-			; Covers Shock, Burning and Frozen and Chilled
-			If (NumSuffixes < 1)
-			{
-				NumSuffixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Removes Bleeding
-		{
-			If (NumSuffixes < 1)
-			{
-				NumSuffixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Removes Curses on use
-		{
-			If (NumSuffixes < 1)
-			{
-				NumSuffixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, during flask effect
-		{
-			If (NumSuffixes < 1)
-			{
-				NumSuffixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Adds Knockback
-		{
-			If (NumSuffixes < 1)
-			{
-				NumSuffixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Life Recovery to Minions
-		{
-			If (NumSuffixes < 1)
-			{
-				NumSuffixes += 1
-			}
-			Continue
-		}
-		*/
-
 		; Prefixes		
-		prefixes := ["Recovery Speed", "Amount Recovered", "Charges", "Instant", "Charge when", "Recovery when", "Mana Recovered", "Mana Recovered", "increased Duration", "increased Charge Recovery", "reduced Charges used"]
+		prefixes := ["Recovery Speed", "Amount Recovered", "Charges", "Instant", "Charge when", "Recovery when", "Mana Recovered", "increased Duration", "increased Charge Recovery", "reduced Charges used"]
 		For key, prefix in prefixes {
 			If (RegExMatch(A_LoopField, "i)" prefix, match)) {
 				If (NumPrefixes < 1)
@@ -2394,97 +2342,6 @@ ParseFlaskAffixes(ItemDataAffixes)
 				Continue
 			}
 		}
-		
-		/*
-		IfInString, A_LoopField, Recovery Speed
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Amount Recovered
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Charges
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Instant
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Charge when
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Recovery when
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Mana Recovered
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, Life Recovered
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, increased Duration
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, increased Charge Recovery
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		IfInString, A_LoopField, reduced Charges used
-		{
-			If (NumPrefixes < 1)
-			{
-				NumPrefixes += 1
-			}
-			Continue
-		}
-		*/
 	}
 
 	AffixTotals.NumPrefixes := NumPrefixes
