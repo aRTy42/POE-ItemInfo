@@ -460,7 +460,8 @@ class Item_ {
 		This.MapLevel 		:= ""
 		This.MapTier 		:= ""
 		This.MaxSockets 	:= ""
-		This.SubType 		:= ""
+		This.SubType 		:= ""		
+		This.DifficultyRestriction := ""
 		This.Implicit 		:= []
 		This.Charges 		:= []
 		This.AreaMonsterLevelReq := []
@@ -487,6 +488,7 @@ class Item_ {
 		This.IsJewel 		:= False
 		This.IsLeaguestone	:= False
 		This.IsDivinationCard := False
+		This.IsProphecy		:= False
 		This.IsUnique 		:= False
 		This.IsRare 		:= False
 		This.IsCorrupted 	:= False
@@ -2235,6 +2237,17 @@ IsValidRange(Bracket)
 	return True
 }
 
+ParseProphecy(ItemData, ByRef Difficulty = "", ByRef SealingCost = "") 
+{
+	; Will have to be reworked for 3.0
+	For key, part in ItemData.Parts {
+		RegExMatch(part, "i)(Normal)|(Cruel)|(Merciless) Difficulty", match)
+		If (match) {
+			Difficulty := match1 . match2 . match3
+		}
+	}
+}
+
 ; Note that while ExtractCompAffixBalance() can be run on processed data
 ; that has compact affix type declarations (or not) for this function to
 ; work properly, make sure to run it on data that has compact affix types
@@ -2306,7 +2319,19 @@ ParseFlaskAffixes(ItemDataAffixes)
 		}
 
 		; Suffixes
-
+		; "during flask effect" and "Life Recovery to Minions" should suffice
+		suffixes := ["Dispels", "Removes Bleeding", "Removes Curses on use", "during flask effect", "Adds Knockback", "Life Recovery to Minions"]
+		For key, suffix in suffixes {
+			If (RegExMatch(A_LoopField, "i)" suffix, match)) {
+				If (NumSuffixes < 1)
+				{
+					NumSuffixes += 1
+				}
+				Continue
+			}
+		}
+		
+		/*
 		IfInString, A_LoopField, Dispels
 		{
 			; Covers Shock, Burning and Frozen and Chilled
@@ -2356,9 +2381,21 @@ ParseFlaskAffixes(ItemDataAffixes)
 			}
 			Continue
 		}
+		*/
 
-		; Prefixes
-
+		; Prefixes		
+		prefixes := ["Recovery Speed", "Amount Recovered", "Charges", "Instant", "Charge when", "Recovery when", "Mana Recovered", "Mana Recovered", "increased Duration", "increased Charge Recovery", "reduced Charges used"]
+		For key, prefix in prefixes {
+			If (RegExMatch(A_LoopField, "i)" prefix, match)) {
+				If (NumPrefixes < 1)
+				{
+					NumPrefixes += 1
+				}
+				Continue
+			}
+		}
+		
+		/*
 		IfInString, A_LoopField, Recovery Speed
 		{
 			If (NumPrefixes < 1)
@@ -2423,6 +2460,31 @@ ParseFlaskAffixes(ItemDataAffixes)
 			}
 			Continue
 		}
+		IfInString, A_LoopField, increased Duration
+		{
+			If (NumPrefixes < 1)
+			{
+				NumPrefixes += 1
+			}
+			Continue
+		}
+		IfInString, A_LoopField, increased Charge Recovery
+		{
+			If (NumPrefixes < 1)
+			{
+				NumPrefixes += 1
+			}
+			Continue
+		}
+		IfInString, A_LoopField, reduced Charges used
+		{
+			If (NumPrefixes < 1)
+			{
+				NumPrefixes += 1
+			}
+			Continue
+		}
+		*/
 	}
 
 	AffixTotals.NumPrefixes := NumPrefixes
@@ -7485,11 +7547,20 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		Item.IsDivinationCard := True
 		Item.BaseType := "Divination Card"
 	}
+	
+	; Prophecy Orb detection	
+	If (InStr(ItemData.PartsLast, "to add this prophecy to"))
+	{
+		Item.IsProphecy := True
+		Item.BaseType := "Prophecy"		
+		ParseProphecy(ItemData, Difficulty)
+		Item.DifficultyRestriction := Difficulty
+	}
 
 	Item.IsGem	:= (InStr(ItemData.Rarity, "Gem"))
 	Item.IsCurrency:= (InStr(ItemData.Rarity, "Currency"))
 
-	If (Not (InStr(ItemDataText, "Itemlevel:") or InStr(ItemDataText, "Item Level:")) and Not Item.IsGem and Not Item.IsCurrency and Not Item.IsDivinationCard)
+	If (Not (InStr(ItemDataText, "Itemlevel:") or InStr(ItemDataText, "Item Level:")) and Not Item.IsGem and Not Item.IsCurrency and Not Item.IsDivinationCard and Not Item.IsProphecy)
 	{
 		return Item.Name
 	}
@@ -7518,7 +7589,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		}
 		
 		; Don't do this on Divination Cards or this script crashes on trying to do the ParseItemLevel
-		Else If (Not Item.IsCurrency and Not Item.IsDivinationCard)
+		Else If (Not Item.IsCurrency and Not Item.IsDivinationCard and Not Item.IsProphecy)
 		{
 			regex := ["^Sacrifice At", "^Fragment of", "^Mortal ", "^Offering to ", "'s Key$", "Ancient Reliquary Key"]
 			For key, val in regex {
@@ -7656,6 +7727,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
 	; Start assembling the text for the tooltip
 	TT := Item.Name
+
 	If (Item.TypeName && (Item.TypeName != Item.Name))
 	{
 		TT := TT . "`n" . Item.TypeName
@@ -7761,6 +7833,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		}
 
 		TT := TT . "`n--------`n" . CardDescription
+	}
+	
+	If (Item.IsProphecy)
+	{
+		Restriction := StrLen(Item.DifficultyRestriction) > 0 ? Item.DifficultyRestriction : "None"
+		TT := TT . "`n--------`nDifficulty Restriction: " Restriction 
 	}
 
 	If (Item.IsMap)
@@ -9705,7 +9783,7 @@ HighlightItems(broadTerms = false) {
 		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)
 		
 		ParsedData := ParseItemData(CBContents)
-		
+
 		If (Item.Name) {
 			rarity := ""
 			If (Item.RarityLevel = 2) {
@@ -9726,6 +9804,18 @@ HighlightItems(broadTerms = false) {
 						terms.push("Rarity: " Item.BaseType)
 					}					
 				} Else {
+					terms.push(Item.Name)
+				}
+			}
+			; prophecies
+			Else If (Item.IsProphecy) {
+				If (broadTerms) {
+					terms.push("this prophecy")
+				} Else {
+					terms.push("this prophecy")
+					If (StrLen(Item.DifficultyRestriction)) {
+						terms.push(Item.DifficultyRestriction)
+					}					
 					terms.push(Item.Name)
 				}
 			}
@@ -9758,6 +9848,7 @@ HighlightItems(broadTerms = false) {
 			; flasks
 			Else If (Item.IsFlask) {
 				If (broadTerms) {
+					terms.push("Consumes")
 					terms.push(Item.SubType)
 				} Else {
 					terms.push(Item.TypeName)
@@ -9804,10 +9895,18 @@ HighlightItems(broadTerms = false) {
 						} Else If (Item.GripType == "2H") {
 							prefix := "Two Handed"
 						}
-						; add a space since all these terms have a preceding one, this reduces the chance of accidental matches
-						; for example "Ring" found in "Voidbringers" or "during Flask effect"
-						terms.push(prefix " " Item.SubType)	
-					} 
+						
+						; Handle Talismans, they have SubType "Amulet" but this won't be found ingame.
+						If (Item.IsTalisman) {
+							term := "Talisman Tier:"
+						} Else {
+							; add a space since all these terms have a preceding one, this reduces the chance of accidental matches
+							; for example "Ring" found in "Voidbringers" or "during Flask effect"
+							term := " " Item.SubType
+						}						
+						
+						terms.push(prefix . term)	
+					}
 					; armour pieces are a bit special, the ingame information doesn't include "armour/body armour" or something alike. 
 					; we can use the item defenses though to match armour pieces with the same defense types (can't differentiate between "Body Armour" and "Helmet").
 					Else If (InStr(Item.BaseType, "Armour")) {
@@ -9828,12 +9927,24 @@ HighlightItems(broadTerms = false) {
 		}
 
 		If (terms.length() > 0) {
-			SendInput ^{sc021}
+			SendInput ^{sc021} ; sc021 = f
+			searchText =
 			For key, val in terms {
-				SendInput "%val%"
-				SendInput {Space}
+				searchText = %searchText% "%val%"
 			}
-			SendInput ^{sc02f}{Enter} ; sc021 = f  sc02f = v
+			
+			; the search field has a 50 character limit, we have to close the last term with a quotation mark
+			If (StrLen(searchText) > 50) {
+				newString := SubStr(searchText, 1, 50)
+				temp := RegExReplace(newString, "i)""", Replacement = "", QuotationMarks)
+				; make sure we have an equal amount of quotation marks (all terms properly enclosed)
+				If (QuotationMarks&1) {
+					searchText := RegExReplace(newString, "i).$", """")
+				}
+			}
+			
+			SendInput %searchText%
+			SendInput ^{sc02f}{Enter} ; sc02f = v
 		} Else {
 			; send ctrl + f in case we don't have information to input
 			SendInput ^{sc021}
