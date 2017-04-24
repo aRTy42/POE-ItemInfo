@@ -9794,7 +9794,6 @@ HighlightItems(broadTerms = false, leaveSearchField = true, addSpaceAfterQuotati
 			SendInput ^{sc021} ; sc021 = f
 			searchText =
 			For key, val in terms {
-				;msgbox % val
 				; some keyboard layouts translate special characters like ^ ' " ` ~ combined with e/i/u/o/a into a special character, for example Dutch: ë
 				; solution: add a space after every one of those characters
 				If (addSpaceAfterQuotationMark) {
