@@ -9818,7 +9818,10 @@ HighlightItems(broadTerms = false, leaveSearchField = true, addSpaceAfterOpening
 		}
 
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-		Clipboard := ClipBoardTemp
+		If (Item.Name) {
+			; revert the initial clipboard upon succeeding to parse any item (doesn't cause clipboard change events otherwise)
+			Clipboard := ClipBoardTemp
+		}
 	}
 }
 
