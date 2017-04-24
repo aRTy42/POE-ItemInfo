@@ -9624,11 +9624,12 @@ CloseScripts() {
 	ExitApp
 }
 
-HighlightItems(broadTerms = false) {
+HighlightItems(broadTerms = false, leaveSearchField = true, addSpaceAfterOpeningQuotationMark = false) {
 	; Highlights items via stash search (also in vendor search)
 	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		Global Item, Opts, Globals, ItemData
+		ClipBoardTemp := Clipboard
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		Send ^{sc02E}	; ^{c}
 		Sleep 100
@@ -9787,7 +9788,12 @@ HighlightItems(broadTerms = false) {
 			SendInput ^{sc021} ; sc021 = f
 			searchText =
 			For key, val in terms {
-				searchText = %searchText% "%val%"
+				; some keyboard layouts translate "e to a special character, for example Dutch: ë
+				If (addSpaceAfterOpeningQuotationMark and RegExMatch(val, "i)^[eioa]")) {
+					searchText = %searchText% " %val%"
+				} Else {
+					searchText = %searchText% "%val%"
+				}				
 			}
 			
 			; the search field has a 50 character limit, we have to close the last term with a quotation mark
@@ -9801,14 +9807,18 @@ HighlightItems(broadTerms = false) {
 			}
 			
 			SendInput %searchText%
-			SendInput ^{sc02f}{Enter} ; sc02f = v
+			If (leaveSearchField) {
+				SendInput {Enter}
+			} Else {				
+				SendInput ^{A}
+			}
 		} Else {
 			; send ctrl + f in case we don't have information to input
 			SendInput ^{sc021}
 		}
 
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-		SetClipboardContents("")
+		Clipboard := ClipBoardTemp
 	}
 }
 

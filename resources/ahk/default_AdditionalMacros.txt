@@ -1,8 +1,14 @@
-   Pause::TogglePOEItemScript()		;pause item parsing with the pause key (other macros remain).
-   #D::WinMinimize, A				;Winkey+D minimizes the active PoE window (PoE stays minimized this way).
-   ^F::HighlightItems()				;Ctrl+F fills search bar in the stash or vendor screens with item's name or info you're hovering over.
-   ^!F::HighlightItems(true)		;Ctrl+Alt+F uses much broader search terms for the highlight function.
-;   ^Escape::CloseScripts()			;Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
+   Pause::TogglePOEItemScript()		; pause item parsing with the pause key (other macros remain).
+   #D::WinMinimize, A				; Winkey+D minimizes the active PoE window (PoE stays minimized this way).
+   
+   ^F::HighlightItems(false,true,false)		; Ctrl+F fills search bar in the stash or vendor screens with item's name or info you're hovering over.
+											; Function parameters, change if needed or wanted:
+											;	1. Use broader terms, default = false.
+											;	2. Leave the search field after pasting the search terms, default = true.
+											;	3. Add a space after every opening quotation mark, default = false. (Some keyboard layouts need this to prevent adding special characters, Dutch for example.)
+   ^!F::HighlightItems(true,true,false)		; Ctrl+Alt+F uses much broader search terms for the highlight function.
+   
+;   ^Escape::CloseScripts()			; Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
   
 ;   F4::SendInput {Enter}/kick own_char_name{Enter}		; quickly leave a group by kicking yourself. Only works for one specific character name.
    F5::SendInput {Enter}/hideout{Enter}			; go to hideout with F5
