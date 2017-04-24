@@ -9641,7 +9641,6 @@ HighlightItems(broadTerms = false, leaveSearchField = true, addSpaceAfterQuotati
 		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)
 		
 		ParsedData := ParseItemData(CBContents)
-		SetClipboardContents("")
 
 		If (Item.Name) {
 			rarity := ""
