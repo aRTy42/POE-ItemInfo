@@ -9624,7 +9624,7 @@ CloseScripts() {
 	ExitApp
 }
 
-HighlightItems(broadTerms = false, leaveSearchField = true, addSpaceAfterQuotationMark = false) {
+HighlightItems(broadTerms = false, leaveSearchField = true, deadKeysWorkaround = false) {
 	; Highlights items via stash search (also in vendor search)
 	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
@@ -9793,9 +9793,9 @@ HighlightItems(broadTerms = false, leaveSearchField = true, addSpaceAfterQuotati
 			SendInput ^{sc021} ; sc021 = f
 			searchText =
 			For key, val in terms {
-				; some keyboard layouts translate special characters like ^ ' " ` ~ combined with e/i/u/o/a into a special character, for example Dutch: ë
+				; some keyboard layouts translate special characters like ^ ' " ` ~ combined with e/i/u/o/a into a special character, for example Dutch: ë (dead keys)
 				; solution: add a space after every one of those characters
-				If (addSpaceAfterQuotationMark) {
+				If (deadKeysWorkaround) {
 					If (RegExMatch(val, "i)^[eioau]")) {
 						; space after opening quotation mark only needed for vowels
 						searchText = %searchText% " %val%"
@@ -9821,7 +9821,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true, addSpaceAfterQuotati
 				temp := RegExReplace(newString, "i)""", Replacement = "", QuotationMarks)
 				; make sure we have an equal amount of quotation marks (all terms properly enclosed)
 				If (QuotationMarks&1) {
-					If (addSpaceAfterQuotationMark) {
+					If (deadKeysWorkaround) {
 						searchText := RegExReplace(newString, "i).{2}$", """ ")
 					} Else {
 						searchText := RegExReplace(newString, "i).$", """")
