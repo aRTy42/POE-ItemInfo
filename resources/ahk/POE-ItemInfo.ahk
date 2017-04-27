@@ -5190,7 +5190,14 @@ ParseAffixes(ItemDataAffixes, Item)
 			}
 			Else If (InStr(A_LoopField, "Socketed Gems"))
 			{
-				ValueRange := LookupAffixData("data\GemLevel.txt", ItemLevel, CurrValue, "", CurrTier)
+				If (ItemSubType == "Ring")
+				{
+					ValueRange := LookupAffixData("data\GemLevel_UnsetRing.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else
+				{
+					ValueRange := LookupAffixData("data\GemLevel.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
 			}
 			NumPrefixes += 1
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
