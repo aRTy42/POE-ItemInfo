@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.1.1
+================================================================================================
+Item highlighting improvements and fixes, you have now some options that you can change, please take a look at AdditionalMacros.txt to read more about it and use these options.
+Fixed an issue where the item highlighting function interfered with other tools like TradeCompanion/TradeHelper.
+
 2.1.0
 ================================================================================================
 Updated ItemInfo - map mod parsing can now be configured, you can open the file for this via system tray menu -> Edit -> MapModWarnings. Just set the value 1 to enable a mod or 0 to disable it.
