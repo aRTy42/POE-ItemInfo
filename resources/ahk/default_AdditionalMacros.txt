@@ -1,20 +1,33 @@
-   Pause::TogglePOEItemScript()		;pause item parsing with the pause key (other macros remain).
-   #D::WinMinimize, A				;Winkey+D minimizes the active PoE window (PoE stays minimized this way).
-   ^F::HighlightItems()				;Ctrl+F fills search bar in the stash or vendor screens with item's name or info you're hovering over.
-   ^!F::HighlightItems(true)		;Ctrl+Alt+F uses much broader search terms for the highlight function.
-;   ^Escape::CloseScripts()			;Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
+;###########----------------- Additional Macros -------------------###########
+;# Lines/text with a semicolon (;) in front are considered comments.         #
+;# Remove a semicolon to enable specific hotkeys or add one to disable them. #
+;# Hotkeys you can use: https://autohotkey.com/docs/KeyList.htm              #
+;# Autohotkey Quick Reference: https://autohotkey.com/docs/AutoHotkey.htm    #
+;###########-------------------------------------------------------###########
+	
+	Pause::TogglePOEItemScript()			; Pause item parsing with the pause key (other macros remain).
+	#D::WinMinimize, A						; Winkey+D minimizes the active PoE window (PoE stays minimized this way).
+   
+	^F::HighlightItems(false,true,false)	; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
+											; Function parameters, change if needed or wanted:
+											;	1. Use broader terms, default = false.
+											;	2. Leave the search field after pasting the search terms, default = true.
+											;	3. Workaround for keyboard layouts with "dead keys", default = false. (Some Layouts need this to prevent adding special characters when using a quotation mark).
+	^!F::HighlightItems(true,true,false)	; Ctrl+Alt+F uses much broader search terms for the highlight function.
+   
+;	^Escape::CloseScripts()						; Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
   
-;   F4::SendInput {Enter}/kick own_char_name{Enter}		; quickly leave a group by kicking yourself. Only works for one specific character name.
-   F5::SendInput {Enter}/hideout{Enter}			; go to hideout with F5
-   ^WheelDown::SendInput {Right}				; Ctrl+scroll down scrolls through stash tabs rightward
-   ^WheelUp::SendInput {Left}					; Ctrl+scroll up scrolls through stash tabs leftward
-   ~RButton & WheelDown::Send {Right}			; holding right mouse button+scroll down scrolls through stash tabs rightward
-   ~RButton & WheelUp::Send {Left}				; holding right mouse button+scroll up scrolls through stash tabs leftward
+;	F4::SendInput {Enter}/kick own_char_name{Enter}		; Quickly leave a group by kicking yourself. Only works for one specific character name.
+	F5::SendInput {Enter}/hideout{Enter}		; Go to hideout with F5.
+	^WheelDown::SendInput {Right}				; Ctrl+scroll down scrolls through stash tabs rightward.
+	^WheelUp::SendInput {Left}					; Ctrl+scroll up scrolls through stash tabs leftward.
+	~RButton & WheelDown::Send {Right}			; Holding right mouse button+scroll down scrolls through stash tabs rightward
+	~RButton & WheelUp::Send {Left}				; Holding right mouse button+scroll up scrolls through stash tabs leftward.
 
-;   ^RButton::SendInput ^c						; Ctrl+right mouse button sends ctrl+c
-;   F9::SendInput {Enter}/remaining{Enter}		; mobs remaining with F9
-;   F10::SendInput {Enter}/global 820{Enter}	; join a channel with F10
-;   F11::setAfkMessage()						; pastes afk message to your chat and marks "X" so you can type in the estimated time
+;	^RButton::SendInput ^c						; Ctrl+right mouse button sends ctrl+c.
+;	F9::SendInput {Enter}/remaining{Enter}		; Mobs remaining with F9.
+;	F10::SendInput {Enter}/global 820{Enter}	; Join a channel with F10.
+;	F11::setAfkMessage()						; Pastes afk message to your chat and marks "X" so you can type in the estimated time.
 
 setAfkMessage(){		
 	T1 := A_Now
