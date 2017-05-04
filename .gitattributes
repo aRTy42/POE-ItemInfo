@@ -1,8 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
-*.txt text
-*.ini text
+# Declare files that will always have CRLF line endings on checkout
+*.txt text eol=crlf
+*.ini text eol=crlf
 
 # Custom for Visual Studio
 *.cs     diff=csharp
