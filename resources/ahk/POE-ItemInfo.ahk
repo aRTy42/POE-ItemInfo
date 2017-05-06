@@ -9803,6 +9803,8 @@ HighlightItems(broadTerms = false, leaveSearchField = true, deadKeysWorkaround =
 				; some keyboard layouts translate special characters like ^ ' " ` ~ combined with e/i/u/o/a into a special character, for example Dutch: ë (dead keys)
 				; solution: add a space after every one of those characters
 				If (deadKeysWorkaround) {
+					
+					/*
 					If (RegExMatch(val, "i)^[eioau]")) {
 						; space after opening quotation mark only needed for vowels
 						searchText = %searchText% " %val%"
@@ -9816,8 +9818,10 @@ HighlightItems(broadTerms = false, leaveSearchField = true, deadKeysWorkaround =
 						space := " s"
 						searchText = %searchText% %space%
 						StringTrimRight, searchText, searchText, 2
-					} 
-				} Else {				
+					}
+					*/
+					searchText = %searchText% "%val%"
+				} Else {		
 					searchText = %searchText% "%val%"
 				}			
 			}
@@ -9829,29 +9833,29 @@ HighlightItems(broadTerms = false, leaveSearchField = true, deadKeysWorkaround =
 				; make sure we have an equal amount of quotation marks (all terms properly enclosed)
 				If (QuotationMarks&1) {
 					If (deadKeysWorkaround) {
-						searchText := RegExReplace(newString, "i).{2}$", """ ")
+						;searchText := RegExReplace(newString, "i).{2}$", """ ")
+						searchText := RegExReplace(newString, "i).$", """")
 					} Else {
 						searchText := RegExReplace(newString, "i).$", """")
 					}					
 				}
 			}
-			
-			SendInput %searchText%
+
+			Clipboard := searchText
+			Sleep 10
+			SendEvent ^{sc02f}		; ctrl + v
 			If (leaveSearchField) {
-				SendInput {Enter}
-			} Else {				
-				SendInput ^{A}
+				SendInput {sc01c}	; enter
+			} Else {
+				SendInput ^{sc01e}	; ctrl + a
 			}
-		} Else {
-			; send ctrl + f in case we don't have information to input
-			SendInput ^{sc021}
+		} Else {			
+			SendInput ^{sc021}		; send ctrl + f in case we don't have information to input
 		}
 
+		Sleep, 10
+		Clipboard := ClipBoardTemp
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-		If (Item.Name) {
-			; revert the initial clipboard upon succeeding to parse any item (doesn't cause clipboard change events otherwise)
-			Clipboard := ClipBoardTemp
-		}
 	}
 }
 
