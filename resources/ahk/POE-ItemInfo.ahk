@@ -9636,18 +9636,29 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		Global Item, Opts, Globals, ItemData
+		
 		ClipBoardTemp := Clipboard
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		Send ^{sc02E}	; ^{c}
-		Sleep 100
 		
-		CBContents := GetClipboardContents()
-		CBContents := PreProcessContents(CBContents)
-		
-		Globals.Set("ItemText", CBContents)
-		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)
-		
-		ParsedData := ParseItemData(CBContents)
+		; Parse the clipboard contents twice.
+		; If the clipboard contains valid item data before we send ctrl + c to try and parse an item via ctrl + f then don't restore that clipboard data later on.
+		; This prevents the highlighting funtion to fill search fields with data from previous item parsings/manual data copying since 
+		; that clipboard data would always be restored again.
+		Loop, 2 {
+			If (A_Index = 2) {
+				Clipboard := 
+				Send ^{sc02E}	; ^{c}
+				Sleep 100		
+			}
+			CBContents := GetClipboardContents()
+			CBContents := PreProcessContents(CBContents)		
+			Globals.Set("ItemText", CBContents)
+			Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)		
+			ParsedData := ParseItemData(CBContents)
+			If (A_Index = 1 and Item.Name) {
+				dontRestoreClipboard := true
+			}
+		}
 
 		If (Item.Name) {
 			rarity := ""
@@ -9826,7 +9837,9 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		}
 
 		Sleep, 10
-		Clipboard := ClipBoardTemp
+		If (!dontRestoreClipboard) {
+			Clipboard := ClipBoardTemp
+		}		
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
 }
