@@ -9631,7 +9631,7 @@ CloseScripts() {
 	ExitApp
 }
 
-HighlightItems(broadTerms = false, leaveSearchField = true, deadKeysWorkaround = false) {
+HighlightItems(broadTerms = false, leaveSearchField = true) {
 	; Highlights items via stash search (also in vendor search)
 	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
@@ -9799,31 +9799,8 @@ HighlightItems(broadTerms = false, leaveSearchField = true, deadKeysWorkaround =
 		If (terms.length() > 0) {
 			SendInput ^{sc021} ; sc021 = f
 			searchText =
-			For key, val in terms {
-				; some keyboard layouts translate special characters like ^ ' " ` ~ combined with e/i/u/o/a into a special character, for example Dutch: ë (dead keys)
-				; solution: add a space after every one of those characters
-				If (deadKeysWorkaround) {
-					
-					/*
-					If (RegExMatch(val, "i)^[eioau]")) {
-						; space after opening quotation mark only needed for vowels
-						searchText = %searchText% " %val%"
-					} Else {
-						searchText = %searchText% "%val%"
-					}
-					
-					If (key == terms.Length()) {
-						; the last space won't be added/typed so we add a tailing character and remove it again
-						; this should result in the string ending with "{Space}
-						space := " s"
-						searchText = %searchText% %space%
-						StringTrimRight, searchText, searchText, 2
-					}
-					*/
-					searchText = %searchText% "%val%"
-				} Else {		
-					searchText = %searchText% "%val%"
-				}			
+			For key, val in terms {		
+				searchText = %searchText% "%val%"			
 			}
 
 			; the search field has a 50 character limit, we have to close the last term with a quotation mark
@@ -9831,13 +9808,8 @@ HighlightItems(broadTerms = false, leaveSearchField = true, deadKeysWorkaround =
 				newString := SubStr(searchText, 1, 50)
 				temp := RegExReplace(newString, "i)""", Replacement = "", QuotationMarks)
 				; make sure we have an equal amount of quotation marks (all terms properly enclosed)
-				If (QuotationMarks&1) {
-					If (deadKeysWorkaround) {
-						;searchText := RegExReplace(newString, "i).{2}$", """ ")
-						searchText := RegExReplace(newString, "i).$", """")
-					} Else {
-						searchText := RegExReplace(newString, "i).$", """")
-					}					
+				If (QuotationMarks&1) {					
+					searchText := RegExReplace(newString, "i).$", """")				
 				}
 			}
 
