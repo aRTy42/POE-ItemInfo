@@ -9631,23 +9631,34 @@ CloseScripts() {
 	ExitApp
 }
 
-HighlightItems(broadTerms = false, leaveSearchField = true, deadKeysWorkaround = false) {
+HighlightItems(broadTerms = false, leaveSearchField = true) {
 	; Highlights items via stash search (also in vendor search)
 	IfWinActive, Path of Exile ahk_class POEWindowClass 
 	{
 		Global Item, Opts, Globals, ItemData
+		
 		ClipBoardTemp := Clipboard
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		Send ^{sc02E}	; ^{c}
-		Sleep 100
 		
-		CBContents := GetClipboardContents()
-		CBContents := PreProcessContents(CBContents)
-		
-		Globals.Set("ItemText", CBContents)
-		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)
-		
-		ParsedData := ParseItemData(CBContents)
+		; Parse the clipboard contents twice.
+		; If the clipboard contains valid item data before we send ctrl + c to try and parse an item via ctrl + f then don't restore that clipboard data later on.
+		; This prevents the highlighting funtion to fill search fields with data from previous item parsings/manual data copying since 
+		; that clipboard data would always be restored again.
+		Loop, 2 {
+			If (A_Index = 2) {
+				Clipboard := 
+				Send ^{sc02E}	; ^{c}
+				Sleep 100		
+			}
+			CBContents := GetClipboardContents()
+			CBContents := PreProcessContents(CBContents)		
+			Globals.Set("ItemText", CBContents)
+			Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)		
+			ParsedData := ParseItemData(CBContents)
+			If (A_Index = 1 and Item.Name) {
+				dontRestoreClipboard := true
+			}
+		}
 
 		If (Item.Name) {
 			rarity := ""
@@ -9799,27 +9810,8 @@ HighlightItems(broadTerms = false, leaveSearchField = true, deadKeysWorkaround =
 		If (terms.length() > 0) {
 			SendInput ^{sc021} ; sc021 = f
 			searchText =
-			For key, val in terms {
-				; some keyboard layouts translate special characters like ^ ' " ` ~ combined with e/i/u/o/a into a special character, for example Dutch: ë (dead keys)
-				; solution: add a space after every one of those characters
-				If (deadKeysWorkaround) {
-					If (RegExMatch(val, "i)^[eioau]")) {
-						; space after opening quotation mark only needed for vowels
-						searchText = %searchText% " %val%"
-					} Else {
-						searchText = %searchText% "%val%"
-					}
-					
-					If (key == terms.Length()) {
-						; the last space won't be added/typed so we add a tailing character and remove it again
-						; this should result in the string ending with "{Space}
-						space := " s"
-						searchText = %searchText% %space%
-						StringTrimRight, searchText, searchText, 2
-					} 
-				} Else {				
-					searchText = %searchText% "%val%"
-				}			
+			For key, val in terms {		
+				searchText = %searchText% "%val%"			
 			}
 
 			; the search field has a 50 character limit, we have to close the last term with a quotation mark
@@ -9827,31 +9819,28 @@ HighlightItems(broadTerms = false, leaveSearchField = true, deadKeysWorkaround =
 				newString := SubStr(searchText, 1, 50)
 				temp := RegExReplace(newString, "i)""", Replacement = "", QuotationMarks)
 				; make sure we have an equal amount of quotation marks (all terms properly enclosed)
-				If (QuotationMarks&1) {
-					If (deadKeysWorkaround) {
-						searchText := RegExReplace(newString, "i).{2}$", """ ")
-					} Else {
-						searchText := RegExReplace(newString, "i).$", """")
-					}					
+				If (QuotationMarks&1) {					
+					searchText := RegExReplace(newString, "i).$", """")				
 				}
 			}
-			
-			SendInput %searchText%
+
+			Clipboard := searchText
+			Sleep 10
+			SendEvent ^{sc02f}		; ctrl + v
 			If (leaveSearchField) {
-				SendInput {Enter}
-			} Else {				
-				SendInput ^{A}
+				SendInput {sc01c}	; enter
+			} Else {
+				SendInput ^{sc01e}	; ctrl + a
 			}
-		} Else {
-			; send ctrl + f in case we don't have information to input
-			SendInput ^{sc021}
+		} Else {			
+			SendInput ^{sc021}		; send ctrl + f in case we don't have information to input
 		}
 
-		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-		If (Item.Name) {
-			; revert the initial clipboard upon succeeding to parse any item (doesn't cause clipboard change events otherwise)
+		Sleep, 10
+		If (!dontRestoreClipboard) {
 			Clipboard := ClipBoardTemp
-		}
+		}		
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
 }
 
