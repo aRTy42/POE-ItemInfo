@@ -8249,7 +8249,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		energyShieldPercentGlobal := Floor(intelligenceFlat/5)
 	}
 	If (dexterityFlat) {
-		accuracyRatingFlat := accuracyRatingFlat + Floor(dexterityFlat/2)
+		accuracyRatingFlat := accuracyRatingFlat + Floor(dexterityFlat*2)
 		evasionRatingPercentGlobal := Floor(dexterityFlat/5)
 	}
 
