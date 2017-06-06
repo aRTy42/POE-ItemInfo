@@ -100,7 +100,17 @@ class TradeUserOptions {
 	BuyoutOnly := 1				;
 	ForceMaxLinks := 1				;
 	AlternativeCurrencySearch := 0	;
+	ShowPricesAsChaosEquiv := 0
+	
 	AdvancedSearchCheckMods := 0
+	AdvancedSearchCheckTotalEleRes :=0
+	AdvancedSearchCheckTotalLife :=0
+	AdvancedSearchCheckPDPS :=0
+	AdvancedSearchCheckEDPS :=0
+	AdvancedSearchCheckTotalES :=0
+	AdvancedSearchCheckES :=0
+	AdvancedSearchCheckILVL :=0
+	AdvancedSearchCheckBase :=0
 	
 	Expire := 3					; cache expire min
 	
@@ -279,7 +289,17 @@ ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 		TradeOpts.BuyoutOnly := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "BuyoutOnly", TradeOpts.BuyoutOnly)	
 		TradeOpts.ForceMaxLinks := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "ForceMaxLinks", TradeOpts.ForceMaxLinks)	
 		TradeOpts.AlternativeCurrencySearch := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AlternativeCurrencySearch", TradeOpts.AlternativeCurrencySearch)	
+		TradeOpts.ShowPricesAsChaosEquiv := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "ShowPricesAsChaosEquiv", TradeOpts.ShowPricesAsChaosEquiv)	
+		
 		TradeOpts.AdvancedSearchCheckMods := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckMods", TradeOpts.AdvancedSearchCheckMods)	
+		TradeOpts.AdvancedSearchCheckTotalEleRes := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckTotalEleRes", TradeOpts.AdvancedSearchCheckTotalEleRes)	
+		TradeOpts.AdvancedSearchCheckTotalLife := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckTotalLife", TradeOpts.AdvancedSearchCheckTotalLife)	
+		TradeOpts.AdvancedSearchCheckPDPS := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckPDPS", TradeOpts.AdvancedSearchCheckPDPS)	
+		TradeOpts.AdvancedSearchCheckEDPS := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckEDPS", TradeOpts.AdvancedSearchCheckEDPS)	
+		TradeOpts.AdvancedSearchCheckTotalES := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckTotalES", TradeOpts.AdvancedSearchCheckTotalES)
+		TradeOpts.AdvancedSearchCheckES := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckES", TradeOpts.AdvancedSearchCheckES)	
+		TradeOpts.AdvancedSearchCheckILVL := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckILVL", TradeOpts.AdvancedSearchCheckILVL)	
+		TradeOpts.AdvancedSearchCheckBase := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckBase", TradeOpts.AdvancedSearchCheckBase)	
 		
 		; Cache        
 		TradeOpts.Expire := TradeFunc_ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
@@ -354,18 +374,18 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 	
 	ValidBrowserPath := TradeFunc_CheckBrowserPath(BrowserPath, true)
 	
-    ; workaround for settings options not being assigned to TradeOpts    
+     ; workaround for settings options not being assigned to TradeOpts    
 	If (SavedTradeSettings) {
-		TradeOpts.ShowItemResults := ShowItemResults
-		TradeOpts.ShowUpdateNotifications := ShowUpdateNotifications
-		TradeOpts.OpenWithDefaultWin10Fix := OpenWithDefaultWin10Fix
-		TradeOpts.ShowAccountName := ShowAccountName
-		TradeOpts.OpenUrlsOnEmptyItem := OpenUrlsOnEmptyItem
-		TradeOpts.DownloadDataFiles := DownloadDataFiles
-		TradeOpts.DeleteCookies := DeleteCookies
-		TradeOpts.CookieSelect := CookieSelect
-		TradeOpts.UpdateSkipSelection := UpdateSkipSelection
-		TradeOpts.UpdateSkipBackup := UpdateSkipBackup
+		TradeOpts.ShowItemResults		:= ShowItemResults
+		TradeOpts.ShowUpdateNotifications	:= ShowUpdateNotifications
+		TradeOpts.OpenWithDefaultWin10Fix	:= OpenWithDefaultWin10Fix
+		TradeOpts.ShowAccountName		:= ShowAccountName
+		TradeOpts.OpenUrlsOnEmptyItem		:= OpenUrlsOnEmptyItem
+		TradeOpts.DownloadDataFiles		:= DownloadDataFiles
+		TradeOpts.DeleteCookies			:= DeleteCookies
+		TradeOpts.CookieSelect			:= CookieSelect
+		TradeOpts.UpdateSkipSelection 	:= UpdateSkipSelection
+		TradeOpts.UpdateSkipBackup		:= UpdateSkipBackup
 
 		TradeOpts.Debug := Debug
 		
@@ -376,59 +396,70 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 			TradeOpts.BrowserPath := ""      
 		}
 		
-		TradeOpts.PriceCheckHotKey := PriceCheckHotKey
+		TradeOpts.PriceCheckHotKey 		:= PriceCheckHotKey
 		TradeOpts.AdvancedPriceCheckHotKey := AdvancedPriceCheckHotKey
-		TradeOpts.OpenWikiHotKey := OpenWikiHotKey
-		TradeOpts.CustomInputSearchHotKey := CustomInputSearchHotKey
+		TradeOpts.OpenWikiHotKey 		:= OpenWikiHotKey
+		TradeOpts.CustomInputSearchHotKey 	:= CustomInputSearchHotKey
 		TradeOpts.OpenSearchOnPoeTradeHotKey := OpenSearchOnPoeTradeHotKey
-		TradeOpts.ShowItemAgeHotKey := ShowItemAgeHotKey
-		TradeOpts.ChangeLeagueHotKey := ChangeLeagueHotKey
+		TradeOpts.ShowItemAgeHotKey		:= ShowItemAgeHotKey
+		TradeOpts.ChangeLeagueHotKey		:= ChangeLeagueHotKey
 		
-		TradeOpts.PriceCheckEnabled := PriceCheckEnabled
-		TradeOpts.AdvancedPriceCheckEnabled := AdvancedPriceCheckEnabled
-		TradeOpts.OpenWikiEnabled := OpenWikiEnabled
-		TradeOpts.CustomInputSearchEnabled := CustomInputSearchEnabled
+		TradeOpts.PriceCheckEnabled		:= PriceCheckEnabled
+		TradeOpts.AdvancedPriceCheckEnabled:= AdvancedPriceCheckEnabled
+		TradeOpts.OpenWikiEnabled		:= OpenWikiEnabled
+		TradeOpts.CustomInputSearchEnabled	:= CustomInputSearchEnabled
 		TradeOpts.OpenSearchOnPoeTradeEnabled := OpenSearchOnPoeTradeEnabled
-		TradeOpts.ShowItemAgeEnabled := ShowItemAgeEnabled
-		TradeOpts.ChangeLeagueEnabled := ChangeLeagueEnabled
+		TradeOpts.ShowItemAgeEnabled		:= ShowItemAgeEnabled
+		TradeOpts.ChangeLeagueEnabled		:= ChangeLeagueEnabled
 		
 		TradeFunc_AssignAllHotkeys()
 		
-		TradeOpts.AccountName := AccountName
-		tempOldLeague := TradeOpts.SearchLeague
-		TradeOpts.SearchLeague := SearchLeague
+		TradeOpts.AccountName			:= AccountName
+		tempOldLeague					:= TradeOpts.SearchLeague
+		TradeOpts.SearchLeague			:= SearchLeague
 		
 		TradeFunc_SetLeagueIfSelectedIsInactive()
 		TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])		
 		
-		tempOldAltCurrencySearch := TradeOpts.AlternativeCurrencySearch
-		TradeOpts.AlternativeCurrencySearch := AlternativeCurrencySearch
+		tempOldAltCurrencySearch			:= TradeOpts.AlternativeCurrencySearch
+		TradeOpts.AlternativeCurrencySearch:= AlternativeCurrencySearch
 		
 		; Get currency data only if league was changed while alternate search is active or alternate search was changed from disabled to enabled
 		If ((TradeOpts.SearchLeague != tempOldLeague and AlternativeCurrencySearch) or (AlternativeCurrencySearch and tempOldAltCurrencySearch != AlternativeCurrencySearch)) {			
 			GoSub, ReadPoeNinjaCurrencyData	
 		}		
 		
-		TradeOpts.AdvancedSearchCheckMods := AdvancedSearchCheckMods
-		TradeOpts.GemLevel := GemLevel
-		TradeOpts.GemLevelRange := GemLevelRange
-		TradeOpts.GemQualityRange := GemQualityRange
-		TradeOpts.OnlineOnly := OnlineOnly
-		TradeOpts.Corrupted := Corrupted
-		TradeOpts.CorruptedOverride := CorruptedOverride
-		TradeOpts.AdvancedSearchModValueRangeMin := AdvancedSearchModValueRangeMin
-		TradeOpts.AdvancedSearchModValueRangeMax := AdvancedSearchModValueRangeMax
-		TradeOpts.RemoveMultipleListingsFromSameAccount := RemoveMultipleListingsFromSameAccount
-		TradeOpts.PrefillMinValue := PrefillMinValue
-		TradeOpts.PrefillMaxValue := PrefillMaxValue
-		TradeOpts.CurrencySearchHave := CurrencySearchHave
-		TradeOpts.BuyoutOnly := BuyoutOnly
-		TradeOpts.ForceMaxLinks := ForceMaxLinks
+		TradeOpts.GemLevel				:= GemLevel
+		TradeOpts.GemLevelRange			:= GemLevelRange
+		TradeOpts.GemQualityRange		:= GemQualityRange
+		TradeOpts.OnlineOnly			:= OnlineOnly
+		TradeOpts.Corrupted				:= Corrupted
+		TradeOpts.CorruptedOverride		:= CorruptedOverride
+		TradeOpts.AdvancedSearchModValueRangeMin		:= AdvancedSearchModValueRangeMin
+		TradeOpts.AdvancedSearchModValueRangeMax		:= AdvancedSearchModValueRangeMax
+		TradeOpts.RemoveMultipleListingsFromSameAccount	:= RemoveMultipleListingsFromSameAccount
+		TradeOpts.PrefillMinValue		:= PrefillMinValue
+		TradeOpts.PrefillMaxValue		:= PrefillMaxValue
+		TradeOpts.CurrencySearchHave		:= CurrencySearchHave
+		TradeOpts.BuyoutOnly			:= BuyoutOnly
+		TradeOpts.ForceMaxLinks			:= ForceMaxLinks		
+		TradeOpts.AlternativeCurrencySearch:= AlternativeCurrencySearch
+		TradeOpts.ShowPricesAsChaosEquiv	:= ShowPricesAsChaosEquiv
 		
-		TradeOpts.UseManualCookies := UseManualCookies
-		TradeOpts.UserAgent := UserAgent
-		TradeOpts.CfdUid := CfdUid
-		TradeOpts.CfClearance := CfClearance
+		TradeOpts.AdvancedSearchCheckMods		:= AdvancedSearchCheckMods		
+		TradeOpts.AdvancedSearchCheckTotalEleRes:= AdvancedSearchCheckTotalEleRes		
+		TradeOpts.AdvancedSearchCheckTotalLife	:= AdvancedSearchCheckTotalLife		
+		TradeOpts.AdvancedSearchCheckPDPS		:= AdvancedSearchCheckPDPS		
+		TradeOpts.AdvancedSearchCheckEDPS		:= AdvancedSearchCheckEDPS		
+		TradeOpts.AdvancedSearchCheckTotalES	:= AdvancedSearchCheckTotalES		
+		TradeOpts.AdvancedSearchCheckES		:= AdvancedSearchCheckES		
+		TradeOpts.AdvancedSearchCheckILVL		:= AdvancedSearchCheckILVL		
+		TradeOpts.AdvancedSearchCheckBase		:= AdvancedSearchCheckBase		
+		
+		TradeOpts.UseManualCookies		:= UseManualCookies
+		TradeOpts.UserAgent				:= UserAgent
+		TradeOpts.CfdUid				:= CfdUid
+		TradeOpts.CfClearance			:= CfClearance
 	}        
 	SavedTradeSettings := false
 	
@@ -489,7 +520,17 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 	TradeFunc_WriteIniValue(TradeOpts.BuyoutOnly, TradeConfigPath, "Search", "BuyoutOnly")
 	TradeFunc_WriteIniValue(TradeOpts.ForceMaxLinks, TradeConfigPath, "Search", "ForceMaxLinks")
 	TradeFunc_WriteIniValue(TradeOpts.AlternativeCurrencySearch, TradeConfigPath, "Search", "AlternativeCurrencySearch")
+	TradeFunc_WriteIniValue(TradeOpts.ShowPricesAsChaosEquiv, TradeConfigPath, "Search", "ShowPricesAsChaosEquiv")
+	
 	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckMods, TradeConfigPath, "Search", "AdvancedSearchCheckMods")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckTotalEleRes, TradeConfigPath, "Search", "AdvancedSearchCheckTotalEleRes")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckTotalLife, TradeConfigPath, "Search", "AdvancedSearchCheckTotalLife")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckPDPS, TradeConfigPath, "Search", "AdvancedSearchCheckPDPS")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckEDPS, TradeConfigPath, "Search", "AdvancedSearchCheckEDPS")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckTotalES, TradeConfigPath, "Search", "AdvancedSearchCheckTotalES")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckES, TradeConfigPath, "Search", "AdvancedSearchCheckES")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckILVL, TradeConfigPath, "Search", "AdvancedSearchCheckILVL")
+	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckBase, TradeConfigPath, "Search", "AdvancedSearchCheckBase")
 	
 	; Cache	
 	TradeFunc_WriteIniValue(TradeOpts.Expire, TradeConfigPath, "Cache", "Expire")
@@ -539,8 +580,8 @@ TradeFunc_ReadIniValue(iniFilePath, Section = "General", IniKey="", DefaultValue
 	IniRead, OutputVar, %iniFilePath%, %Section%, %IniKey%
 	If (!OutputVar | RegExMatch(OutputVar, "^ERROR$")) { 
 		OutputVar := DefaultValue
-        ; Somehow reading some ini-values is not working with IniRead
-        ; Fallback for these cases via FileReadLine 
+		; Somehow reading some ini-values is not working with IniRead
+		; Fallback for these cases via FileReadLine 
 		lastSection := ""        
 		Loop {
 			FileReadLine, line, %iniFilePath%, %A_Index%
@@ -561,8 +602,7 @@ TradeFunc_ReadIniValue(iniFilePath, Section = "General", IniKey="", DefaultValue
 				}
 				Else {
 					OutputVar := value1
-				}              
-                ;MsgBox % "`n`n`n`n" lastSection ": " IniKey  " = " OutputVar 
+				}
 			}
 		}
 	}   
@@ -802,7 +842,7 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.ShowItemAgeEnabled, "ShowItemAgeEnabled", "ShowItemAgeEnabledH")
 	AddToolTip(ShowItemAgeEnabledH, "Enable Hotkey.")
 	
-	GuiAddText("Change league:", "x17 yp+38 w100 h20 0x0100", "LblChangeLeagueHotkey", "LblChangeLeagueH")
+	GuiAddText("Change League:", "x17 yp+38 w100 h20 0x0100", "LblChangeLeagueHotkey", "LblChangeLeagueH")
 	AddToolTip(LblChangeLeagueHotkeyH, "Checks your item's age.")
 	GuiAddHotkey(TradeOpts.ChangeLeagueHotkey, "x+1 yp-2 w120 h20", "ChangeLeagueHotkey", "ChangeLeagueHotkeyH")
 	AddToolTip(ChangeLeagueHotkeyH, "Press key/key combination.`nDefault: ctrl + l")
@@ -834,7 +874,7 @@ CreateTradeSettingsUI()
 	
     ; Search
 	
-	GuiAddGroupBox("[TradeMacro] Search", "x277 y34 w260 h535")
+	GuiAddGroupBox("[TradeMacro] Search", "x277 y34 w260 h625")
 	
 	GuiAddText("League:", "x287 yp+28 w100 h20 0x0100", "LblSearchLeague", "LblSearchLeagueH")
 	AddToolTip(LblSearchLeagueH, "Defaults to ""standard"" or ""tmpstandard"" If there is a`nTemp-League active at the time of script execution.`n`n""tmpstandard"" and ""tmphardcore"" are automatically replaced`nwith their permanent counterparts If no Temp-League is active.")
@@ -871,43 +911,86 @@ CreateTradeSettingsUI()
 	
 	CurrencyList := TradeFunc_GetDelimitedCurrencyListString()
 	GuiAddText("Currency Search:", "x287 yp+30 w100 h20 0x0100", "LblCurrencySearchHave", "LblCurrencySearchHaveH")
-	AddToolTip(LblCurrencySearchHaveH, "This settings sets the currency that you`nwant to use as ""have"" for the currency search.")
+	AddToolTip(LblCurrencySearchHaveH, "This settings sets the currency that you`nwant to use as ""have"" for the currency search.")	
 	GuiAddDropDownList(CurrencyList, "x+10 yp-2", TradeOpts.CurrencySearchHave, "CurrencySearchHave", "CurrencySearchHaveH")
 	
-	GuiAddCheckbox("Online only", "x287 yp+22 w210 h35 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
+	; option group start
+	GuiAddCheckbox("Online only", "x287 yp+25 w110 h30 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
 	
-	GuiAddCheckbox("Buyout only (Search on poe.trade)", "x287 yp+30 w210 h35 0x0100", TradeOpts.BuyoutOnly, "BuyoutOnly", "BuyoutOnlyH")
+	GuiAddCheckbox("Buyout only", "x407 yp0 w110 h30 0x0100", TradeOpts.BuyoutOnly, "BuyoutOnly", "BuyoutOnlyH")
 	AddToolTip(BuyoutOnlyH, "This option only takes affect when opening the search on poe.trade.")
 	
-	GuiAddCheckbox("Remove multiple Listings from same Account", "x287 yp+28 w230 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
-	AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
-	
-	GuiAddCheckbox("Pre-Fill Min-Values", "x287 yp+30 w230 h40", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
+	; option group start
+	GuiAddCheckbox("Pre-Fill Min-Values", "x287 yp+25 w110 h40", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
 	AddToolTip(PrefillMinValueH, "Automatically fill the min-values in the advanced search GUI.")
-	GuiAddCheckbox("Pre-Fill Max-Values", "x287 yp+30 w230 h40", TradeOpts.PrefillMinValue, "PrefillMaxValue", "PrefillMaxValueH")
+	
+	GuiAddCheckbox("Pre-Fill Max-Values", "x407 yp0 w110 h40", TradeOpts.PrefillMinValue, "PrefillMaxValue", "PrefillMaxValueH")
 	AddToolTip(PrefillMaxValueH, "Automatically fill the max-values in the advanced search GUI.")
 	
+	; option group start
+	GuiAddCheckbox("Remove multiple Listings from same Account", "x287 yp+30 w230 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
+	AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
+	
+	; option group start
 	GuiAddCheckbox("Force max links (certain corrupted items)", "x287 yp+30 w230 h40", TradeOpts.ForceMaxLinks, "ForceMaxLinks", "ForceMaxLinksH")
-	AddToolTip(ForceMaxLinksH, "Corrupted 3/4 max-socket unique items always use`nmax links if your item is fully linked.")
+	AddToolTip(ForceMaxLinksH, "Searches for corrupted 3/4 max-socket unique items always use`nthe maximum amount of links if your item is fully linked.")
 	
+	; option group start
 	GuiAddCheckbox("Alternative currency search", "x287 yp+30 w230 h40", TradeOpts.AlternativeCurrencySearch, "AlternativeCurrencySearch", "AlternativeCurrencySearchH")
-	AddToolTip(AlternativeCurrencySearchH, "Shows historical data of the searched currency.")
+	AddToolTip(AlternativeCurrencySearchH, "Shows historical data of the searched currency.`nProvided by poe.ninja.")
 	
-	GuiAddCheckbox("Pre-select normal mods (advanced search)", "x287 yp+30 w230 h40", TradeOpts.AdvancedSearchCheckMods, "AdvancedSearchCheckMods", "AdvancedSearchCheckModsH")
+	; option group start
+	GuiAddCheckbox("Show prices as chaos equivalent", "x287 yp+30 w230 h40", TradeOpts.ShowPricesAsChaosEquiv, "ShowPricesAsChaosEquiv", "ShowPricesAsChaosEquivH")
+	AddToolTip(ShowPricesAsChaosEquivH, "Shows all prices as their chaoes equivalent.")
+	
+	; header
+	GuiAddText("Pre-Select Options (Advanced Search)", "x287 yp+43 w230 h20 0x0100 cDA4F49", "", "")
+	GuiAddText("-------------------------------------------------------------", "x287 yp+6 w230 h20 0x0100 cDA4F49", "", "")
+	
+	; option group start
+	GuiAddCheckbox("Normal mods", "x287 yp+11 w110 h40", TradeOpts.AdvancedSearchCheckMods, "AdvancedSearchCheckMods", "AdvancedSearchCheckModsH")
 	AddToolTip(AdvancedSearchCheckModsH, "Selects all normal mods (no pseudo mods)`nwhen creating the advanced search GUI.")
+	
+	GuiAddCheckbox("Total Ele Resistances", "x407 yp0 w120 h40", TradeOpts.AdvancedSearchCheckTotalEleRes, "AdvancedSearchCheckTotalEleRes", "AdvancedSearchCheckTotalEleResH")
+	AddToolTip(AdvancedSearchCheckTotalEleResH, "Selects the total elemental resistances pseudo mod`nwhen creating the advanced search GUI.")
+	
+	; option group start
+	GuiAddCheckbox("Life", "x287 yp+30 w50 h40", TradeOpts.AdvancedSearchCheckTotalLife, "AdvancedSearchCheckTotalLife", "AdvancedSearchCheckTotalLifeH")
+	AddToolTip(AdvancedSearchCheckTotalLifeH, "Selects the total flat life pseudo mod or flat life mod and`n percent maximum increased life mod when creating the advanced search GUI.")
+	
+	GuiAddCheckbox("ES Mod", "x340 yp0 w60 h40", TradeOpts.AdvancedSearchCheckES, "AdvancedSearchCheckES", "AdvancedSearchCheckESH")
+	AddToolTip(AdvancedSearchCheckESH, "Selects the flat energy shield mod and percent maximum increased `nenergy shield mod when creating the advanced search GUI.")
+	
+	GuiAddCheckbox("ES Defense Total", "x407 yp0 w110 h40", TradeOpts.AdvancedSearchCheckTotalES, "AdvancedSearchCheckTotalES", "AdvancedSearchCheckTotalESH")
+	AddToolTip(AdvancedSearchCheckTotalESH, "Selects the energy shield total defense, for example on `narmour pieces when creating the advanced search GUI.")
+	
+	; option group start
+	GuiAddCheckbox("Elemental DPS", "x287 yp+30 w110 h40", TradeOpts.AdvancedSearchCheckEDPS, "AdvancedSearchCheckEDPS", "AdvancedSearchCheckEDPSH")
+	AddToolTip(AdvancedSearchCheckEDPSH, "Selects elemental damage per second`nwhen creating the advanced search GUI.")
+	
+	GuiAddCheckbox("Physical DPS", "x407 yp0 w110 h40", TradeOpts.AdvancedSearchCheckPDPS, "AdvancedSearchCheckPDPS", "AdvancedSearchCheckPDPSH")
+	AddToolTip(AdvancedSearchCheckPDPSH, "Selects physical damage per second`nwhen creating the advanced search GUI.")
+	
+	; option group start
+	GuiAddCheckbox("Minimum Item Level", "x287 yp+30 w110 h40", TradeOpts.AdvancedSearchCheckILVL, "AdvancedSearchCheckILVL", "AdvancedSearchCheckILVLH")
+	AddToolTip(AdvancedSearchCheckILVLH, "Selects the items itemlevel as minimum itemlevel`nwhen creating the advanced search GUI.")
+	
+	GuiAddCheckbox("Item Base", "x407 yp0 w110 h40", TradeOpts.AdvancedSearchCheckBase, "AdvancedSearchCheckBase", "AdvancedSearchCheckBaseH")
+	AddToolTip(AdvancedSearchCheckBaseH, "Selects the item base`nwhen creating the advanced search GUI.")
+	
 	
 	Gui, Add, Link, x287 yp+43 w230 cBlue BackgroundTrans, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
 	
-	GuiAddText("Mouse over settings to see what these settings do exactly.", "x287 y585 w250 h30")
+	GuiAddText("Mouse over settings to see a detailed description.", "x287 y680 w250 h30")
 	
-	GuiAddCheckbox("Debug Output", "x287 yp+25 w100 h25 cRed", TradeOpts.Debug, "Debug", "DebugH")
+	GuiAddCheckbox("Debug Output", "x287 yp+13 w100 h25", TradeOpts.Debug, "Debug", "DebugH")
 	AddToolTip(DebugH, "Don't use this unless you're developing!")
 	
-	GuiAddButton("Defaults", "x282 y640 w90 h23", "TradeSettingsUI_BtnDefaults")
-	GuiAddButton("Ok", "Default x+5 y640 w75 h23", "TradeSettingsUI_BtnOK")
-	GuiAddButton("Cancel", "x+5 y640 w80 h23", "TradeSettingsUI_BtnCancel")
+	GuiAddButton("Defaults", "x282 y725 w90 h23", "TradeSettingsUI_BtnDefaults")
+	GuiAddButton("Ok", "Default x+5 y725 w75 h23", "TradeSettingsUI_BtnOK")
+	GuiAddButton("Cancel", "x+5 y725 w80 h23", "TradeSettingsUI_BtnCancel")
 	
-	GuiAddText("Use these Buttons to change TradeMacro Settings only.", "x287 y+10 w250 h50 cRed")
+	GuiAddText("Use these buttons to change TradeMacro settings (ItemInfo has it's own buttons).", "x287 y+10 w250 h50 cRed")
 	
 	Gui, Tab, 2
 	
@@ -1429,7 +1512,7 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 	If (match) {
 		FileDelete, %A_ScriptDir%\temp\poe_trade_search_form_options.txt
 		FileAppend, %html%, %A_ScriptDir%\temp\poe_trade_search_form_options.txt, utf-8	
-		TradeFunc_ParseSearchFormOptions()		
+		TradeFunc_ParseSearchFormOptions()	
 		Return 1
 	}
 	Else If (!StrLen(html)) {
@@ -1441,7 +1524,7 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 	}
 }
 
-TradeFunc_HandleWinHttpFailure(){
+TradeFunc_HandleWinHttpFailure() {
 	dhw := A_DetectHiddenWindows
 	DetectHiddenWindows On
 	Run "%ComSpec%" /k,, Hide, pid

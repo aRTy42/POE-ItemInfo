@@ -1,5 +1,14 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.2.0
+================================================================================================
+Added new settings:
+	Advanced search pre-selection options.
+	Show prices as chaos equivalent.
+Added a checkbox to override the online status (advanced search).
+Fixed quivers not working with the advanced search.
+
+
 2.1.1
 ================================================================================================
 Item highlighting improvements and fixes, you have now some options that you can change, please take a look at AdditionalMacros.txt to read more about it and use these options.
