@@ -8,12 +8,11 @@
 	Pause::TogglePOEItemScript()			; Pause item parsing with the pause key (other macros remain).
 	#D::WinMinimize, A						; Winkey+D minimizes the active PoE window (PoE stays minimized this way).
    
-	^F::HighlightItems(false,true,false)	; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
+	^F::HighlightItems(false,true)			; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
 											; Function parameters, change if needed or wanted:
 											;	1. Use broader terms, default = false.
 											;	2. Leave the search field after pasting the search terms, default = true.
-											;	3. Workaround for keyboard layouts with "dead keys", default = false. (Some Layouts need this to prevent adding special characters when using a quotation mark).
-	^!F::HighlightItems(true,true,false)	; Ctrl+Alt+F uses much broader search terms for the highlight function.
+	^!F::HighlightItems(true,true)			; Ctrl+Alt+F uses much broader search terms for the highlight function.
    
 ;	^Escape::CloseScripts()						; Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
   
