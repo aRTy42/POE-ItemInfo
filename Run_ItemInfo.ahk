@@ -35,7 +35,7 @@ FileRead, info		, %A_ScriptDir%\resources\ahk\POE-ItemInfo.ahk
 FileRead, addMacros	, %userDirectory%\AdditionalMacros.txt
 
 info := info . "`n`r`n`r"
-addMacros := "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros
+addMacros := "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros . "`n`r"
 
 CloseScript("ItemInfoMain.ahk")
 FileDelete, %A_ScriptDir%\_ItemInfoMain.ahk

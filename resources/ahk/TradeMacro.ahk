@@ -1,32 +1,80 @@
-﻿;TradeMacro Add-on to POE-ItemInfo
+﻿; TradeMacro Add-on to POE-ItemInfo
 ; IGN: Eruyome
 
 PriceCheck:
-	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe
 	{
-		Global TradeOpts, Item
-		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		Send ^{sc02E}
-		Sleep 250
-		TradeFunc_Main()
-		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+		TradeFunc_PriceCheckHotkey()
 	}
-return
+Return
+
+TradeFunc_PriceCheckHotkey(priceCheckTest = false, itemData = "") {
+	Global TradeOpts, Item
+	
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+	
+	; simulate clipboard change to test item pricing
+	If (priceCheckTest) {
+		Clipboard :=
+		CLipboard := itemData
+	} Else {
+		Send ^{sc02E}	
+	}	
+	Sleep 250
+	TradeFunc_Main()
+	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+}
 
 AdvancedPriceCheck:
-	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe 
 	{
-		Global TradeOpts, Item
-		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		Send ^{sc02E}
-		Sleep 250
-		TradeFunc_Main(false, true)
-		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+		TradeFunc_AdvancedPriceCheckHotkey()
 	}
-return
+Return
+
+TradeFunc_AdvancedPriceCheckHotkey(priceCheckTest = false, itemData = "") {
+	Global TradeOpts, Item
+	
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+	
+	; simulate clipboard change to test item pricing
+	If (priceCheckTest) {
+		Clipboard :=
+		CLipboard := itemData
+	} Else {
+		Send ^{sc02E}	
+	}	
+	Sleep 250
+	TradeFunc_Main(false, true)
+	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+}
+
+OpenSearchOnPoeTrade:
+	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe 
+	{
+		TradeFunc_OpenSearchOnPoeTradeHotkey()
+	}
+Return
+
+TradeFunc_OpenSearchOnPoeTradeHotkey(priceCheckTest = false, itemData = "") {
+	Global TradeOpts, Item
+	
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+	
+	; simulate clipboard change to test item pricing
+	If (priceCheckTest) {
+		Clipboard :=
+		CLipboard := itemData
+	} Else {
+		Send ^{sc02E}	
+	}	
+	Sleep 250
+	TradeFunc_Main(true)
+	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+}
 
 ShowItemAge:
-	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe 
 	{
 		Global TradeOpts, Item
 		If (!TradeOpts.AccountName) {
@@ -39,64 +87,66 @@ ShowItemAge:
 		TradeFunc_Main(false, false, false, true)
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
-return
+Return
 
 OpenWiki:
-	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe 
 	{
-		Global TradeOpts, Item
-		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		Send ^{sc02E}
-		Sleep 250
-		TradeFunc_DoParseClipboard()
-		
-		If (!Item.Name and TradeOpts.OpenUrlsOnEmptyItem) {
-			TradeFunc_OpenUrlInBrowser("http://pathofexile.gamepedia.com/")
-		}
-		Else {	
-			UrlAffix := 
-			If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
-				UrlAffix := Item.Name
-			} Else If (Item.IsFlask or Item.IsMap) {
-				UrlAffix := Item.SubType
-			} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
-				UrlAffix := Item.Name
-			} Else {
-				UrlAffix := Item.BaseType
-			}
-			
-			If (StrLen(UrlAffix) > 0) {			
-				UrlAffix := StrReplace(UrlAffix," ","_")
-				WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
-				TradeFunc_OpenUrlInBrowser(WikiUrl)	
-			}
-		}
-		
-		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-		SetClipboardContents("")
+		TradeFunc_OpenWikiHotkey()
 	}
-return
+Return
+
+TradeFunc_OpenWikiHotkey(priceCheckTest = false, itemData = "") {
+	Global TradeOpts, Item
+		
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+	
+	If (priceCheckTest) {
+		Clipboard :=
+		CLipboard := itemData
+	} Else {
+		Send ^{sc02E}
+	}
+	Sleep 250
+	TradeFunc_DoParseClipboard()
+	
+	If (!Item.Name and TradeOpts.OpenUrlsOnEmptyItem) {
+		TradeFunc_OpenUrlInBrowser("http://pathofexile.gamepedia.com/")
+	}
+	Else {	
+		UrlAffix := 
+		If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard or Item.IsCurrency) {
+			UrlAffix := Item.Name
+		} Else If (Item.IsFlask or Item.IsMap) {
+			UrlAffix := Item.SubType
+		} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
+			UrlAffix := Item.Name
+		} Else {
+			UrlAffix := Item.BaseType
+		}
+		
+		If (StrLen(UrlAffix) > 0) {			
+			UrlAffix := StrReplace(UrlAffix," ","_")
+			WikiUrl := "http://pathofexile.gamepedia.com/" UrlAffix		
+			TradeFunc_OpenUrlInBrowser(WikiUrl)	
+		}
+	}
+	
+	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	SetClipboardContents("")
+}
 
 CustomInputSearch:
-	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe 
 	{
 		TradeFunc_CustomSearchGui()
 	}
-return
-
-OpenSearchOnPoeTrade:
-	Global TradeOpts, Item
-	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-	Send ^{sc02E}
-	Sleep 250
-	TradeFunc_Main(true)
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-return
+Return
 
 ChangeLeague:
-	Global TradeOpts
-	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe 
 	{
+		Global TradeOpts
 		TradeFunc_ChangeLeague()
 	}
 Return
@@ -1535,6 +1585,7 @@ TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = ""){
 	While A_Index <= NoOfItemsToCount {
 		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index - 1 """(.*?)<\/tbody>", html)
 		AccountName 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-seller=""(.*?)""")
+		AccountName	:= RegexReplace(AccountName, "i)^\+", "")
 		ChaosValue 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-name=""price_in_chaos""(.*?)>")
 		Currency	 	:= TradeUtils.HtmlParseItemData(ItemBlock, "has-tip.*currency-(.*?)""", rest)
 		CurrencyV	 	:= TradeUtils.HtmlParseItemData(rest, ">(.*?)<", rest)
@@ -1777,6 +1828,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	While A_Index < NoOfItemsToShow {		
 		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index - 1 """(.*?)<\/tbody>", html)	
 		AccountName 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-seller=""(.*?)""")
+		AccountName	:= RegexReplace(AccountName, "i)^\+", "")
 		Buyout 		:= TradeUtils.HtmlParseItemData(ItemBlock, "data-buyout=""(.*?)""")
 		IGN			:= TradeUtils.HtmlParseItemData(ItemBlock, "data-ign=""(.*?)""")
 		
@@ -2610,6 +2662,24 @@ TradeFunc_CustomSearchGui() {
 	Gui, CustomSearch:Add, Text, x+10 yp+4 cGray, (Use Alt + S/C to submit a button)
 	
 	Gui, CustomSearch:Show, w500 , Custom Search
+}
+
+TradeFunc_CreateItemPricingTestGUI() {
+	Global
+	Gui, PricingTest:Destroy
+	
+	Gui, PricingTest:Add, Text, x10 y10 w480, Input item information/data
+	Gui, PricingTest:Add, Edit, x10 w480 y+10 R30 vPricingTestItemInput
+	
+	Gui, PricingTest:Add, Button, x10 gSubmitPricingTestDefault , &Normal
+	Gui, PricingTest:Add, Button, x+10 yp+0 gSubmitPricingTestAdvanced, &Advanced
+	Gui, PricingTest:Add, Button, x+10 yp+0 gOpenPricingTestOnPoeTrade, Op&en on poe.trade
+	Gui, PricingTest:Add, Button, x+10 yp+0 gSubmitPricingTestWiki, Open &Wiki
+	Gui, PricingTest:Add, Button, x+10 yp+0 gSubmitPricingTestParsing, &Parse
+	Gui, PricingTest:Add, Button, x10 yp+40 gClosePricingTest, &Close
+	Gui, PricingTest:Add, Text, x+10 yp+4 cGray, (Use Alt + N/A/E/W/C to submit a button)
+	
+	Gui, PricingTest:Show, w500 , Item Pricing Test
 }
 
 ; Open Gui window to show the items variable mods, select the ones that should be used in the search and set their min/max values
@@ -3481,7 +3551,7 @@ OpenGithubWikiFromMenu:
 	repo := TradeGlobals.Get("GithubRepo")
 	user := TradeGlobals.Get("GithubUser")
 	TradeFunc_OpenUrlInBrowser("https://github.com/" user "/" repo "/wiki")
-return
+Return
 
 TradeSettingsUI_BtnOK:
 	Global TradeOpts
@@ -3525,19 +3595,27 @@ ReadPoeNinjaCurrencyData:
 		ShowToolTip("Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ")...")
 	}
 	
-	league := TradeUtils.UriEncode(TradeGlobals.Get("LeagueName"))
-	url := "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league	
-	UrlDownloadToFile, %url% , %A_ScriptDir%\temp\currencyData.json
-	FileRead, JSONFile, %A_ScriptDir%\temp\currencyData.json
-	parsedJSON 	:= JSON.Load(JSONFile)
+	league		:= TradeUtils.UriEncode(TradeGlobals.Get("LeagueName"))
+	url			:= "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league
+	parsedJSON 	:= TradeFunc_DowloadURLtoJSON(url)
+	
+	; fallback to Standard and Hardcore league if used league seems to not be available 
+	If (!parsedjson.currencyDetails.length()) {
+		If (InStr(league, "Hardcore", 0)) {
+			league := "Hardcore"
+		} Else {
+			league := "Standard"
+		}
+		url			:= "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league		
+		parsedJSON	:= TradeFunc_DowloadURLtoJSON(url)
+	}
 	global CurrencyHistoryData := parsedJSON.lines
-
 	TradeGlobals.Set("LastAltCurrencyUpdate", A_NowUTC)
 	
-	global ChaosEquivalents := {}
+	global ChaosEquivalents	:= {}
 	For key, val in CurrencyHistoryData {
-		currencyTypeName := RegexReplace(val.currencyTypeName, "[^a-z A-Z]", "")
-		ChaosEquivalents[currencyTypeName] := val.chaosEquivalent		
+		currencyTypeName	:= RegexReplace(val.currencyTypeName, "[^a-z A-Z]", "")
+		ChaosEquivalents[currencyTypeName] := val.chaosEquivalent
 	}
 	ChaosEquivalents["Chaos Orb"] := 1
 	
@@ -3546,6 +3624,14 @@ ReadPoeNinjaCurrencyData:
 	}
 	TempChangingLeagueInProgress := False
 Return
+
+TradeFunc_DowloadURLtoJSON(url) {
+	UrlDownloadToFile, %url%, %A_ScriptDir%\temp\currencyData.json
+	FileRead, JSONFile, %A_ScriptDir%\temp\currencyData.json
+	parsedJSON 	:= JSON.Load(JSONFile)
+	
+	Return parsedJSON
+}
 
 CloseCookieWindow:
 	Gui, CookieWindow:Cancel
@@ -3600,6 +3686,41 @@ Return
 
 SubmitCustomSearch:
 	TradeFunc_HandleCustomSearchSubmit()
+Return
+
+DebugTestItemPricing:
+	TradeFunc_CreateItemPricingTestGUI()
+Return
+
+ClosePricingTest:
+	PricingTestItemInput :=
+	Gui, PricingTest:Destroy
+Return
+
+OpenPricingTestOnPoeTrade:
+	Gui, PricingTest:Submit, Nohide
+	TradeFunc_OpenSearchOnPoeTradeHotkey(true, PricingTestItemInput)
+Return
+
+SubmitPricingTestDefault:
+	Gui, PricingTest:Submit, Nohide
+	TradeFunc_PriceCheckHotkey(true, PricingTestItemInput)
+Return
+
+SubmitPricingTestAdvanced:
+	Gui, PricingTest:Submit, Nohide
+	TradeFunc_AdvancedPriceCheckHotkey(true, PricingTestItemInput)
+Return
+
+SubmitPricingTestWiki:
+	Gui, PricingTest:Submit, Nohide
+	TradeFunc_OpenWikiHotkey(true, PricingTestItemInput)
+Return
+
+SubmitPricingTestParsing:
+	Gui, PricingTest:Submit, Nohide
+	Clipboard :=
+	Clipboard := PricingTestItemInput
 Return
 
 TradeFunc_HandleCustomSearchSubmit(openInBrowser = false) {
@@ -3690,7 +3811,7 @@ TradeFunc_ChangeLeague() {
 	; Get currency data only if league was changed while alternate search is active or alternate search was changed from disabled to enabled
 	If (TradeOpts.AlternativeCurrencySearch) {
 		TempChangingLeagueInProgress := True 
-		GoSub, ReadPoeNinjaCurrencyData	
+		GoSub, ReadPoeNinjaCurrencyData
 	}
 	Else {
 		ShowToolTip("Changed league to " . TradeOpts.SearchLeague . " (" . TradeGlobals.Get("LeagueName") . ").", true)
