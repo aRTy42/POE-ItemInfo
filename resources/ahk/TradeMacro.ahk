@@ -1693,8 +1693,7 @@ TradeFunc_MapCurrencyPoeTradeNameToIngameName(CurrencyName) {
 }
 
 ; Parse poe.trade html to display the search result tooltip with X listings
-TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false)
-{	
+TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false) {	
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
 	
@@ -2683,10 +2682,10 @@ TradeFunc_CreateItemPricingTestGUI() {
 }
 
 ; Open Gui window to show the items variable mods, select the ones that should be used in the search and set their min/max values
-TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedImplicit = ""){	
+TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedImplicit = "") {	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	Global 
-
+	
 	;prevent advanced gui in certain cases 
 	If (not advItem.mods.Length() and not ChangedImplicit) {
 		ShowTooltip("Advanced search not available for this item.")
@@ -3135,7 +3134,8 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 
 	windowWidth := modGroupBox + 40 + 5 + 45 + 10 + 45 + 10 + 40 + 5 + 45 + 10 + 65
 	windowWidth := (windowWidth > 510) ? windowWidth : 510
-	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search
+	AdvancedSearchLeagueDisplay := TradeGlobals.Get("LeagueName")
+	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search - %AdvancedSearchLeagueDisplay% 
 }
 
 TradeFunc_DetermineAdvancedSearchPreSelectedMods(advItem, ByRef Stats) {
@@ -3592,19 +3592,22 @@ ReadPoeNinjaCurrencyData:
 	; Disable hotkey until currency data was parsed
 	key := TradeOpts.ChangeLeagueHotKey
 	If (TempChangingLeagueInProgress) {
-		ShowToolTip("Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ")...")
+		ShowToolTip("Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ")...", true)
 	}
 	
 	league		:= TradeUtils.UriEncode(TradeGlobals.Get("LeagueName"))
+	fallback		:= ""
 	url			:= "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league
 	parsedJSON 	:= TradeFunc_DowloadURLtoJSON(url)
 	
 	; fallback to Standard and Hardcore league if used league seems to not be available 
 	If (!parsedjson.currencyDetails.length()) {
-		If (InStr(league, "Hardcore", 0)) {
-			league := "Hardcore"
+		If (InStr(league, "Hardcore", 0) or RegExMatch(league, "HC")) {
+			league	:= "Hardcore"
+			fallback	:= "Hardcore"
 		} Else {
-			league := "Standard"
+			league	:= "Standard"
+			fallback	:= "Standard"
 		}
 		url			:= "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league		
 		parsedJSON	:= TradeFunc_DowloadURLtoJSON(url)
@@ -3620,7 +3623,10 @@ ReadPoeNinjaCurrencyData:
 	ChaosEquivalents["Chaos Orb"] := 1
 	
 	If (TempChangingLeagueInProgress) {
-		ShowToolTip("Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ") finished.")
+		msg := "Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ") finished."
+		msg .= "`n- Requested chaos equivalents and currency history from poe.ninja."
+		msg .= StrLen(fallback) ? "`n- Using data from " fallback " league since the requested data is not available." : ""
+		ShowToolTip(msg, true)
 	}
 	TempChangingLeagueInProgress := False
 Return
@@ -3789,15 +3795,32 @@ TradeFunc_ChangeLeague() {
 	}
 	
 	leagues := TradeGlobals.Get("Leagues")
-
-	If (TradeOpts.SearchLeague == "standard") {
-		TradeOpts.SearchLeague := "hardcore"
-	} Else If (TradeOpts.SearchLeague == "hardcore") {
-		TradeOpts.SearchLeague := "tmpstandard"
-	} Else If (TradeOpts.SearchLeague == "tmpstandard") {
-		TradeOpts.SearchLeague := "tmphardcore"
-	} Else If (TradeOpts.SearchLeague == "tmphardcore") {
-		TradeOpts.SearchLeague := "standard"
+	
+	index:= 0
+	i	:= 0
+	For key, val in leagues {
+		i++
+		If (TradeOpts.SearchLeague == key) {
+			index := i
+		}
+	}
+	j	:= 0
+	first:= ""
+	next := ""
+	For key, val in leagues {
+		j++
+		If (j = i) {
+			first:= key
+		}
+		If ((index - 1) = j) {
+			next	:= key
+		}		
+	}
+	
+	If (StrLen(next)) {
+		TradeOpts.SearchLeague := next
+	} Else {
+		TradeOpts.SearchLeague := first
 	}
 	
 	; Call Submit for the settings UI, otherwise we can't set the new league if the UI was last closed via close button or "x"
@@ -3805,17 +3828,11 @@ TradeFunc_ChangeLeague() {
 	
 	TradeFunc_SetLeagueIfSelectedIsInactive()        
 	TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
-	TradeFunc_WriteIniValue(TradeOpts.SearchLeague, userDirectory . "\config_trade.ini", "Search", "SearchLeague")
-	GuiUpdateDropdownList("tmpstandard|tmphardcore|standard|hardcore", TradeOpts.SearchLeague, SearchLeague)	
+	TradeFunc_WriteIniValue(TradeOpts.SearchLeague, userDirectory . "\config_trade.ini", "Search", "SearchLeague")	
+	GuiUpdateDropdownList(TradeFunc_GetDelimitedLeagueList(), TradeOpts.SearchLeague, SearchLeague)	
 	
-	; Get currency data only if league was changed while alternate search is active or alternate search was changed from disabled to enabled
-	If (TradeOpts.AlternativeCurrencySearch) {
-		TempChangingLeagueInProgress := True 
-		GoSub, ReadPoeNinjaCurrencyData
-	}
-	Else {
-		ShowToolTip("Changed league to " . TradeOpts.SearchLeague . " (" . TradeGlobals.Get("LeagueName") . ").", true)
-	}
+	TempChangingLeagueInProgress := True 
+	GoSub, ReadPoeNinjaCurrencyData
 }
 
 ResetWinHttpProxy:
