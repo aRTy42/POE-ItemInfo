@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.3.2
+================================================================================================
+Fixed the alternative currency search (via poe.ninja), it was broken due to some API changes.
+
 2.3.1
 ================================================================================================
 Added support for week races.
