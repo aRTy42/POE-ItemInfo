@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.3.4
+================================================================================================
+Fixed an url encoding issue with the new browser search.
+
 2.3.3
 ================================================================================================
 Changed the way that searches openend in your browser are functioning. They now also work when poe.trade has cloudflare protection enabled without needing to bypass this protection.
