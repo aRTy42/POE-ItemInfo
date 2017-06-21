@@ -4207,25 +4207,11 @@ ParseAffixes(ItemDataAffixes, Item)
 			NumSuffixes += 1
 			Continue
 		}
-
-		IfInString, A_LoopField, increased Fire Damage
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\IncrFireDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, increased Cold Damage
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\IncrColdDamage.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, increased Lightning Damage
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\IncrLightningDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+		
+		If (RegExMatch(A_LoopField, "i).*(incr)eased (Fire|Cold|Lightning) (Damage)", match)) {			
+			NumSuffixes	+= 1
+			FileName 		:= "data\" match1 match2 match3 ".txt"
+			ValueRange	:= LookupAffixData(FileName, ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
@@ -4250,25 +4236,11 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		; Flask affixes (on belts)
-		IfInString, A_LoopField, reduced Flask Charges used
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\FlaskChargesUsed.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, increased Flask Charges gained
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\FlaskChargesGained.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, increased Flask effect duration
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\FlaskDuration.txt", ItemLevel, CurrValue, "", CurrTier)
+		; Flask affixes (on belts)		
+		If (RegExMatch(A_LoopField, "i).*(reduced|increased) Flask (Charges used|Charges gained|effect (duration))", match)) {
+			NumSuffixes	+= 1
+			FileName 		:= match3 ? "data\Flask" match3 ".txt" : "data\Flask" RegExReplace(match2, "\s") ".txt"
+			ValueRange	:= LookupAffixData(FileName, ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
@@ -4280,10 +4252,11 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, Life gained on Kill
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\LifeOnKill.txt", ItemLevel, CurrValue, "", CurrTier)
+		
+		If (RegExMatch(A_LoopField, "i).*(Life Regen)erated per second|.*(Life Gained on Kill)|.*increased (Mana Regen)eration Rate|.*(Mana Gained on Kill)", match)) {
+			NumSuffixes	+= 1
+			FileName		:= "data\" RegExReplace(match1 . match2 . match3 . match4, "gained|\s") ".txt"
+			ValueRange	:= LookupAffixData(FileName, ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
@@ -4300,27 +4273,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, Life Regenerated per second
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\LifeRegen.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, Mana Gained on Kill
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\ManaOnKill.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, increased Mana Regeneration Rate
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\ManaRegen.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
+		
 		IfInString, A_LoopField, increased Projectile Speed
 		{
 			NumSuffixes += 1
@@ -4335,52 +4288,18 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, to all Elemental Resistances
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\ToAllResist.txt", ItemLevel, CurrValue, "", CurrTier)
+		If (RegExMatch(A_LoopField, "i).*to (Fire|Cold|Lightning|Chaos|(all) Elemental) (Resist)ances?", match)) {
+			NumSuffixes	+= 1
+			FileName 		:= match2 ? "data\To" match2 match3 ".txt" : "data\To" match1 match3 ".txt"
+			ValueRange	:= LookupAffixData(FileName, ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, to Fire Resistance
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\ToFireResist.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, to Cold Resistance
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\ToColdResist.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, to Lightning Resistance
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\ToLightningResist.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, to Chaos Resistance
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\ToChaosResist.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, increased Stun Duration on Enemies
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\StunDuration.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
-			Continue
-		}
-		IfInString, A_LoopField, reduced Enemy Stun Threshold
-		{
-			NumSuffixes += 1
-			ValueRange := LookupAffixData("data\StunThreshold.txt", ItemLevel, CurrValue, "", CurrTier)
+		
+		If (RegExMatch(A_LoopField, "i).*increased (Stun Duration) on Enemies|.*reduced Enemy (Stun Threshold)", match)) {
+			NumSuffixes	+= 1
+			FileName		:= "data\" RegExReplace(match1 . match2, "\s") ".txt"
+			ValueRange	:= LookupAffixData(FileName, ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
@@ -5247,9 +5166,9 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-	IfInString, A_LoopField, increased Elemental Damage with Weapons
+		IfInString, A_LoopField, increased Elemental Damage with Weapons
 		{
-		; Slinkston edit. I originally screwed this up , but it is now fixed.
+			; Slinkston edit. I originally screwed this up , but it is now fixed.
 			NumPrefixes	+= 1
 			ValueRange	:= LookupAffixData("data\IncrWeaponElementalDamage.txt", ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
@@ -6606,7 +6525,7 @@ PostProcessData(ParsedData)
 	return Result
 }
 
-ParseClipBoardChanges()
+ParseClipBoardChanges(debug = false)
 {
 	Global Opts, Globals
 
@@ -6633,7 +6552,7 @@ ParseClipBoardChanges()
 	}
 
 	
-	If (StrLen(ParsedData) and !Opts.OnlyActiveIfPOEIsFront) {	
+	If (StrLen(ParsedData) and !Opts.OnlyActiveIfPOEIsFront and debug) {	
 		AddLogEntry(ParsedData, CBContents)
 	}
 

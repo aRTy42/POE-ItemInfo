@@ -979,7 +979,7 @@ CreateTradeSettingsUI()
 	
 	; option group start
 	GuiAddCheckbox("Show prices as chaos equivalent", "x287 yp+30 w230 h40", TradeOpts.ShowPricesAsChaosEquiv, "ShowPricesAsChaosEquiv", "ShowPricesAsChaosEquivH")
-	AddToolTip(ShowPricesAsChaosEquivH, "Shows all prices as their chaoes equivalent.")
+	AddToolTip(ShowPricesAsChaosEquivH, "Shows all prices as their chaos equivalent.")
 	
 	; header
 	GuiAddText("Pre-Select Options (Advanced Search)", "x287 yp+43 w230 h20 0x0100 cDA4F49", "", "")
@@ -1395,12 +1395,12 @@ TradeFunc_ReadCookieData() {
 	SplashTextOff		
 	If (ErrorLevel or BypassFailed or CompiledExeNotFound) {
 		; collect debug information
-		ScriptVersion := TradeGlobals.Get("RelVersion")
-		CookieFile := (!CookieFileNotFound) ? "Cookie file found." : "Cookie file not found."
-		Cookies := (!ErrorLevel) ? "Retrieving cookies successful." : "Retrieving cookies failed."
-		OSInfo := TradeFunc_GetOSInfo()
-		Compilation := (!CompiledExeNotFound) ? "Compiling 'getCookieData' script successful." : "Compiling 'getCookieData' script failed."
-		NetFramework := DotNetFrameworkInstallation.Number  ? "Net Framework used for compiling: v" DotNetFrameworkInstallation.Number : "Using manual cookies"
+		ScriptVersion	:= TradeGlobals.Get("ReleaseVersion")
+		CookieFile	:= (!CookieFileNotFound) ? "Cookie file found." : "Cookie file not found."
+		Cookies		:= (!ErrorLevel) ? "Retrieving cookies successful." : "Retrieving cookies failed."
+		OSInfo		:= TradeFunc_GetOSInfo()
+		Compilation	:= (!CompiledExeNotFound) ? "Compiling 'getCookieData' script successful." : "Compiling 'getCookieData' script failed."
+		NetFramework	:= DotNetFrameworkInstallation.Number  ? "Net Framework used for compiling: v" DotNetFrameworkInstallation.Number : "Using manual cookies"
 		RegRead, IEVersion, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\Internet Explorer, svcVersion
 		If (!IEVersion) {
 			RegRead, IEVersion, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\Internet Explorer\Version Vector, IE
@@ -1424,14 +1424,23 @@ TradeFunc_ReadCookieData() {
 			Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed!
 			Gui, CookieWindow:Add, Text, , - Cookies and user-agent were retrieved.`n- Lowered/disabled Internet Explorer security settings can cause this to fail.
 			cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "Cookies were deleted on script start." : ""
-			Gui, CookieWindow:Add, Text, , - %cookiesDeleted% Please try again and make sure that `n  you're not using any proxy server.`n- If all else fails try using the compiled script <PoE-TradeMacro_(Fallback).exe>.
+			Gui, CookieWindow:Add, Text, , - %cookiesDeleted% Please try again and make sure that `n  you're not using any proxy server.
 			Gui, CookieWindow:Add, Text, , The connection test sometimes fails while using the correct user-agent/cookies. `nJust try it again to be sure.			
-			Gui, CookieWindow:Add, Text, , You can also try setting the cookies manually in the settings menu (with 'How to' link).
+			Gui, CookieWindow:Add, Text, , You can also try setting the cookies manually in the settings menu.
+			
+			Gui, CookieWindow:Add, Text, cRed, It's possible that poe.trade doesn't use CloudFlare protection in most regions but does so `nin a few. In these regions this may also include a Captcha challenge.
+			Gui, CookieWindow:Add, Text, , If that's the case try opening poe.trade in Internet Explorer and solving this challenge to `ngenerate cookies (make sure not to delete them on script start up -> settings menu).
+			Gui, CookieWindow:Add, Text, , If it still doesn't work it's possible that no solution for your issue is known, but you can still `nuse the macro and use all searches that open your Browser directly instead of showing a `ntooltip. 
 		}
 		; something went wrong while reading the cookies
 		Else {
 			Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
-			Gui, CookieWindow:Add, Text, cRed, This can be a false positive. Poe.trade doesn't always use CloudFlare protection`n but the test to check this can fail if the request takes too long.`nPlease try again.
+			Gui, CookieWindow:Add, Text, cRed, This can be a false positive. Poe.trade doesn't always use CloudFlare protection `nbut the test to check this can fail if the request takes too long.
+			
+			Gui, CookieWindow:Add, Text, cRed, Poe.trade may not use CloudFlare protection in most regions but may do so `nin a few. In these regions this may also include a Captcha challenge.
+			Gui, CookieWindow:Add, Text, , If that's the case try opening poe.trade in Internet Explorer and solving this challenge to `ngenerate cookies (make sure not to delete them on script start up -> settings menu).
+			Gui, CookieWindow:Add, Text, , If it still doesn't work it's possible that no solution for your issue is known, but you can still `nuse the macro and use all searches that open your Browser directly instead of showing a `ntooltip. 
+			
 			If (CookieFileNotFound) {
 				Gui, CookieWindow:Add, Text, , - File <ScriptDirectory\temp\cookie_data.txt> could not be found.
 			}
@@ -1451,7 +1460,7 @@ TradeFunc_ReadCookieData() {
 		Gui, CookieWindow:Add, Link, cBlue, Report on <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Github</a>, <a href="https://discord.gg/taKZqWw">Discord</a>, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">the forum</a>.
 		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
 		Gui, CookieWindow:Add, Edit, r6 ReadOnly w430, %ScriptVersion% `n%CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
-		Gui, CookieWindow:Add, Text, , Continue the script to access the settings menu.
+		Gui, CookieWindow:Add, Text, , Continue the script to access the settings menu or to use searches opening `nyour Browser directly.
 		If (!TradeOpts.UseManualCookies) {
 			Gui, CookieWindow:Add, Button, y+10 gOpenCookieFile, Open cookie file
 			Gui, CookieWindow:Add, Button, yp+0 x+10 gCloseCookieWindow, Continue

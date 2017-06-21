@@ -16,7 +16,7 @@ TradeFunc_PriceCheckHotkey(priceCheckTest = false, itemData = "") {
 	; simulate clipboard change to test item pricing
 	If (priceCheckTest) {
 		Clipboard :=
-		CLipboard := itemData
+		Clipboard := itemData
 	} Else {
 		Send ^{sc02E}	
 	}	
@@ -694,26 +694,29 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			}
 		}
 	}
-	Else {
+	Else If (not openSearchInBrowser) {
 		Html := TradeFunc_DoPostRequest(Payload, openSearchInBrowser)	
 	}
 	
-	If (openSearchInBrowser) {
-		; redirect was prevented to get the url and open the search on poe.trade instead
+	If (openSearchInBrowser) {		
 		If (Item.isCurrency and !Item.IsEssence) {
 			ParsedUrl1 := currencyUrl
 		}
-		Else {
-			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
+		Else {			
+			; using GET request instead of preventing the POST request redirect and parsing the url
+			parsedUrl1 := "http://poe.trade/search?" Payload
+			; redirect was prevented to get the url and open the search on poe.trade instead
+			;RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
 		}
 		
 		If (StrLen(ParsingError)) {
 			ShowToolTip("")
 			ShowToolTip(ParsingError)
-		} Else {			
+		} Else {
 			TradeFunc_OpenUrlInBrowser(ParsedUrl1)
 			SetClipboardContents("")
 		}
+		
 	}
 	Else If (Item.isCurrency and !Item.IsEssence) {
 		; Default currency search
@@ -1392,27 +1395,43 @@ TradeFunc_ParseCurrencyIDs(html) {
 	StringReplace, html,html, `n,, All
 	html := RegExReplace(html,"\s+"," ")
 	
-	RegExMatch(html, "is)id=""currency-want"">(.*?)input", match)
-	startString := "<div data-tooltip"	
-	Currencies := {}
-	
-	Loop {
-		CurrencyBlock 	:= TradeUtils.HtmlParseItemData(match1, startString . "(.*?)>", html)
-		CurrencyName 	:= TradeUtils.HtmlParseItemData(CurrencyBlock, "title=""(.*?)""")
-		CurrencyID 	:= TradeUtils.HtmlParseItemData(CurrencyBlock, "data-id=""(.*?)""")
-		CurrencyName := StrReplace(CurrencyName, "&#39;", "'")
-		
-		If (!CurrencyName) {
-			TradeGlobals.Set("CurrencyIDs", Currencies)
-			break
-		}		
-		
-		match1 := match1
-		match1 := SubStr(match1, StrLen(CurrencyBlock))
-		
-		Currencies[CurrencyName] := CurrencyID  
-		TradeGlobals.Set("CurrencyIDs", Currencies)
+	categoryBlocks := []
+	Pos		:= 0
+	While Pos := RegExMatch(html, "i)id=""cat-want-(.*?)(id=""cat-want-|id=""cat-have-|input)", match, Pos + (StrLen(match1) ? StrLen(match1) : 1)) {
+		categoryBlocks.push(match1)
 	}
+	
+	RegExMatch(html, "is)id=""currency-want"">(.*?)input", match)
+	startStringCurrency	:= "<div data-tooltip"
+	startStringOthers	:= "<div class=""currency-selectable"
+	
+	Currencies := {}
+
+	For key, val in categoryBlocks {
+		Loop {
+			start := key > 2 ? startStringOthers : startStringCurrency
+			CurrencyBlock 	:= TradeUtils.HtmlParseItemData(val, start . "(.*?)>", val)
+			CurrencyName 	:= TradeUtils.HtmlParseItemData(CurrencyBlock, "title=""(.*?)""")
+			CurrencyID 	:= TradeUtils.HtmlParseItemData(CurrencyBlock, "data-id=""(.*?)""")
+			CurrencyName 	:= StrReplace(CurrencyName, "&#39;", "'")
+
+			If (!CurrencyName) {
+				TradeGlobals.Set("CurrencyIDs", Currencies)
+				break
+			}
+			
+			match1 := match1
+			match1 := SubStr(match1, StrLen(CurrencyBlock))
+			
+			Currencies[CurrencyName] := CurrencyID  
+		}
+	}
+	
+	If (!Currencies["Chaos Orb"]) {
+		Currencies := TradeCurrencyIDsFallback
+	}
+	
+	TradeGlobals.Set("CurrencyIDs", Currencies)
 }
 
 ; Parse currency.poe.trade to display tooltip with first X listings
@@ -1729,7 +1748,7 @@ TradeFunc_MapCurrencyPoeTradeNameToIngameName(CurrencyName) {
 }
 
 ; Parse poe.trade html to display the search result tooltip with X listings
-TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false) {	
+TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false) {
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
 	
@@ -2086,10 +2105,10 @@ class RequestParams_ {
 		p .= "&thread=" this.xthread "&identified=" this.identified "&corrupted=" this.corrupted "&online=" this.online "&has_buyout=" this.buyout "&altart=" this.altart "&capquality=" this.capquality 
 		p .= "&buyout_min=" this.buyout_min "&buyout_max=" this.buyout_max "&buyout_currency=" this.buyout_currency "&crafted=" this.crafted "&enchanted=" this.enchanted	
 
-		; not used yet
-		temp := p
-		temp := CleanPayload(temp)
-		;console.log(temp)
+		temp		:= p
+		cleaned	:= CleanPayload(temp)
+		;console.log(cleaned)
+		; GET requests won't work with the cleaned payload when including the group_type
 		
 		Return p
 	}
@@ -2169,6 +2188,7 @@ class _ParamMod {
 	{
 		; for some reason '+' is not encoded properly, this affects mods like '+#% to all Elemental Resistances'
 		this.mod_name := StrReplace(this.mod_name, "+", "%2B")
+		this.mod_name := TradeUtils.UriEncode(this.mod_name)
 		p := "&mod_name=" this.mod_name "&mod_min=" this.mod_min "&mod_max=" this.mod_max
 		Return p
 	}
@@ -2710,9 +2730,10 @@ TradeFunc_CreateItemPricingTestGUI() {
 	Gui, PricingTest:Add, Button, x+10 yp+0 gSubmitPricingTestAdvanced, &Advanced
 	Gui, PricingTest:Add, Button, x+10 yp+0 gOpenPricingTestOnPoeTrade, Op&en on poe.trade
 	Gui, PricingTest:Add, Button, x+10 yp+0 gSubmitPricingTestWiki, Open &Wiki
-	Gui, PricingTest:Add, Button, x+10 yp+0 gSubmitPricingTestParsing, &Parse
+	Gui, PricingTest:Add, Button, x+10 yp+0 gSubmitPricingTestParsing, Parse (&Tooltip)
+	Gui, PricingTest:Add, Button, x+10 yp+0 gSubmitPricingTestParsingObject, Parse (&Object)
 	Gui, PricingTest:Add, Button, x10 yp+40 gClosePricingTest, &Close
-	Gui, PricingTest:Add, Text, x+10 yp+4 cGray, (Use Alt + N/A/E/W/C to submit a button)
+	Gui, PricingTest:Add, Text, x+10 yp+4 cGray, (Use Alt + N/A/E/W/C/T/O to submit a button)
 	
 	Gui, PricingTest:Show, w500 , Item Pricing Test
 }
@@ -3760,9 +3781,23 @@ SubmitPricingTestWiki:
 Return
 
 SubmitPricingTestParsing:
-	Gui, PricingTest:Submit, Nohide
-	Clipboard :=
+	Gui, PricingTest:Submit, Nohide	
+	SuspendPOEItemScript = 1
 	Clipboard := PricingTestItemInput
+	ParseClipBoardChanges(true)
+	SuspendPOEItemScript = 0
+Return
+
+SubmitPricingTestParsingObject:
+	Gui, PricingTest:Submit, Nohide	
+	SuspendPOEItemScript = 1
+	Clipboard := PricingTestItemInput
+	ParseClipBoardChanges(true)
+	DebugTmpObject			:= {}
+	DebugTmpObject.Item		:= Item
+	DebugTmpObject.ItemData	:= ItemData
+	DebugPrintArray(DebugTmpObject)
+	SuspendPOEItemScript = 0
 Return
 
 TradeFunc_HandleCustomSearchSubmit(openInBrowser = false) {

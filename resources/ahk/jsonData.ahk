@@ -32,6 +32,11 @@ FileRead, JSONFile, %A_ScriptDir%\data_trade\currencyNames.json
 parsedJSON := JSON.Load(JSONFile)
 global TradeCurrencyNames := parsedJSON.currencyNames
 
+; Parse fallback currency IDs
+FileRead, JSONFile, %A_ScriptDir%\data_trade\currencyIDs_Fallback.json
+parsedJSON := JSON.Load(JSONFile)
+global TradeCurrencyIDsFallback := parsedJSON
+
 ; Download and parse the current leagues
 postData	:= ""
 reqHeaders =
