@@ -193,7 +193,6 @@ global overwrittenUserFiles	:= overwrittenUserFiles ? overwrittenUserFiles : arg
 global SuspendPOEItemScript = 0
 
 class UserOptions {
-
 	OnlyActiveIfPOEIsFront := 1     ; Set to 1 to make it so the script does nothing if Path of Exile window isn't the frontmost.
 									; If 0, the script also works if PoE isn't frontmost. This is handy for have the script parse
 									; textual item representations appearing somewhere Else, like in the forums or text files.
@@ -302,39 +301,45 @@ class UserOptions {
 	
 	ScanUI()
 	{
-		this.OnlyActiveIfPOEIsFront := GuiGet("OnlyActiveIfPOEIsFront")
-		this.PutResultsOnClipboard := GuiGet("PutResultsOnClipboard")
-		this.ShowUpdateNotifications := GuiGet("ShowUpdateNotifications")
-		this.UpdateSkipSelection := GuiGet("UpdateSkipSelection")
-		this.UpdateSkipBackup := GuiGet("UpdateSkipBackup")		
-		this.ShowItemLevel := GuiGet("ShowItemLevel")
-		this.ShowMaxSockets := GuiGet("ShowMaxSockets")
-		this.ShowDamageCalculations := GuiGet("ShowDamageCalculations")
-		this.ShowAffixTotals := GuiGet("ShowAffixTotals")
-		this.ShowAffixDetails := GuiGet("ShowAffixDetails")
-		this.ShowAffixLevel := GuiGet("ShowAffixLevel")
-		this.ShowAffixBracket := GuiGet("ShowAffixBracket")
-		this.ShowAffixMaxPossible := GuiGet("ShowAffixMaxPossible")
-		this.ShowAffixBracketTier := GuiGet("ShowAffixBracketTier")
-		this.ShowAffixBracketTierTotal := GuiGet("ShowAffixBracketTierTotal")
-		this.TierRelativeToItemLevel := GuiGet("TierRelativeToItemLevel")
-		this.ShowDarkShrineInfo := GuiGet("ShowDarkShrineInfo")
-		this.ShowCurrencyValueInChaos := GuiGet("ShowCurrencyValueInChaos")
-		this.DisplayToolTipAtFixedCoords := GuiGet("DisplayToolTipAtFixedCoords")
-		this.ScreenOffsetX := GuiGet("ScreenOffsetX")
-		this.ScreenOffsetY := GuiGet("ScreenOffsetY")
-		this.MaxSpanStartingFromFirst := GuiGet("MaxSpanStartingFromFirst")
-		this.CompactDoubleRanges := GuiGet("CompactDoubleRanges")
-		this.CompactAffixTypes := GuiGet("CompactAffixTypes")
-		this.MirrorAffixLines := GuiGet("MirrorAffixLines")
-		this.MirrorLineFieldWidth := GuiGet("MirrorLineFieldWidth")
-		this.ValueRangeFieldWidth := GuiGet("ValueRangeFieldWidth")
-		this.AffixDetailDelimiter := GuiGet("AffixDetailDelimiter")
-		this.AffixDetailEllipsis := GuiGet("AffixDetailEllipsis")
-		this.MouseMoveThreshold := GuiGet("MouseMoveThreshold")
-		this.UseTooltipTimeout := GuiGet("UseTooltipTimeout")
-		this.ToolTipTimeoutTicks := GuiGet("ToolTipTimeoutTicks")
-		this.FontSize := GuiGet("FontSize")
+		/*
+		this.OnlyActiveIfPOEIsFront		:= GuiGet("OnlyActiveIfPOEIsFront")
+		this.PutResultsOnClipboard		:= GuiGet("PutResultsOnClipboard")
+		this.ShowUpdateNotifications	:= GuiGet("ShowUpdateNotifications")
+		this.UpdateSkipSelection		:= GuiGet("UpdateSkipSelection")
+		this.UpdateSkipBackup			:= GuiGet("UpdateSkipBackup")		
+		this.ShowItemLevel				:= GuiGet("ShowItemLevel")
+		this.ShowMaxSockets				:= GuiGet("ShowMaxSockets")
+		this.ShowDamageCalculations		:= GuiGet("ShowDamageCalculations")
+		this.ShowAffixTotals			:= GuiGet("ShowAffixTotals")
+		this.ShowAffixDetails			:= GuiGet("ShowAffixDetails")
+		this.ShowAffixLevel				:= GuiGet("ShowAffixLevel")
+		this.ShowAffixBracket			:= GuiGet("ShowAffixBracket")
+		this.ShowAffixMaxPossible		:= GuiGet("ShowAffixMaxPossible")
+		this.ShowAffixBracketTier		:= GuiGet("ShowAffixBracketTier")
+		this.ShowAffixBracketTierTotal	:= GuiGet("ShowAffixBracketTierTotal")
+		this.TierRelativeToItemLevel	:= GuiGet("TierRelativeToItemLevel")
+		this.ShowDarkShrineInfo			:= GuiGet("ShowDarkShrineInfo")
+		this.ShowCurrencyValueInChaos	:= GuiGet("ShowCurrencyValueInChaos")
+		this.DisplayToolTipAtFixedCoords:= GuiGet("DisplayToolTipAtFixedCoords")
+		this.ScreenOffsetX				:= GuiGet("ScreenOffsetX")
+		this.ScreenOffsetY				:= GuiGet("ScreenOffsetY")
+		this.MaxSpanStartingFromFirst	:= GuiGet("MaxSpanStartingFromFirst")
+		this.CompactDoubleRanges		:= GuiGet("CompactDoubleRanges")
+		this.CompactAffixTypes			:= GuiGet("CompactAffixTypes")
+		this.MirrorAffixLines			:= GuiGet("MirrorAffixLines")
+		this.MirrorLineFieldWidth		:= GuiGet("MirrorLineFieldWidth")
+		this.ValueRangeFieldWidth		:= GuiGet("ValueRangeFieldWidth")
+		this.AffixDetailDelimiter		:= GuiGet("AffixDetailDelimiter")
+		this.AffixDetailEllipsis		:= GuiGet("AffixDetailEllipsis")
+		this.MouseMoveThreshold			:= GuiGet("MouseMoveThreshold")
+		this.UseTooltipTimeout			:= GuiGet("UseTooltipTimeout")
+		this.ToolTipTimeoutTicks		:= GuiGet("ToolTipTimeoutTicks")
+		this.FontSize					:= GuiGet("FontSize")
+		*/
+		
+		For key, val in this {
+			this[key] := GuiGet(key)
+		}
 	}
 }
 Opts := new UserOptions()
@@ -343,10 +348,10 @@ class Fonts {
 
 	Init(FontSizeFixed, FontSizeUI)
 	{
-		this.FontSizeFixed := FontSizeFixed
-		this.FontSizeUI := FontSizeUI
-		this.FixedFont := this.CreateFixedFont(FontSizeFixed)
-		this.UIFont := this.CreateUIFont(FontSizeUI)
+		this.FontSizeFixed	:= FontSizeFixed
+		this.FontSizeUI		:= FontSizeUI
+		this.FixedFont		:= this.CreateFixedFont(FontSizeFixed)
+		this.UIFont			:= this.CreateUIFont(FontSizeUI)
 	}
 
 	CreateFixedFont(FontSize_)
@@ -429,17 +434,17 @@ class Fonts {
 class ItemData_ {
 	Init() 
 	{
-		This.Links := ""
-		This.Sockets := ""
-		This.Stats := ""
-		This.NamePlate := ""
-		This.Affixes := ""
-		This.FullText := ""
+		This.Links		:= ""
+		This.Sockets	:= ""
+		This.Stats		:= ""
+		This.NamePlate	:= ""
+		This.Affixes	:= ""
+		This.FullText	:= ""
 		This.IndexAffixes := -1
-		This.IndexLast := -1
-		This.PartsLast := ""
-		This.Rarity := ""
-		This.Parts := []
+		This.IndexLast	:= -1
+		This.PartsLast	:= ""
+		This.Rarity		:= ""
+		This.Parts		:= []
 	}
 }
 Global ItemData := new ItemData_
@@ -456,7 +461,7 @@ class Item_ {
 		This.RarityLevel 	:= ""
 		This.BaseType 		:= ""
 		This.GripType 		:= ""
-		This.Level		:= ""
+		This.Level			:= ""
 		This.MapLevel 		:= ""
 		This.MapTier 		:= ""
 		This.MaxSockets 	:= ""
@@ -472,18 +477,18 @@ class Item_ {
 		This.IsArmour 		:= False
 		This.IsQuiver 		:= False
 		This.IsFlask 		:= False
-		This.IsGem		:= False
+		This.IsGem			:= False
 		This.IsCurrency 	:= False
 		This.IsUnidentified := False
 		This.IsBelt 		:= False
 		This.IsRing 		:= False
 		This.IsUnsetRing 	:= False
-		This.IsBow		:= False
+		This.IsBow			:= False
 		This.IsAmulet 		:= False
 		This.IsSingleSocket := False
 		This.IsFourSocket 	:= False
 		This.IsThreeSocket 	:= False
-		This.IsMap		:= False
+		This.IsMap			:= False
 		This.IsTalisman 	:= False
 		This.IsJewel 		:= False
 		This.IsLeaguestone	:= False
