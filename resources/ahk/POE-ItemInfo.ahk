@@ -7020,7 +7020,7 @@ ParseSockets(ItemDataText)
 ParseCharges(stats)
 {
 	charges := {}
-	Loop,  Parse, stats, `n, `r 
+	Loop, Parse, stats, `n, `r 
 	{
 		LoopField := RegExReplace(A_Loopfield, "i)\s\(augmented\)", "")
 		; Flasks
@@ -7030,20 +7030,21 @@ ParseCharges(stats)
 			charges.usage	:= max1
 			charges.max	:= max2
 		}		
-		RegExMatch(LoopField, "i)Currently has (\d+) Charges.*", current)
+		RegExMatch(LoopField, "i)Currently has (\d+) Charge.*", current)
 
 		If (current) {
 			charges.current:= current1
 		}
 		
 		; Leaguestones	
-		RegExMatch(LoopField, "i)Currently has (\d+) of (\d+) Charges.*", max)
+		RegExMatch(LoopField, "i)Currently has (\d+) of (\d+) Charge.*", max)
 		If (max) {
 			charges.usage	:= 1
 			charges.max	:= max2
 			charges.current:= max1
 		}		
 	}
+	
 	return charges
 }
 
@@ -8082,9 +8083,11 @@ ModStringToObject(string, isImplicit) {
 				break
 			}
 		}
-		
+
 		temp.values	:= values
-		s			:= RegExReplace(Matches[A_Index], "i)(-?[.0-9]+)", "#")
+		; mods with negative values inputted in the value fields are not supported on poe.trade, so searching for "-1 maximum charges/frenzy charges" is not possible
+		; unless there is a mod "-# maximum charges"
+		s			:= RegExReplace(Matches[A_Index], "i)(-?)[.0-9]+", "$1#")
 		temp.name		:= RegExReplace(s, "i)# ?to ? #", "#", isRange)
 		temp.isVariable:= false
 		temp.type		:= (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"
@@ -8092,21 +8095,7 @@ ModStringToObject(string, isImplicit) {
 	}
 	
 	Return arr
-}	
-
-
-; #######################################################################################################################
-; ###	Dev:	4GForce/Eruyome
-; ### 	Date:	01/28/2017
-; ###     Issue:	#224 @ https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/224
-; ###	Desc:	Not only about this issue, many reports of improper pseudo calculation, I experienced it plenty myself
-; ###			Tried debugging the old function but it was so messed up that I decided to rewrite it.
-; ###			Based on the same logic that was used before, but simpler and clearer.
-; ###			Using simplifiedNames for the mods so they are easier to compare without rewriting regex all the time
-; ###	TODO:	- Test, test and more test
-; ###			- Build a structure for the possible mods ? 
-; ###			  something like: { simplifiedName: "xToFireResistance", regex: "i)to Fire Resistance", displayFormat: "+#% to Fire Resistance" }
-; #######################################################################################################################
+}
 
 ; Moved from TradeMacro to ItemInfo to avoid duplicate code, please be careful with any changes
 CreatePseudoMods(mods, returnAllMods := False) {
