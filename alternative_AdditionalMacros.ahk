@@ -68,7 +68,8 @@ AM_CloseScripts_HKey:
 Return
 
 AM_KickYourself_HKey:
-	SendInput {Enter}/kick own_char_name{Enter}		; Quickly leave a group by kicking yourself. Only works for one specific character name.
+	charName := AM_KickYourself[3]
+	SendInput {Enter}/kick %charName%{Enter}		; Quickly leave a group by kicking yourself. Only works for one specific character name.
 Return
 
 AM_Hideout_HKey:
