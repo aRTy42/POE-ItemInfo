@@ -202,6 +202,8 @@ class UserOptions {
 	UpdateSkipSelection := 0
 	UpdateSkipBackup := 0
 
+	EnableAdditionalMacros := 1		; Enable/disable the entire AdditionalMacros.txt file
+
 	ShowItemLevel := 1              ; Show item level and the item type's base level (enabled by default change to 0 to disable)
 	ShowMaxSockets := 1             ; Show the max sockets based on ilvl and type
 	ShowDamageCalculations := 1     ; Show damage projections (for weapons only)
@@ -300,43 +302,7 @@ class UserOptions {
 	ScreenOffsetY := 0
 	
 	ScanUI()
-	{
-		/*
-		this.OnlyActiveIfPOEIsFront		:= GuiGet("OnlyActiveIfPOEIsFront")
-		this.PutResultsOnClipboard		:= GuiGet("PutResultsOnClipboard")
-		this.ShowUpdateNotifications	:= GuiGet("ShowUpdateNotifications")
-		this.UpdateSkipSelection		:= GuiGet("UpdateSkipSelection")
-		this.UpdateSkipBackup			:= GuiGet("UpdateSkipBackup")		
-		this.ShowItemLevel				:= GuiGet("ShowItemLevel")
-		this.ShowMaxSockets				:= GuiGet("ShowMaxSockets")
-		this.ShowDamageCalculations		:= GuiGet("ShowDamageCalculations")
-		this.ShowAffixTotals			:= GuiGet("ShowAffixTotals")
-		this.ShowAffixDetails			:= GuiGet("ShowAffixDetails")
-		this.ShowAffixLevel				:= GuiGet("ShowAffixLevel")
-		this.ShowAffixBracket			:= GuiGet("ShowAffixBracket")
-		this.ShowAffixMaxPossible		:= GuiGet("ShowAffixMaxPossible")
-		this.ShowAffixBracketTier		:= GuiGet("ShowAffixBracketTier")
-		this.ShowAffixBracketTierTotal	:= GuiGet("ShowAffixBracketTierTotal")
-		this.TierRelativeToItemLevel	:= GuiGet("TierRelativeToItemLevel")
-		this.ShowDarkShrineInfo			:= GuiGet("ShowDarkShrineInfo")
-		this.ShowCurrencyValueInChaos	:= GuiGet("ShowCurrencyValueInChaos")
-		this.DisplayToolTipAtFixedCoords:= GuiGet("DisplayToolTipAtFixedCoords")
-		this.ScreenOffsetX				:= GuiGet("ScreenOffsetX")
-		this.ScreenOffsetY				:= GuiGet("ScreenOffsetY")
-		this.MaxSpanStartingFromFirst	:= GuiGet("MaxSpanStartingFromFirst")
-		this.CompactDoubleRanges		:= GuiGet("CompactDoubleRanges")
-		this.CompactAffixTypes			:= GuiGet("CompactAffixTypes")
-		this.MirrorAffixLines			:= GuiGet("MirrorAffixLines")
-		this.MirrorLineFieldWidth		:= GuiGet("MirrorLineFieldWidth")
-		this.ValueRangeFieldWidth		:= GuiGet("ValueRangeFieldWidth")
-		this.AffixDetailDelimiter		:= GuiGet("AffixDetailDelimiter")
-		this.AffixDetailEllipsis		:= GuiGet("AffixDetailEllipsis")
-		this.MouseMoveThreshold			:= GuiGet("MouseMoveThreshold")
-		this.UseTooltipTimeout			:= GuiGet("UseTooltipTimeout")
-		this.ToolTipTimeoutTicks		:= GuiGet("ToolTipTimeoutTicks")
-		this.FontSize					:= GuiGet("FontSize")
-		*/
-		
+	{		
 		For key, val in this {
 			this[key] := GuiGet(key)
 		}
@@ -588,6 +554,7 @@ CreateSettingsUI()
 If (StrLen(overwrittenUserFiles)) {
 	ShowChangedUserFiles()
 }
+GoSub, AM_AssignHotkeys
 GoSub, FetchCurrencyData
 
 Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
@@ -9191,7 +9158,7 @@ CreateSettingsUI()
 	Global
 	
 	; General
-	generalHeight := SkipItemInfoUpdateCall ? "90" : "180"
+	generalHeight := SkipItemInfoUpdateCall ? "120" : "210"
 	GuiAddGroupBox("General", "x7 y+15 w260 h" generalHeight " Section")
 
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
@@ -9200,14 +9167,16 @@ CreateSettingsUI()
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "If checked the script does nothing if the`nPath of Exile window isn't the frontmost")
 	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 ys50 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
 	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")	
+	GuiAddCheckbox("Enable Additional Macros", "xs10 ys80 w210 h30", Opts.EnableAdditionalMacros, "EnableAdditionalMacros", "EnableAdditionalMacrosH")
+	AddToolTip(EnableAdditionalMacrosH, "Enables or disables the entire 'AdditionalMacros.txt' file.`nNeeds a script reload to take effect.")
 	If (!SkipItemInfoUpdateCall) {
-		GuiAddCheckbox("Update: Show Notifications", "xs10 ys80 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
+		GuiAddCheckbox("Update: Show Notifications", "xs10 ys110 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
 		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")		
-		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys110 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys140 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
 		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")	
-		GuiAddCheckbox("Update: Skip backup", "xs10 ys140 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+		GuiAddCheckbox("Update: Skip backup", "xs10 ys170 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
 		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
-	}
+	}		
 
 	; Display
 
@@ -9307,6 +9276,7 @@ UpdateSettingsUI()
 
 	GuiControl,, OnlyActiveIfPOEIsFront, % Opts.OnlyActiveIfPOEIsFront
 	GuiControl,, PutResultsOnClipboard, % Opts.PutResultsOnClipboard
+	GuiControl,, EnableAdditionalMacros, % Opts.EnableAdditionalMacros
 	If (!SkipItemInfoUpdateCall) {
 		GuiControl,, ShowUpdateNotifications, % Opts.ShowUpdateNotifications
 		GuiControl,, UpdateSkipSelection, % Opts.UpdateSkipSelection
@@ -9508,6 +9478,7 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 
 		Opts.OnlyActiveIfPOEIsFront := IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
 		Opts.PutResultsOnClipboard := IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
+		Opts.EnableAdditionalMacros := IniRead(ConfigPath, "General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
 		Opts.ShowUpdateNotifications := IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
 		Opts.UpdateSkipSelection := IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
 		Opts.UpdateSkipBackup := IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
@@ -9568,6 +9539,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 
 	IniWrite(Opts.OnlyActiveIfPOEIsFront, ConfigPath, "General", "OnlyActiveIfPOEIsFront")
 	IniWrite(Opts.PutResultsOnClipboard, ConfigPath, "General", "PutResultsOnClipboard")
+	IniWrite(Opts.EnableAdditionalMacros, ConfigPath, "General", "EnableAdditionalMacros")
 	IniWrite(Opts.ShowUpdateNotifications, ConfigPath, "General", "ShowUpdateNotifications")
 	IniWrite(Opts.UpdateSkipSelection, ConfigPath, "General", "UpdateSkipSelection")
 	IniWrite(Opts.UpdateSkipBackup, ConfigPath, "General", "UpdateSkipBackup")
