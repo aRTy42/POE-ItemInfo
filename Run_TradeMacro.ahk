@@ -41,8 +41,9 @@ FileRead, tradeInit	, %A_ScriptDir%\resources\ahk\TradeMacroInit.ahk
 FileRead, trade	, %A_ScriptDir%\resources\ahk\TradeMacro.ahk
 FileRead, addMacros	, %userDirectory%\AdditionalMacros.txt
 
-info := "`n`r`n`r" . info . "`n`r`n`r"
-addMacros := "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros . "`n`r`n`r"
+info		:= "`n`r`n`r" . info . "`n`r`n`r"
+addMacros	:= "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros . "`n`r`n`r"
+addMacros	.= AppendCustomMacros(userDirectory)
 
 CloseScript("_TradeMacroMain.ahk")
 CloseScript("_ItemInfoMain.ahk")
@@ -98,4 +99,25 @@ RunAsAdmin()
 
 StartSplashScreen() {
     SplashTextOn, , 20, PoE-TradeMacro, Merging and starting Scripts...
+}
+
+AppendCustomMacros(userDirectory)
+{
+	If(!InStr(FileExist(userDirectory "\CustomMacros"), "D")) {
+		FileCreateDir, %userDirectory%\CustomMacros\
+	}
+	
+	appendedMacros := "`n`n"
+	extensions := "txt,ahk"
+	Loop %userDirectory%\CustomMacros\*
+	{
+		If A_LoopFileExt in %extensions% 
+		{
+			FileRead, tmp, %A_LoopFileFullPath%
+			appendedMacros .= "; appended custom macro file: " A_LoopFileName " ---------------------------------------------------"
+			appendedMacros .= "`n" tmp "`n`n"
+		}
+	}
+	
+	Return appendedMacros
 }

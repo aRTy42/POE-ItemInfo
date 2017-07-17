@@ -193,7 +193,6 @@ global overwrittenUserFiles	:= overwrittenUserFiles ? overwrittenUserFiles : arg
 global SuspendPOEItemScript = 0
 
 class UserOptions {
-
 	OnlyActiveIfPOEIsFront := 1     ; Set to 1 to make it so the script does nothing if Path of Exile window isn't the frontmost.
 									; If 0, the script also works if PoE isn't frontmost. This is handy for have the script parse
 									; textual item representations appearing somewhere Else, like in the forums or text files.
@@ -202,6 +201,8 @@ class UserOptions {
 	ShowUpdateNotifications := 1
 	UpdateSkipSelection := 0
 	UpdateSkipBackup := 0
+
+	EnableAdditionalMacros := 1		; Enable/disable the entire AdditionalMacros.txt file
 
 	ShowItemLevel := 1              ; Show item level and the item type's base level (enabled by default change to 0 to disable)
 	ShowMaxSockets := 1             ; Show the max sockets based on ilvl and type
@@ -301,40 +302,10 @@ class UserOptions {
 	ScreenOffsetY := 0
 	
 	ScanUI()
-	{
-		this.OnlyActiveIfPOEIsFront := GuiGet("OnlyActiveIfPOEIsFront")
-		this.PutResultsOnClipboard := GuiGet("PutResultsOnClipboard")
-		this.ShowUpdateNotifications := GuiGet("ShowUpdateNotifications")
-		this.UpdateSkipSelection := GuiGet("UpdateSkipSelection")
-		this.UpdateSkipBackup := GuiGet("UpdateSkipBackup")		
-		this.ShowItemLevel := GuiGet("ShowItemLevel")
-		this.ShowMaxSockets := GuiGet("ShowMaxSockets")
-		this.ShowDamageCalculations := GuiGet("ShowDamageCalculations")
-		this.ShowAffixTotals := GuiGet("ShowAffixTotals")
-		this.ShowAffixDetails := GuiGet("ShowAffixDetails")
-		this.ShowAffixLevel := GuiGet("ShowAffixLevel")
-		this.ShowAffixBracket := GuiGet("ShowAffixBracket")
-		this.ShowAffixMaxPossible := GuiGet("ShowAffixMaxPossible")
-		this.ShowAffixBracketTier := GuiGet("ShowAffixBracketTier")
-		this.ShowAffixBracketTierTotal := GuiGet("ShowAffixBracketTierTotal")
-		this.TierRelativeToItemLevel := GuiGet("TierRelativeToItemLevel")
-		this.ShowDarkShrineInfo := GuiGet("ShowDarkShrineInfo")
-		this.ShowCurrencyValueInChaos := GuiGet("ShowCurrencyValueInChaos")
-		this.DisplayToolTipAtFixedCoords := GuiGet("DisplayToolTipAtFixedCoords")
-		this.ScreenOffsetX := GuiGet("ScreenOffsetX")
-		this.ScreenOffsetY := GuiGet("ScreenOffsetY")
-		this.MaxSpanStartingFromFirst := GuiGet("MaxSpanStartingFromFirst")
-		this.CompactDoubleRanges := GuiGet("CompactDoubleRanges")
-		this.CompactAffixTypes := GuiGet("CompactAffixTypes")
-		this.MirrorAffixLines := GuiGet("MirrorAffixLines")
-		this.MirrorLineFieldWidth := GuiGet("MirrorLineFieldWidth")
-		this.ValueRangeFieldWidth := GuiGet("ValueRangeFieldWidth")
-		this.AffixDetailDelimiter := GuiGet("AffixDetailDelimiter")
-		this.AffixDetailEllipsis := GuiGet("AffixDetailEllipsis")
-		this.MouseMoveThreshold := GuiGet("MouseMoveThreshold")
-		this.UseTooltipTimeout := GuiGet("UseTooltipTimeout")
-		this.ToolTipTimeoutTicks := GuiGet("ToolTipTimeoutTicks")
-		this.FontSize := GuiGet("FontSize")
+	{		
+		For key, val in this {
+			this[key] := GuiGet(key)
+		}
 	}
 }
 Opts := new UserOptions()
@@ -343,10 +314,10 @@ class Fonts {
 
 	Init(FontSizeFixed, FontSizeUI)
 	{
-		this.FontSizeFixed := FontSizeFixed
-		this.FontSizeUI := FontSizeUI
-		this.FixedFont := this.CreateFixedFont(FontSizeFixed)
-		this.UIFont := this.CreateUIFont(FontSizeUI)
+		this.FontSizeFixed	:= FontSizeFixed
+		this.FontSizeUI		:= FontSizeUI
+		this.FixedFont		:= this.CreateFixedFont(FontSizeFixed)
+		this.UIFont			:= this.CreateUIFont(FontSizeUI)
 	}
 
 	CreateFixedFont(FontSize_)
@@ -429,17 +400,17 @@ class Fonts {
 class ItemData_ {
 	Init() 
 	{
-		This.Links := ""
-		This.Sockets := ""
-		This.Stats := ""
-		This.NamePlate := ""
-		This.Affixes := ""
-		This.FullText := ""
+		This.Links		:= ""
+		This.Sockets	:= ""
+		This.Stats		:= ""
+		This.NamePlate	:= ""
+		This.Affixes	:= ""
+		This.FullText	:= ""
 		This.IndexAffixes := -1
-		This.IndexLast := -1
-		This.PartsLast := ""
-		This.Rarity := ""
-		This.Parts := []
+		This.IndexLast	:= -1
+		This.PartsLast	:= ""
+		This.Rarity		:= ""
+		This.Parts		:= []
 	}
 }
 Global ItemData := new ItemData_
@@ -456,7 +427,7 @@ class Item_ {
 		This.RarityLevel 	:= ""
 		This.BaseType 		:= ""
 		This.GripType 		:= ""
-		This.Level		:= ""
+		This.Level			:= ""
 		This.MapLevel 		:= ""
 		This.MapTier 		:= ""
 		This.MaxSockets 	:= ""
@@ -472,18 +443,18 @@ class Item_ {
 		This.IsArmour 		:= False
 		This.IsQuiver 		:= False
 		This.IsFlask 		:= False
-		This.IsGem		:= False
+		This.IsGem			:= False
 		This.IsCurrency 	:= False
 		This.IsUnidentified := False
 		This.IsBelt 		:= False
 		This.IsRing 		:= False
 		This.IsUnsetRing 	:= False
-		This.IsBow		:= False
+		This.IsBow			:= False
 		This.IsAmulet 		:= False
 		This.IsSingleSocket := False
 		This.IsFourSocket 	:= False
 		This.IsThreeSocket 	:= False
-		This.IsMap		:= False
+		This.IsMap			:= False
 		This.IsTalisman 	:= False
 		This.IsJewel 		:= False
 		This.IsLeaguestone	:= False
@@ -583,6 +554,7 @@ CreateSettingsUI()
 If (StrLen(overwrittenUserFiles)) {
 	ShowChangedUserFiles()
 }
+GoSub, AM_AssignHotkeys
 GoSub, FetchCurrencyData
 
 Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
@@ -4207,11 +4179,25 @@ ParseAffixes(ItemDataAffixes, Item)
 			NumSuffixes += 1
 			Continue
 		}
-		
-		If (RegExMatch(A_LoopField, "i).*(incr)eased (Fire|Cold|Lightning) (Damage)", match)) {			
-			NumSuffixes	+= 1
-			FileName 		:= "data\" match1 match2 match3 ".txt"
-			ValueRange	:= LookupAffixData(FileName, ItemLevel, CurrValue, "", CurrTier)
+
+		IfInString, A_LoopField, increased Fire Damage
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\IncrFireDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, increased Cold Damage
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\IncrColdDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, increased Lightning Damage
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\IncrLightningDamage.txt", ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
@@ -4236,11 +4222,25 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		; Flask affixes (on belts)		
-		If (RegExMatch(A_LoopField, "i).*(reduced|increased) Flask (Charges used|Charges gained|effect (duration))", match)) {
-			NumSuffixes	+= 1
-			FileName 		:= match3 ? "data\Flask" match3 ".txt" : "data\Flask" RegExReplace(match2, "\s") ".txt"
-			ValueRange	:= LookupAffixData(FileName, ItemLevel, CurrValue, "", CurrTier)
+		; Flask affixes (on belts)
+		IfInString, A_LoopField, reduced Flask Charges used
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\FlaskChargesUsed.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, increased Flask Charges gained
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\FlaskChargesGained.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, increased Flask effect duration
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\FlaskDuration.txt", ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
@@ -4252,11 +4252,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		
-		If (RegExMatch(A_LoopField, "i).*(Life Regen)erated per second|.*(Life Gained on Kill)|.*increased (Mana Regen)eration Rate|.*(Mana Gained on Kill)", match)) {
-			NumSuffixes	+= 1
-			FileName		:= "data\" RegExReplace(match1 . match2 . match3 . match4, "gained|\s") ".txt"
-			ValueRange	:= LookupAffixData(FileName, ItemLevel, CurrValue, "", CurrTier)
+		IfInString, A_LoopField, Life gained on Kill
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\LifeOnKill.txt", ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
@@ -4273,7 +4272,27 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		
+		IfInString, A_LoopField, Life Regenerated per second
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\LifeRegen.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, Mana Gained on Kill
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ManaOnKill.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, increased Mana Regeneration Rate
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ManaRegen.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
 		IfInString, A_LoopField, increased Projectile Speed
 		{
 			NumSuffixes += 1
@@ -4288,18 +4307,52 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		If (RegExMatch(A_LoopField, "i).*to (Fire|Cold|Lightning|Chaos|(all) Elemental) (Resist)ances?", match)) {
-			NumSuffixes	+= 1
-			FileName 		:= match2 ? "data\To" match2 match3 ".txt" : "data\To" match1 match3 ".txt"
-			ValueRange	:= LookupAffixData(FileName, ItemLevel, CurrValue, "", CurrTier)
+		IfInString, A_LoopField, to all Elemental Resistances
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ToAllResist.txt", ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		
-		If (RegExMatch(A_LoopField, "i).*increased (Stun Duration) on Enemies|.*reduced Enemy (Stun Threshold)", match)) {
-			NumSuffixes	+= 1
-			FileName		:= "data\" RegExReplace(match1 . match2, "\s") ".txt"
-			ValueRange	:= LookupAffixData(FileName, ItemLevel, CurrValue, "", CurrTier)
+		IfInString, A_LoopField, to Fire Resistance
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ToFireResist.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, to Cold Resistance
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ToColdResist.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, to Lightning Resistance
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ToLightningResist.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, to Chaos Resistance
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ToChaosResist.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, increased Stun Duration on Enemies
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\StunDuration.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, reduced Enemy Stun Threshold
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\StunThreshold.txt", ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
@@ -5166,9 +5219,9 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, increased Elemental Damage with Weapons
+	IfInString, A_LoopField, increased Elemental Damage with Weapons
 		{
-			; Slinkston edit. I originally screwed this up , but it is now fixed.
+		; Slinkston edit. I originally screwed this up , but it is now fixed.
 			NumPrefixes	+= 1
 			ValueRange	:= LookupAffixData("data\IncrWeaponElementalDamage.txt", ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
@@ -6934,7 +6987,7 @@ ParseSockets(ItemDataText)
 ParseCharges(stats)
 {
 	charges := {}
-	Loop,  Parse, stats, `n, `r 
+	Loop, Parse, stats, `n, `r 
 	{
 		LoopField := RegExReplace(A_Loopfield, "i)\s\(augmented\)", "")
 		; Flasks
@@ -6944,20 +6997,21 @@ ParseCharges(stats)
 			charges.usage	:= max1
 			charges.max	:= max2
 		}		
-		RegExMatch(LoopField, "i)Currently has (\d+) Charges.*", current)
+		RegExMatch(LoopField, "i)Currently has (\d+) Charge.*", current)
 
 		If (current) {
 			charges.current:= current1
 		}
 		
 		; Leaguestones	
-		RegExMatch(LoopField, "i)Currently has (\d+) of (\d+) Charges.*", max)
+		RegExMatch(LoopField, "i)Currently has (\d+) of (\d+) Charge.*", max)
 		If (max) {
 			charges.usage	:= 1
 			charges.max	:= max2
 			charges.current:= max1
 		}		
 	}
+	
 	return charges
 }
 
@@ -7996,9 +8050,11 @@ ModStringToObject(string, isImplicit) {
 				break
 			}
 		}
-		
+
 		temp.values	:= values
-		s			:= RegExReplace(Matches[A_Index], "i)(-?[.0-9]+)", "#")
+		; mods with negative values inputted in the value fields are not supported on poe.trade, so searching for "-1 maximum charges/frenzy charges" is not possible
+		; unless there is a mod "-# maximum charges"
+		s			:= RegExReplace(Matches[A_Index], "i)(-?)[.0-9]+", "$1#")
 		temp.name		:= RegExReplace(s, "i)# ?to ? #", "#", isRange)
 		temp.isVariable:= false
 		temp.type		:= (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"
@@ -8006,21 +8062,7 @@ ModStringToObject(string, isImplicit) {
 	}
 	
 	Return arr
-}	
-
-
-; #######################################################################################################################
-; ###	Dev:	4GForce/Eruyome
-; ### 	Date:	01/28/2017
-; ###     Issue:	#224 @ https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/224
-; ###	Desc:	Not only about this issue, many reports of improper pseudo calculation, I experienced it plenty myself
-; ###			Tried debugging the old function but it was so messed up that I decided to rewrite it.
-; ###			Based on the same logic that was used before, but simpler and clearer.
-; ###			Using simplifiedNames for the mods so they are easier to compare without rewriting regex all the time
-; ###	TODO:	- Test, test and more test
-; ###			- Build a structure for the possible mods ? 
-; ###			  something like: { simplifiedName: "xToFireResistance", regex: "i)to Fire Resistance", displayFormat: "+#% to Fire Resistance" }
-; #######################################################################################################################
+}
 
 ; Moved from TradeMacro to ItemInfo to avoid duplicate code, please be careful with any changes
 CreatePseudoMods(mods, returnAllMods := False) {
@@ -9116,7 +9158,7 @@ CreateSettingsUI()
 	Global
 	
 	; General
-	generalHeight := SkipItemInfoUpdateCall ? "90" : "180"
+	generalHeight := SkipItemInfoUpdateCall ? "120" : "210"
 	GuiAddGroupBox("General", "x7 y+15 w260 h" generalHeight " Section")
 
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
@@ -9125,14 +9167,16 @@ CreateSettingsUI()
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "If checked the script does nothing if the`nPath of Exile window isn't the frontmost")
 	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 ys50 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
 	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")	
+	GuiAddCheckbox("Enable Additional Macros", "xs10 ys80 w210 h30", Opts.EnableAdditionalMacros, "EnableAdditionalMacros", "EnableAdditionalMacrosH")
+	AddToolTip(EnableAdditionalMacrosH, "Enables or disables the entire 'AdditionalMacros.txt' file.`nNeeds a script reload to take effect.")
 	If (!SkipItemInfoUpdateCall) {
-		GuiAddCheckbox("Update: Show Notifications", "xs10 ys80 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
+		GuiAddCheckbox("Update: Show Notifications", "xs10 ys110 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
 		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")		
-		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys110 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys140 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
 		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")	
-		GuiAddCheckbox("Update: Skip backup", "xs10 ys140 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+		GuiAddCheckbox("Update: Skip backup", "xs10 ys170 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
 		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
-	}
+	}		
 
 	; Display
 
@@ -9232,6 +9276,7 @@ UpdateSettingsUI()
 
 	GuiControl,, OnlyActiveIfPOEIsFront, % Opts.OnlyActiveIfPOEIsFront
 	GuiControl,, PutResultsOnClipboard, % Opts.PutResultsOnClipboard
+	GuiControl,, EnableAdditionalMacros, % Opts.EnableAdditionalMacros
 	If (!SkipItemInfoUpdateCall) {
 		GuiControl,, ShowUpdateNotifications, % Opts.ShowUpdateNotifications
 		GuiControl,, UpdateSkipSelection, % Opts.UpdateSkipSelection
@@ -9433,6 +9478,7 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 
 		Opts.OnlyActiveIfPOEIsFront := IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
 		Opts.PutResultsOnClipboard := IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
+		Opts.EnableAdditionalMacros := IniRead(ConfigPath, "General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
 		Opts.ShowUpdateNotifications := IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
 		Opts.UpdateSkipSelection := IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
 		Opts.UpdateSkipBackup := IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
@@ -9493,6 +9539,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 
 	IniWrite(Opts.OnlyActiveIfPOEIsFront, ConfigPath, "General", "OnlyActiveIfPOEIsFront")
 	IniWrite(Opts.PutResultsOnClipboard, ConfigPath, "General", "PutResultsOnClipboard")
+	IniWrite(Opts.EnableAdditionalMacros, ConfigPath, "General", "EnableAdditionalMacros")
 	IniWrite(Opts.ShowUpdateNotifications, ConfigPath, "General", "ShowUpdateNotifications")
 	IniWrite(Opts.UpdateSkipSelection, ConfigPath, "General", "UpdateSkipSelection")
 	IniWrite(Opts.UpdateSkipBackup, ConfigPath, "General", "UpdateSkipBackup")

@@ -1546,38 +1546,21 @@ TradeFunc_GetLatestDotNetInstallation() {
 	Return LatestDotNetInstall
 }
 
-TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", useCookies=false) {
-	ComObjError(0)
-	Encoding := "utf-8"
-	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	
-	HttpObj.Open("GET",Url)
-	If (useCookies) {
-		HttpObj.SetRequestHeader("User-Agent", UserAgent)
-		HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
-	}	
-	HttpObj.Send()
-	HttpObj.WaitForResponse()
-	
-	Try {				
-		If Encoding {
-			oADO          := ComObjCreate("adodb.stream")
-			oADO.Type     := 1
-			oADO.Mode     := 3
-			oADO.Open()
-			oADO.Write(HttpObj.ResponseBody)
-			oADO.Position := 0
-			oADO.Type     := 2
-			oADO.Charset  := Encoding
-			html := oADO.ReadText()
-			oADO.Close()
-		}
-	} Catch e {			
-		html := HttpObj.ResponseText
-		If (TradeOpts.Debug) {
-			MsgBox % e
-		}
+TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", useCookies=false) {	
+	postData		:= ""
+	reqHeaders	:= ""
+	If (StrLen(UserAgent)) {
+		reqHeaders .= "`nUser-Agent: " UserAgent
+		reqHeaders .= "`nCookie: __cfduid= " cfduid "; cf_clearance= " cfClearance
 	}
+	options =
+		(LTrim
+			Charset: UTF-8
+			Method: GET
+		)
+
+	html := ""
+	html := PoEScripts_Download(Url, ioData := postData, ioHdr := reqHeaders, options, false)
 	
 	; pathofexile.com link in page footer (forum thread)
 	RegExMatch(html, "i)pathofexile", match)

@@ -20,7 +20,7 @@ If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-ItemInfo")) {
 /*	 
 	Set ProjectName to create user settings folder in A_MyDocuments
 */
-projectName			:= "PoE-ItemInfo"
+projectName				:= "PoE-ItemInfo"
 FilesToCopyToUserFolder	:= ["\resources\config\default_config.ini", "\resources\ahk\default_AdditionalMacros.txt", "\resources\ahk\default_MapModWarnings.txt"]
 overwrittenFiles 		:= PoEScripts_HandleUserSettings(projectName, A_MyDocuments, "", FilesToCopyToUserFolder, A_ScriptDir)
 isDevelopmentVersion	:= PoEScripts_isDevelopmentVersion()
@@ -34,14 +34,14 @@ PoEScripts_CompareUserFolderWithScriptFolder(userDirectory, A_ScriptDir, project
 FileRead, info		, %A_ScriptDir%\resources\ahk\POE-ItemInfo.ahk
 FileRead, addMacros	, %userDirectory%\AdditionalMacros.txt
 
-info := info . "`n`r`n`r"
-addMacros := "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros . "`n`r"
+info		:= info . "`n`r`n`r"
+addMacros	:= "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros
+addMacros   .= AppendCustomMacros(userDirectory)
 
 CloseScript("ItemInfoMain.ahk")
 FileDelete, %A_ScriptDir%\_ItemInfoMain.ahk
 FileCopy,   %A_ScriptDir%\resources\ahk\POE-ItemInfo.ahk, %A_ScriptDir%\_ItemInfoMain.ahk
 
-FileAppend, %test%		, %A_ScriptDir%\_ItemInfoMain.ahk
 FileAppend, %addMacros%	, %A_ScriptDir%\_ItemInfoMain.ahk
 
 ; set script hidden
@@ -84,4 +84,25 @@ RunAsAdmin()
 			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_AhkPath, str, """" . A_ScriptFullPath . """", str, A_WorkingDir, int, 1) 
 		ExitApp 
     }
+}
+
+AppendCustomMacros(userDirectory)
+{
+	If(!InStr(FileExist(userDirectory "\CustomMacros"), "D")) {
+		FileCreateDir, %userDirectory%\CustomMacros\
+	}
+	
+	appendedMacros := "`n`n"
+	extensions := "txt,ahk"
+	Loop %userDirectory%\CustomMacros\*
+	{
+		If A_LoopFileExt in %extensions% 
+		{
+			FileRead, tmp, %A_LoopFileFullPath%
+			appendedMacros .= "; appended custom macro file: " A_LoopFileName " ---------------------------------------------------"
+			appendedMacros .= "`n" tmp "`n`n"
+		}
+	}
+	
+	Return appendedMacros
 }

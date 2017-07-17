@@ -189,13 +189,13 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	DamageDetails := Item.DamageDetails
 	Name := Item.Name
 
-	Item.xtype := ""
-	Item.UsedInSearch := {}
-	Item.UsedInSearch.iLvl := {}
+	Item.xtype		:= ""
+	Item.UsedInSearch	:= {}
+	Item.UsedInSearch.iLvl	:= {}
 
-	RequestParams := new RequestParams_()
-	RequestParams.league := LeagueName
-	RequestParams.buyout := "1"
+	RequestParams			:= new RequestParams_()
+	RequestParams.league	:= LeagueName
+	RequestParams.buyout	:= "1"
 	
 	; ignore item name in certain cases
 	If (!Item.IsJewel and !Item.IsLeaguestone and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask or (Item.IsJewel and isAdvancedPriceCheckRedirect)) {
@@ -209,9 +209,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	
 	If (Item.IsLeagueStone) {
-		ItemData.Affixes := TradeFunc_AddCustomModsToLeaguestone(ItemData.Affixes)
+		ItemData.Affixes := TradeFunc_AddCustomModsToLeaguestone(ItemData.Affixes, Item.Charges)
 	}
-	
+
 	; check if the item implicit mod is an enchantment or corrupted. retrieve this mods data.
 	Enchantment := false
 	Corruption  := false
@@ -219,13 +219,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	If (Item.hasImplicit) {
 		Enchantment := TradeFunc_GetEnchantment(Item, Item.SubType)
 		Corruption  := Item.IsCorrupted ? TradeFunc_GetCorruption(Item) : false
-	}	
-
-	If (Item.IsWeapon or Item.IsArmour and not Item.IsUnique) {
-		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, Item)
-		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, Item)	
 	}
-	
+
 	If (Item.IsWeapon or Item.IsQuiver or Item.IsArmour or Item.IsLeagueStone or (Item.IsFlask and Item.RarityLevel > 1) or Item.IsJewel or (Item.IsMap and Item.RarityLevel > 1) of Item.IsBelt or Item.IsRing or Item.IsAmulet) 
 	{
 		hasAdvancedSearch := true
@@ -236,7 +231,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		preparedItem.maxSockets := Item.maxSockets		
 		preparedItem.iLvl := Item.level
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
-		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
+		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)		
 		
 		If (isAdvancedPriceCheck and hasAdvancedSearch) {
 			If (Enchantment) {
@@ -260,7 +255,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
 		uniqueWithVariableMods :=
 		uniqueWithVariableMods := TradeFunc_FindUniqueItemIfItHasVariableRolls(Name, Item.IsRelic)
-		
+
 		; Return if the advanced search was used but the checked item doesn't have variable mods
 		If (!uniqueWithVariableMods and isAdvancedPriceCheck and not Enchantment and not Corruption) {
 			ShowToolTip("Advanced search not available for this item (no variable mods)`nor item is new and the necessary data is not yet available/updated.")
@@ -279,8 +274,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			preparedItem.isRelic	:= Item.isRelic
 			preparedItem.iLvl 		:= Item.level
 			Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
-			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)	
-			
+			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)
+
 			; open TradeFunc_AdvancedPriceCheckGui to select mods and their min/max values
 			If (isAdvancedPriceCheck) {
 				UniqueStats := TradeFunc_GetUniqueStats(Name)
@@ -507,14 +502,16 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			}			
 		}
 		
-		temp_name := "(leaguestone) Currently has # Charges"
-		If (not TradeFunc_FindModInRequestParams(RequestParams, temp_name)) {
-			modParam := new _ParamMod()
-			modParam.mod_name := "(leaguestone) Currently has # Charges"
-			modParam.mod_min  := Item.Charges.Current
-			modParam.mod_max  := Item.Charges.Current
-			RequestParams.modGroups[1].AddMod(modParam)
-			Item.UsedInSearch.Charges:= "Charges: " Item.Charges.Current
+		If (Item.Charges.max > 1) {
+			temp_name := "(leaguestone) Currently has # Charges"
+			If (not TradeFunc_FindModInRequestParams(RequestParams, temp_name)) {
+				modParam := new _ParamMod()
+				modParam.mod_name := "(leaguestone) Currently has # Charges"
+				modParam.mod_min  := Item.Charges.Current
+				modParam.mod_max  := Item.Charges.Current
+				RequestParams.modGroups[1].AddMod(modParam)
+				Item.UsedInSearch.Charges:= "Charges: " Item.Charges.Current
+			}
 		}
 	}
 	
@@ -672,14 +669,26 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	If (TradeOpts.Debug) {
 		;console.log(RequestParams)
 	}
+	
 	Payload := RequestParams.ToPayload()
-	ShowToolTip("Running search...")
+
+	If (openSearchInBrowser) {
+		ShowToolTip("Opening search in your browser...")
+	} Else {
+		ShowToolTip("Requesting search results...")
+	}
+	
+	TimestampLast		:= A_Tickcount	
+	RequestEnd	:=
+	ParsingStart	:=
+	ParsingEnd	:=
 	
 	ParsingError	:= ""
 	currencyUrl	:= ""
 	If (Item.IsCurrency and !Item.IsEssence) {
 		If (!TradeOpts.AlternativeCurrencySearch) {
-			Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser, 0, currencyUrl, error)	
+			Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser, 0, currencyUrl, error)
+			RequestEnd	:= A_TickCount	
 			If (error) {
 				ParsingError := Html
 			}
@@ -694,8 +703,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			}
 		}
 	}
-	Else If (not openSearchInBrowser) {
-		Html := TradeFunc_DoPostRequest(Payload, openSearchInBrowser)	
+	Else If (not openSearchInBrowser) {		
+		Html := TradeFunc_DoPostRequest(Payload, openSearchInBrowser)
+		RequestEnd	:= A_TickCount		
 	}
 	
 	If (openSearchInBrowser) {		
@@ -720,6 +730,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	Else If (Item.isCurrency and !Item.IsEssence) {
 		; Default currency search
+		ParsingStart	:= A_TickCount
 		If (!TradeOpts.AlternativeCurrencySearch) {
 			ParsedData := TradeFunc_ParseCurrencyHtml(Html, Payload, ParsingError)
 		}
@@ -727,8 +738,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Else {
 			ParsedData := TradeFunc_ParseAlternativeCurrencySearch(Item.Name, Payload)
 		}
+		ParsingEnd	:= A_TickCount
 		
-		;SetClipboardContents(ParsedData)		
 		SetClipboardContents("")
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
@@ -744,23 +755,27 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Else {
 			Item.UsedInSearch.SearchType := "Default" 
 		}
+		ParsingStart	:= A_TickCount
 		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
+		ParsingEnd	:= A_TickCount
 		
-		;SetClipboardContents(ParsedData)		
 		SetClipboardContents("")
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
-	}    
-
+	}
+	console.log("Request duration: " RequestEnd - TimestampLast "`nParsing after: " ParsingStart - RequestEnd "`nParsing duration : " ParsingEnd - ParsingStart)
+	
 	TradeGlobals.Set("AdvancedPriceCheckItem", {})
 }
 
-TradeFunc_AddCustomModsToLeaguestone(ItemAffixes) {
+TradeFunc_AddCustomModsToLeaguestone(ItemAffixes, Charges) {
 	If (Item.AreaMonsterLevelReq.lvl) {
 		ItemAffixes .= "`nCan only be used in Areas with Monster Level " Item.AreaMonsterLevelReq.lvl " or below"
 	}
 	
-	ItemAffixes .= "`nCurrently has " Item.Charges.Current " Charges"
+	If (Charges.max > 1) {
+		ItemAffixes .= "`nCurrently has " Item.Charges.Current " Charges"	
+	}	
 	
 	return ItemAffixes
 }
@@ -939,7 +954,7 @@ TradeFunc_CalculateQ20(base, affixFlat, affixPercent){
 }
 
 ; parse items dmg stats
-TradeFunc_ParseItemOffenseStats(Stats, mods){
+TradeFunc_ParseItemOffenseStats(Stats, mods) {
 	Global ItemData
 	iStats := {}
 	debugOutput := 
@@ -962,9 +977,13 @@ TradeFunc_ParseItemOffenseStats(Stats, mods){
 				affixAttackSpeed := match1
 			}
 			
+			nname :=
 			If (RegExMatch(affix, "Adds.*Lightning Damage")) {
 				affix := RegExReplace(affix, "i)to (\d+)", "to #")
 				affix := RegExReplace(affix, "i)to (\d+.*?\d+?)", "to #")
+				If (not mod.isVariable) {
+					nname := RegExReplace(mod.name, "i)(Adds )(#)( Lightning Damage)", "$1" mod.values[1] " to #$3")
+				}				
 			} 
 			Else {
 				affix := RegExReplace(affix, "i)(\d+ to \d+)", "#")
@@ -972,9 +991,9 @@ TradeFunc_ParseItemOffenseStats(Stats, mods){
 			}						
 			affix := RegExReplace(affix, "i)# %", "#%")
 			affix := Trim(RegExReplace(affix, "\s", " "))
-			name :=  Trim(mod.name)	
-			
-			If ( affix = name ){
+			nname := StrLen(nname) ? Trim(nname) : Trim(mod.name)
+
+			If ( affix = nname ){
 				match :=
 				; ignore mods like " ... per X dexterity" and "damage to spells"
 				If (RegExMatch(affix, "i) per | to spells")) {
@@ -998,14 +1017,14 @@ TradeFunc_ParseItemOffenseStats(Stats, mods){
 				If (RegExMatch(affix, "i)Adds.*(\d+) to #.*(Lightning) Damage", match)) {
 					If (not mod.isVariable) {
 						min_affixFlat%match2%Low    := match1 
-						min_affixFlat%match2%Hi     := mod.values[1] 
-						max_affixFlat%match2%Low    := match1
-						max_affixFlat%match2%Hi     := mod.values[1] 
+						min_affixFlat%match2%Hi     := match1 
+						max_affixFlat%match2%Low    := mod.values[2]
+						max_affixFlat%match2%Hi     := mod.values[2] 
 					}
 					Else {
 						min_affixFlat%match2%Low    := match1 
-						min_affixFlat%match2%Hi     := mod.ranges[1][1] 
-						max_affixFlat%match2%Low    := match1
+						min_affixFlat%match2%Hi     := match1 
+						max_affixFlat%match2%Low    := mod.ranges[1][1]
 						max_affixFlat%match2%Hi     := mod.ranges[1][2] 
 					}					
 					debugOutput .= affix "`nflat " match2 " : " min_affixFlat%match2%Low " - " min_affixFlat%match2%Hi " to " max_affixFlat%match2%Low " - " max_affixFlat%match2%Hi "`n`n"
@@ -1042,30 +1061,44 @@ TradeFunc_ParseItemOffenseStats(Stats, mods){
 	basePhysHi   := TradeFunc_CalculateBase(physicalDamageHi , affixPercentPhys, Stats.Quality, affixFlatPhysHi)
 	
 	minPhysLow   := Round(TradeFunc_CalculateQ20(basePhysLow, min_affixFlatPhysicalLow, min_affixPercentPhys))
-	minPhysHi    := Round(TradeFunc_CalculateQ20(basePhysHi , min_affixFlatPhysicalHi , min_affixPercentPhys))
-	maxPhysLow   := Round(TradeFunc_CalculateQ20(basePhysLow, max_affixFlatPhysicalLow, max_affixPercentPhys))
+	minPhysHi    := Round(TradeFunc_CalculateQ20(basePhysHi , max_affixFlatPhysicalLow, min_affixPercentPhys))
+	maxPhysLow   := Round(TradeFunc_CalculateQ20(basePhysLow, min_affixFlatPhysicalHi , max_affixPercentPhys))
 	maxPhysHi    := Round(TradeFunc_CalculateQ20(basePhysHi , max_affixFlatPhysicalHi , max_affixPercentPhys))
 	min_affixPercentAPS := (min_affixPercentAPS) ? min_affixPercentAPS : 0
 	max_affixPercentAPS := (max_affixPercentAPS) ? max_affixPercentAPS : 0
+	
+	SetFormat, FloatFast, 5.4
 	minAPS       := baseAPS * (1 + min_affixPercentAPS)
 	maxAPS       := baseAPS * (1 + max_affixPercentAPS)
+	For key, val in mods.stats {
+		If (val.name = "APS") {		
+			If (val.ranges[1][1]) {
+				minAPS := val.ranges[1][1]
+			}
+			If (val.ranges[1][2]) {
+				maxAPS := val.ranges[1][2]
+			}
+		}
+	}
 	
 	iStats.PhysDps        := {}
 	iStats.PhysDps.Name   := "Physical Dps (Q20)"
 	iStats.PhysDps.Value  := (Stats.Q20Dps > 0) ? (Stats.Q20Dps - Stats.EleDps - Stats.ChaosDps) : Stats.PhysDps 
-	iStats.PhysDps.Min    := ((minPhysLow + minPhysHi) / 2) * minAPS
-	iStats.PhysDps.Max    := ((maxPhysLow + maxPhysHi) / 2) * maxAPS
+	iStats.PhysDps.Min    := Floor(((minPhysLow + minPhysHi) / 2) * minAPS)
+	iStats.PhysDps.Max    := Ceil(((maxPhysLow + maxPhysHi) / 2) * maxAPS)
 	iStats.EleDps         := {}
 	iStats.EleDps.Name    := "Elemental Dps"
 	iStats.EleDps.Value   := Stats.EleDps
-	iStats.EleDps.Min     := TradeFunc_CalculateEleDps(min_affixFlatFireLow, min_affixFlatFireHi, min_affixFlatColdLow, min_affixFlatColdHi, min_affixFlatLightningLow, min_affixFlatLightningHi, minAPS)
-	iStats.EleDps.Max     := TradeFunc_CalculateEleDps(max_affixFlatFireLow, max_affixFlatFireHi, max_affixFlatColdLow, max_affixFlatColdHi, max_affixFlatLightningLow, max_affixFlatLightningHi, maxAPS)
+	iStats.EleDps.Min     := Floor(TradeFunc_CalculateEleDps(min_affixFlatFireLow, max_affixFlatFireLow, min_affixFlatColdLow, max_affixFlatColdLow, min_affixFlatLightningLow, max_affixFlatLightningLow, minAPS))
+	iStats.EleDps.Max     := Ceil(TradeFunc_CalculateEleDps(min_affixFlatFireHi, max_affixFlatFireHi, min_affixFlatColdHi, max_affixFlatColdHi, min_affixFlatLightningHi, max_affixFlatLightningHi, maxAPS))
 	
 	debugOutput .= "Phys DPS: " iStats.PhysDps.Value "`n" "Phys Min: " iStats.PhysDps.Min "`n" "Phys Max: " iStats.PhysDps.Max "`n" "EleDps: " iStats.EleDps.Value "`n" "Ele Min: " iStats.EleDps.Min "`n" "Ele Max: "  iStats.EleDps.Max
-	
+
 	If (TradeOpts.Debug) {
 		;console.log(debugOutput)
 	}
+	SetFormat, FloatFast, 5.2
+	
 	Return iStats
 }
 
@@ -1078,7 +1111,11 @@ TradeFunc_CalculateEleDps(fireLo, fireHi, coldLo, coldHi, lightLo, lightHi, aps)
 	lightLo := lightLo > 0 ? lightLo : 0
 	lightHi := lightHi > 0 ? lightHi : 0
 	
+	If (TradeOpts.Debug) {
+		;console.log("((" fireLo " + " fireHi " + " coldLo " + " coldHi " + " lightLo " + " lightHi ") / 2) * " aps " )")
+	}
 	dps := ((fireLo + fireHi + coldLo + coldHi + lightLo + lightHi) / 2) * aps
+	dps := Round(dps, 1)
 	
 	return dps
 }
@@ -1183,25 +1220,23 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	cfduid      := TradeGlobals.Get("cfduid")
 	cfClearance := TradeGlobals.Get("cfClearance")
 
-	/* Not working yet, no response
 	postData := payload
 	payLength:= StrLen(payload)
 	reqHeaders =
 		(LTrim
-			Content-type: application/html
 			Host: poe.trade
 			Connection: keep-alive
 			Content-Length: %payLength%
 			Cache-Control: max-age=0
 			Origin: http://poe.trade
-			Upgrade-Insecure-Requests: 1
+			Upgrade-Insecure-Requests: 1			
 			Content-type: application/x-www-form-urlencoded
 			Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
 			Referer: http://poe.trade/
 		)
 	If (StrLen(UserAgent)) {
-		options .= "`nUser-Agent: " UserAgent
-		options .= "`nCookie: __cfduid= " cfduid "; cf_clearance= " cfClearance
+		reqHeaders .= "`nUser-Agent: " UserAgent
+		reqHeaders .= "`nCookie: __cfduid= " cfduid "; cf_clearance= " cfClearance
 	}
 	options =
 		(LTrim
@@ -1209,70 +1244,15 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 			Method: POST
 		)
 	If (openSearchInBrowser) {
-		options .= "`nNO_AUTO_REDIRECT" 
+		options .= "`nNO_AUTO_REDIRECT"
 	}
-
+	
 	html := ""
 	html := PoEScripts_Download("http://poe.trade/search", ioData := postData, ioHdr := reqHeaders, options, false)
-	*/
-		
-	ComObjError(0)
-	Encoding := "utf-8"
-    ;Reference in making POST requests - http://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
-	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	If (openSearchInBrowser) {
-		HttpObj.Option(6) := False
-	}    
-	
-	HttpObj.Open("POST","http://poe.trade/search")
-	HttpObj.SetRequestHeader("Host","poe.trade")	
-	HttpObj.SetRequestHeader("Connection","keep-alive")
-	HttpObj.SetRequestHeader("Content-Length",StrLen(payload))
-	HttpObj.SetRequestHeader("Cache-Control","max-age=0")
-	HttpObj.SetRequestHeader("Origin","http://poe.trade")
-	HttpObj.SetRequestHeader("Upgrade-Insecure-Requests","1")
-	HttpObj.SetRequestHeader("User-Agent", UserAgent)
-	HttpObj.SetRequestHeader("Content-type","application/x-www-form-urlencoded")
-	HttpObj.SetRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-	HttpObj.SetRequestHeader("Referer","http://poe.trade/")
-
-	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
-    ;HttpObj.SetRequestHeader("Accept-Encoding","gzip;q=0,deflate;q=0") ; disables compression
-    ;HttpObj.SetRequestHeader("Accept-Encoding","gzip, deflate")
-    ;HttpObj.SetRequestHeader("Accept-Language","en-US,en;q=0.8")    
-	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
-	HttpObj.Send(payload)
-	retCode := HttpObj.WaitForResponse()	; EMPTY = no response
-	
-
-	Try {				
-		If Encoding {
-			oADO          := ComObjCreate("adodb.stream")
-			oADO.Type     := 1
-			oADO.Mode     := 3
-			oADO.Open()
-			oADO.Write(HttpObj.ResponseBody)
-			oADO.Position := 0
-			oADO.Type     := 2
-			oADO.Charset  := Encoding
-			html := oADO.ReadText()
-			oADO.Close()
-		}
-	} Catch e {			
-		html := HttpObj.ResponseText
-		If (TradeOpts.Debug) {
-			MsgBox % e
-		}
-	}
-	
-	If A_LastError
-		MsgBox % A_LastError
 	
 	If (TradeOpts.Debug) {
 		FileDelete, %A_ScriptDir%\temp\DebugSearchOutput.txt
-		FileAppend, %html%, %A_ScriptDir%\temp\DebugSearchOutput.txt		
-		Out_HEADERS := "Search Finished.`n`n Return Code: " retCode "`n Content Length: " StrLen(html) "`n`nHTTP/1.1 " HttpObj.Status " " HttpObj.StatusText "`n" HttpObj.GetAllResponseHeaders()	
-		console.log(Out_HEADERS)
+		FileAppend, %html%, %A_ScriptDir%\temp\DebugSearchOutput.txt
 	}
 	
 	Return, html
@@ -1364,7 +1344,7 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	If (TradeOpts.Debug) {
 		FileDelete, %A_ScriptDir%\temp\DebugSearchOutput.txt
 		FileAppend, %html%, %A_ScriptDir%\temp\DebugSearchOutput.txt
-		console.log("Search finished. Returned content length: " StrLen(html))
+		;console.log("Search finished. Returned content length: " StrLen(html))
 	}
 	
 	Return, html
@@ -2021,9 +2001,13 @@ TradeFunc_FormatItemAge(age) {
 }
 
 class RequestParams_ {
+	; these are special cases, for example by default, the string key "base" is used to retrieve or set the object's base object, so cannot be used for storing ordinary values with a normal assignment. 
+	xtype		:= ""	
+	xbase		:= ""	
+	xthread 		:= ""	
+	;
+	
 	league		:= ""
-	xtype		:= ""
-	xbase		:= ""
 	name			:= ""
 	dmg_min 		:= ""
 	dmg_max 		:= ""
@@ -2074,7 +2058,6 @@ class RequestParams_ {
 	ilvl_max		:= ""
 	rarity 		:= ""
 	seller 		:= ""
-	xthread 		:= ""
 	identified 	:= ""
 	corrupted		:= "0"
 	online 		:= (TradeOpts.OnlineOnly == 0) ? "" : "x"
@@ -2093,7 +2076,8 @@ class RequestParams_ {
 			modGroupStr .= this.modGroups[A_Index].ToPayload()	
 		}
 		
-		p := "league=" this.league "&type=" this.xtype "&base=" this.xbase "&name=" this.name "&dmg_min=" this.dmg_min "&dmg_max=" this.dmg_max "&aps_min=" this.aps_min "&aps_max=" this.aps_max 
+		/*
+		p := "league=" this.league "&type=" this.type "&base=" this.base "&name=" this.name "&dmg_min=" this.dmg_min "&dmg_max=" this.dmg_max "&aps_min=" this.aps_min "&aps_max=" this.aps_max 
 		p .= "&crit_min=" this.crit_min "&crit_max=" this.crit_max "&dps_min=" this.dps_min "&dps_max=" this.dps_max "&edps_min=" this.edps_min "&edps_max=" this.edps_max "&pdps_min=" this.pdps_min 
 		p .= "&pdps_max=" this.pdps_max "&armour_min=" this.armour_min "&armour_max=" this.armour_max "&evasion_min=" this.evasion_min "&evasion_max=" this.evasion_max "&shield_min=" this.shield_min 
 		p .= "&shield_max=" this.shield_max "&block_min=" this.block_min "&block_max=" this.block_max "&sockets_min=" this.sockets_min "&sockets_max=" this.sockets_max "&link_min=" this.link_min 
@@ -2104,12 +2088,22 @@ class RequestParams_ {
 		p .= "&q_min=" this.q_min  "&q_max=" this.q_max "&level_min=" this.level_min "&level_max=" this.level_max "&ilvl_min=" this.ilvl_min "&ilvl_max=" this.ilvl_max "&rarity=" this.rarity "&seller=" this.seller 
 		p .= "&thread=" this.xthread "&identified=" this.identified "&corrupted=" this.corrupted "&online=" this.online "&has_buyout=" this.buyout "&altart=" this.altart "&capquality=" this.capquality 
 		p .= "&buyout_min=" this.buyout_min "&buyout_max=" this.buyout_max "&buyout_currency=" this.buyout_currency "&crafted=" this.crafted "&enchanted=" this.enchanted	
-
-		temp		:= p
-		cleaned	:= CleanPayload(temp)
-		;console.log(cleaned)
-		; GET requests won't work with the cleaned payload when including the group_type
+		*/
 		
+		p :=	
+		For key, val in this {
+			; check if not array (modGroups for example are arrays)
+			If (!this[key].MaxIndex()) {
+				If (StrLen(val)) {
+					; remove prefixed x for special keys
+					argument := RegExReplace(key, "i)(x(base|thread|type))?(.*)", "$2$3")
+					p .= "&" argument "=" TradeUtils.UriEncode(val) 	
+				}				
+			}			
+		}
+		p .= modGroupStr
+		p := RegExReplace(p, "^&", "")
+
 		Return p
 	}
 	
@@ -2139,11 +2133,11 @@ CleanPayload(payload) {
 }
 
 class _ParamModGroup {
-	ModArray := []
-	group_type := "And"
-	group_min := ""
-	group_max := ""
-	group_count := 1
+	ModArray		:= []
+	group_type	:= "And"
+	group_min		:= ""
+	group_max		:= ""
+	group_count	:= 1
 	
 	ToPayload() {
 		p := ""
@@ -2152,9 +2146,16 @@ class _ParamModGroup {
 			this.AddMod(new _ParamMod())
 		}
 		this.group_count := this.ModArray.Length()
-		Loop % this.ModArray.Length()
+		Loop % this.ModArray.Length() {
 			p .= this.ModArray[A_Index].ToPayload()
-		p .= "&group_type=" this.group_type "&group_min=" this.group_min "&group_max=" this.group_max "&group_count=" this.group_count
+		}
+		p .= "&group_type="  TradeUtils.UriEncode(this.group_type)
+		p .= "&group_min="   TradeUtils.UriEncode(this.group_min)
+		p .= "&group_max="   TradeUtils.UriEncode(this.group_max)		
+		p .= "&group_count=" TradeUtils.UriEncode(this.group_count)
+		
+		;p .= "&group_type=" this.group_type "&group_min=" this.group_min "&group_max=" this.group_max "&group_count=" this.group_count		
+		
 		Return p
 	}
 	
@@ -2181,13 +2182,18 @@ class _ParamModGroup {
 }
 
 class _ParamMod {
-	mod_name := ""
-	mod_min := ""
-	mod_max := ""
+	mod_name	:= ""
+	mod_min	:= ""
+	mod_max	:= ""
 	ToPayload() 
 	{		
-		this.mod_name := TradeUtils.UriEncode(this.mod_name)
-		p := "&mod_name=" this.mod_name "&mod_min=" this.mod_min "&mod_max=" this.mod_max		
+		;this.mod_name	:= TradeUtils.UriEncode(this.mod_name)
+		;p := "&mod_name=" this.mod_name "&mod_min=" this.mod_min "&mod_max=" this.mod_max
+		If (StrLen(this.mod_name)) {
+			p .= "&mod_name=" TradeUtils.UriEncode(this.mod_name)
+			p .= "&mod_min="  TradeUtils.UriEncode(this.mod_min) "&mod_max="   TradeUtils.UriEncode(this.mod_max)
+		}	
+		
 		Return p
 	}
 }
@@ -2229,8 +2235,8 @@ TradeFunc_RemoveAlternativeVersionsMods(Item, Affixes) {
 		modFound := false
 		For key, val in Affixes {
 			; remove negative sign also
-			t := TradeUtils.CleanUp(RegExReplace(val, "i)-?[\d\.]+\s?to\s?-?[\d\.]+|-?[\d\.]+", "#"))
-			n := TradeUtils.CleanUp(v.name)
+			t := TradeUtils.CleanUp(RegExReplace(val, "i)-?[\d\.]+", "#"))
+			n := TradeUtils.CleanUp(v.param)
 			; match with optional positive sign to match for example "-7% to cold resist" with "+#% to cold resist"
 			RegExMatch(n, "i)(\+?" . t . ")", match)
 			If (match) {			
@@ -2242,7 +2248,7 @@ TradeFunc_RemoveAlternativeVersionsMods(Item, Affixes) {
 			tempMods.push(v)
 		}
 	}
-	
+
 	Item.mods := tempMods
 	
 	return Item
@@ -2262,7 +2268,7 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 				mods.push(tempMod)
 			}
 		}
-	}	
+	}
 
 	For key, val in Affixes {
 		If (!val or RegExMatch(val, "i)---")) {
@@ -2323,7 +2329,7 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 			Index++			
 		}
 	}
-	
+
 	mods := CreatePseudoMods(mods, True)
 
 	tempItem		:= {}
@@ -2351,7 +2357,7 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 
 	; use this to control search order (which group is more important)
 	For k, imod in _item.mods {
-		; check total and then implicits first If mod is implicit, otherwise check later
+		; check total and then implicits first if mod is implicit, otherwise check later
 		If (_item.mods[k].type == "implicit" and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])			
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
@@ -2389,14 +2395,13 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["leaguestone"], _item.mods[k])
 		}
 	}
-	
+
 	Return _item
 }
 
 ; Add poe.trades mod names to the items mods to use as POST parameter
 TradeFunc_GetItemsPoeTradeUniqueMods(_item) {	
 	mods := TradeGlobals.Get("ModsData")
-	
 	For k, imod in _item.mods {	
 		_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
 		If (StrLen(_item.mods[k]["param"]) < 1) {
@@ -2419,18 +2424,18 @@ TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
 	Return _item
 }
 
-; find mod in modgroup and Return its name
-TradeFunc_FindInModGroup(modgroup, needle) {	
+; find mod in modgroup and return its name
+TradeFunc_FindInModGroup(modgroup, needle) {
 	matches := []
 	editedNeedle := ""
-
+	
 	For j, mod in modgroup {
 		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)|\(leaguestone\)", ""))
 		s  := RegExReplace(s, "# ?to ? #", "#")
 		s  := TradeUtils.CleanUp(s)		
 		ss := TradeUtils.CleanUp(ss)
 		ss := Trim(needle.name)
-		;matches "1 to" in for example "adds 1 to (20-40) lightning damage"
+		; matches "1 to" in for example "adds 1 to (20-40) lightning damage"
 		ss := RegExReplace(ss, "\d+ ?to ?#", "#")		
 		ss := RegExReplace(ss, "Monsters' skills Chain # additional times", "Monsters' skills Chain 2 additional times")
 		editedNeedle := ss
@@ -2740,7 +2745,7 @@ TradeFunc_CreateItemPricingTestGUI() {
 TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = "", ChangedImplicit = "") {	
 	;https://autohotkey.com/board/topic/9715-positioning-of-controls-a-cheat-sheet/
 	Global 
-	
+
 	;prevent advanced gui in certain cases 
 	If (not advItem.mods.Length() and not ChangedImplicit) {
 		ShowTooltip("Advanced search not available for this item.")
@@ -3282,7 +3287,7 @@ AdvancedOpenSearchOnPoeTrade:
 	TradeFunc_Main(true, false, true)
 return
 
-TradeFunc_ResetGUI(){
+TradeFunc_ResetGUI() {
 	Global 
 	Loop {
 		If (TradeAdvancedModMin%A_Index% or TradeAdvancedParam%A_Index%) {
@@ -3292,7 +3297,7 @@ TradeFunc_ResetGUI(){
 			TradeAdvancedModMax%A_Index%	:=
 			TradeAdvancedModName%A_Index%	:=
 		}
-		Else If (A_Index >= 20){
+		Else If (A_Index >= 20) {
 			TradeAdvancedStatCount :=
 			break
 		}
@@ -3305,7 +3310,7 @@ TradeFunc_ResetGUI(){
 			TradeAdvancedStatMin%A_Index%		:=
 			TradeAdvancedStatMax%A_Index%		:=
 		}
-		Else If (A_Index >= 20){
+		Else If (A_Index >= 20) {
 			TradeAdvancedModCount := 
 			break
 		}
@@ -3324,7 +3329,7 @@ TradeFunc_ResetGUI(){
 	TradeGlobals.Set("AdvancedPriceCheckItem", {})
 }
 
-TradeFunc_HandleGuiSubmit(){
+TradeFunc_HandleGuiSubmit() {
 	Global 
 
 	Gui, SelectModsGui:Submit
@@ -3357,7 +3362,7 @@ TradeFunc_HandleGuiSubmit(){
 	
 	Loop {
 		stat := {param:"",selected:"",min:"",max:""}
-		If (TradeAdvancedStatMin%A_Index%) {
+		If (TradeAdvancedStatMin%A_Index% or TradeAdvancedStatMax%A_Index%) {
 			stat.param    := TradeAdvancedStatParam%A_Index%
 			stat.selected := TradeAdvancedStatSelected%A_Index%
 			stat.min      := TradeAdvancedStatMin%A_Index%
@@ -3811,8 +3816,8 @@ TradeFunc_HandleCustomSearchSubmit(openInBrowser = false) {
 		
 		StringLower, CustomSearchRarity, CustomSearchRarity
 		
-		RequestParams.xtype 	:= CustomSearchType         ? CustomSearchType : ""
-		RequestParams.xbase 	:= CustomSearchBase         ? CustomSearchBase : ""
+		RequestParams.xtype		:= CustomSearchType         ? CustomSearchType : ""
+		RequestParams.xbase		:= CustomSearchBase         ? CustomSearchBase : ""
 		RequestParams.rarity	:= CustomSearchRarity       ? CustomSearchRarity : ""
 		RequestParams.link_min	:= CustomSearchLinksMin     ? CustomSearchLinksMin : ""
 		RequestParams.link_max	:= CustomSearchLinksMax     ? CustomSearchLinksMax : ""
@@ -3833,8 +3838,6 @@ TradeFunc_HandleCustomSearchSubmit(openInBrowser = false) {
 			RequestParams.corrupted := "x"
 		}		
 		Item.UsedInSearch.Corruption := CustomSearchCorrupted
-
-		ShowToolTip("Running search...")
 		
 		Payload := RequestParams.ToPayload()
 		If (openInBrowser) {
@@ -3844,6 +3847,7 @@ TradeFunc_HandleCustomSearchSubmit(openInBrowser = false) {
 			TradeFunc_OpenUrlInBrowser(ParsedUrl1)
 		}
 		Else {
+			ShowToolTip("Requesting search results...")
 			Html := TradeFunc_DoPostRequest(Payload)
 			ParsedData := TradeFunc_ParseHtml(Html, Payload)
 			SetClipboardContents(ParsedData)
