@@ -14,7 +14,8 @@
 
 	e := {}
 	Try {
-		WinHttpRequest(url, ioData, ioHdr, options, Out_Headers_Obj)
+		;WinHttpRequest(url, ioData, ioHdr, options, Out_Headers_Obj)
+		HTTPRequest(url, ioData, ioHdr, options)
 		html := ioData
 	} Catch e {
 		
@@ -32,9 +33,9 @@
 	}
 	; handle binary file downloads
 	Else If (InStr(Options, "SaveAs:") and not e.what) {
-		; check http status
-		If (Out_Headers_Obj["Status"] != 200) {
-			MsgBox, 16,, % "Error downloading file. HTTP status: " Out_Headers_Obj["Status"] " " Out_Headers_Obj["Statustext"]
+		; check returned request headers (including custom error messages)
+		If (RegExMatch(ioHdr, "(CreateFile).*?( failed)|(WriteFile).*?( failed)", match)) {
+			MsgBox, 16,, % "Error downloading file. " match1 match2 match3 match4 "!"
 			Return "Error: Wrong Status"
 		}
 		
@@ -42,7 +43,8 @@
 		
 		; compare file sizes
 		FileGetSize, sizeOnDisk, %SavePath%
-		size := Out_Headers_Obj["Content-Length"]
+		RegExMatch(ioHdr, "i)Content-Length:\s(\d+)", size)
+		size := size1
 		If (size != sizeOnDisk) {
 			html := "Error: Different Size"
 		}
