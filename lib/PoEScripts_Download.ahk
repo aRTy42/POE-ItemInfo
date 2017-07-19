@@ -1,45 +1,76 @@
 ﻿PoEScripts_Download(url, ioData, ioHdr, options, useFallback = true, critical = false, binaryDL = false, errorMsg = "") {
 	/*
 		url		= download url
-		postData	= postData 
-		reqHeaders= multiple request headers separated by newline
-		options	= multiple options separated by newline
-		(take a look at WinHttpRequest.ahk)
+		ioData	= uri encoded postData 
+		ioHdr	= array of request headers
+		options	= multiple options separated by newline (currently only "SaveAs:")
 		
-		useFallback = Use UrlDownloadToFile if WinHttp fails, not possible for POST requests or when cookies are required 
+		useFallback = Use UrlDownloadToFile if curl fails, not possible for POST requests or when cookies are required 
 		critical	= exit macro if download fails
 		binaryDL	= file download (zip for example)
 		errorMsg	= optional error message, will be added to default message
 	*/
-
+	
+	; https://curl.haxx.se/download.html -> https://bintray.com/vszakats/generic/curl/
+	curl		:= A_ScriptDir "\lib\curl.exe"	
+	headers	:= ""
+	For key, val in ioHdr {
+		headers .= "-H """ val """ "
+	}	
+	
+	If (StrLen(options)) {
+		RegExMatch(options, "i)SaveAs:[ \t]*\K[^\r\n]+", SavePath)
+		commandData	.= " " options " "
+		commandHdr	.= ""
+	}
+	
 	e := {}
-	Try {
-		;WinHttpRequest(url, ioData, ioHdr, options, Out_Headers_Obj)
-		HTTPRequest(url, ioData, ioHdr, options)
-		html := ioData
+	Try {		
+		commandData	:= curl
+		commandHdr	:= curl
+		If (binaryDL) {
+			commandData .= " -LJkv "					; save as file
+			If (SavePath) {
+				commandData .= "-o """ SavePath """ "	; set target destination and name
+			}
+		} Else {
+			commandData .= " -Ls --compressed "			; follow redirects
+			commandHdr  .= " -ILs "						; follow redirects
+		}
+		If (StrLen(headers)) {
+			commandData .= headers
+			commandHdr  .= headers
+		}
+		If (StrLen(ioData)) {
+			commandData .= "--data """ ioData """ "
+		}
+
+		; get data
+		html	:= StdOutStream(commandData """" url """")
+		If (not binaryDL) {
+			; get headers in seperate request
+			ioHdr := StdOutStream(commandHdr """" url payload """") ; add payload to url since you can't use the -I argument with POST requests
+		}
 	} Catch e {
 		
 	}
 	
 	If (!binaryDL) {
-		; Use fallback download if WinHttpRequest fails
-		If ((StrLen(html) < 1 or not html or e.what) and useFallback) {
+		; Use fallback download if curl fails
+		If ((not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK") or e.what) and useFallback) {
 			DownloadFallback(url, html, e, critical, errorMsg)
-		} Else If ((StrLen(html) < 1 or not html) and e.what) {
+		} Else If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK" and e.what)) {
 			ThrowError(e)
-		} Else If ((StrLen(html) < 1 or not html)) {
-			
 		}
 	}
 	; handle binary file downloads
-	Else If (InStr(Options, "SaveAs:") and not e.what) {
-		; check returned request headers (including custom error messages)
-		If (RegExMatch(ioHdr, "(CreateFile).*?( failed)|(WriteFile).*?( failed)", match)) {
-			MsgBox, 16,, % "Error downloading file. " match1 match2 match3 match4 "!"
+	Else If (not e.what) {
+		; check returned request headers
+		ioHdr := ParseReturnedHeaders(html)
+		If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK")) {
+			MsgBox, 16,, % "Error downloading file to " SavePath
 			Return "Error: Wrong Status"
 		}
-		
-		RegExMatch(Options, "i)SaveAs:[ \t]*\K[^\r\n]+", SavePath)
 		
 		; compare file sizes
 		FileGetSize, sizeOnDisk, %SavePath%
@@ -53,6 +84,36 @@
 	}
 	
 	Return html
+}
+
+ParseReturnedHeaders(output) {
+	headerGroups	:= []
+	headerGroup	:= ""
+	
+	Pos		:= 0
+	While Pos := RegExMatch(output, "is)\[5 bytes data.*?({|$)", match, Pos + (StrLen(match) ? StrLen(match) : 1)) {
+		headerGroups.push(match)
+	}
+		
+	i := headerGroups.Length()
+	Loop, % i {
+		If (RegExMatch(headerGroups[i], "is)Content-Length")) {
+			headerGroup := headerGroups[i]
+			break
+		}		
+		i--
+	}
+	
+	out := ""
+	headerGroup := RegExReplace(headerGroup, "im)^<|\[5 bytes data\]|^{")
+	Loop, parse, headerGroup, `n, `r 
+	{
+		If (StrLen(Trim(A_LoopField))) {
+			out .= Trim(A_LoopField)
+		}
+	}
+	
+	Return out
 }
 
 ; only works if no post data required/not downloading for example .zip files
