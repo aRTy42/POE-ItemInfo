@@ -9725,7 +9725,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		
 		; Parse the clipboard contents twice.
 		; If the clipboard contains valid item data before we send ctrl + c to try and parse an item via ctrl + f then don't restore that clipboard data later on.
-		; This prevents the highlighting funtion to fill search fields with data from previous item parsings/manual data copying since 
+		; This prevents the highlighting function to fill search fields with data from previous item parsings/manual data copying since 
 		; that clipboard data would always be restored again.
 		Loop, 2 {
 			If (A_Index = 2) {
@@ -9919,6 +9919,71 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 			SendInput ^{sc021}		; send ctrl + f in case we don't have information to input
 		}
 
+		Sleep, 10
+		If (!dontRestoreClipboard) {
+			Clipboard := ClipBoardTemp
+		}		
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
+}
+
+LookUpAffixes() {
+	/*
+		Opens item base on poeaffix.net
+	*/
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		Global Item, Opts, Globals, ItemData
+		
+		ClipBoardTemp := Clipboard
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event		
+		
+		Clipboard := 
+		Send ^{sc02E}	; ^{c}
+		Sleep 100		
+		
+		CBContents := GetClipboardContents()
+		CBContents := PreProcessContents(CBContents)		
+		Globals.Set("ItemText", CBContents)
+		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)		
+		ParsedData := ParseItemData(CBContents)
+		If (Item.Name) {
+			dontRestoreClipboard := true
+		}
+
+		If (Item.Name) {
+			url := "http://poeaffix.net/" 
+			If (RegExMatch(Item.TypeName, "i)Sacrificial Garb")) {
+				url 		.= "ch-garb" ; ".html"
+			} Else {
+				ev		:= RegExMatch(ItemData.Stats, "i)Evasion Rating") ? "ev" : ""
+				ar		:= RegExMatch(ItemData.Stats, "i)Armour") ? "ar" : ""
+				es		:= RegExMatch(ItemData.Stats, "i)Energy Shield") ? "es" : ""
+				RegExMatch(Item.SubType, "i)Axe|Sword|Mace|Sceptre|Bow|Staff|Wand|Fish", weapon)
+				RegExMatch(Item.Subtype, "i)Amulet|Ring|Belt|Quiver|Flask", accessory)
+				RegExMatch(Item.Subtype, "i)Cobalt|Viridian|Crimson", jewel)
+				
+				suffix	:= ar . ev . es . weapon . accessory . jewel
+				StringLower, suffix, suffix
+				
+				boots	:= RegExMatch(Item.Subtype, "i)Boots") ? "bt" : ""
+				chest 	:= RegExMatch(Item.Subtype, "i)BodyArmour") ? "ch" : ""
+				gloves 	:= RegExMatch(Item.Subtype, "i)Gloves") ? "gl" : ""
+				helmet 	:= RegExMatch(Item.Subtype, "i)Helmet") ? "hm" : ""
+				shield 	:= RegExMatch(Item.Subtype, "i)Shield") ? "sh" : ""
+				ac		:= StrLen(accessory) ? "ac" : ""
+				jw		:= StrLen(jewel) ? "jw" : ""
+				gripType 	:= Item.GripType != "None" ? Item.GripType : ""
+				
+				prefix	:= boots . chest . gloves . helmet . shield . gripType . ac . jw
+				StringLower, prefix, prefix
+				
+				url		.= prefix "-" suffix ; ".html"
+			}			
+			openWith := AssociatedProgram("html")
+			Run, %openWith% -new-tab "%Url%"
+		}
+		
 		Sleep, 10
 		If (!dontRestoreClipboard) {
 			Clipboard := ClipBoardTemp
