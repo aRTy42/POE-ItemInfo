@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.3.5-beta.2
+================================================================================================
+Replaced WinHttpRequest and the HttpRequest (WinInet.dll) library with cURL.
+	All search requests should work again.
+	Please report any issues that you encounter.
+
 2.3.5-beta
 ================================================================================================
 Rewrote AdditionalMacros.txt:

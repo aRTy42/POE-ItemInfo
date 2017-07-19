@@ -678,17 +678,11 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		ShowToolTip("Requesting search results...")
 	}
 	
-	TimestampLast		:= A_Tickcount	
-	RequestEnd	:=
-	ParsingStart	:=
-	ParsingEnd	:=
-	
 	ParsingError	:= ""
 	currencyUrl	:= ""
 	If (Item.IsCurrency and !Item.IsEssence) {
 		If (!TradeOpts.AlternativeCurrencySearch) {
 			Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser, 0, currencyUrl, error)
-			RequestEnd	:= A_TickCount	
 			If (error) {
 				ParsingError := Html
 			}
@@ -705,7 +699,6 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	Else If (not openSearchInBrowser) {		
 		Html := TradeFunc_DoPostRequest(Payload, openSearchInBrowser)
-		RequestEnd	:= A_TickCount		
 	}
 	
 	If (openSearchInBrowser) {		
@@ -730,7 +723,6 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	Else If (Item.isCurrency and !Item.IsEssence) {
 		; Default currency search
-		ParsingStart	:= A_TickCount
 		If (!TradeOpts.AlternativeCurrencySearch) {
 			ParsedData := TradeFunc_ParseCurrencyHtml(Html, Payload, ParsingError)
 		}
@@ -738,7 +730,6 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Else {
 			ParsedData := TradeFunc_ParseAlternativeCurrencySearch(Item.Name, Payload)
 		}
-		ParsingEnd	:= A_TickCount
 		
 		SetClipboardContents("")
 		ShowToolTip("")
@@ -755,15 +746,12 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Else {
 			Item.UsedInSearch.SearchType := "Default" 
 		}
-		ParsingStart	:= A_TickCount
 		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
-		ParsingEnd	:= A_TickCount
 		
 		SetClipboardContents("")
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}
-	console.log("Request duration: " RequestEnd - TimestampLast "`nParsing after: " ParsingStart - RequestEnd "`nParsing duration : " ParsingEnd - ParsingStart)
 	
 	TradeGlobals.Set("AdvancedPriceCheckItem", {})
 }
@@ -1215,44 +1203,35 @@ TradeFunc_DoParseClipboard()
 	ParsedData := ParseItemData(CBContents)
 }
 
-TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {	
+TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	UserAgent   := TradeGlobals.Get("UserAgent")
 	cfduid      := TradeGlobals.Get("cfduid")
 	cfClearance := TradeGlobals.Get("cfClearance")
-
-	postData := payload
-	payLength:= StrLen(payload)
-	reqHeaders =
-		(LTrim
-			Host: poe.trade
-			Connection: keep-alive
-			Content-Length: %payLength%
-			Cache-Control: max-age=0
-			Origin: http://poe.trade
-			Upgrade-Insecure-Requests: 1			
-			Content-type: application/x-www-form-urlencoded
-			Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
-			Referer: http://poe.trade/
-		)
+	
+	postData 	:= payload
+	payLength	:= StrLen(postData)
+	url 		:= "http://poe.trade/search"	
+	options	:= ""
+	
+	reqHeaders	:= []
+	reqHeaders.push("Host: poe.trade")
+	reqHeaders.push("Connection: keep-alive")
+	reqHeaders.push("Cache-Control: max-age=0")
+	reqHeaders.push("Origin: http://poe.trade")
+	reqHeaders.push("Upgrade-Insecure-Requests: 1")
+	reqHeaders.push("Content-type: application/x-www-form-urlencoded; charset=UTF-8")
+	reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+	reqHeaders.push("Referer: http://poe.trade/")
 	If (StrLen(UserAgent)) {
-		reqHeaders .= "`nUser-Agent: " UserAgent
-		reqHeaders .= "`nCookie: __cfduid= " cfduid "; cf_clearance= " cfClearance
-	}
-	options =
-		(LTrim
-			Charset: UTF-8
-			Method: POST
-		)
-	If (openSearchInBrowser) {
-		options .= "`nNO_AUTO_REDIRECT"
+		reqHeaders.push("User-Agent: " UserAgent)
+		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
 	}
 	
-	html := ""
-	html := PoEScripts_Download("http://poe.trade/search", ioData := postData, ioHdr := reqHeaders, options, false)
+	html := PoEScripts_Download(url, postData, reqHeaders, options, false)
 	
 	If (TradeOpts.Debug) {
-		FileDelete, %A_ScriptDir%\temp\DebugSearchOutput.txt
-		FileAppend, %html%, %A_ScriptDir%\temp\DebugSearchOutput.txt
+		FileDelete, %A_ScriptDir%\temp\DebugSearchOutput.html
+		FileAppend, %html%, %A_ScriptDir%\temp\DebugSearchOutput.html
 	}
 	
 	Return, html
@@ -1275,24 +1254,17 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	cfduid      := TradeGlobals.Get("cfduid")
 	cfClearance := TradeGlobals.Get("cfClearance")
 	
-	ComObjError(0)
-	Encoding := "utf-8"
-	HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	If (openSearchInBrowser) {
-		HttpObj.Option(6) := False ;
-	} 
-	
 	If (init) {
 		Url := "http://currency.poe.trade/"
 	}
 	Else {
 		LeagueName := TradeGlobals.Get("LeagueName")
 		IDs := TradeGlobals.Get("CurrencyIDs")
-		Have:= TradeOpts.CurrencySearchHave		
+		Have:= TradeOpts.CurrencySearchHave
 		
 		; currently not necessary
-		;idWant := TradeFunc_MapCurrencyNameToID(currencyName)
-		;idHave := TradeFunc_MapCurrencyNameToID(TradeOpts.CurrencySearchHave)
+		; idWant := TradeFunc_MapCurrencyNameToID(currencyName)
+		; idHave := TradeFunc_MapCurrencyNameToID(TradeOpts.CurrencySearchHave)
 		
 		idWant := TradeGlobals.Get("CurrencyIDs")[currencyName]
 		idHave := TradeGlobals.Get("CurrencyIDs")[TradeOpts.CurrencySearchHave]
@@ -1307,34 +1279,16 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 		}
 	}
 	
-	HttpObj.Open("GET",Url)
-	HttpObj.SetRequestHeader("User-Agent", UserAgent)
-	HttpObj.SetRequestHeader("Cookie","__cfduid=" cfduid "; cf_clearance=" cfClearance)
-	HttpObj.Send()
-	HttpObj.WaitForResponse()
-
-	Try {				
-		If Encoding {
-			oADO          := ComObjCreate("adodb.stream")
-			oADO.Type     := 1
-			oADO.Mode     := 3
-			oADO.Open()
-			oADO.Write(HttpObj.ResponseBody)
-			oADO.Position := 0
-			oADO.Type     := 2
-			oADO.Charset  := Encoding
-			html := oADO.ReadText()
-			oADO.Close()
-		}
-	} Catch e {			
-		html := HttpObj.ResponseText
-		If (TradeOpts.Debug) {
-			MsgBox % e
-		}
+	postData 	:= ""
+	options	:= ""
+	
+	reqHeaders	:= []
+	If (StrLen(UserAgent)) {
+		reqHeaders.push("User-Agent: " UserAgent)
+		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
 	}
 	
-	If A_LastError
-		MsgBox % A_LastError	
+	html := PoEScripts_Download(url, postData, reqHeaders, options, false)
 	
 	If (init) {
 		TradeFunc_ParseCurrencyIDs(html)
@@ -1344,7 +1298,6 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	If (TradeOpts.Debug) {
 		FileDelete, %A_ScriptDir%\temp\DebugSearchOutput.txt
 		FileAppend, %html%, %A_ScriptDir%\temp\DebugSearchOutput.txt
-		;console.log("Search finished. Returned content length: " StrLen(html))
 	}
 	
 	Return, html

@@ -1250,9 +1250,9 @@ TradeFunc_CheckBrowserPath(path, showMsg) {
 TradeFunc_ParseSearchFormOptions() {
 	FileRead, html, %A_ScriptDir%\temp\poe_trade_search_form_options.txt
 	
-	RegExMatch(html, "i)(var)?\s*(items_types\s*=\s*{.*})", match)
+	RegExMatch(html, "i)(var)?\s*(items_types\s*=\s*{.*})", match)	
 	itemTypes := RegExReplace(match2, "i)items_types\s*=", "{""items_types"" :")
-	itemTypes .= "}"	
+	itemTypes .= "}"
 	parsedJSON := JSON.Load(itemTypes)
 
 	availableLeagues := []
@@ -1547,21 +1547,18 @@ TradeFunc_GetLatestDotNetInstallation() {
 }
 
 TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", useCookies=false) {	
-	postData		:= ""
-	reqHeaders	:= ""
+	postData		:= ""	
+	options		:= ""
+	
+	reqHeaders	:= []
 	If (StrLen(UserAgent)) {
-		reqHeaders .= "`nUser-Agent: " UserAgent
-		reqHeaders .= "`nCookie: __cfduid= " cfduid "; cf_clearance= " cfClearance
+		reqHeaders.push("User-Agent: " UserAgent)
+		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
 	}
-	options =
-		(LTrim
-			Charset: UTF-8
-			Method: GET
-		)
-
+	
 	html := ""
 	html := PoEScripts_Download(Url, ioData := postData, ioHdr := reqHeaders, options, false)
-	
+
 	; pathofexile.com link in page footer (forum thread)
 	RegExMatch(html, "i)pathofexile", match)
 	If (match) {
@@ -1570,8 +1567,8 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 		TradeFunc_ParseSearchFormOptions()	
 		Return 1
 	}
-	Else If (!StrLen(html)) {
-		TradeFunc_HandleWinHttpFailure()
+	Else If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK")) {
+		TradeFunc_HandleConnectionFailure()
 	}
 	Else {
 		FileDelete, %A_ScriptDir%\temp\poe_trade_gem_names.txt
@@ -1579,45 +1576,12 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 	}
 }
 
-TradeFunc_HandleWinHttpFailure() {
-	dhw := A_DetectHiddenWindows
-	DetectHiddenWindows On
-	Run "%ComSpec%" /k,, Hide, pid
-	While !(hConsole := WinExist("ahk_pid" pid))
-		Sleep 10
-	DllCall("AttachConsole", "UInt", pid)
-	DetectHiddenWindows %dhw%
-	objShell := ComObjCreate("WScript.Shell")
-	objExec := objShell.Exec("cmd /c netsh winhttp show proxy")
-	While !objExec.Status
-	    Sleep 100
-	strLine := objExec.StdOut.ReadAll() ;read the output at once
-	DllCall("FreeConsole")
-	Process Exist, %pid%
-	If (ErrorLevel == pid)
-		Process Close, %pid%
-	
-	output := ""
-	Loop, Parse, strLine, `n,  `r
-	{
-		If (StrLen(A_LoopField)) {
-			output .= A_LoopField "`n"
-		}
-	}
-	
+TradeFunc_HandleConnectionFailure() {	
 	SplashTextOff
 	
-	Gui, WinHttpFailure:Add, Text, cRed, WinHttpRequest to poe.trade failed!
-	Gui, WinHttpFailure:Add, Text, , The correct winhttp setting is: "Direct access (no proxy)"
+	Gui, ConnectionFailure:Add, Text, cRed, Request to poe.trade failed!
 	
-	Gui, WinHttpFailure:Add, Text, cGray, % output
-	
-	Gui, WinHttpFailure:Add, Text, y+5, If your settings are different you can  
-	Gui, WinHttpFailure:Add, Link, x+5 yp+0 cBlue, <a href="https://superuser.com/questions/558070/how-to-turn-off-winhttp-proxy">reset this proxy</a>.
-	
-	Gui, WinHttpFailure:Add, Button, y+10 x10 gResetWinHttpProxy, Reset Proxy
-	
-	Gui, WinHttpFailure:Show, w450 xCenter yCenter, Connection Failure
+	Gui, ConnectionFailure:Show, w450 xCenter yCenter, Connection Failure
 	ControlFocus, Reset Proxy, Connection Failure
 	WinWaitClose, Connection Failure
 	
