@@ -1,14 +1,28 @@
-;###########------------------- Additional Macros ---------------------###########
-;# Use the global variables to enable/disable hotkeys and set a key combination. #
-;#                                                                               #
-;# You can also add your own macros here, but adding your own files in the       #
-;# subfolder "CustomMacros\" is the more preferable solution. All files there    #
-;# will be appended/included. Please make sure that any issues that you are      #
-;# experiencing aren't related to your own macros before reporting them.         #
-;#                                                                               #
-;# Hotkeys you can use: https://autohotkey.com/docs/KeyList.htm                  #
-;# Autohotkey Quick Reference: https://autohotkey.com/docs/AutoHotkey.htm        #
-;###########-----------------------------------------------------------###########
+;###########----------------------- Additional Macros -------------------------###########
+;# Use the global variables to enable/disable hotkeys and set a key combination.         #
+;#                                                                                       #
+;# You can also add your own macros here, but adding your own files in the subfolder     #
+;# "CustomMacros\" is the more preferable solution. All files there will be appended.    #
+;# Please make sure that any issues that you are experiencing aren't related to your own #
+;# macros before reporting them.                                                         #
+;#                                                                                       #
+;# Hotkeys you can use: https://autohotkey.com/docs/KeyList.htm.                         #
+;# Autohotkey Quick Reference: https://autohotkey.com/docs/AutoHotkey.htm.               #
+;# Using a hotkey in your custom macro that is assigned in this scrip but set to "off"   #
+;# won't work since that hotkey exists but is disabled. Use the hotkey command to        #
+;# overwrite and enable it: https://autohotkey.com/docs/commands/Hotkey.htm.             #
+;#                                                                                       #
+;# Declaring variables or executing code outside of functions, labels or hotkeys won't   #
+;# work in AdditionalMacros or your custom macros. Read more about it here:              #
+;# https://autohotkey.com/docs/Scripts.htm#auto (script auto-execute section).           #
+;# Function calls via hotkeys work though.                                               #
+;#                                                                                       #
+;# AutoHotkey IDE's and Editor setups (NotePad++, Sublime, Vim):                         #                                             
+;# https://github.com/ahkscript/awesome-AutoHotkey#integrated-development-environment    #
+;#                                                                                       #
+;# Curated list of awesome AHK libs, lib distributions, scripts, tools and resources:    # 
+;# https://github.com/ahkscript/awesome-AutoHotkey                                       #
+;###########-------------------------------------------------------------------###########
 	
 AM_AssignHotkeys:
 	; Assign and enable/disable the hotkeys here
