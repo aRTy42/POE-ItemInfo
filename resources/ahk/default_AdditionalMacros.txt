@@ -5,6 +5,8 @@
 ;# "CustomMacros\" is the more preferable solution. All files there will be appended.    #
 ;# Please make sure that any issues that you are experiencing aren't related to your own #
 ;# macros before reporting them.                                                         #
+;# For example, paste the line "^Space::SendInput {Enter}/oos{Enter}" in an ".ahk" file, #
+;# place it in the CustomMacros folder and you have your macro ready. It's that easy.    #                              
 ;#                                                                                       #
 ;# Hotkeys you can use: https://autohotkey.com/docs/KeyList.htm.                         #
 ;# Autohotkey Quick Reference: https://autohotkey.com/docs/AutoHotkey.htm.               #
