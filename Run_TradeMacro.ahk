@@ -12,15 +12,25 @@ If (A_AhkVersion < TradeAHKVersionRequired)
     ExitApp
 }
 
-arguments	= %1%
+arguments := ""
+Loop, %0%  ; For each parameter
+{
+	arguments .= " " Trim(%A_Index%)
+}
+
 If (!InStr(arguments, "-noelevation", 0)) {
-	RunAsAdmin()
+	RunAsAdmin(arguments)
+}
+If (InStr(arguments, "-nosplash", 0)) {
+	skipSplash := 1	
+} Else {
+	skipSplash := 0
+	StartSplashScreen()
 }
 
 If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-TradeMacro")) {
-	ExitApp	
+	ExitApp
 }
-StartSplashScreen()
 
 /*	 
 	Set ProjectName to create user settings folder in A_MyDocuments
@@ -58,7 +68,7 @@ FileAppend, %trade%		, %A_ScriptDir%\_TradeMacroMain.ahk
 ; set script hidden
 FileSetAttrib, +H, %A_ScriptDir%\_TradeMacroMain.ahk
 ; pass some parameters to TradeMacroInit
-Run "%A_AhkPath%" "%A_ScriptDir%\_TradeMacroMain.ahk" "%projectName%" "%userDirectory%" "%isDevelopmentVersion%" "%overwrittenFiles%" "isMergedScript"
+Run "%A_AhkPath%" "%A_ScriptDir%\_TradeMacroMain.ahk" "%projectName%" "%userDirectory%" "%isDevelopmentVersion%" "%overwrittenFiles%" "isMergedScript" "%skipSplash%"
 
 ExitApp
 
@@ -84,17 +94,19 @@ CloseScript(Name)
 		Return Name . " not found"
 }
 
-RunAsAdmin() 
+RunAsAdmin(arguments) 
 {
-    ShellExecute := A_IsUnicode ? "shell32\ShellExecute":"shell32\ShellExecuteA" 
+    ShellExecute := A_IsUnicode ? "shell32\ShellExecute":"shell32\ShellExecuteA"
     If Not A_IsAdmin 
     { 
 		If A_IsCompiled 
-			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_ScriptFullPath, str, A_WorkingDir, int, 1) 
+			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_ScriptFullPath . " " . arguments, str, A_WorkingDir, int, 1) 
 		Else 
-			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_AhkPath, str, """" . A_ScriptFullPath . """", str, A_WorkingDir, int, 1) 
-		ExitApp 
+			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_AhkPath, str, """" . A_ScriptFullPath . """" . " " . arguments, str, A_WorkingDir, int, 1) 
+		ExitApp
     }
+
+    Return arguments
 }	
 
 StartSplashScreen() {

@@ -25,7 +25,7 @@
 	}
 	
 	e := {}
-	Try {		
+	Try {
 		commandData	:= curl
 		commandHdr	:= curl
 		If (binaryDL) {
@@ -34,8 +34,8 @@
 				commandData .= "-o """ SavePath """ "	; set target destination and name
 			}
 		} Else {
-			commandData .= " -Ls --compressed "			; follow redirects
-			commandHdr  .= " -ILs "						; follow redirects
+			commandData .= " -Lks --compressed "			; follow redirects
+			commandHdr  .= " -ILks "						; follow redirects
 		}
 		If (StrLen(headers)) {
 			commandData .= headers
@@ -58,9 +58,9 @@
 	If (!binaryDL) {
 		; Use fallback download if curl fails
 		If ((not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK") or e.what) and useFallback) {
-			DownloadFallback(url, html, e, critical, errorMsg)
+			DownloadFallback(url, html, e, critical, ioHdr)
 		} Else If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK" and e.what)) {
-			ThrowError(e)
+			ThrowError(e, false, ioHdr)
 		}
 	}
 	; handle binary file downloads
@@ -80,7 +80,7 @@
 			html := "Error: Different Size"
 		}
 	} Else {
-		ThrowError(e)
+		ThrowError(e, false, ioHdr)
 	}
 	
 	Return html
@@ -132,9 +132,9 @@ DownloadFallback(url, ByRef html, e, critical, errorMsg) {
 }
 
 ThrowError(e, critical = false, errorMsg = "") {
-	msg := "Exception thrown (download)!"
+	msg := "Exception thrown (download)!"	
+	msg .= "`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
 	msg := StrLen(errorMsg) ? msg "`n`n" errorMsg : msg
-	msg .= "`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra	
 	
 	If (critical) {
 		MsgBox, 16,, % msg

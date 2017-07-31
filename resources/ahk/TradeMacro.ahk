@@ -1304,7 +1304,7 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 }
 
 ; Open given Url with default Browser
-TradeFunc_OpenUrlInBrowser(Url){
+TradeFunc_OpenUrlInBrowser(Url) {
 	Global TradeOpts
 	
 	openWith := 

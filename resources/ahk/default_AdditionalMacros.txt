@@ -1,14 +1,30 @@
-;###########------------------- Additional Macros ---------------------###########
-;# Use the global variables to enable/disable hotkeys and set a key combination. #
-;#                                                                               #
-;# You can also add your own macros here, but adding your own files in the       #
-;# subfolder "CustomMacros\" is the more preferable solution. All files there    #
-;# will be appended/included. Please make sure that any issues that you are      #
-;# experiencing aren't related to your own macros before reporting them.         #
-;#                                                                               #
-;# Hotkeys you can use: https://autohotkey.com/docs/KeyList.htm                  #
-;# Autohotkey Quick Reference: https://autohotkey.com/docs/AutoHotkey.htm        #
-;###########-----------------------------------------------------------###########
+;###########----------------------- Additional Macros -------------------------###########
+;# Use the global variables to enable/disable hotkeys and set a key combination.         #
+;#                                                                                       #
+;# You can also add your own macros here, but adding your own files in the subfolder     #
+;# "CustomMacros\" is the more preferable solution. All files there will be appended.    #
+;# Please make sure that any issues that you are experiencing aren't related to your own #
+;# macros before reporting them.                                                         #
+;# For example, paste the line "^Space::SendInput {Enter}/oos{Enter}" in an ".ahk" file, #
+;# place it in the CustomMacros folder and you have your macro ready. It's that easy.    #                              
+;#                                                                                       #
+;# Hotkeys you can use: https://autohotkey.com/docs/KeyList.htm.                         #
+;# Autohotkey Quick Reference: https://autohotkey.com/docs/AutoHotkey.htm.               #
+;# Using a hotkey in your custom macro that is assigned in this scrip but set to "off"   #
+;# won't work since that hotkey exists but is disabled. Use the hotkey command to        #
+;# overwrite and enable it: https://autohotkey.com/docs/commands/Hotkey.htm.             #
+;#                                                                                       #
+;# Declaring variables or executing code outside of functions, labels or hotkeys won't   #
+;# work in AdditionalMacros or your custom macros. Read more about it here:              #
+;# https://autohotkey.com/docs/Scripts.htm#auto (script auto-execute section).           #
+;# Function calls via hotkeys work though.                                               #
+;#                                                                                       #
+;# AutoHotkey IDE's and Editor setups (NotePad++, Sublime, Vim):                         #                                             
+;# https://github.com/ahkscript/awesome-AutoHotkey#integrated-development-environment    #
+;#                                                                                       #
+;# Curated list of awesome AHK libs, lib distributions, scripts, tools and resources:    # 
+;# https://github.com/ahkscript/awesome-AutoHotkey                                       #
+;###########-------------------------------------------------------------------###########
 	
 AM_AssignHotkeys:
 	; Assign and enable/disable the hotkeys here
@@ -16,6 +32,7 @@ AM_AssignHotkeys:
 	global AM_Minimize			:= ["on", "#D"]
 	global AM_HighlightItems	:= ["on", "^F"]
 	global AM_HighlightItemsAlt	:= ["on", "^!F"]
+	global AM_LookUpAffixes		:= ["on", "^L"]
 	global AM_CloseScripts		:= ["off", "^Escape"]
 	global AM_KickYourself		:= ["off", "F4", "Input your character name here"]
 	global AM_Hideout			:= ["on", "F5"]
@@ -31,6 +48,7 @@ AM_AssignHotkeys:
 		Hotkey, % AM_Minimize[2]			, AM_Minimize_HKey				, % AM_Minimize[1]
 		Hotkey, % AM_HighlightItems[2]		, AM_HighlightItems_HKey		, % AM_HighlightItems[1]
 		Hotkey, % AM_HighlightItemsAlt[2]	, AM_HighlightItemsAlt_HKey		, % AM_HighlightItemsAlt[1]
+		Hotkey, % AM_LookUpAffixes[2]		, AM_LookUpAffixes_HKey			, % AM_LookUpAffixes[1]
 		Hotkey, % AM_CloseScripts[2]		, AM_CloseScripts_HKey			, % AM_CloseScripts[1]
 		Hotkey, % AM_KickYourself[2]		, AM_KickYourself_HKey			, % AM_KickYourself[1]
 		Hotkey, % AM_Hideout[2]				, AM_Hideout_HKey				, % AM_Hideout[1]
@@ -62,6 +80,10 @@ Return
 
 AM_HighlightItemsAlt_HKey:
 	HighlightItems(true,true)		; Ctrl+Alt+F uses much broader search terms for the highlight function.
+Return
+
+AM_LookUpAffixes_HKey:
+	LookUpAffixes()					; Opens poeaffix.net in your browser, navigating to the item that you're hovering over.
 Return
 
 AM_CloseScripts_HKey:

@@ -1,5 +1,26 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.3.6
+================================================================================================
+Includes changes from previous beta versions:
+Replaced the WinHttpRequest library with cURL.
+All requests to poe.trade/Github/poe.ninja now support gzip compression. This greatly reduces bandwith usage (and therefore request times).
+
+Rewrote AdditionalMacros.txt:
+	Hotkeys can be set and enabled/disabled via global variables.
+	You can completely disable the entire file with all it's hotkeys in the settings menu (ItemInfo tab).
+	Added a hotkey to open a base item on poeaffix.net.
+Added a subfolder "CustomMacros" to the user directory:
+	This folder is now being created on script start, all files (.txt, .ahk) in there will be appended to AdditionalMacros/TradeMacro.
+	You can still edit AdditionalMacros, but also add your own macros as seperate files.	
+
+Added the "-nosplash" argument for the run script, using it via shortcut/script skips the splashtexts at script start.	
+Fixed the item parsing for negative mods (for example "-4 maximum charges") and charges in general for Leaguestones failing in some edge cases.  
+Fixed minimum and maximum dps calculation for uniques being off in some cases (advanced search GUI).
+Fixed a bug where some uniques had their lightning damage mod missing (advanced saerch GUI).
+Fixed a bug where the maximum value of innate defenses/offenses was being ignored in the request when the minimum value was empty (advanced search).
+Rewrote POST request payload generation (much shorter payload).
+
 2.3.5-beta.2
 ================================================================================================
 Replaced WinHttpRequest and the HttpRequest (WinInet.dll) library with cURL.

@@ -24,7 +24,10 @@ If (A_AhkVersion < TradeAHKVersionRequired)
 Menu, Tray, Icon, %A_ScriptDir%\resources\images\poe-trade-bl.ico
 Menu, Tray, Add, Open Wiki/FAQ, OpenGithubWikiFromMenu
 
-TradeFunc_StartSplashScreen()
+argumentSkipSplash = %6%
+If (not argumentSkipSplash) {
+	TradeFunc_StartSplashScreen()	
+}
 
 ; empty clipboard on start to fix first search searching random stuff
 Clipboard := ""
@@ -1273,26 +1276,29 @@ TradeFunc_ParseSearchFormOptions() {
 
 TradeFunc_DownloadDataFiles() {
 	; disabled while using debug mode 	
-	owner := TradeGlobals.Get("GithubUser", "POE-TradeMacro")
-	repo  := TradeGlobals.Get("GithubRepo", "POE-TradeMacro")
-	url   := "https://raw.githubusercontent.com/" . owner . "/" . repo . "/master/data_trade/"
-	dir = %A_ScriptDir%\data_trade
-	bakDir = %A_ScriptDir%\data_trade\old_data_files
-	files := ["boot_enchantment_mods.txt","crafting_bases.txt","glove_enchantment_mods.txt","helmet_enchantment_mods.txt","item_corrupted_mods.txt","mods.json","uniques.json", "relics.json"]		
+	owner	:= TradeGlobals.Get("GithubUser", "POE-TradeMacro")
+	repo 	:= TradeGlobals.Get("GithubRepo", "POE-TradeMacro")
+	url		:= "https://raw.githubusercontent.com/" . owner . "/" . repo . "/master/data_trade/"
+	dir		= %A_ScriptDir%\data_trade
+	bakDir	= %A_ScriptDir%\data_trade\old_data_files
+	files	:= ["boot_enchantment_mods.txt", "crafting_bases.txt", "glove_enchantment_mods.txt", "helmet_enchantment_mods.txt"
+				, "mods.json", "uniques.json", "relics.json", "item_bases_armour.json", "item_bases_weapon.json"]
 	
 	; create .bak files and download (overwrite) data files
-	; if downlaoded file exists move .bak-file to backup folder, otherwise restore .bak-file 
+	; if downloaded file exists move .bak-file to backup folder, otherwise restore .bak-file
 	Loop % files.Length() {
 		file := files[A_Index]
 		filePath = %dir%\%file%
-		FileCopy, %filePath%, %filePath%.bak
-		UrlDownloadToFile, %url%%file%, %filePath%
+		FileCopy, %filePath%, %filePath%.bak		
+		output := PoEScripts_Download(url . file, postData := "", reqHeaders := "", options := "", false)
+		FileDelete, %filePath%
+		FileAppend, %output%, %filePath%
 		
 		Sleep,50
 		If (FileExist(filePath) and not ErrorLevel) {
 			FileMove, %filePath%.bak, %bakDir%\%file%
 		}
-		Else {
+		Else {			
 			FileMove, %dir%\%file%.bak, %dir%\%file%
 		}
 		ErrorLevel := 0
