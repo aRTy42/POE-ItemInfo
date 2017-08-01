@@ -1,32 +1,133 @@
-;###########----------------- Additional Macros -------------------###########
-;# Lines/text with a semicolon (;) in front are considered comments.         #
-;# Remove a semicolon to enable specific hotkeys or add one to disable them. #
-;# Hotkeys you can use: https://autohotkey.com/docs/KeyList.htm              #
-;# Autohotkey Quick Reference: https://autohotkey.com/docs/AutoHotkey.htm    #
-;###########-------------------------------------------------------###########
+;###########----------------------- Additional Macros -------------------------###########
+;# Use the global variables to enable/disable hotkeys and set a key combination.         #
+;#                                                                                       #
+;# You can also add your own macros here, but adding your own files in the subfolder     #
+;# "CustomMacros\" is the more preferable solution. All files there will be appended.    #
+;# Please make sure that any issues that you are experiencing aren't related to your own #
+;# macros before reporting them.                                                         #
+;# For example, paste the line "^Space::SendInput {Enter}/oos{Enter}" in an ".ahk" file, #
+;# place it in the CustomMacros folder and you have your macro ready. It's that easy.    #                              
+;#                                                                                       #
+;# Hotkeys you can use: https://autohotkey.com/docs/KeyList.htm.                         #
+;# Autohotkey Quick Reference: https://autohotkey.com/docs/AutoHotkey.htm.               #
+;# Using a hotkey in your custom macro that is assigned in this scrip but set to "off"   #
+;# won't work since that hotkey exists but is disabled. Use the hotkey command to        #
+;# overwrite and enable it: https://autohotkey.com/docs/commands/Hotkey.htm.             #
+;#                                                                                       #
+;# Declaring variables or executing code outside of functions, labels or hotkeys won't   #
+;# work in AdditionalMacros or your custom macros. Read more about it here:              #
+;# https://autohotkey.com/docs/Scripts.htm#auto (script auto-execute section).           #
+;# Function calls via hotkeys work though.                                               #
+;#                                                                                       #
+;# AutoHotkey IDE's and Editor setups (NotePad++, Sublime, Vim):                         #                                             
+;# https://github.com/ahkscript/awesome-AutoHotkey#integrated-development-environment    #
+;#                                                                                       #
+;# Curated list of awesome AHK libs, lib distributions, scripts, tools and resources:    # 
+;# https://github.com/ahkscript/awesome-AutoHotkey                                       #
+;###########-------------------------------------------------------------------###########
 	
-	Pause::TogglePOEItemScript()			; Pause item parsing with the pause key (other macros remain).
-	#D::WinMinimize, A						; Winkey+D minimizes the active PoE window (PoE stays minimized this way).
-   
-	^F::HighlightItems(false,true)			; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
-											; Function parameters, change if needed or wanted:
-											;	1. Use broader terms, default = false.
-											;	2. Leave the search field after pasting the search terms, default = true.
-	^!F::HighlightItems(true,true)			; Ctrl+Alt+F uses much broader search terms for the highlight function.
-   
-;	^Escape::CloseScripts()						; Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
-  
-;	F4::SendInput {Enter}/kick own_char_name{Enter}		; Quickly leave a group by kicking yourself. Only works for one specific character name.
-	F5::SendInput {Enter}/hideout{Enter}		; Go to hideout with F5.
-	^WheelDown::SendInput {Right}				; Ctrl+scroll down scrolls through stash tabs rightward.
-	^WheelUp::SendInput {Left}					; Ctrl+scroll up scrolls through stash tabs leftward.
-	~RButton & WheelDown::Send {Right}			; Holding right mouse button+scroll down scrolls through stash tabs rightward
-	~RButton & WheelUp::Send {Left}				; Holding right mouse button+scroll up scrolls through stash tabs leftward.
+AM_AssignHotkeys:
+	; Assign and enable/disable the hotkeys here
+	global AM_TogglePOEItemScript := ["on", "Pause"]
+	global AM_Minimize			:= ["on", "#D"]
+	global AM_HighlightItems	:= ["on", "^F"]
+	global AM_HighlightItemsAlt	:= ["on", "^!F"]
+	global AM_LookUpAffixes		:= ["on", "^L"]
+	global AM_CloseScripts		:= ["off", "^Escape"]
+	global AM_KickYourself		:= ["off", "F4", "Input your character name here"]
+	global AM_Hideout			:= ["on", "F5"]
+	global AM_ScrollTabRight	:= ["on", "^WheelDown", "~RButton & WheelDown"]
+	global AM_ScrollTabLeft		:= ["on", "^WheelUp", "~RButton & WheelUp"]
+	global AM_SendCtrlC			:= ["off", "^RButton"]
+	global AM_Remaining			:= ["off", "F9"]
+	global AM_JoinGlobal820		:= ["off", "F10"]
+	global AM_SetAfkMessage		:= ["off", "F11"]
 
-;	^RButton::SendInput ^c						; Ctrl+right mouse button sends ctrl+c.
-;	F9::SendInput {Enter}/remaining{Enter}		; Mobs remaining with F9.
-;	F10::SendInput {Enter}/global 820{Enter}	; Join a channel with F10.
-;	F11::setAfkMessage()						; Pastes afk message to your chat and marks "X" so you can type in the estimated time.
+	If (Opts.EnableAdditionalMacros) {
+		Hotkey, % AM_TogglePOEItemScript[2]	, AM_TogglePOEItemScript_HKey	, % AM_TogglePOEItemScript[1]
+		Hotkey, % AM_Minimize[2]			, AM_Minimize_HKey				, % AM_Minimize[1]
+		Hotkey, % AM_HighlightItems[2]		, AM_HighlightItems_HKey		, % AM_HighlightItems[1]
+		Hotkey, % AM_HighlightItemsAlt[2]	, AM_HighlightItemsAlt_HKey		, % AM_HighlightItemsAlt[1]
+		Hotkey, % AM_LookUpAffixes[2]		, AM_LookUpAffixes_HKey			, % AM_LookUpAffixes[1]
+		Hotkey, % AM_CloseScripts[2]		, AM_CloseScripts_HKey			, % AM_CloseScripts[1]
+		Hotkey, % AM_KickYourself[2]		, AM_KickYourself_HKey			, % AM_KickYourself[1]
+		Hotkey, % AM_Hideout[2]				, AM_Hideout_HKey				, % AM_Hideout[1]
+		Hotkey, % AM_ScrollTabRight[2]		, AM_ScrollTabRight_HKey		, % AM_ScrollTabRight[1]
+		Hotkey, % AM_ScrollTabLeft[2]		, AM_ScrollTabLeft_HKey			, % AM_ScrollTabLeft[1]
+		Hotkey, % AM_ScrollTabRight[3]		, AM_ScrollTabRightAlt_HKey		, % AM_ScrollTabRight[1]
+		Hotkey, % AM_ScrollTabLeft[3]		, AM_ScrollTabLeftAlt_HKey		, % AM_ScrollTabLeft[1]
+		Hotkey, % AM_SendCtrlC[2]			, AM_SendCtrlC_HKey				, % AM_SendCtrlC[1]
+		Hotkey, % AM_Remaining[2]			, AM_Remaining_HKey				, % AM_Remaining[1]
+		Hotkey, % AM_JoinGlobal820[2]		, AM_JoinGlobal820_HKey			, % AM_JoinGlobal820[1]
+		Hotkey, % AM_SetAfkMessage[2]		, AM_SetAfkMessage_HKey			, % AM_SetAfkMessage[1]
+	}
+Return
+
+AM_TogglePOEItemScript_HKey:
+	TogglePOEItemScript()			; Pause item parsing with the pause key (other macros remain).
+Return
+
+AM_Minimize_HKey:
+	WinMinimize, A					; Winkey+D minimizes the active PoE window (PoE stays minimized this way).
+Return 
+
+AM_HighlightItems_HKey:
+	HighlightItems(false,true)		; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
+										; Function parameters, change if needed or wanted:
+										;	1. Use broader terms, default = false.
+										;	2. Leave the search field after pasting the search terms, default = true.
+Return
+
+AM_HighlightItemsAlt_HKey:
+	HighlightItems(true,true)		; Ctrl+Alt+F uses much broader search terms for the highlight function.
+Return
+
+AM_LookUpAffixes_HKey:
+	LookUpAffixes()					; Opens poeaffix.net in your browser, navigating to the item that you're hovering over.
+Return
+
+AM_CloseScripts_HKey:
+	CloseScripts()					; Ctrl+Esc closes all running scripts specified by (and including) ItemInfo or TradeMacro.
+Return
+
+AM_KickYourself_HKey:
+	charName := AM_KickYourself[3]
+	SendInput {Enter}/kick %charName%{Enter}		; Quickly leave a group by kicking yourself. Only works for one specific character name.
+Return
+
+AM_Hideout_HKey:
+	SendInput {Enter}/hideout{Enter}				; Go to hideout with F5.
+Return
+
+AM_ScrollTabRight_HKey:
+	SendInput {Right}		; Ctrl+scroll down scrolls through stash tabs rightward.
+Return
+AM_ScrollTabLeft_HKey:
+	SendInput {Left}		; Ctrl+scroll up scrolls through stash tabs leftward.
+Return
+	
+AM_ScrollTabRightAlt_HKey:	
+	Send {Right}			; Holding right mouse button+scroll down scrolls through stash tabs rightward
+Return
+AM_ScrollTabLeftAlt_HKey:
+	Send {Left}				; Holding right mouse button+scroll up scrolls through stash tabs leftward.
+Return
+
+AM_SendCtrlC_HKey:
+	SendInput ^c			; Ctrl+right mouse button sends ctrl+c.
+Return
+
+AM_Remaining_HKey:
+	SendInput {Enter}/remaining{Enter}		; Mobs remaining with F9.
+Return
+
+AM_JoinGlobal820_HKey:
+	SendInput {Enter}/global 820{Enter}		; Join a channel with F10.
+Return
+
+AM_SetAfkMessage_HKey:
+	setAfkMessage()							; Pastes afk message to your chat and marks "X" so you can type in the estimated time.
+Return
 
 setAfkMessage(){		
 	T1 := A_Now

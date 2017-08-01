@@ -1,6 +1,5 @@
 ﻿#Include, %A_ScriptDir%\lib\JSON.ahk
 #Include, %A_ScriptDir%\lib\zip.ahk
-#Include, %A_ScriptDir%\lib\WinHttpRequest.ahk
 
 PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "") {
 	status := GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle)
@@ -15,18 +14,12 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 	url			:= "https://api.github.com/repos/" . user . "/" . repo . "/releases"
 	downloadUrl	:= "https://github.com/" . user . "/" . repo . "/releases"
 	html			:= ""
-	
+
 	postData		:= ""
-	reqHeaders =
-		(LTrim
-			Content-type: application/html
-		)
-	options =
-		(LTrim
-			Charset: UTF-8
-			Codepage: 65001
-			Method: GET
-		)
+	options		:= ""
+	
+	reqHeaders	:= []
+	reqHeaders.push("Content-Type: text/html; charset=UTF-8")
 	
 	Try  {
 		errorMsg	:= "Update check failed. Please check manually on the Github page for updates.`nThe script will now continue."
@@ -493,18 +486,8 @@ DownloadRelease(url, project, ByRef savePath) {
 	}
 	
 	postData := ""
-	reqHeaders =
-		(LTrim
-			Content-type: application/octet-stream
-			User-Agent: %project%
-		)
-	options =
-		(LTrim
-			Charset: UTF-8
-			Codepage: 65001
-			SaveAs: %savePath%
-			Method: GET
-		)	
+	reqHeaders := []
+	options := "SaveAs: " savePath
 	response := PoEScripts_Download(url, ioData := postData, ioHdr := reqHeaders, options, true, true, true)
 	SplashTextOff
 	

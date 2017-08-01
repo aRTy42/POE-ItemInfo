@@ -193,7 +193,6 @@ global overwrittenUserFiles	:= overwrittenUserFiles ? overwrittenUserFiles : arg
 global SuspendPOEItemScript = 0
 
 class UserOptions {
-
 	OnlyActiveIfPOEIsFront := 1     ; Set to 1 to make it so the script does nothing if Path of Exile window isn't the frontmost.
 									; If 0, the script also works if PoE isn't frontmost. This is handy for have the script parse
 									; textual item representations appearing somewhere Else, like in the forums or text files.
@@ -202,6 +201,8 @@ class UserOptions {
 	ShowUpdateNotifications := 1
 	UpdateSkipSelection := 0
 	UpdateSkipBackup := 0
+
+	EnableAdditionalMacros := 1		; Enable/disable the entire AdditionalMacros.txt file
 
 	ShowItemLevel := 1              ; Show item level and the item type's base level (enabled by default change to 0 to disable)
 	ShowMaxSockets := 1             ; Show the max sockets based on ilvl and type
@@ -301,40 +302,10 @@ class UserOptions {
 	ScreenOffsetY := 0
 	
 	ScanUI()
-	{
-		this.OnlyActiveIfPOEIsFront := GuiGet("OnlyActiveIfPOEIsFront")
-		this.PutResultsOnClipboard := GuiGet("PutResultsOnClipboard")
-		this.ShowUpdateNotifications := GuiGet("ShowUpdateNotifications")
-		this.UpdateSkipSelection := GuiGet("UpdateSkipSelection")
-		this.UpdateSkipBackup := GuiGet("UpdateSkipBackup")		
-		this.ShowItemLevel := GuiGet("ShowItemLevel")
-		this.ShowMaxSockets := GuiGet("ShowMaxSockets")
-		this.ShowDamageCalculations := GuiGet("ShowDamageCalculations")
-		this.ShowAffixTotals := GuiGet("ShowAffixTotals")
-		this.ShowAffixDetails := GuiGet("ShowAffixDetails")
-		this.ShowAffixLevel := GuiGet("ShowAffixLevel")
-		this.ShowAffixBracket := GuiGet("ShowAffixBracket")
-		this.ShowAffixMaxPossible := GuiGet("ShowAffixMaxPossible")
-		this.ShowAffixBracketTier := GuiGet("ShowAffixBracketTier")
-		this.ShowAffixBracketTierTotal := GuiGet("ShowAffixBracketTierTotal")
-		this.TierRelativeToItemLevel := GuiGet("TierRelativeToItemLevel")
-		this.ShowDarkShrineInfo := GuiGet("ShowDarkShrineInfo")
-		this.ShowCurrencyValueInChaos := GuiGet("ShowCurrencyValueInChaos")
-		this.DisplayToolTipAtFixedCoords := GuiGet("DisplayToolTipAtFixedCoords")
-		this.ScreenOffsetX := GuiGet("ScreenOffsetX")
-		this.ScreenOffsetY := GuiGet("ScreenOffsetY")
-		this.MaxSpanStartingFromFirst := GuiGet("MaxSpanStartingFromFirst")
-		this.CompactDoubleRanges := GuiGet("CompactDoubleRanges")
-		this.CompactAffixTypes := GuiGet("CompactAffixTypes")
-		this.MirrorAffixLines := GuiGet("MirrorAffixLines")
-		this.MirrorLineFieldWidth := GuiGet("MirrorLineFieldWidth")
-		this.ValueRangeFieldWidth := GuiGet("ValueRangeFieldWidth")
-		this.AffixDetailDelimiter := GuiGet("AffixDetailDelimiter")
-		this.AffixDetailEllipsis := GuiGet("AffixDetailEllipsis")
-		this.MouseMoveThreshold := GuiGet("MouseMoveThreshold")
-		this.UseTooltipTimeout := GuiGet("UseTooltipTimeout")
-		this.ToolTipTimeoutTicks := GuiGet("ToolTipTimeoutTicks")
-		this.FontSize := GuiGet("FontSize")
+	{		
+		For key, val in this {
+			this[key] := GuiGet(key)
+		}
 	}
 }
 Opts := new UserOptions()
@@ -343,10 +314,10 @@ class Fonts {
 
 	Init(FontSizeFixed, FontSizeUI)
 	{
-		this.FontSizeFixed := FontSizeFixed
-		this.FontSizeUI := FontSizeUI
-		this.FixedFont := this.CreateFixedFont(FontSizeFixed)
-		this.UIFont := this.CreateUIFont(FontSizeUI)
+		this.FontSizeFixed	:= FontSizeFixed
+		this.FontSizeUI		:= FontSizeUI
+		this.FixedFont		:= this.CreateFixedFont(FontSizeFixed)
+		this.UIFont			:= this.CreateUIFont(FontSizeUI)
 	}
 
 	CreateFixedFont(FontSize_)
@@ -429,17 +400,17 @@ class Fonts {
 class ItemData_ {
 	Init() 
 	{
-		This.Links := ""
-		This.Sockets := ""
-		This.Stats := ""
-		This.NamePlate := ""
-		This.Affixes := ""
-		This.FullText := ""
+		This.Links		:= ""
+		This.Sockets	:= ""
+		This.Stats		:= ""
+		This.NamePlate	:= ""
+		This.Affixes	:= ""
+		This.FullText	:= ""
 		This.IndexAffixes := -1
-		This.IndexLast := -1
-		This.PartsLast := ""
-		This.Rarity := ""
-		This.Parts := []
+		This.IndexLast	:= -1
+		This.PartsLast	:= ""
+		This.Rarity		:= ""
+		This.Parts		:= []
 	}
 }
 Global ItemData := new ItemData_
@@ -456,7 +427,7 @@ class Item_ {
 		This.RarityLevel 	:= ""
 		This.BaseType 		:= ""
 		This.GripType 		:= ""
-		This.Level		:= ""
+		This.Level			:= ""
 		This.MapLevel 		:= ""
 		This.MapTier 		:= ""
 		This.MaxSockets 	:= ""
@@ -472,18 +443,18 @@ class Item_ {
 		This.IsArmour 		:= False
 		This.IsQuiver 		:= False
 		This.IsFlask 		:= False
-		This.IsGem		:= False
+		This.IsGem			:= False
 		This.IsCurrency 	:= False
 		This.IsUnidentified := False
 		This.IsBelt 		:= False
 		This.IsRing 		:= False
 		This.IsUnsetRing 	:= False
-		This.IsBow		:= False
+		This.IsBow			:= False
 		This.IsAmulet 		:= False
 		This.IsSingleSocket := False
 		This.IsFourSocket 	:= False
 		This.IsThreeSocket 	:= False
-		This.IsMap		:= False
+		This.IsMap			:= False
 		This.IsTalisman 	:= False
 		This.IsJewel 		:= False
 		This.IsLeaguestone	:= False
@@ -583,6 +554,7 @@ CreateSettingsUI()
 If (StrLen(overwrittenUserFiles)) {
 	ShowChangedUserFiles()
 }
+GoSub, AM_AssignHotkeys
 GoSub, FetchCurrencyData
 
 Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
@@ -6606,7 +6578,7 @@ PostProcessData(ParsedData)
 	return Result
 }
 
-ParseClipBoardChanges()
+ParseClipBoardChanges(debug = false)
 {
 	Global Opts, Globals
 
@@ -6631,7 +6603,55 @@ ParseClipBoardChanges()
 	{
 		SetClipboardContents(ParsedData)
 	}
+
+	
+	If (StrLen(ParsedData) and !Opts.OnlyActiveIfPOEIsFront and debug) {	
+		AddLogEntry(ParsedData, CBContents)
+	}
+
 	ShowToolTip(ParsedData)
+}
+
+AddLogEntry(ParsedData, RawData) {
+	logFileRaw	:= userDirectory "\parsingLogRaw.txt"
+	logFileParsed	:= userDirectory "\parsingLog.txt"
+	
+	line		:= "----------------------------------------------------------"
+	timeStamp	:= ""
+	ID 		:= MD5(RawData)
+	UTCTimestamp := GetTimestampUTC()
+	UTCFormatStr := "yyyy-MM-dd'T'HH:mm'Z'"
+	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr%
+
+	entry	:= line "`n" TimeStr " - ID: " ID "`n" line "`n`n"  
+	entryRaw	:= entry . RawData "`n`n"
+	entryParsed := entry . ParsedData "`n`n"
+	
+	FileAppend, %entryRaw%, %logFileRaw%
+	FileAppend, %entryParsed%, %logFileParsed%
+}
+
+MD5(string, case := False)    ; by SKAN | rewritten by jNizM
+{
+	static MD5_DIGEST_LENGTH := 16
+	hModule := DllCall("LoadLibrary", "Str", "advapi32.dll", "Ptr")
+	, VarSetCapacity(MD5_CTX, 104, 0), DllCall("advapi32\MD5Init", "Ptr", &MD5_CTX)
+	, DllCall("advapi32\MD5Update", "Ptr", &MD5_CTX, "AStr", string, "UInt", StrLen(string))
+	, DllCall("advapi32\MD5Final", "Ptr", &MD5_CTX)
+	loop % MD5_DIGEST_LENGTH
+		o .= Format("{:02" (case ? "X" : "x") "}", NumGet(MD5_CTX, 87 + A_Index, "UChar"))
+	return o, DllCall("FreeLibrary", "Ptr", hModule)
+}
+
+GetTimestampUTC() { ; http://msdn.microsoft.com/en-us/library/ms724390
+   VarSetCapacity(ST, 16, 0) ; SYSTEMTIME structure
+   DllCall("Kernel32.dll\GetSystemTime", "Ptr", &ST)
+   Return NumGet(ST, 0, "UShort")                        ; year   : 4 digits until 10000
+		. SubStr("0" . NumGet(ST,  2, "UShort"), -1)     ; month  : 2 digits forced
+		. SubStr("0" . NumGet(ST,  6, "UShort"), -1)     ; day    : 2 digits forced
+		. SubStr("0" . NumGet(ST,  8, "UShort"), -1)     ; hour   : 2 digits forced
+		. SubStr("0" . NumGet(ST, 10, "UShort"), -1)     ; minute : 2 digits forced
+		. SubStr("0" . NumGet(ST, 12, "UShort"), -1)     ; second : 2 digits forced
 }
 
 AssembleDamageDetails(FullItemData)
@@ -6967,7 +6987,7 @@ ParseSockets(ItemDataText)
 ParseCharges(stats)
 {
 	charges := {}
-	Loop,  Parse, stats, `n, `r 
+	Loop, Parse, stats, `n, `r 
 	{
 		LoopField := RegExReplace(A_Loopfield, "i)\s\(augmented\)", "")
 		; Flasks
@@ -6977,20 +6997,21 @@ ParseCharges(stats)
 			charges.usage	:= max1
 			charges.max	:= max2
 		}		
-		RegExMatch(LoopField, "i)Currently has (\d+) Charges.*", current)
+		RegExMatch(LoopField, "i)Currently has (\d+) Charge.*", current)
 
 		If (current) {
 			charges.current:= current1
 		}
 		
 		; Leaguestones	
-		RegExMatch(LoopField, "i)Currently has (\d+) of (\d+) Charges.*", max)
+		RegExMatch(LoopField, "i)Currently has (\d+) of (\d+) Charge.*", max)
 		If (max) {
 			charges.usage	:= 1
 			charges.max	:= max2
 			charges.current:= max1
 		}		
 	}
+	
 	return charges
 }
 
@@ -8029,9 +8050,11 @@ ModStringToObject(string, isImplicit) {
 				break
 			}
 		}
-		
+
 		temp.values	:= values
-		s			:= RegExReplace(Matches[A_Index], "i)(-?[.0-9]+)", "#")
+		; mods with negative values inputted in the value fields are not supported on poe.trade, so searching for "-1 maximum charges/frenzy charges" is not possible
+		; unless there is a mod "-# maximum charges"
+		s			:= RegExReplace(Matches[A_Index], "i)(-?)[.0-9]+", "$1#")
 		temp.name		:= RegExReplace(s, "i)# ?to ? #", "#", isRange)
 		temp.isVariable:= false
 		temp.type		:= (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"
@@ -8039,21 +8062,7 @@ ModStringToObject(string, isImplicit) {
 	}
 	
 	Return arr
-}	
-
-
-; #######################################################################################################################
-; ###	Dev:	4GForce/Eruyome
-; ### 	Date:	01/28/2017
-; ###     Issue:	#224 @ https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/224
-; ###	Desc:	Not only about this issue, many reports of improper pseudo calculation, I experienced it plenty myself
-; ###			Tried debugging the old function but it was so messed up that I decided to rewrite it.
-; ###			Based on the same logic that was used before, but simpler and clearer.
-; ###			Using simplifiedNames for the mods so they are easier to compare without rewriting regex all the time
-; ###	TODO:	- Test, test and more test
-; ###			- Build a structure for the possible mods ? 
-; ###			  something like: { simplifiedName: "xToFireResistance", regex: "i)to Fire Resistance", displayFormat: "+#% to Fire Resistance" }
-; #######################################################################################################################
+}
 
 ; Moved from TradeMacro to ItemInfo to avoid duplicate code, please be careful with any changes
 CreatePseudoMods(mods, returnAllMods := False) {
@@ -9149,7 +9158,7 @@ CreateSettingsUI()
 	Global
 	
 	; General
-	generalHeight := SkipItemInfoUpdateCall ? "90" : "180"
+	generalHeight := SkipItemInfoUpdateCall ? "120" : "210"
 	GuiAddGroupBox("General", "x7 y+15 w260 h" generalHeight " Section")
 
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
@@ -9158,14 +9167,16 @@ CreateSettingsUI()
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "If checked the script does nothing if the`nPath of Exile window isn't the frontmost")
 	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 ys50 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
 	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")	
+	GuiAddCheckbox("Enable Additional Macros", "xs10 ys80 w210 h30", Opts.EnableAdditionalMacros, "EnableAdditionalMacros", "EnableAdditionalMacrosH")
+	AddToolTip(EnableAdditionalMacrosH, "Enables or disables the entire 'AdditionalMacros.txt' file.`nNeeds a script reload to take effect.")
 	If (!SkipItemInfoUpdateCall) {
-		GuiAddCheckbox("Update: Show Notifications", "xs10 ys80 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
+		GuiAddCheckbox("Update: Show Notifications", "xs10 ys110 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
 		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")		
-		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys110 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys140 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
 		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")	
-		GuiAddCheckbox("Update: Skip backup", "xs10 ys140 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+		GuiAddCheckbox("Update: Skip backup", "xs10 ys170 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
 		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
-	}
+	}		
 
 	; Display
 
@@ -9265,6 +9276,7 @@ UpdateSettingsUI()
 
 	GuiControl,, OnlyActiveIfPOEIsFront, % Opts.OnlyActiveIfPOEIsFront
 	GuiControl,, PutResultsOnClipboard, % Opts.PutResultsOnClipboard
+	GuiControl,, EnableAdditionalMacros, % Opts.EnableAdditionalMacros
 	If (!SkipItemInfoUpdateCall) {
 		GuiControl,, ShowUpdateNotifications, % Opts.ShowUpdateNotifications
 		GuiControl,, UpdateSkipSelection, % Opts.UpdateSkipSelection
@@ -9466,6 +9478,7 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 
 		Opts.OnlyActiveIfPOEIsFront := IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
 		Opts.PutResultsOnClipboard := IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
+		Opts.EnableAdditionalMacros := IniRead(ConfigPath, "General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
 		Opts.ShowUpdateNotifications := IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
 		Opts.UpdateSkipSelection := IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
 		Opts.UpdateSkipBackup := IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
@@ -9526,6 +9539,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 
 	IniWrite(Opts.OnlyActiveIfPOEIsFront, ConfigPath, "General", "OnlyActiveIfPOEIsFront")
 	IniWrite(Opts.PutResultsOnClipboard, ConfigPath, "General", "PutResultsOnClipboard")
+	IniWrite(Opts.EnableAdditionalMacros, ConfigPath, "General", "EnableAdditionalMacros")
 	IniWrite(Opts.ShowUpdateNotifications, ConfigPath, "General", "ShowUpdateNotifications")
 	IniWrite(Opts.UpdateSkipSelection, ConfigPath, "General", "UpdateSkipSelection")
 	IniWrite(Opts.UpdateSkipBackup, ConfigPath, "General", "UpdateSkipBackup")
@@ -9588,6 +9602,75 @@ RemoveConfig()
 	FileDelete, %userDirectory%\config.ini
 }
 
+StdOutStream(sCmd, Callback = "") {
+	/*
+		Runs commands in a hidden cmdlet window and returns the output.
+	*/
+							; Modified  :  Eruyome 18-June-2017
+	Static StrGet := "StrGet"	; Modified  :  SKAN 31-Aug-2013 http://goo.gl/j8XJXY                             
+							; Thanks to :  HotKeyIt         http://goo.gl/IsH1zs                                   
+							; Original  :  Sean 20-Feb-2007 http://goo.gl/mxCdn
+	64Bit := A_PtrSize=8
+	
+	DllCall( "CreatePipe", UIntP,hPipeRead, UIntP,hPipeWrite, UInt,0, UInt,0 )
+	DllCall( "SetHandleInformation", UInt,hPipeWrite, UInt,1, UInt,1 )
+	
+	If 64Bit {
+		VarSetCapacity( STARTUPINFO, 104, 0 )		; STARTUPINFO          ;  http://goo.gl/fZf24
+		NumPut( 68,         STARTUPINFO,  0 )		; cbSize
+		NumPut( 0x100,      STARTUPINFO, 60 )		; dwFlags    =>  STARTF_USESTDHANDLES = 0x100 
+		NumPut( hPipeWrite, STARTUPINFO, 88 )		; hStdOutput
+		NumPut( hPipeWrite, STARTUPINFO, 96 )		; hStdError
+		
+		VarSetCapacity( PROCESS_INFORMATION, 32 )	; PROCESS_INFORMATION  ;  http://goo.gl/b9BaI  
+	} Else {
+		VarSetCapacity( STARTUPINFO, 68,  0 )		; STARTUPINFO          ;  http://goo.gl/fZf24
+		NumPut( 68,         STARTUPINFO,  0 )		; cbSize
+		NumPut( 0x100,      STARTUPINFO, 44 )		; dwFlags    =>  STARTF_USESTDHANDLES = 0x100 
+		NumPut( hPipeWrite, STARTUPINFO, 60 )		; hStdOutput
+		NumPut( hPipeWrite, STARTUPINFO, 64 )		; hStdError
+		
+		VarSetCapacity( PROCESS_INFORMATION, 32 )	; PROCESS_INFORMATION  ;  http://goo.gl/b9BaI  
+	}	    
+
+	If ! DllCall( "CreateProcess", UInt,0, UInt,&sCmd, UInt,0, UInt,0 ;  http://goo.gl/USC5a
+				, UInt,1, UInt,0x08000000, UInt,0, UInt,0
+				, UInt,&STARTUPINFO, UInt,&PROCESS_INFORMATION ) 
+	Return "" 
+	, DllCall( "CloseHandle", UInt,hPipeWrite )
+	, DllCall( "CloseHandle", UInt,hPipeRead )
+	, DllCall( "SetLastError", Int,-1 )
+
+	hProcess := NumGet( PROCESS_INFORMATION, 0 )
+	If 64Bit {
+		hThread  := NumGet( PROCESS_INFORMATION, 8 )
+	} Else {
+		hThread  := NumGet( PROCESS_INFORMATION, 4 )
+	}
+
+	DllCall( "CloseHandle", UInt,hPipeWrite )
+
+	AIC := ( SubStr( A_AhkVersion, 1, 3 ) = "1.0" )                   ;  A_IsClassic 
+	VarSetCapacity( Buffer, 4096, 0 ), nSz := 0 
+
+	While DllCall( "ReadFile", UInt,hPipeRead, UInt,&Buffer, UInt,4094, UIntP,nSz, Int,0 ) {
+
+	tOutput := ( AIC && NumPut( 0, Buffer, nSz, "Char" ) && VarSetCapacity( Buffer,-1 ) ) 
+			? Buffer : %StrGet%( &Buffer, nSz, "CP850" )
+
+	Isfunc( Callback ) ? %Callback%( tOutput, A_Index ) : sOutput .= tOutput
+
+	}                   
+
+	DllCall( "GetExitCodeProcess", UInt,hProcess, UIntP,ExitCode )
+	DllCall( "CloseHandle",  UInt,hProcess  )
+	DllCall( "CloseHandle",  UInt,hThread   )
+	DllCall( "CloseHandle",  UInt,hPipeRead )
+	DllCall( "SetLastError", UInt,ExitCode  )
+
+	Return Isfunc( Callback ) ? %Callback%( "", 0 ) : sOutput      
+}
+
 GetContributors(AuthorsPerLine=0)
 {
 	IfNotExist, %A_ScriptDir%\resources\AUTHORS.txt
@@ -9642,7 +9725,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		
 		; Parse the clipboard contents twice.
 		; If the clipboard contains valid item data before we send ctrl + c to try and parse an item via ctrl + f then don't restore that clipboard data later on.
-		; This prevents the highlighting funtion to fill search fields with data from previous item parsings/manual data copying since 
+		; This prevents the highlighting function to fill search fields with data from previous item parsings/manual data copying since 
 		; that clipboard data would always be restored again.
 		Loop, 2 {
 			If (A_Index = 2) {
@@ -9836,6 +9919,71 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 			SendInput ^{sc021}		; send ctrl + f in case we don't have information to input
 		}
 
+		Sleep, 10
+		If (!dontRestoreClipboard) {
+			Clipboard := ClipBoardTemp
+		}		
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
+}
+
+LookUpAffixes() {
+	/*
+		Opens item base on poeaffix.net
+	*/
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		Global Item, Opts, Globals, ItemData
+		
+		ClipBoardTemp := Clipboard
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event		
+		
+		Clipboard := 
+		Send ^{sc02E}	; ^{c}
+		Sleep 100		
+		
+		CBContents := GetClipboardContents()
+		CBContents := PreProcessContents(CBContents)		
+		Globals.Set("ItemText", CBContents)
+		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)		
+		ParsedData := ParseItemData(CBContents)
+		If (Item.Name) {
+			dontRestoreClipboard := true
+		}
+
+		If (Item.Name) {
+			url := "http://poeaffix.net/" 
+			If (RegExMatch(Item.TypeName, "i)Sacrificial Garb")) {
+				url 		.= "ch-garb" ; ".html"
+			} Else {
+				ev		:= RegExMatch(ItemData.Stats, "i)Evasion Rating") ? "ev" : ""
+				ar		:= RegExMatch(ItemData.Stats, "i)Armour") ? "ar" : ""
+				es		:= RegExMatch(ItemData.Stats, "i)Energy Shield") ? "es" : ""
+				RegExMatch(Item.SubType, "i)Axe|Sword|Mace|Sceptre|Bow|Staff|Wand|Fish", weapon)
+				RegExMatch(Item.Subtype, "i)Amulet|Ring|Belt|Quiver|Flask", accessory)
+				RegExMatch(Item.Subtype, "i)Cobalt|Viridian|Crimson", jewel)
+				
+				suffix	:= ar . ev . es . weapon . accessory . jewel
+				StringLower, suffix, suffix
+				
+				boots	:= RegExMatch(Item.Subtype, "i)Boots") ? "bt" : ""
+				chest 	:= RegExMatch(Item.Subtype, "i)BodyArmour") ? "ch" : ""
+				gloves 	:= RegExMatch(Item.Subtype, "i)Gloves") ? "gl" : ""
+				helmet 	:= RegExMatch(Item.Subtype, "i)Helmet") ? "hm" : ""
+				shield 	:= RegExMatch(Item.Subtype, "i)Shield") ? "sh" : ""
+				ac		:= StrLen(accessory) ? "ac" : ""
+				jw		:= StrLen(jewel) ? "jw" : ""
+				gripType 	:= Item.GripType != "None" ? Item.GripType : ""
+				
+				prefix	:= boots . chest . gloves . helmet . shield . gripType . ac . jw
+				StringLower, prefix, prefix
+				
+				url		.= prefix "-" suffix ; ".html"
+			}			
+			openWith := AssociatedProgram("html")
+			Run, %openWith% -new-tab "%Url%"
+		}
+		
 		Sleep, 10
 		If (!dontRestoreClipboard) {
 			Clipboard := ClipBoardTemp
