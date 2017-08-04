@@ -2378,7 +2378,7 @@ ParseMapAffixes(ItemDataAffixes)
 		; --- ONE LINE AFFIXES ---
 
 		
-		If (RegExMatch(A_LoopField, "Area is inhabited by (Abominations|Humanoids|Goatmen|Demons|ranged monsters|Animals|Skeletons|Sea Witches and their Spawn|Undead)"))
+		If (RegExMatch(A_LoopField, "Area is inhabited by (Abominations|Humanoids|Goatmen|Demons|ranged monsters|Animals|Skeletons|Sea Witches and their Spawn|Undead|Ghosts|Solaris fanatics|Lunaris fanatics)"))
 		{
 			MapAffixCount += 1
 			NumPrefixes += 1
@@ -4085,6 +4085,9 @@ ParseAffixes(ItemDataAffixes, Item)
 			} Else If (ItemBaseType == "Weapon")
 			{
 				ValueRange := LookupAffixData("data\AttackSpeed_Weapons.txt", ItemLevel, CurrValue, "", CurrTier)
+			} Else If (ItemSubType == "Shield")
+			{
+				ValueRange := LookupAffixData("data\AttackSpeed_Shield.txt", ItemLevel, CurrValue, "", CurrTier)
 			} Else
 			{
 				ValueRange := LookupAffixData("data\AttackSpeed_ArmourAndItems.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -4272,6 +4275,13 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
+		IfInString, A_LoopField, of Life Regenerated per second
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\LifeRegenPercent.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}		
 		IfInString, A_LoopField, Life Regenerated per second
 		{
 			NumSuffixes += 1
@@ -4356,7 +4366,95 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-
+		IfInString, A_LoopField, additional Physical Damage Reduction
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\AdditionalPhysicalDamageReduction.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, chance to Dodge Attacks
+		{
+			If (ItemSubtype == "BodyArmour")
+			{
+				NumSuffixes += 1
+				ValueRange := LookupAffixData("data\ChanceToDodgeAttacks_BodyArmour.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+			Else If (ItemSubtype == "Shield")
+			{
+				NumSuffixes += 1
+				ValueRange := LookupAffixData("data\ChanceToDodgeAttacks_Shield.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+		}
+		IfInString, A_LoopField, of Energy Shield Regenerated per second
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\EnergyShieldRegeneratedPerSecond.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, additional Block Chance against Projectiles
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\AdditionalBlockChanceAgainstProjectiles.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, chance to Avoid being Stunned
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ChanceToAvoidBeingStunned.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, chance to Avoid Elemental Ailments
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ChanceToAvoidElementalAilments.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, chance to Dodge Spell Damage
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ChanceToDodgeSpellDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, Chance to Block Spells
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ChanceToBlockSpells.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, Life gained when you Block
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\LifeOnBlock.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, Mana gained when you Block
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\ManaOnBlock.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		IfInString, A_LoopField, increased Attack and Cast Speed
+		{
+			NumSuffixes += 1
+			ValueRange := LookupAffixData("data\AttackAndCastSpeed_Shield.txt", ItemLevel, CurrValue, "", CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+			Continue
+		}
+		
+		
 		; Prefixes
 
 		IfInString, A_LoopField, to Armour
@@ -5219,11 +5317,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-	IfInString, A_LoopField, increased Elemental Damage with Weapons
+		IfInString, A_LoopField, increased Elemental Damage with Attack Skills
 		{
-		; Slinkston edit. I originally screwed this up , but it is now fixed.
 			NumPrefixes	+= 1
-			ValueRange	:= LookupAffixData("data\IncrWeaponElementalDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+			ValueRange	:= LookupAffixData("data\IncrElementalDamageWithAttackSkills.txt", ItemLevel, CurrValue, "", CurrTier)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
@@ -5243,7 +5340,34 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-
+		
+		If (ItemSubType == "Shield"){
+			IfInString, A_LoopField, increased Physical Damage
+			{
+				NumPrefixes	+= 1
+				ValueRange	:= LookupAffixData("data\IncrPhysDamage_Shield.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+			IfInString, A_LoopField, increased Elemental Damage
+			{
+				NumPrefixes	+= 1
+				ValueRange	:= LookupAffixData("data\IncrEleDamage_Shield.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+			IfInString, A_LoopField, increased Attack Damage
+			{
+				NumPrefixes += 1
+				ValueRange := LookupAffixData("data\IncrAttackDamage_Shield.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+		}
+		
+		; --- MASTER CRAFT ONLY AFFIXES ---
+		
+		
 		; Haku prefix
 		IfInString, A_LoopField, to Quality of Socketed Support Gems
 		{
