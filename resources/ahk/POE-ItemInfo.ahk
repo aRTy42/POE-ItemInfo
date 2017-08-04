@@ -3724,6 +3724,55 @@ ParseAffixes(ItemDataAffixes, Item)
 				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
 				Continue
 			}
+			IfInString, A_LoopField, chance to Poison
+			{
+				NumSuffixes += 1
+				ValueRange := LookupAffixData("data\jewel\ChanceToPoison.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+			IfInString, A_LoopField, increased Poison Duration on Enemies
+			{
+				; Don't increase number of suffixes, combined with "chance to Poison" this is just 1 suffix
+				ValueRange := LookupAffixData("data\jewel\PoisonDurationOnEnemies.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+			IfInString, A_LoopField, chance to Bleed
+			{
+				NumSuffixes += 1
+				ValueRange := LookupAffixData("data\jewel\ChanceToBleed.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+			IfInString, A_LoopField, increased Bleeding Duration on Enemies
+			{
+				; Don't increase number of suffixes, combined with "chance to Bleed" this is just 1 suffix
+				ValueRange := LookupAffixData("data\jewel\BleedingDurationOnEnemies.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+			IfInString, A_LoopField, increased Burning Damage
+			{
+				NumSuffixes += 1
+				ValueRange := LookupAffixData("data\jewel\IncrBurningDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+			IfInString, A_LoopField, increased Bleeding Damage
+			{
+				NumSuffixes += 1
+				ValueRange := LookupAffixData("data\jewel\IncrBleedingDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+			IfInString, A_LoopField, increased Poison Damage
+			{
+				NumSuffixes += 1
+				ValueRange := LookupAffixData("data\jewel\IncrPoisonDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
 			If RegExMatch(A_LoopField, ".*increased (Fire|Cold|Lightning) Damage")
 			{
 				NumPrefixes += 1

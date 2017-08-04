@@ -1,6 +1,15 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+3.0.00
+================================
+from aRTy42, Eruyome
+
+Reworked AdditionalMacros (by Eruyome). Refer to the ReadMe section at the start of the AdditionalMacros.txt file.
+Improved several technical aspects regarding file downloads and updates (by Eruyome).
+Added most unambiguous new mods and updated existing ones. NOT included: The new hybrid mods and mods that overlap (such as
+	the new "increased fire/cold/lightning damage" prefix on weapons that combines with the suffix).
+
 2.6.04
 ================================
 from aRTy42, Eruyome, Nightblade
