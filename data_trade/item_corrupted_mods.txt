@@ -3,6 +3,7 @@ Adds # to # Chaos Damage to Attacks
 #% increased Area of Effect of Area Skills
 Adds an additional Arrow
 Enemies can have # additional Curse
+Arrows Pierce an additional Target
 Can have up to # additional Trap placed at a time
 Grants level # Anger Skill
 #% increased Attack Speed
@@ -31,7 +32,7 @@ Curse Enemies with level # Vulnerability on Hit
 #% of Physical Damage Converted to Fire Damage
 #% of Physical Damage Converted to Lightning Damage
 -# Physical Damage taken from Attacks
-When Hit, #% of Damage is taken from Mana before Life
+#% of Damage is taken from Mana before Life
 #% increased Damage while Dead
 Grants level # Determination Skill
 Grants level # Discipline Skill
@@ -43,7 +44,7 @@ Grants level # Elemental Weakness Skill
 Grants level # Flammability Skill
 Grants level # Frostbite Skill
 +# to Level of Socketed Gems
-#% chance of Projectiles Piercing
+#% increased Projectile Speed
 Grants level # Grace Skill
 Grants level # Haste Skill
 Grants level # Hatred Skill
@@ -55,14 +56,13 @@ Adds # to # Chaos Damage
 +# to Weapon range
 #% increased Mana Leeched per second per equipped Corrupted Item
 +# Mana gained for each Enemy hit by your Attacks
-#% of Damage taken gained as Mana when Hit
+#% of Damage taken gained as Mana over 4 seconds when Hit
 +# to Maximum Frenzy Charges
 +# to Maximum Power Charges
 +# to Maximum Endurance Charges
 +#% to all maximum Resistances
 Minions deal #% increased Damage
 #% increased Movement Speed
-#% chance of Arrows Piercing
 Grants level # Projectile Weakness Skill
 Grants level # Purity of Ice Skill
 Grants level # Purity of Fire Skill
@@ -95,5 +95,5 @@ Grants level # Temporal Chains Skill
 #% increased Vaal Skill Damage
 Grants level # Vitality Skill
 Grants level # Vulnerability Skill
-#% increased Elemental Damage with Weapons
+#% increased Elemental Damage with Attack Skills
 Grants level # Wrath Skill

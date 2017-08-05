@@ -47,7 +47,7 @@ Blast Rain has a #% chance for an additional blast
 #% increased Blast Rain Area of Effect
 #% increased Blight Damage
 #% increased Blight Area of Effect
-#% increased Secondary Blight Effect Duration
+Blight has #% increased Hinder Duration
 Blink Arrow and Blink Arrow Clones have #% increased Attack Speed
 #% increased Blink Arrow Cooldown Recovery Speed
 Blink Arrow and Blink Arrow Clones have #% increased Damage
@@ -66,6 +66,9 @@ Burning Arrow has +#% chance to Ignite
 #% increased Blade Flurry Damage
 #% chance to Dodge Attacks at Maximum Blade Flurry stages
 #% increased Blade Flurry Area of Effect
+#% increased Charged Dash Damage
+#% chance to Dodge Attacks if you have finished Channelling Charged Dash Recently
+#% Area of Effect of Charged Dash's final Damage Area
 #% reduced Clarity Mana Reservation
 #% increased Cleave Attack Speed
 #% increased Cleave Damage
@@ -84,6 +87,8 @@ Converted Enemies have #% increased Damage
 #% increased Convocation Buff Effect
 #% increased Cyclone Attack Speed
 #% increased Cyclone Damage
+#% increased Dark Pact Cast Speed
+#% increased Dark Pact Area of Effect
 #% increased Decoy Totem Life
 #% increased Decoy Totem Area of Effect
 Desecrate summons # additional corpses
@@ -243,15 +248,15 @@ Lightning Arrow hits # additional Enemies
 #% increased Lightning Arrow Area of Effect
 +#% to Lightning Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Lightning Golems
+Lightning Strike pierces # additional Targets
 #% increased Lightning Strike Damage
 # additional Lightning Strike Projectiles
-+#% to Lightning Strike Pierce Chance
 #% increased Lightning Tendrils Critical Strike Chance
 #% increased Lightning Tendrils Damage
 #% increased Lightning Tendrils Area of Effect
+Lightning Trap pierces # additional Targets
 #% increased Lightning Trap Cooldown Recovery Speed
 #% increased Lightning Trap Damage
-+#% Lightning Trap Pierce Chance
 #% increased Lightning Warp Cast Speed
 #% increased Lightning Warp Damage
 #% reduced Lightning Warp Duration
@@ -317,11 +322,12 @@ Shock Nova ring deals #% increased Damage
 #% increased Shockwave Totem Damage
 #% increased Shockwave Totem Area of Effect
 #% increased Shrapnel Shot Damage
-#% of Shrapnel Shot Physical damage added as Lightning Damage
+#% of Shrapnel Shot Physical Damage gained as extra Lightning Damage
 #% increased Shrapnel Shot Area of Effect
 #% increased Siege Ballista Attack Speed
 #% increased Siege Ballista Damage
 #% increased Siege Ballista Totem Placement Speed
+#% increased Dark Pact Damage
 #% increased Smoke Mine Duration
 Smoke Mine grants additional #% increased Movement Speed
 #% increased Spark Damage
@@ -342,6 +348,9 @@ Spirit Offering grants +#% of Physical Damage as Extra Chaos Damage
 #% increased Static Strike Area of Effect
 +#% to Stone Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Stone Golems
+#% chance to Avoid interruption from Stuns while Casting Storm Burst
+#% increased Storm Burst Damage
+#% increased Storm Burst Area of Effect
 #% increased Storm Call Damage
 #% reduced Storm Call Duration
 #% increased Storm Call Area of Effect
@@ -352,8 +361,7 @@ Ice Golems deal #% increased Damage
 Lightning Golems deal #% increased Damage
 Raging Spirits have #% increased Damage
 Skeletons deal #% increased Damage
-Summon # additional Skeleton Warrior with Summon Skeletons
-Summon # additional Skeleton Warriors with Summon Skeletons
+#% chance to Summon an additional Skeleton Warrior with Summon Skeleton
 Stone Golems deal #% increased Damage
 Summon Raging Spirit has #% chance to summon an extra Minion
 #% increased Summon Raging Spirit Duration
