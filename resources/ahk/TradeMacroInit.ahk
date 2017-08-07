@@ -1309,9 +1309,10 @@ TradeFunc_DownloadDataFiles() {
 TradeFunc_CheckIfCloudFlareBypassNeeded() {
 	; call this function without parameters to access poe.trade without cookies
 	; if it succeeds we don't need any cookies
-	If (!TradeFunc_TestCloudflareBypass("http://poe.trade")) {
+	If (!TradeFunc_TestCloudflareBypass("http://poe.trade", "", "", "", false, "PreventErrorMsg")) {
 		TradeFunc_ReadCookieData()
 	}
+
 }
 
 TradeFunc_ReadCookieData() {
@@ -1321,7 +1322,7 @@ TradeFunc_ReadCookieData() {
 		If (TradeOpts.DeleteCookies) {
 			TradeFunc_ClearWebHistory()
 		}
-	
+
 		; compile the c# script reading the user-agent and cookies
 		DotNetFrameworkInstallation := TradeFunc_GetLatestDotNetInstallation()
 		DotNetFrameworkPath := DotNetFrameworkInstallation.Path
@@ -1388,7 +1389,7 @@ TradeFunc_ReadCookieData() {
 		ErrorLevel := 1
 	}
 	If (StrLen(TradeGlobals.Get("cfClearance")) < 1) {
-		ErrorLevel := 1
+		;ErrorLevel := 1
 	}	
 	
 	; test connection to poe.trade
@@ -1462,7 +1463,7 @@ TradeFunc_ReadCookieData() {
 			}
 		}
 		
-		Gui, CookieWindow:Add, Link, cBlue, Take a look at the <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/FAQ">FAQ</a>.
+		Gui, CookieWindow:Add, Link, cBlue, Take a look at the <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/FAQ">FAQ</a> first, especially the parts mentioning "cURL".
 		Gui, CookieWindow:Add, Link, cBlue, Report on <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Github</a>, <a href="https://discord.gg/taKZqWw">Discord</a>, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">the forum</a>.
 		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
 		Gui, CookieWindow:Add, Edit, r6 ReadOnly w430, %ScriptVersion% `n%CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
@@ -1552,15 +1553,28 @@ TradeFunc_GetLatestDotNetInstallation() {
 	Return LatestDotNetInstall
 }
 
-TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", useCookies=false) {	
+TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", useCookies=false, PreventErrorMsg = "") {	
 	postData		:= ""	
 	options		:= ""
+	options		.= "`n" PreventErrorMsg
 	
 	reqHeaders	:= []
+	authHeaders	:= []
 	If (StrLen(UserAgent)) {
 		reqHeaders.push("User-Agent: " UserAgent)
+		authHeaders.push("User-Agent: " UserAgent)
 		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
+		authHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
+	} Else {
+		reqHeaders.push("User-Agent:Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")
 	}
+	
+	reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+	reqHeaders.push("Accept-Encoding:gzip, deflate")
+	reqHeaders.push("Accept-Language:de-DE,de;q=0.8,en-US;q=0.6,en;q=0.4")
+	reqHeaders.push("Connection:keep-alive")
+	reqHeaders.push("Host:poe.trade")
+	reqHeaders.push("Upgrade-Insecure-Requests:1")	
 	
 	html := ""
 	html := PoEScripts_Download(Url, ioData := postData, ioHdr := reqHeaders, options, false)
@@ -1573,8 +1587,8 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 		TradeFunc_ParseSearchFormOptions()	
 		Return 1
 	}
-	Else If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK")) {
-		TradeFunc_HandleConnectionFailure()
+	Else If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK") and not StrLen(PreventErrorMsg)) {
+		TradeFunc_HandleConnectionFailure(authHeaders, ioHdr)
 	}
 	Else {
 		FileDelete, %A_ScriptDir%\temp\poe_trade_gem_names.txt
@@ -1582,18 +1596,28 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 	}
 }
 
-TradeFunc_HandleConnectionFailure() {	
+TradeFunc_HandleConnectionFailure(authHeaders, returnedHeaders) {	
 	SplashTextOff
+	Gui, ConnectionFailure:Add, Text, x10 cRed, Request to poe.trade using cookies failed!
+	text := "You can continue to run PoE-TradeMacro with limited functionality.`nThe only searches that will probably work are the ones`ndirectly openend in your browser."
+	Gui, ConnectionFailure:Add, Text, , % text
+
+	headers := ""
+	For key, val in authHeaders {
+		headers .= val "`n"
+	}
 	
-	Gui, ConnectionFailure:Add, Text, cRed, Request to poe.trade failed!
+	headers .= "`n--------------------------------`n`n" returnedHeaders
+
+	Gui, ConnectionFailure:Add, Edit, r6 ReadOnly w430, %headers%
+	LinkText := "Take a look at the <a href=""https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/FAQ"">FAQ</a>, especially the parts mentioning ""cURL""."
+	Gui, ConnectionFailure:Add, Link, x10 y+10 cBlue, % LinkText
 	
+	Gui, ConnectionFailure:Add, Button, gContinueAtConnectionFailure, Continue  
+	Gui, ConnectionFailure:Add, Edit, ReadOnly, sdsd
 	Gui, ConnectionFailure:Show, w450 xCenter yCenter, Connection Failure
-	ControlFocus, Reset Proxy, Connection Failure
-	WinWaitClose, Connection Failure
-	
-	SplashTextOn, 300, 20, PoE-TradeMacro, No poe.trade connection possible, exiting script...
-	Sleep, 3000
-	ExitApp
+
+	ControlFocus, %LinkText%, Connection Failure
 }
 
 TradeFunc_ClearWebHistory() {

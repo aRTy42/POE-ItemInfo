@@ -70,4 +70,4 @@ lib/npm-debug.log.*
 release
 _TradeMacroMain.ahk
 _ItemInfoMain.ahk
-resources/tests/test_temp/*
+resources/tests/tempOutput/*

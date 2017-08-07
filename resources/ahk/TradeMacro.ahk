@@ -1285,8 +1285,20 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	reqHeaders	:= []
 	If (StrLen(UserAgent)) {
 		reqHeaders.push("User-Agent: " UserAgent)
+		authHeaders.push("User-Agent: " UserAgent)
 		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
+		authHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
+	} Else {
+		reqHeaders.push("User-Agent:Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")
 	}
+	
+	reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+	reqHeaders.push("Accept-Encoding:gzip, deflate")
+	reqHeaders.push("Accept-Language:de-DE,de;q=0.8,en-US;q=0.6,en;q=0.4")
+	reqHeaders.push("Connection:keep-alive")
+	reqHeaders.push("Host:currency.poe.trade")
+	reqHeaders.push("Referer:http://poe.trade/")
+	reqHeaders.push("Upgrade-Insecure-Requests:1")
 	
 	html := PoEScripts_Download(url, postData, reqHeaders, options, false)
 	
@@ -3656,6 +3668,10 @@ CloseCookieWindow:
 	Gui, CookieWindow:Cancel
 Return
 
+ContinueAtConnectionFailure:
+	Gui, ConnectionFailure:Cancel
+Return
+
 OpenCookieFile:
 	Run, %A_ScriptDir%\temp\cookie_data.txt
 Return
@@ -3796,8 +3812,8 @@ TradeFunc_HandleCustomSearchSubmit(openInBrowser = false) {
 		If (openInBrowser) {
 			ShowToolTip("")
 			Html := TradeFunc_DoPostRequest(Payload, true)
-			RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
-			TradeFunc_OpenUrlInBrowser(ParsedUrl1)
+			RegExMatch(Html, "i)href=""\/(search\/.*?)\/live", ParsedUrl)
+			TradeFunc_OpenUrlInBrowser("http://poe.trade/" ParsedUrl1)
 		}
 		Else {
 			ShowToolTip("Requesting search results...")
