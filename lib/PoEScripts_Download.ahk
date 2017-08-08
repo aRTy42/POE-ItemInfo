@@ -12,12 +12,12 @@
 	*/
 	
 	; https://curl.haxx.se/download.html -> https://bintray.com/vszakats/generic/curl/
-	curl		:= A_ScriptDir "\lib\curl.exe"	
+	curl		:= """" A_ScriptDir "\lib\curl.exe"""	
 	headers	:= ""
 	For key, val in ioHdr {
 		headers .= "-H """ val """ "
 	}	
-	
+
 	PreventErrorMsg := false
 	If (StrLen(options)) {
 		If (RegExMatch(options, "i)SaveAs:[ \t]*\K[^\r\n]+", SavePath)) {

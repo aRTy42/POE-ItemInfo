@@ -32,7 +32,7 @@ AM_AssignHotkeys:
 	global AM_Minimize			:= ["on", "#D"]
 	global AM_HighlightItems	:= ["on", "^F"]
 	global AM_HighlightItemsAlt	:= ["on", "^!F"]
-	global AM_LookUpAffixes		:= ["on", "^L"]
+	global AM_LookUpAffixes		:= ["on", "^M"]
 	global AM_CloseScripts		:= ["off", "^Escape"]
 	global AM_KickYourself		:= ["off", "F4", "Input your character name here"]
 	global AM_Hideout			:= ["on", "F5"]

@@ -52,7 +52,11 @@ PoEScripts_CopyFiles(Files, sourceDir, Dir, ByRef fileList) {
 					PoEScripts_CreateDirIfNotExist(Dir "\backup")
 					FileMove, %Dir%\%file_name%, %Dir%\backup\%file_name%, 1
 				}				
+				ErrorLevel := 0
 				FileCopy, %Dir%\temp\%file_name%, %Dir%\%file_name%, 1
+				If (ErrorLevel) {
+					Msgbox % "File: " file_name "could not be copied to the user folder. Please make sure this folder is not protected/readonly."
+				}
 			}			
 			FileDelete, %Dir%\temp\%file_name%			
 		}
