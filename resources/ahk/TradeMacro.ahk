@@ -1375,7 +1375,7 @@ TradeFunc_ParseCurrencyIDs(html) {
 	If (!Currencies["Chaos Orb"]) {
 		Currencies := TradeCurrencyIDsFallback
 	}
-	
+
 	TradeGlobals.Set("CurrencyIDs", Currencies)
 }
 
@@ -1437,6 +1437,7 @@ TradeFunc_ParseCurrencyHtml(html, payload, ParsingError = "") {
 			If (StrLen(Column) < 1) {
 				Break
 			}
+			Column := StrReplace(Column, "&#39;", "'")
 			DisplayNames.Push(Column)
 		}
 		

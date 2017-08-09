@@ -1062,7 +1062,7 @@ TradeFunc_GetDelimitedCurrencyListString() {
 	For currName, currID in CurrencyTemp {
 		name := RegExReplace(currName,  "i)_", " ")
 		; only use real currency items here
-		RegExMatch(name, "i)fragment| set|essence| key|breachstone|mortal|sacrifice|remnant|splinter|blessing|offering", skip)
+		RegExMatch(name, "i)fragment| set|essence| key|breachstone|mortal|sacrifice|remnant|splinter|blessing|offering| vessel", skip)
 		If (!skip) {
 			CurrencyList .= "|" . name	
 		}		
