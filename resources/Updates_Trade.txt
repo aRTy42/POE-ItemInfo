@@ -1,5 +1,18 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.3.9
+================================================================================================
+Added support for currencies not available on poe.trades currency search, which where previously not being able to be searched for (some shards).
+Fixed currency search for the Hardcore Harbinger league.
+Fixed the currency name encoding for some of the new orbs on the tooltip.
+Improved the curl_test.bat script.
+Updated ItemInfo unique item data.
+
+2.3.8
+================================================================================================
+Fixed an issue where spaces in the PoE-TradeMacro folder path caused the curl command to fail, causing issues connecting to poe.trade.
+Fixed AdditionalMacros.txt's "LookUpAffixes" hotkey overwriting PoE-TradeMacros "ChangeLeague" hotkey.
+
 2.3.7
 ================================================================================================
 Improved connection error handling, failing to connect to poe.trade doesn't exit the macro. You can continue using it with limited functionality instead.

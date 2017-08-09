@@ -1062,7 +1062,7 @@ TradeFunc_GetDelimitedCurrencyListString() {
 	For currName, currID in CurrencyTemp {
 		name := RegExReplace(currName,  "i)_", " ")
 		; only use real currency items here
-		RegExMatch(name, "i)fragment| set|essence| key|breachstone|mortal|sacrifice|remnant|splinter|blessing|offering", skip)
+		RegExMatch(name, "i)fragment| set|essence| key|breachstone|mortal|sacrifice|remnant|splinter|blessing|offering| vessel", skip)
 		If (!skip) {
 			CurrencyList .= "|" . name	
 		}		
@@ -1684,7 +1684,7 @@ TradeFunc_StopSplashScreen() {
 		Menu, Tray, Add ; Separator
 		Menu, Tray, Add, Test Item Pricing, DebugTestItemPricing
 		Menu, Tray, Add ; Separator
-		MsgBox % "Debug mode enabled! Disable in settings-menu unless you're developing!"
+		MsgBox, 4096, PoE-TradeMacro, Debug mode enabled! Disable in settings-menu unless you're developing!, 2
 		Class_Console("console",0,335,650,900,,,,9)
 		console.show()
 		

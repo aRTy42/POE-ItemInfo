@@ -680,7 +680,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	
 	ParsingError	:= ""
 	currencyUrl	:= ""
-	If (Item.IsCurrency and !Item.IsEssence) {
+	If (Item.IsCurrency and !Item.IsEssence and TradeFunc_CurrencyFoundOnCurrencySearch(Item.Name)) {
 		If (!TradeOpts.AlternativeCurrencySearch) {
 			Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser, 0, currencyUrl, error)
 			If (error) {
@@ -697,12 +697,12 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			}
 		}
 	}
-	Else If (not openSearchInBrowser) {		
+	Else If (not openSearchInBrowser) {	
 		Html := TradeFunc_DoPostRequest(Payload, openSearchInBrowser)
 	}
 	
 	If (openSearchInBrowser) {		
-		If (Item.isCurrency and !Item.IsEssence) {
+		If (Item.isCurrency and !Item.IsEssence and TradeFunc_CurrencyFoundOnCurrencySearch(Item.Name)) {
 			ParsedUrl1 := currencyUrl
 		}
 		Else {			
@@ -721,7 +721,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 		
 	}
-	Else If (Item.isCurrency and !Item.IsEssence) {
+	Else If (Item.isCurrency and !Item.IsEssence and TradeFunc_CurrencyFoundOnCurrencySearch(Item.Name)) {
 		; Default currency search
 		If (!TradeOpts.AlternativeCurrencySearch) {
 			ParsedData := TradeFunc_ParseCurrencyHtml(Html, Payload, ParsingError)
@@ -1268,9 +1268,9 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 		
 		idWant := TradeGlobals.Get("CurrencyIDs")[currencyName]
 		idHave := TradeGlobals.Get("CurrencyIDs")[TradeOpts.CurrencySearchHave]
-		
+
 		If (idWant and idHave) {
-			Url := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . idWant . "&have=" . idHave
+			Url := "http://currency.poe.trade/search?league=" . TradeUtils.UriEncode(LeagueName) . "&online=x&want=" . idWant . "&have=" . idHave
 			currencyURL := Url
 		} Else {			
 			errorMsg = Couldn't find currency "%currencyname%" on poe.trade's currency search.`n`nThis search needs to know the currency names used on poe.trades currency page.`n`nEither this item doesn't exist on that page or parsing and mapping the poe.trade`nnames to the actual names failed. Please report this issue.
@@ -1333,6 +1333,11 @@ TradeFunc_OpenUrlInBrowser(Url) {
 	}
 }
 
+TradeFunc_CurrencyFoundOnCurrencySearch(currencyName) {
+	id := TradeGlobals.Get("CurrencyIDs")[currencyName]
+	Return StrLen(id) > 0 ? 1 : 0
+}
+
 ; Parse currency.poe.trade to get all available currencies and their IDs
 TradeFunc_ParseCurrencyIDs(html) {
 	; remove linebreaks and replace multiple spaces with a single one
@@ -1371,11 +1376,11 @@ TradeFunc_ParseCurrencyIDs(html) {
 			Currencies[CurrencyName] := CurrencyID  
 		}
 	}
-	
+
 	If (!Currencies["Chaos Orb"]) {
 		Currencies := TradeCurrencyIDsFallback
 	}
-	
+
 	TradeGlobals.Set("CurrencyIDs", Currencies)
 }
 
@@ -1437,6 +1442,7 @@ TradeFunc_ParseCurrencyHtml(html, payload, ParsingError = "") {
 			If (StrLen(Column) < 1) {
 				Break
 			}
+			Column := StrReplace(Column, "&#39;", "'")
 			DisplayNames.Push(Column)
 		}
 		

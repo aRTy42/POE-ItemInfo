@@ -31,8 +31,8 @@ PoEScripts_CompareUserFolderWithScriptFolder(userDirectory, A_ScriptDir, project
 /*
 	merge all scripts into `_ItemInfoMain.ahk` and execute it.
 */
-FileRead, info		, %A_ScriptDir%\resources\ahk\POE-ItemInfo.ahk
-FileRead, addMacros	, %userDirectory%\AdditionalMacros.txt
+info		:= ReadFileToMerge(A_ScriptDir "\resources\ahk\POE-ItemInfo.ahk")
+addMacros := ReadFileToMerge(userDirectory "\AdditionalMacros.txt")
 
 info		:= info . "`n`r`n`r"
 addMacros	:= "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros
@@ -105,4 +105,29 @@ AppendCustomMacros(userDirectory)
 	}
 	
 	Return appendedMacros
+}
+
+ReadFileToMerge(path) {
+	If (FileExist(path)) {
+		ErrorLevel := 0
+		FileRead, file, %path%
+		If (ErrorLevel = 1) {
+			; file does not exist (should be caught already)
+			Msgbox, 4096, Critical file read error, File "%path%" doesn't exist.`n`nClosing Script...
+			ExitApp
+		} Else If (ErrorLevel = 2) {
+			; file is locked or inaccessible
+			Msgbox, 4096, Critical file read error, File "%path%" is locked or inaccessible.`n`nClosing Script...
+			ExitApp
+		} Else If (ErrorLevel = 3) {
+			; the system lacks sufficient memory to load the file
+			Msgbox, 4096, Critical file read error, The system lacks sufficient memory to load the file "%path%".`n`nClosing Script...
+			ExitApp
+		} Else {
+			Return file	
+		}		
+	} Else {
+		Msgbox, 4096, Critical file read error, File "%path%" doesn't exist.`n`nClosing Script...
+		ExitApp		
+	}	
 }

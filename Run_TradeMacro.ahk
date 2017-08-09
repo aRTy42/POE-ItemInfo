@@ -46,10 +46,10 @@ PoEScripts_CompareUserFolderWithScriptFolder(userDirectory, A_ScriptDir, project
 /*	 
 	merge all scripts into `_TradeMacroMain.ahk` and execute it.
 */
-FileRead, info		, %A_ScriptDir%\resources\ahk\POE-ItemInfo.ahk
-FileRead, tradeInit	, %A_ScriptDir%\resources\ahk\TradeMacroInit.ahk
-FileRead, trade	, %A_ScriptDir%\resources\ahk\TradeMacro.ahk
-FileRead, addMacros	, %userDirectory%\AdditionalMacros.txt
+info		:= ReadFileToMerge(A_ScriptDir "\resources\ahk\POE-ItemInfo.ahk")
+tradeInit := ReadFileToMerge(A_ScriptDir "\resources\ahk\TradeMacroInit.ahk")
+trade	:= ReadFileToMerge(A_ScriptDir "\resources\ahk\TradeMacro.ahk")
+addMacros := ReadFileToMerge(userDirectory "\AdditionalMacros.txt")
 
 info		:= "`n`r`n`r" . info . "`n`r`n`r"
 addMacros	:= "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros . "`n`r`n`r"
@@ -132,4 +132,29 @@ AppendCustomMacros(userDirectory)
 	}
 	
 	Return appendedMacros
+}
+
+ReadFileToMerge(path) {
+	If (FileExist(path)) {
+		ErrorLevel := 0
+		FileRead, file, %path%
+		If (ErrorLevel = 1) {
+			; file does not exist (should be caught already)
+			Msgbox, 4096, Critical file read error, File "%path%" doesn't exist.`n`nClosing Script...
+			ExitApp
+		} Else If (ErrorLevel = 2) {
+			; file is locked or inaccessible
+			Msgbox, 4096, Critical file read error, File "%path%" is locked or inaccessible.`n`nClosing Script...
+			ExitApp
+		} Else If (ErrorLevel = 3) {
+			; the system lacks sufficient memory to load the file
+			Msgbox, 4096, Critical file read error, The system lacks sufficient memory to load the file "%path%".`n`nClosing Script...
+			ExitApp
+		} Else {
+			Return file	
+		}		
+	} Else {
+		Msgbox, 4096, Critical file read error, File "%path%" doesn't exist.`n`nClosing Script...
+		ExitApp		
+	}	
 }
