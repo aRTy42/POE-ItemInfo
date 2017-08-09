@@ -1684,7 +1684,7 @@ TradeFunc_StopSplashScreen() {
 		Menu, Tray, Add ; Separator
 		Menu, Tray, Add, Test Item Pricing, DebugTestItemPricing
 		Menu, Tray, Add ; Separator
-		MsgBox % "Debug mode enabled! Disable in settings-menu unless you're developing!"
+		MsgBox, 4096, PoE-TradeMacro, Debug mode enabled! Disable in settings-menu unless you're developing!, 4
 		Class_Console("console",0,335,650,900,,,,9)
 		console.show()
 		
