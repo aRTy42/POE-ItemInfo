@@ -1270,7 +1270,7 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 		idHave := TradeGlobals.Get("CurrencyIDs")[TradeOpts.CurrencySearchHave]
 
 		If (idWant and idHave) {
-			Url := "http://currency.poe.trade/search?league=" . LeagueName . "&online=x&want=" . idWant . "&have=" . idHave
+			Url := "http://currency.poe.trade/search?league=" . TradeUtils.UriEncode(LeagueName) . "&online=x&want=" . idWant . "&have=" . idHave
 			currencyURL := Url
 		} Else {			
 			errorMsg = Couldn't find currency "%currencyname%" on poe.trade's currency search.`n`nThis search needs to know the currency names used on poe.trades currency page.`n`nEither this item doesn't exist on that page or parsing and mapping the poe.trade`nnames to the actual names failed. Please report this issue.
