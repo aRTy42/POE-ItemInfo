@@ -131,7 +131,17 @@
 			"Blacksmiths_Whetstone" : "whetstone",
 			"Scroll_of_Wisdom" : "wisdom",
 			"xophs_breachstone" : "xoph's breachstone",
-			"Yriels_Key" : "yriel's"
+			"Yriels_Key" : "yriel's",
+			"Divine_Vessel": "divine vessel",
+			"Orb_of_Annulment": "orb of annulment",
+			"Orb_of Binding": "orb of binding",
+			"Orb_of_Horizons": "orb of horizons",
+			"Harbinger's_Orb": "harbinger's orb",
+			"Ancient_Orb": "ancient orb",
+			"Annulment_Shard": "annulment shard",
+			"Exalted_Shard": "exalted shard",
+			"Mirror_Shard": "mirror shard",
+			"Ancient_Reliquary_Key": "ancient reliquary key"
 		}
 	}
 }
