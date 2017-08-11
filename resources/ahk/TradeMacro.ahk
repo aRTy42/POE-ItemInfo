@@ -3550,7 +3550,7 @@ ChangeScriptListsTimer:
 		Global.Set("UpdateNoteFileList", l)
 
 		SetTimer, ChangeScriptListsTimer, Off
-	}	
+	}
 Return
 
 OverwriteSettingsNameTimer:
@@ -3568,14 +3568,19 @@ OverwriteSettingsNameTimer:
 			Globals.Set("SettingsUITitle", TradeGlobals.Get("SettingsUITitle"))
 			SetTimer, OverwriteSettingsNameTimer, Off
 		}
-		Menu, Tray, UseErrorLevel, off			
-	}	
+		Menu, Tray, UseErrorLevel, off	
+	}
 Return
 
 OverwriteUpdateOptionsTimer:	
 	If (InititalizedItemInfoUserOptions) {
 		TradeFunc_SyncUpdateSettings()
 	}
+Return
+
+BringPoEWindowToFrontAfterInit:
+	WinActivate, Path of Exile ahk_class POEWindowClass
+	SetTimer, BringPoEWindowToFrontAfterInit, OFF
 Return
 
 OpenGithubWikiFromMenu:

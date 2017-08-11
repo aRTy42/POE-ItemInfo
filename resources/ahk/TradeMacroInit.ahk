@@ -1687,6 +1687,7 @@ TradeFunc_StopSplashScreen() {
 		MsgBox, 4096, PoE-TradeMacro, Debug mode enabled! Disable in settings-menu unless you're developing!, 2
 		Class_Console("console",0,335,650,900,,,,9)
 		console.show()
+		SetTimer, BringPoEWindowToFrontAfterInit, 1000		
 		
 		gemList := TradeGlobals.Get("GemNameList")
 		If(gemList.Length()) {
