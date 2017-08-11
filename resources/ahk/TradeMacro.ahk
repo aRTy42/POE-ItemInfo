@@ -746,7 +746,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Else {
 			Item.UsedInSearch.SearchType := "Default" 
 		}
-		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
+		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest, isAdvancedPriceCheckRedirect)
 		
 		SetClipboardContents("")
 		ShowToolTip("")
@@ -1699,7 +1699,7 @@ TradeFunc_MapCurrencyPoeTradeNameToIngameName(CurrencyName) {
 }
 
 ; Parse poe.trade html to display the search result tooltip with X listings
-TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false) {
+TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false, isAdvancedSearch = false) {
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
 	
@@ -1921,6 +1921,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		Title .= "`n"		
 	}	
 	Title .= (itemsListed > 0) ? "" : "`nNo item found.`n"
+	Title .= (isAdvancedSearch) ? "" : "`n`n" "Use Ctrl + Alt + D (default) instead for a more thorough search."
 	
 	Return, Title
 }
