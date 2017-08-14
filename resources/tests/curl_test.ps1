@@ -28,7 +28,9 @@ cd ..\..
 cd lib
 $currentDir = Get-Location
 
-[Threading.Thread]::CurrentThread.CurrentUICulture = 'en-us'; & "$currentDir\curl.exe" -ILks -H "User-Agent: $useragent" -H "Cookie: __cfduid= $cfduid; cf_clearance= $cfClearance" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8" -H "Accept-Encoding:gzip, deflate" -H "Accept-Language:de-DE,de;q=0.8,en-US;q=0.6,en;q=0.4" -H "Connection:keep-alive" -H "Host:poe.trade" -H "Upgrade-Insecure-Requests:1" "http://poe.trade" | Out-File $outFile
+[Threading.Thread]::CurrentThread.CurrentUICulture = 'en-us'; & "$currentDir\curl.exe" -ILks -H "User-Agent: $useragent" -H "Cookie: __cfduid= $cfduid; cf_clearance= $cfClearance" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8" -H "Accept-Encoding:gzip, deflate" -H "Accept-Language:de-DE,de;q=0.8,en-US;q=0.6,en;q=0.4" -H "Connection:keep-alive" -H "Host:poe.trade" -H "Upgrade-Insecure-Requests:1" "http://poe.trade" |  Tee-Object -Variable cmdOutput
+
+$cmdOutput | Out-File $outFile
 
 If($error) {
 	$error | Add-Content $outFile
