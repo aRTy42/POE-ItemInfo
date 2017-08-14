@@ -32,6 +32,7 @@ $currentDir = Get-Location
 
 If($error) {
 	$error | Add-Content $outFile
+	Write-Host $error
 }
 
 Invoke-Item $outFile
