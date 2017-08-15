@@ -52,6 +52,7 @@
 
 		; get data
 		html	:= StdOutStream(commandData """" url """")
+		;html := ReadConsoleOutputFromFile(commandData """" url """", "commandData") ; alternative function
 		
 		; get return headers in seperate request
 		If (not binaryDL) {			
@@ -61,7 +62,8 @@
 				commandHdr := commandHdr """" url """"
 			}
 			ioHdr := StdOutStream(commandHdr)		
-		}
+			;ioHrd := ReadConsoleOutputFromFile(commandHdr, "commandHdr") ; alternative function
+		}		
 	} Catch e {
 		
 	}

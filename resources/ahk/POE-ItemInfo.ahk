@@ -9842,6 +9842,14 @@ StdOutStream(sCmd, Callback = "") {
 	Return Isfunc( Callback ) ? %Callback%( "", 0 ) : sOutput      
 }
 
+ReadConsoleOutputFromFile(command, fileName) {
+	file := "temp\" fileName ".txt"
+	RunWait %comspec% /c "chcp 1251 /f >nul 2>&1 & %command% > %file%", , Hide
+	FileRead, io, %file%
+	
+	Return io
+}
+
 GetContributors(AuthorsPerLine=0)
 {
 	IfNotExist, %A_ScriptDir%\resources\AUTHORS.txt
