@@ -9827,12 +9827,10 @@ StdOutStream(sCmd, Callback = "") {
 	VarSetCapacity( Buffer, 4096, 0 ), nSz := 0 
 
 	While DllCall( "ReadFile", UInt,hPipeRead, UInt,&Buffer, UInt,4094, UIntP,nSz, Int,0 ) {
+		tOutput := ( AIC && NumPut( 0, Buffer, nSz, "Char" ) && VarSetCapacity( Buffer,-1 ) ) 
+				? Buffer : %StrGet%( &Buffer, nSz, "CP850" )
 
-	tOutput := ( AIC && NumPut( 0, Buffer, nSz, "Char" ) && VarSetCapacity( Buffer,-1 ) ) 
-			? Buffer : %StrGet%( &Buffer, nSz, "CP850" )
-
-	Isfunc( Callback ) ? %Callback%( tOutput, A_Index ) : sOutput .= tOutput
-
+		Isfunc( Callback ) ? %Callback%( tOutput, A_Index ) : sOutput .= tOutput
 	}                   
 
 	DllCall( "GetExitCodeProcess", UInt,hProcess, UIntP,ExitCode )
