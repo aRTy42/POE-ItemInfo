@@ -2467,11 +2467,11 @@ ParseMapAffixes(ItemDataAffixes)
 			Continue
 		}
 
-		If (RegExMatch(A_LoopField, "Monsters have a \d+% chance to cause Status Ailments"))
+		If (RegExMatch(A_LoopField, "Monsters have a \d+% chance to cause Elemental Ailments on Hit"))
 		{
-			If (MapModWarn.MonstCauseStatusAilments)
+			If (MapModWarn.MonstCauseElementalAilments)
 			{
-				MapModWarnings := MapModWarnings . "`nCause Status Ailments"
+				MapModWarnings := MapModWarnings . "`nCause Elemental Ailments"
 			}
 			
 			MapAffixCount += 1
@@ -2745,11 +2745,11 @@ ParseMapAffixes(ItemDataAffixes)
 			Continue
 		}
 		
-		If (RegExMatch(A_LoopField, "Monsters have \d+% chance to Avoid Elemental Status Ailments"))
+		If (RegExMatch(A_LoopField, "Monsters have \d+% chance to Avoid Elemental Ailments"))
 		{
-			If (MapModWarn.MonstAvoidStatusAilments)
+			If (MapModWarn.MonstAvoidElementalAilments)
 			{
-				MapModWarnings := MapModWarnings . "`nMonsters Avoid Elemental Status Ailments"
+				MapModWarnings := MapModWarnings . "`nMonsters Avoid Elemental Ailments"
 			}
 			
 			MapAffixCount += 1
@@ -3759,14 +3759,14 @@ ParseAffixes(ItemDataAffixes, Item)
 				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 				Continue
 			}
-			IfInString, A_LoopField, increased Bleeding Damage
+			IfInString, A_LoopField, increased Damage with Bleeding
 			{
 				NumSuffixes += 1
 				ValueRange := LookupAffixData("data\jewel\IncrBleedingDamage.txt", ItemLevel, CurrValue, "", CurrTier)
 				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 				Continue
 			}
-			IfInString, A_LoopField, increased Poison Damage
+			IfInString, A_LoopField, increased Damage with Poison
 			{
 				NumSuffixes += 1
 				ValueRange := LookupAffixData("data\jewel\IncrPoisonDamage.txt", ItemLevel, CurrValue, "", CurrTier)
