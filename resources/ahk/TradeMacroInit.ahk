@@ -1462,11 +1462,12 @@ TradeFunc_ReadCookieData() {
 				}
 			}
 		}
-		
+
+		Gui, CookieWindow:Add, Text, cRed , Make sure that no file in the PoE-TradeMacro folder is blocked by your `nantivirus software/firewall, notably the file "lib\curl.exe".
 		Gui, CookieWindow:Add, Link, cBlue, Take a look at the <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/FAQ">FAQ</a> first, especially the parts mentioning "cURL".
 		Gui, CookieWindow:Add, Link, cBlue, Report on <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Github</a>, <a href="https://discord.gg/taKZqWw">Discord</a>, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">the forum</a>.
 		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
-		Gui, CookieWindow:Add, Edit, r6 ReadOnly w430, %ScriptVersion% `n%CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
+		Gui, CookieWindow:Add, Edit, r7 ReadOnly w430, %ScriptVersion% `n%CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
 		Gui, CookieWindow:Add, Text, , Continue the script to access the settings menu or to use searches opening `nyour Browser directly.
 		If (!TradeOpts.UseManualCookies) {
 			Gui, CookieWindow:Add, Button, y+10 gOpenCookieFile, Open cookie file

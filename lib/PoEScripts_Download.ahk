@@ -3,7 +3,7 @@
 		url		= download url
 		ioData	= uri encoded postData 
 		ioHdr	= array of request headers
-		options	= multiple options separated by newline (currently only "SaveAs:")
+		options	= multiple options separated by newline (currently only "SaveAs:",  "Redirect:true/false")
 		
 		useFallback = Use UrlDownloadToFile if curl fails, not possible for POST requests or when cookies are required 
 		critical	= exit macro if download fails
@@ -17,12 +17,16 @@
 	For key, val in ioHdr {
 		headers .= "-H """ val """ "
 	}	
-
+	
+	redirect := "L"
 	PreventErrorMsg := false
 	If (StrLen(options)) {
 		If (RegExMatch(options, "i)SaveAs:[ \t]*\K[^\r\n]+", SavePath)) {
 			commandData	.= " " options " "
 			commandHdr	.= ""	
+		}
+		If (RegExMatch(options, "i)Redirect:\sFalse")) {
+			redirect := ""
 		}
 		If (RegExMatch(options, "i)PreventErrorMsg")) {
 			PreventErrorMsg := true
@@ -34,13 +38,13 @@
 		commandData	:= curl
 		commandHdr	:= curl
 		If (binaryDL) {
-			commandData .= " -LJkv "					; save as file
+			commandData .= " -" redirect "Jkv "		; save as file
 			If (SavePath) {
 				commandData .= "-o """ SavePath """ "	; set target destination and name
 			}
 		} Else {
-			commandData .= " -Lks --compressed "			
-			commandHdr  .= " -ILks "
+			commandData .= " -" redirect "ks --compressed "			
+			commandHdr  .= " -I" redirect "ks "
 		}
 		If (StrLen(headers)) {
 			commandData .= headers
@@ -63,16 +67,17 @@
 			}
 			ioHdr := StdOutStream(commandHdr)		
 			;ioHrd := ReadConsoleOutputFromFile(commandHdr, "commandHdr") ; alternative function
-		}		
+		}
 	} Catch e {
 		
 	}
 	
+	goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
 	If (!binaryDL) {
 		; Use fallback download if curl fails
-		If ((not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK") or e.what) and useFallback) {
+		If ((not goodStatusCode or e.what) and useFallback) {
 			DownloadFallback(url, html, e, critical, ioHdr, PreventErrorMsg)
-		} Else If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK" and e.what)) {
+		} Else If (not goodStatusCode and e.what) {
 			ThrowError(e, false, ioHdr, PreventErrorMsg)
 		}
 	}
@@ -80,7 +85,7 @@
 	Else If (not e.what) {
 		; check returned request headers
 		ioHdr := ParseReturnedHeaders(html)
-		If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK")) {
+		If (not goodStatusCode) {
 			MsgBox, 16,, % "Error downloading file to " SavePath
 			Return "Error: Wrong Status"
 		}
@@ -140,6 +145,8 @@ DownloadFallback(url, ByRef html, e, critical, errorMsg, PreventErrorMsg = false
 		FileDelete, %A_ScriptDir%\temp\%fileName%
 	} Else If (!PreventErrorMsg) {
 		SplashTextOff
+		msg 		:= "Error while downloading <" url "> using UrlDownloadToFile (DownloadFallback)."
+		errorMsg	:= StrLen(errorMsg) ? errorMsg "`n`n" msg : msg
 		ThrowError(e, critical, errorMsg)
 	}
 }
@@ -149,8 +156,10 @@ ThrowError(e, critical = false, errorMsg = "", PreventErrorMsg = false) {
 		Return
 	}
 	
-	msg := "Exception thrown (download)!"	
-	msg .= "`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
+	msg := "Exception thrown (download)!"
+	If (e.what) {
+		msg .= "`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra	
+	}
 	msg := StrLen(errorMsg) ? msg "`n`n" errorMsg : msg
 	
 	If (critical) {
