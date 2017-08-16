@@ -146,7 +146,7 @@ DownloadFallback(url, ByRef html, e, critical, errorMsg, PreventErrorMsg = false
 	} Else If (!PreventErrorMsg) {
 		SplashTextOff
 		msg 		:= "Error while downloading <" url "> using UrlDownloadToFile (DownloadFallback)."
-		errorMsg	:= StrLen(errorMsg) ? errorMsg "`n`n" msg : msg
+		errorMsg	:= StrLen(errorMsg) ? msg "`n`n" errorMsg : msg
 		ThrowError(e, critical, errorMsg)
 	}
 }
