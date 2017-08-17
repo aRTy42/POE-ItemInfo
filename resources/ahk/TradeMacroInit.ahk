@@ -57,7 +57,7 @@ class TradeUserOptions {
 	BrowserPath :=                  	; Show also sellers account name in the results window
 	OpenUrlsOnEmptyItem := 0			; Open wiki/poe.trade also when no item was checked
 	DownloadDataFiles := 0			; 
-	DeleteCookies := 1				; Delete Internet Explorer cookies on startup (only poe.trade)
+	DeleteCookies := 0				; Delete Internet Explorer cookies on startup (only poe.trade)
 	CookieSelect := "All"
 	UseGZip := 1
 	UpdateSkipSelection := 0
@@ -173,9 +173,9 @@ IfNotExist, %userDirectory%\config_trade.ini
 	}
 	CopyDefaultTradeConfig()
 }
-TradeFunc_CheckIfCloudFlareBypassNeeded()
 ReadTradeConfig()
 Sleep, 100
+TradeFunc_CheckIfCloudFlareBypassNeeded()
 
 ; set this variable to skip the update check in "PoE-ItemInfo.ahk"
 SkipItemInfoUpdateCall := 1
@@ -1312,7 +1312,6 @@ TradeFunc_CheckIfCloudFlareBypassNeeded() {
 	If (!TradeFunc_TestCloudflareBypass("http://poe.trade", "", "", "", false, "PreventErrorMsg")) {
 		TradeFunc_ReadCookieData()
 	}
-
 }
 
 TradeFunc_ReadCookieData() {
