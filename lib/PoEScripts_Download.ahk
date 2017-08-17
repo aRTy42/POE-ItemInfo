@@ -34,9 +34,9 @@
 	}
 	
 	e := {}
-	Try {
-		commandData	:= curl
-		commandHdr	:= curl
+	Try {		
+		commandData	:= curl		; console curl command to return data/content 
+		commandHdr	:= curl		; console curl command to return headers
 		If (binaryDL) {
 			commandData .= " -" redirect "Jkv "		; save as file
 			If (SavePath) {

@@ -3105,12 +3105,21 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	If (Sockets >= 5) {
 		m++
 		text := "Sockets: " . Trim(Sockets)
-		Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets     , % text
+		If (Links >= 5) {
+			Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets, % text
+		} Else {
+			Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets Checked, % text
+		}		
 	}
-	Else If (Sockets <= 4 and advItem.maxSockets > 4) {
+	Else If (Sockets <= 4 and advItem.maxSockets = 4) {
 		m++
 		text := "Sockets (max): 4"
 		Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSocketsMaxFour, % text
+	}
+	Else If (Sockets <= 3 and advItem.maxSockets = 3) {
+		m++
+		text := "Sockets (max): 3"
+		Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets, % text
 	}
 	
 	If (Links >= 5) {
@@ -3119,13 +3128,27 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		text := "Links:  " . Trim(Links)
 		Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks Checked, % text
 	}
-	Else If (Links <= 4 and advItem.maxSockets > 4) {
+	Else If (Links <= 4 and advItem.maxSockets = 4) {
 		offset := (m > 1 ) ? "+15" : "15"
 		m++
 		text := "Links (max): 4"
-		Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour Checked, % text
+		If (Links = 4) {
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour Checked, % text	
+		} Else {
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour, % text
+		}		
 	}
-	
+	Else If (Links <= 3 and advItem.maxSockets = 3) {
+		offset := (m > 1 ) ? "+15" : "15"
+		m++
+		text := "Links (max): 3"
+		If (Links = 3) {
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks Checked, % text	
+		} Else {
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks, % text
+		}		
+	}
+
 	; ilvl
 	offsetX := (m = 1) ? "15" : "+15"
 	offsetY := (m = 1) ? "20" : "+0"
