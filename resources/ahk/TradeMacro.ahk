@@ -2743,47 +2743,52 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	Loop, 500 {
 		line := line . "-"
 	}
-
+	
+	; Item "nameplate" including sockets and links
 	If (true) {
 		itemName := advItem.name
 		itemType := advItem.TypeName
 		If (advItem.Rarity = 1) {
-			tColor := "cblack"
+			iPic 	:= "bg-normal.png"
+			tColor	:= "cc8c8c8"
 		} Else If (advItem.Rarity = 2) {
-			tColor := "c8787fe"
+			iPic 	:= "bg-magic.png"
+			tColor	:= "c8787fe"
 		} Else If (advItem.Rarity = 3) {
-			tColor := "c93930c"
+			iPic 	:= "bg-rare.png"
+			tColor	:= "cfefe76"
 		} Else If (advItem.isUnique) {
-			tColor := "cAF5F1C"
-		}  
-		Gui, SelectModsGui:Add, Text, x0 w700 yp+13, %line%
-		Gui, SelectModsGui:Add, Text, x14 yp+15 %tColor%, %itemName%
+			iPic 	:= "bg-unique.png"
+			tColor	:= "cAF5F1C"
+		}
+		Gui, SelectModsGui:Add, Picture, w700 h30 x0 yp+20, %A_ScriptDir%\resources\images\%iPic%
+		Gui, SelectModsGui:Add, Text, x14 yp+9 %tColor% BackgroundTrans, %itemName%
 		If (advItem.Rarity > 2 or advItem.isUnique) {
-			Gui, SelectModsGui:Add, Text, x14 yp+0 x+5 cBlack, %itemType%
+			Gui, SelectModsGui:Add, Text, x14 yp+0 x+5 cc8c8c8 BackgroundTrans, %itemType%
 		}
 		If (advItem.isRelic) {
-			Gui, SelectModsGui:Add, Text, x+10 yp+0 cGreen, Relic
+			Gui, SelectModsGui:Add, Text, x+10 yp+0 cGreen BackgroundTrans, Relic
 		}
 		If (advItem.isCorrupted) {
-			Gui, SelectModsGui:Add, Text, x+10 yp+0 cD20000, (Corrupted)
+			Gui, SelectModsGui:Add, Text, x+10 yp+0 cD20000 BackgroundTrans, (Corrupted)
 		}
 		If (advItem.maxSockets > 0) {
 			tLinksSockets := "S (" Sockets "/" advItem.maxSockets ")"
 			If (advItem.maxSockets > 1) {
 				tLinksSockets .= " - " "L (" Links "/" advItem.maxSockets ")"
 			}
-			Gui, SelectModsGui:Add, Text, x+10 yp+0 cBlack, %tLinksSockets%
+			Gui, SelectModsGui:Add, Text, x+10 yp+0 cc8c8c8 BackgroundTrans, %tLinksSockets%
 		}
-		
-		Gui, SelectModsGui:Add, Text, x0 w700 yp+13 cc9cacd, %line%	
+			
+		Gui, SelectModsGui:Add, Text, x0 w700 yp+13 cBlack BackgroundTrans, %line%	
 	}
 	
-	ValueRangeMin := ValueRangeMin / 100 	
-	ValueRangeMax := ValueRangeMax / 100 	
+	ValueRangeMin	:= ValueRangeMin / 100 	
+	ValueRangeMax	:= ValueRangeMax / 100 	
 	
 	; calculate length of first column
-	modLengthMax := 0
-	modGroupBox := 0
+	modLengthMax	:= 0
+	modGroupBox	:= 0
 	Loop % advItem.mods.Length() {
 		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
