@@ -1578,7 +1578,8 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 	reqHeaders.push("Upgrade-Insecure-Requests:1")	
 	
 	html := ""
-	html := PoEScripts_Download(Url, ioData := postData, ioHdr := reqHeaders, options, false)
+	html := PoEScripts_Download(Url, ioData := postData, ioHdr := reqHeaders, options, false, false, false, "", reqHeadersCurl)
+	TradeFunc_WriteToLogFile("Testing CloudFlare bypass, connecting to " url "...`n`n" "cURL command:`n" reqHeadersCurl "`n`nAnswer:`n" ioHdr)
 
 	; pathofexile.com link in page footer (forum thread)
 	RegExMatch(html, "i)pathofexile", match)
@@ -1641,6 +1642,24 @@ TradeFunc_ClearWebHistory() {
 		RunWait %comspec% /c "chcp 1251 & "%A_ScriptDir%\lib\clearWebHistoryAll.bat"", , Hide
 	}
 
+}
+
+TradeFunc_WriteToLogFile(data) {
+	logFile	:= A_ScriptDir "\temp\StartupLog.txt"
+	If (not FileExist(logFile)) {
+		FileAppend, Starting up PoE-TradeMacro....`n`n, %logFile%
+	}	
+	
+	line		:= "----------------------------------------------------------"
+	timeStamp	:= ""	
+	UTCTimestamp := GetTimestampUTC()
+	UTCFormatStr := "yyyy-MM-dd'T'HH:mm'Z'"
+	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr%
+
+	entry	:= line "`n" TimeStr "`n" line "`n`n"  
+	entry	:= entry . data "`n`n"
+	
+	FileAppend, %entry%, %logFile%
 }
 
 TradeFunc_GetOSInfo() {

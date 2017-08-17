@@ -1,4 +1,4 @@
-﻿PoEScripts_Download(url, ioData, ioHdr, options, useFallback = true, critical = false, binaryDL = false, errorMsg = "") {
+﻿PoEScripts_Download(url, ioData, ByRef ioHdr, options, useFallback = true, critical = false, binaryDL = false, errorMsg = "", ByRef reqHeadersCurl = "") {
 	/*
 		url		= download url
 		ioData	= uri encoded postData 
@@ -65,13 +65,14 @@
 			} Else {
 				commandHdr := commandHdr """" url """"
 			}
-			ioHdr := StdOutStream(commandHdr)		
+			ioHdr := StdOutStream(commandHdr)
 			;ioHrd := ReadConsoleOutputFromFile(commandHdr, "commandHdr") ; alternative function
 		}
+		reqHeadersCurl := commandHdr
 	} Catch e {
 		
 	}
-	
+
 	goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
 	If (!binaryDL) {
 		; Use fallback download if curl fails
