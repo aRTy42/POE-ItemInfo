@@ -228,8 +228,11 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 
 	If (!Item.IsUnique) {
 		preparedItem  := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)
-		preparedItem.maxSockets := Item.maxSockets		
-		preparedItem.iLvl := Item.level
+		preparedItem.maxSockets	:= Item.maxSockets		
+		preparedItem.iLvl		:= Item.level
+		preparedItem.Name		:= Item.Name
+		preparedItem.TypeName	:= Item.TypeName
+		preparedItem.Rarity		:= Item.RarityLevel
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)		
 		
@@ -273,6 +276,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			preparedItem.isCorrupted	:= Item.isCorrupted
 			preparedItem.isRelic	:= Item.isRelic
 			preparedItem.iLvl 		:= Item.level
+			preparedItem.typeName	:= Item.TypeName
 			Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)
 
@@ -2740,16 +2744,37 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		line := line . "-"
 	}
 
-	If (advItem.isUnique) {
+	If (true) {
 		itemName := advItem.name
+		itemType := advItem.TypeName
+		If (advItem.Rarity = 1) {
+			tColor := "cblack"
+		} Else If (advItem.Rarity = 2) {
+			tColor := "c8787fe"
+		} Else If (advItem.Rarity = 3) {
+			tColor := "c93930c"
+		} Else If (advItem.isUnique) {
+			tColor := "cAF5F1C"
+		}  
 		Gui, SelectModsGui:Add, Text, x0 w700 yp+13, %line%
-		Gui, SelectModsGui:Add, Text, x14 yp+15 cAF5F1C, %itemName%
+		Gui, SelectModsGui:Add, Text, x14 yp+15 %tColor%, %itemName%
+		If (advItem.Rarity > 2 or advItem.isUnique) {
+			Gui, SelectModsGui:Add, Text, x14 yp+0 x+5 cBlack, %itemType%
+		}
 		If (advItem.isRelic) {
 			Gui, SelectModsGui:Add, Text, x+10 yp+0 cGreen, Relic
 		}
 		If (advItem.isCorrupted) {
 			Gui, SelectModsGui:Add, Text, x+10 yp+0 cD20000, (Corrupted)
 		}
+		If (advItem.maxSockets > 0) {
+			tLinksSockets := "S (" Sockets "/" advItem.maxSockets ")"
+			If (advItem.maxSockets > 1) {
+				tLinksSockets .= " - " "L (" Links "/" advItem.maxSockets ")"
+			}
+			Gui, SelectModsGui:Add, Text, x+10 yp+0 cBlack, %tLinksSockets%
+		}
+		
 		Gui, SelectModsGui:Add, Text, x0 w700 yp+13 cc9cacd, %line%	
 	}
 	
@@ -2787,7 +2812,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	
 	boxRows := modCount * 3 + statCount * 3
 	
-	modGroupYPos := advItem.isUnique ? 4 : 10
+	modGroupYPos := 4
 	Gui, SelectModsGui:Add, Text, x14 y+%modGroupYPos% w%modGroupBox%, Mods
 	Gui, SelectModsGui:Add, Text, x+10 yp+0 w90, min
 	Gui, SelectModsGui:Add, Text, x+10 yp+0 w45, current
