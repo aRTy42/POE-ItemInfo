@@ -3177,9 +3177,26 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	; ilvl
 	offsetX := (m = 1) ? "15" : "+15"
 	offsetY := (m = 1) ? "20" : "+0"
-	iLvlCheckState := TradeOpts.AdvancedSearchCheckILVL ? "Checked" : ""
-	Gui, SelectModsGui:Add, CheckBox, x%offsetX% yp%offsetY% vTradeAdvancedSelectedILvl %iLvlCheckState%, % "Item Level (min)"
-	iLvlValue := TradeOpts.AdvancedSearchCheckILVL ? advItem.iLvl : ""
+	iLvlCheckState := ""
+	iLvlValue		:= ""
+	If (TradeOpts.AdvancedSearchCheckILVL) {
+		iLvlCheckState := TradeOpts.AdvancedSearchCheckILVL ? "Checked" : ""
+		iLvlValue		:= TradeOpts.AdvancedSearchCheckILVL ? advItem.iLvl : ""	
+	} Else {
+		If (advItem.maxSockets > 1) {
+			If (advItem.iLvl >= 50 and advItem.maxSockets > 5) {
+				iLvlValue := 50
+			} Else If (advItem.iLvl >= 35 and advItem.maxSockets > 4) {
+				iLvlValue := 35
+			} Else If (advItem.iLvl >= 25 and advItem.maxSockets > 3) {
+				iLvlValue := 25
+			} Else If (advItem.iLvl >= 2 and advItem.maxSockets > 2) {
+				iLvlValue := 2
+			}
+			iLvlCheckState := "Checked"
+		}	
+	}
+	Gui, SelectModsGui:Add, CheckBox, x%offsetX% yp%offsetY% vTradeAdvancedSelectedILvl %iLvlCheckState%, % "Item Level (min)"	
 	Gui, SelectModsGui:Add, Edit    , x+5 yp-3 w30 vTradeAdvancedMinILvl , % iLvlValue
 	
 	; item base
