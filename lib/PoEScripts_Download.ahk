@@ -1,4 +1,4 @@
-﻿PoEScripts_Download(url, ioData, ByRef ioHdr, options, useFallback = true, critical = false, binaryDL = false, errorMsg = "", ByRef reqHeadersCurl = "") {
+﻿PoEScripts_Download(url, ioData, ByRef ioHdr, options, useFallback = true, critical = false, binaryDL = false, errorMsg = "", ByRef reqHeadersCurl = "", handleAccessForbidden = true) {
 	/*
 		url		= download url
 		ioData	= uri encoded postData 
@@ -9,6 +9,8 @@
 		critical	= exit macro if download fails
 		binaryDL	= file download (zip for example)
 		errorMsg	= optional error message, will be added to default message
+		reqHeadersCurl = returns the returned headers from the curl request 
+		handleAccessForbidden = "true" throws an error message if "403 Forbidden" is returned, "false" prevents it, returning "403 Forbidden" to enable custom error handling
 	*/
 	
 	; https://curl.haxx.se/download.html -> https://bintray.com/vszakats/generic/curl/
@@ -74,6 +76,10 @@
 	}
 
 	goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
+	If (RegExMatch(ioHdr, "i)HTTP\/1.1 403 Forbidden") and not handleAccessForbidden) {
+		PreventErrorMsg		:= true
+		handleAccessForbidden	:= "403 Forbidden"
+	}
 	If (!binaryDL) {
 		; Use fallback download if curl fails
 		If ((not goodStatusCode or e.what) and useFallback) {
@@ -162,6 +168,11 @@ ThrowError(e, critical = false, errorMsg = "", PreventErrorMsg = false) {
 		msg .= "`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra	
 	}
 	msg := StrLen(errorMsg) ? msg "`n`n" errorMsg : msg
+	
+	If (RegExMatch(errorMsg, "i)HTTP\/1.1 403 Forbidden")) {
+		cookiesRequired := "Access forbidden, a likely reason for this is that necessary cookies are missing.`nYou may have to use"
+	}
+	msg := StrLen(cookiesRequired) ? msg "`n`n" cookiesRequired : msg
 	
 	If (critical) {
 		MsgBox, 16,, % msg

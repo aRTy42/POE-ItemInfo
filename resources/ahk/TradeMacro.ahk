@@ -3764,6 +3764,10 @@ DeleteCookies:
 	ExitApp
 Return
 
+OpenPageInInternetExplorer:
+	
+Return
+
 TradeAboutDlg_GitHub:
 	repo := TradeGlobals.Get("GithubRepo")
 	user := TradeGlobals.Get("GithubUser")
