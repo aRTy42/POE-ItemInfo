@@ -1366,7 +1366,7 @@ TradeFunc_ReadCookieData() {
 				Else If (InStr(key1, "cf_clearance")) {
 					TradeGlobals.Set("cfClearance", Trim(value1))
 				}		
-			}		
+			}
 		}
 		Else {
 			CookieFileNotFound := 1
@@ -1563,8 +1563,8 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 	If (StrLen(UserAgent)) {
 		reqHeaders.push("User-Agent: " UserAgent)
 		authHeaders.push("User-Agent: " UserAgent)
-		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
-		authHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
+		reqHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
+		authHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
 	} Else {
 		reqHeaders.push("User-Agent:Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")
 	}

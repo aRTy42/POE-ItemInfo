@@ -1228,7 +1228,7 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	reqHeaders.push("Referer: http://poe.trade/")
 	If (StrLen(UserAgent)) {
 		reqHeaders.push("User-Agent: " UserAgent)
-		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
+		reqHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
 	}
 	
 	html := PoEScripts_Download(url, postData, reqHeaders, options, false)
@@ -1290,8 +1290,8 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	If (StrLen(UserAgent)) {
 		reqHeaders.push("User-Agent: " UserAgent)
 		authHeaders.push("User-Agent: " UserAgent)
-		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
-		authHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
+		reqHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
+		authHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
 	} Else {
 		reqHeaders.push("User-Agent:Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")
 	}
