@@ -3768,6 +3768,11 @@ OpenPageInInternetExplorer:
 	
 Return
 
+ReloadScriptAtCookieError:
+	scriptName :="Run_TradeMacro.ahk"
+	Run, "%A_AhkPath%" "%A_ScriptDir%\%scriptName%"
+Return
+
 TradeAboutDlg_GitHub:
 	repo := TradeGlobals.Get("GithubRepo")
 	user := TradeGlobals.Get("GithubUser")
