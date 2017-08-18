@@ -1403,9 +1403,7 @@ TradeFunc_ReadCookieData() {
 			BypassFailed := 1
 		}
 	}
-	BypassFailed := 1
-	accessForbidden := "403 Forbidden."
-	CookieErrorLevel := 1
+
 	SplashTextOff		
 	If (CookieErrorLevel or BypassFailed or CompiledExeNotFound) {
 		; collect debug information
@@ -1423,7 +1421,7 @@ TradeFunc_ReadCookieData() {
 		
 		; create GUI window
 		WinSet, AlwaysOnTop, Off, PoE-TradeMacro
-		msgbox % CookieErrorLevel
+
 		; something went wrong while compiling the script
 		If (CompiledExeNotFound and not TradeOpts.UseManualCookies) {			
 			Gui, CookieWindow:Add, Text, cRed, <ScriptDirectory\temp\getCookieData.exe> not found!

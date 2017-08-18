@@ -3765,7 +3765,8 @@ DeleteCookies:
 Return
 
 OpenPageInInternetExplorer:
-	
+	RegRead, iexplore, HKLM, SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\iexplore.exe
+	Run, %iexplore% http://poe.trade
 Return
 
 ReloadScriptAtCookieError:
