@@ -1312,7 +1312,6 @@ TradeFunc_CheckIfCloudFlareBypassNeeded() {
 	If (!TradeFunc_TestCloudflareBypass("http://poe.trade", "", "", "", false, "PreventErrorMsg")) {
 		TradeFunc_ReadCookieData()
 	}
-	TradeFunc_ReadCookieData()
 }
 
 TradeFunc_ReadCookieData() {

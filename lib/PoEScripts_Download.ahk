@@ -14,11 +14,18 @@
 	*/
 	
 	; https://curl.haxx.se/download.html -> https://bintray.com/vszakats/generic/curl/
-	curl		:= """" A_ScriptDir "\lib\curl.exe"""	
+	curl		:= """" A_ScriptDir "\lib\curl.exe"" "	
 	headers	:= ""
+	cookies	:= ""
 	For key, val in ioHdr {
+		val := Trim(RegExReplace(val, "i)(.*?)\s*:\s*(.*)", "$1:$2"))
 		headers .= "-H """ val """ "
+		
+		If (RegExMatch(val, "i)^Cookie:(.*)", cookie)) {
+			cookies .= cookie1 " "		
+		}
 	}	
+	cookies := StrLen(cookies) ? "-b """ Trim(cookies) """ " : ""
 	
 	redirect := "L"
 	PreventErrorMsg := false
@@ -37,8 +44,8 @@
 	
 	e := {}
 	Try {		
-		commandData	:= curl		; console curl command to return data/content 
-		commandHdr	:= curl		; console curl command to return headers
+		commandData	:= ""		; console curl command to return data/content 
+		commandHdr	:= ""		; console curl command to return headers
 		If (binaryDL) {
 			commandData .= " -" redirect "Jkv "		; save as file
 			If (SavePath) {
@@ -51,21 +58,25 @@
 		If (StrLen(headers)) {
 			commandData .= headers
 			commandHdr  .= headers
+			If (StrLen(cookies)) {
+				commandData .= cookies
+				commandHdr  .= cookies
+			}
 		}
 		If (StrLen(ioData)) {
 			commandData .= "--data """ ioData """ "
 		}
 
 		; get data
-		html	:= StdOutStream(commandData """" url """")
+		html	:= StdOutStream(curl """" url """" commandData)
 		;html := ReadConsoleOutputFromFile(commandData """" url """", "commandData") ; alternative function
 		
 		; get return headers in seperate request
 		If (not binaryDL) {			
 			If (StrLen(ioData)) {
-				commandHdr := commandHdr """" url "?" ioData """"		; add payload to url since you can't use the -I argument with POST requests
+				commandHdr := curl """" url "?" ioData """" commandHdr		; add payload to url since you can't use the -I argument with POST requests
 			} Else {
-				commandHdr := commandHdr """" url """"
+				commandHdr := curl """" url """" commandHdr
 			}
 			ioHdr := StdOutStream(commandHdr)
 			;ioHrd := ReadConsoleOutputFromFile(commandHdr, "commandHdr") ; alternative function
