@@ -72,7 +72,7 @@
 		;html := ReadConsoleOutputFromFile(commandData """" url """", "commandData") ; alternative function
 		
 		; get return headers in seperate request
-		If (not binaryDL) {			
+		If (not binaryDL) {
 			If (StrLen(ioData)) {
 				commandHdr := curl """" url "?" ioData """" commandHdr		; add payload to url since you can't use the -I argument with POST requests
 			} Else {

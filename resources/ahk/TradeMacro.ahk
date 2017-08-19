@@ -378,16 +378,33 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 				}						
 			}	
 		}
-		
+
 		; handle item sockets
 		If (s.UseSockets) {
 			RequestParams.sockets_min := ItemData.Sockets
 			Item.UsedInSearch.Sockets := ItemData.Sockets
-		}	
+		} 
+		If (s.UseSocketsMaxFour) {
+			RequestParams.sockets_min := 4
+			Item.UsedInSearch.Sockets := 4
+		} 
+		If (s.UseSocketsMaxThree) {
+			RequestParams.sockets_min := 3
+			Item.UsedInSearch.Sockets := 3
+		}		
+	
 		; handle item links
 		If (s.UseLinks) {
-			RequestParams.link_min := ItemData.Links
-			Item.UsedInSearch.Links := ItemData.Links
+			RequestParams.link_min	:= ItemData.Links
+			Item.UsedInSearch.Links	:= ItemData.Links
+		} 
+		If (s.UseLinksMaxFour) {
+			RequestParams.link_min	:= 4
+			Item.UsedInSearch.Links	:= 4
+		} 
+		If (s.UseLinksMaxThree) {
+			RequestParams.link_min	:= 3
+			Item.UsedInSearch.Links	:= 3
 		}					
 		
 		If (s.UsedInSearch) {
@@ -3149,7 +3166,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	Else If (Sockets <= 3 and advItem.maxSockets = 3) {
 		m++
 		text := "Sockets (max): 3"
-		Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets, % text
+		Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSocketsMaxThree, % text
 	}
 	
 	If (Links >= 5) {
@@ -3173,9 +3190,9 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		m++
 		text := "Links (max): 3"
 		If (Links = 3) {
-			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks Checked, % text	
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxThree Checked, % text	
 		} Else {
-			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks, % text
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxThree, % text
 		}		
 	}
 
@@ -3358,14 +3375,18 @@ TradeFunc_ResetGUI() {
 		}
 	}
 
-	TradeAdvancedUseSockets		:=
-	TradeAdvancedUseLinks		:=
-	TradeAdvancedSelectedILvl	:=
-	TradeAdvancedMinILvl		:=
-	TradeAdvancedSelectedItemBase	:=
+	TradeAdvancedUseSockets			:=
+	TradeAdvancedUseLinks			:=
+	TradeAdvancedUseSocketsMaxThree	:=
+	TradeAdvancedUseLinksMaxThree		:=
+	TradeAdvancedUseSocketsMaxFour	:=
+	TradeAdvancedUseLinksMaxFour		:=
+	TradeAdvancedSelectedILvl		:=
+	TradeAdvancedMinILvl			:=
+	TradeAdvancedSelectedItemBase		:=
 	TradeAdvancedSelectedCheckAllMods	:=
-	TradeAdvancedImplicitCount	:=
-	TradeAdvancedNormalModCount	:=
+	TradeAdvancedImplicitCount		:=
+	TradeAdvancedNormalModCount		:=
 	TradeAdvancedOverrideOnlineState	:=
 	
 	TradeGlobals.Set("AdvancedPriceCheckItem", {})
@@ -3417,14 +3438,18 @@ TradeFunc_HandleGuiSubmit() {
 		}
 	}
 	
-	newItem.mods       	:= mods
-	newItem.stats      	:= stats
-	newItem.useSockets	:= TradeAdvancedUseSockets
-	newItem.useLinks	:= TradeAdvancedUseLinks
-	newItem.useIlvl	:= TradeAdvancedSelectedILvl
-	newItem.minIlvl	:= TradeAdvancedMinILvl
-	newItem.useBase	:= TradeAdvancedSelectedItemBase
-	newItem.onlineOverride := TradeAdvancedOverrideOnlineState
+	newItem.mods				:= mods
+	newItem.stats				:= stats
+	newItem.useSockets			:= TradeAdvancedUseSockets
+	newItem.useLinks			:= TradeAdvancedUseLinks
+	newItem.useSocketsMaxThree	:= TradeAdvancedUseSocketsMaxThree
+	newItem.useLinksMaxThree		:= TradeAdvancedUseLinksMaxThree
+	newItem.useSocketsMaxFour	:= TradeAdvancedUseSocketsMaxFour
+	newItem.useLinksMaxFour		:= TradeAdvancedUseLinksMaxFour
+	newItem.useIlvl			:= TradeAdvancedSelectedILvl
+	newItem.minIlvl			:= TradeAdvancedMinILvl
+	newItem.useBase			:= TradeAdvancedSelectedItemBase
+	newItem.onlineOverride		:= TradeAdvancedOverrideOnlineState
 
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)	
 	Gui, SelectModsGui:Destroy
