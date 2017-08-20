@@ -1391,14 +1391,14 @@ TradeFunc_ReadCookieData() {
 		cookiesSuccessfullyRead++
 	}
 	If (StrLen(TradeGlobals.Get("cfClearance")) < 1) {
-		;CookieErrorLevel := 1
+		CookieErrorLevel := 1
 		cookiesSuccessfullyRead++
 	}	
 	
 	; test connection to poe.trade
 	If (!CookieErrorLevel) {
 		accessForbidden := ""
-		If (!TradeFunc_TestCloudflareBypass("http://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"), true, accessForbidden)) {
+		If (!TradeFunc_TestCloudflareBypass("http://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"), true, "", accessForbidden)) {
 			BypassFailed := 1
 		}
 	}
@@ -1471,12 +1471,13 @@ TradeFunc_ReadCookieData() {
 					}
 					Else {
 						text .= "- The user-agent/cookies set in the settings menu may be invalid." %cookiesDeleted% "`n"
+						text .= "  Make sure your cf_clearance is complete, it likely consists of 2 parts seperated by a '-'."
 					}
 
 					If (cookiesSuccessfullyRead < 3) {
-						textC := StrLen(TradeGlobals.Get("UserAgent")) ? "- UserAgent found, " : "- UserAgent missing, " 
+						textC := StrLen(TradeGlobals.Get("UserAgent")) ? "- User-Agent found, " : "- User-Agent missing, " 
 						textC .= StrLen(TradeGlobals.Get("cfduid")) ? "cfduid found, " : "cfduid missing, "
-						textC .= StrLen(TradeGlobals.Get("cfClearance")) ? "cfClearance found, " : "cfClearance missing.`n"
+						textC .= StrLen(TradeGlobals.Get("cfClearance")) ? "cf_clearance found, " : "cf_clearance missing.`n"
 						text .= textC
 					}
 					text .= "- Your cookies will change every few days (make sure they are correct/refreshed)."
@@ -1611,7 +1612,7 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 		TradeFunc_ParseSearchFormOptions()	
 		Return 1
 	}
-	Else If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK") and not StrLen(PreventErrorMsg) and not handleAccessForbidden = "403 Forbidden") {
+	Else If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK") and not StrLen(PreventErrorMsg) and not InStr(handleAccessForbidden, "Forbidden")) {
 		TradeFunc_HandleConnectionFailure(authHeaders, ioHdr, url)
 	}
 	Else {
