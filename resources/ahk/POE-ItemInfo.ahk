@@ -9850,6 +9850,32 @@ ReadConsoleOutputFromFile(command, fileName) {
 	Return io
 }
 
+StrPutVar(Str, ByRef Var, Enc = "") {
+	Len := StrPut(Str, Enc) * (Enc = "UTF-16" || Enc = "CP1200" ? 2 : 1)
+	VarSetCapacity(Var, Len, 0)
+	Return, StrPut(Str, &Var, Enc)
+}
+
+UriEncode(Uri, Enc = "UTF-8")	{
+	StrPutVar(Uri, Var, Enc)
+	f := A_FormatInteger
+	SetFormat, IntegerFast, H
+	Loop
+	{
+		Code := NumGet(Var, A_Index - 1, "UChar")
+		If (!Code)
+			Break
+		If (Code >= 0x30 && Code <= 0x39 ; 0-9
+			|| Code >= 0x41 && Code <= 0x5A ; A-Z
+			|| Code >= 0x61 && Code <= 0x7A) ; a-z
+			Res .= Chr(Code)
+		Else
+			Res .= "%" . SubStr(Code + 0x100, -1)
+	}
+	SetFormat, IntegerFast, %f%
+	Return, Res
+}
+
 GetContributors(AuthorsPerLine=0)
 {
 	IfNotExist, %A_ScriptDir%\resources\AUTHORS.txt
@@ -10104,6 +10130,41 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		}		
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
+}
+
+AdvancedItemInfoExt() {
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		Global Item, Opts, Globals, ItemData
+		
+		ClipBoardTemp := Clipboard
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		
+		Clipboard := 
+		Send ^{sc02E}	; ^{c}
+		Sleep 100		
+		
+		CBContents := GetClipboardContents()
+		CBContents := PreProcessContents(CBContents)		
+		Globals.Set("ItemText", CBContents)
+		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)		
+		ParsedData := ParseItemData(CBContents)
+		
+		If (Item.Name) {			
+			itemTextBase64 := ""
+			FileDelete, %A_ScriptDir%\temp\itemText.txt
+			FileAppend, %CBContents%, %A_ScriptDir%\temp\itemText.txt, utf-8
+			command		:= "certutil -encode -f %cd%\temp\itemText.txt %cd%\temp\base64ItemText.txt & type %cd%\temp\base64ItemText.txt"
+			itemTextBase64	:= ReadConsoleOutputFromFile(command, "encodeToBase64.txt")
+			itemTextBase64	:= Trim(RegExReplace(itemTextBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))				
+			itemTextBase64	:= UriEncode(itemTextBase64)
+			itemTextBase64	:= RegExReplace(itemTextBase64, "i)^(%0D)?(%0A)?|((%0D)?(%0A)?)+$", "")
+			url 			:= "http://pathof.info/?item=" itemTextBase64
+			openWith := AssociatedProgram("html")
+			Run, %openWith% -new-tab "%Url%"
+		}
+		SuspendPOEItemScript = 0
+	}	
 }
 
 LookUpAffixes() {

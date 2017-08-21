@@ -42,6 +42,7 @@ AM_AssignHotkeys:
 	global AM_Remaining			:= ["off", "F9"]
 	global AM_JoinGlobal820		:= ["off", "F10"]
 	global AM_SetAfkMessage		:= ["off", "F11"]
+	global AM_AdvancedItemInfo	:= ["on", "^!c"]
 
 	If (Opts.EnableAdditionalMacros) {
 		Hotkey, % AM_TogglePOEItemScript[2]	, AM_TogglePOEItemScript_HKey	, % AM_TogglePOEItemScript[1]
@@ -60,6 +61,7 @@ AM_AssignHotkeys:
 		Hotkey, % AM_Remaining[2]			, AM_Remaining_HKey				, % AM_Remaining[1]
 		Hotkey, % AM_JoinGlobal820[2]		, AM_JoinGlobal820_HKey			, % AM_JoinGlobal820[1]
 		Hotkey, % AM_SetAfkMessage[2]		, AM_SetAfkMessage_HKey			, % AM_SetAfkMessage[1]
+		Hotkey, % AM_AdvancedItemInfo[2]	, AM_AdvancedItemInfo_HKey		, % AM_AdvancedItemInfo[1]
 	}
 Return
 
@@ -127,6 +129,10 @@ Return
 
 AM_SetAfkMessage_HKey:
 	setAfkMessage()							; Pastes afk message to your chat and marks "X" so you can type in the estimated time.
+Return
+
+AM_AdvancedItemInfo_HKey:
+	AdvancedItemInfoExt()					; Opens an item on pathof.info for an advanced affix breakdown
 Return
 
 setAfkMessage(){		
