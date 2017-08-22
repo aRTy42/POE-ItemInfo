@@ -8374,7 +8374,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			mod.simplifiedName := "xIncreased" element1 "Damage"
 		}
 		; % elemental damage with weapons
-		Else If (RegExMatch(mod.name, "i)(Cold|Fire|Lightning|Elemental) damage with weapons", element)) {
+		Else If (RegExMatch(mod.name, "i)(Cold|Fire|Lightning|Elemental) damage with attack skills", element)) {
 			%element1%Dmg_AttacksPercent := %element1%Dmg_AttacksPercent + mod.values[1]
 			mod.simplifiedName := "xIncreased" element1 "DamageAttacks"
 		}
@@ -8440,8 +8440,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	coldDmg_Percent	:= coldDmg_Percent + elementalDmg_Percent
 	lightningDmg_Percent:= lightningDmg_Percent + elementalDmg_Percent
 	
-	; ### Elemental damage - Weapons % increased
-	; ### - spreads Elemental damage with weapon to each 'element' damage with weapon and adds related % increased 'element' damage
+	; ### Elemental damage - attack skills % increased
+	; ### - spreads Elemental damage with attack skills to each 'element' damage with attack skills and adds related % increased 'element' damage
 	fireDmg_AttacksPercent      	:= fireDmg_AttacksPercent + elementalDmg_AttacksPercent + fireDmg_Percent
 	coldDmg_AttacksPercent		:= coldDmg_AttacksPercent + elementalDmg_AttacksPercent + coldDmg_Percent
 	lightningDmg_AttacksPercent	:= lightningDmg_AttacksPercent + elementalDmg_AttacksPercent + lightningDmg_Percent
@@ -8663,7 +8663,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	}
 	
 	; other damages
-	percentDamageModSuffixes := [" Damage", " Damage with Weapons", " Spell Damage"]
+	percentDamageModSuffixes := [" Damage", " Damage with Attack Skills", " Spell Damage"]
 	flatDamageModSuffixes    := ["", " to Attacks", " to Spells"]
 	
 	For i, element in ["Fire", "Cold", "Lightning", "Elemental"] {
@@ -8725,6 +8725,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 				If (mod.values[2]) {
 					mv := (mod.values[1] + mod.values[2]) / 2
 					tv := (tempMod.values[1] + tempMod.values[2]) / 2
+					
+					console.log(mod.name "`n" mv " - " tv)
 					If (tv <= mv) {
 						higher := false
 					}
@@ -8737,23 +8739,13 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			}
 		}
 		; add the tempMod to pseudos if it has greater values, or no parent
-		If (higher){
+		If (higher) {
 			tempMod.isVariable:= false
 			tempMod.type := "pseudo"
 			allPseudoMods.push(tempMod)
 		}
 	}
-
-	; ### This is mostly for TradeMacro
-	; returns all original mods and all the pseudo mods if requested
-	If (returnAllMods) {
-		returnedMods := mods
-		For i, mod in allPseudoMods {
-			returnedMods.push(mod)
-		}
-		Return returnedMods
-	}
-
+	
 	; 2nd pass
 	; now we remove pseudos that are shadowed by an original mod they inherited from
 	; ex ( '25% increased Cold Spell Damage' is shadowed by '%25 increased Spell Damage' )
@@ -8787,7 +8779,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			}
 		}
 		; add the tempMod to pseudos if it has greater values, or no parent
-		If (higher){
+		If (higher) {
 			tempMod.isVariable:= false
 			tempMod.type := "pseudo"
 			tempPseudoMods.push(tempMod)
@@ -8810,8 +8802,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 				isParentMod := false
 				For k, simplifiedName in tempPseudoA.possibleParentSimplifiedNames {
 					if (tempPseudoB.simplifiedName == simplifiedName) {
-							isParentMod := true
-							; TODO: match found we could exit loop here
+						isParentMod := true
+						; TODO: match found we could exit loop here
 					}
 				}
 				If ( isParentMod ) {
@@ -8839,7 +8831,17 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		}
 	}
 	
-	return pseudoMods
+	; ### This is mostly for TradeMacro
+	; returns all original mods and the pseudo mods if requested
+	If (returnAllMods) {
+		returnedMods := mods
+		For i, mod in pseudoMods {
+			returnedMods.push(mod)			
+		}
+		Return returnedMods
+	}
+	
+	Return pseudoMods
 }
 
 CheckIfTempModExists(needle, mods) {
