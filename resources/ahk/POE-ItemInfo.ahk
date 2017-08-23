@@ -441,6 +441,7 @@ class Item_ {
 		This.HasEffect		:= False
 		This.IsWeapon 		:= False
 		This.IsArmour 		:= False
+		This.IsHybridArmour := False
 		This.IsQuiver 		:= False
 		This.IsFlask 		:= False
 		This.IsGem			:= False
@@ -1717,6 +1718,18 @@ NumFormat(Num, Format)
 	newNum := newNum . "" ; convert to string so the next SetFormat doesn't apply
 	SetFormat, FloatFast, %oldFormat%
 	return newNum
+}
+
+; Formats floating values such as 2.50000 or 3.00000 into 2.5 and 3
+NumFormatPointFiveOrInt(Value){
+	If( not Mod(Value, 1) )
+	{
+		return Round(Value)
+	}
+	Else
+	{
+		return NumFormat(Value, 0.1)	
+	}
 }
 
 ; Pads a number with prefixed 0s and optionally rounds or appends to specified decimal places width.
@@ -3273,10 +3286,11 @@ ParseAffixes(ItemDataAffixes, Item)
 	ItemDataChunk	:= ItemDataAffixes
 
 	ItemBaseType	:= Item.BaseType
-	ItemSubType	:= Item.SubType
+	ItemSubType		:= Item.SubType
 	ItemGripType	:= Item.GripType
 	ItemLevel		:= Item.Level
-	ItemQuality	:= Item.Quality
+	ItemQuality		:= Item.Quality
+	ItemIsHybridArmour := Item.IsHybridArmour
 
 	; Reset the AffixLines "array" and other vars
 	ResetAffixDetailVars()
@@ -4266,7 +4280,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, increased Damage
+		If RegExMatch(A_LoopField, ".*increased Damage$")
 		{
 			; Can be either Leo prefix or jewel suffix.
 			NumPrefixes += 1
@@ -4502,47 +4516,141 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
 			Continue
 		}
-		
+		If (ItemBaseType == "Weapon")
+			{
+				IfInString, A_LoopField, Chance to Ignite
+				{
+					NumSuffixes += 1
+					ValueRange := LookupAffixData("data\ChanceToIgnite.txt", ItemLevel, CurrValue, "", CurrTier)
+					AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+					Continue
+				}
+				IfInString, A_LoopField, Chance to Freeze
+				{
+					NumSuffixes += 1
+					ValueRange := LookupAffixData("data\ChanceToFreeze.txt", ItemLevel, CurrValue, "", CurrTier)
+					AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+					Continue
+				}
+				IfInString, A_LoopField, Chance to Shock
+				{
+					NumSuffixes += 1
+					ValueRange := LookupAffixData("data\ChanceToShock.txt", ItemLevel, CurrValue, "", CurrTier)
+					AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+					Continue
+				}
+				IfInString, A_LoopField, chance to cause Bleeding on Hit
+				{
+					NumSuffixes += 1
+					ValueRange := LookupAffixData("data\ChanceToBleed.txt", ItemLevel, CurrValue, "", CurrTier)
+					AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+					Continue
+				}
+				IfInString, A_LoopField, chance to Poison on Hit
+				{
+					NumSuffixes += 1
+					ValueRange := LookupAffixData("data\ChanceToPoison.txt", ItemLevel, CurrValue, "", CurrTier)
+					AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+					Continue
+				}
+				IfInString, A_LoopField, increased Burning Damage
+				{
+					NumSuffixes += 1
+					ValueRange := LookupAffixData("data\IncrBurningDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+					AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+					Continue
+				}
+				IfInString, A_LoopField, increased Damage with Poison
+				{
+					NumSuffixes += 1
+					ValueRange := LookupAffixData("data\IncrPoisonDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+					AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+					Continue
+				}
+				IfInString, A_LoopField, increased Damage with Bleeding
+				{
+					NumSuffixes += 1
+					ValueRange := LookupAffixData("data\IncrBleedingDamage.txt", ItemLevel, CurrValue, "", CurrTier)
+					AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+					Continue
+				}
+				IfInString, A_LoopField, increased Poison Duration
+				{
+					NumSuffixes += 1
+					ValueRange := LookupAffixData("data\PoisonDuration.txt", ItemLevel, CurrValue, "", CurrTier)
+					AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+					Continue
+				}
+				IfInString, A_LoopField, increased Bleed duration
+				{
+					NumSuffixes += 1
+					ValueRange := LookupAffixData("data\BleedDuration.txt", ItemLevel, CurrValue, "", CurrTier)
+					AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+					Continue
+				}
+			}
+
 		
 		; Prefixes
 
 		IfInString, A_LoopField, to Armour
 		{
-			; Slinkston edit. AR, EV, and ES items are all correct for Armour, Shields, Helmets, Boots, Gloves, and different jewelry.
-			; to Armour has Belt, but does not have Ring or Amulet.
-			If (ItemSubType == "Belt")
+			If(ItemIsHybridArmour == False)
 			{
-				ValueRange := LookupAffixData("data\ToArmourBelt.txt", ItemLevel, CurrValue, "", CurrTier)
-			}
-		Else If (ItemSubtype == "Helmet")
-		{
-			ValueRange := LookupAffixData("data\ToArmourHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
-		}
-			Else If (ItemSubtype == "Gloves" or ItemSubType == "Boots")
-			{
-				ValueRange := LookupAffixData("data\ToArmourGlovesandBoots.txt", ItemLevel, CurrValue, "", CurrTier)
+				; Slinkston edit. AR, EV, and ES items are all correct for Armour, Shields, Helmets, Boots, Gloves, and different jewelry.
+				; to Armour has Belt, but does not have Ring or Amulet.
+				If (ItemSubType == "Belt")
+				{
+					ValueRange := LookupAffixData("data\ToArmourBelt.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubtype == "Helmet")
+				{
+					ValueRange := LookupAffixData("data\ToArmourHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubtype == "Gloves" or ItemSubType == "Boots")
+				{
+					ValueRange := LookupAffixData("data\ToArmourGlovesAndBoots.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else
+				{
+					ValueRange := LookupAffixData("data\ToArmourArmourAndShield.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				NumPrefixes += 1
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+				Continue
 			}
 			Else
 			{
-				ValueRange := LookupAffixData("data\ToArmourArmourandShield.txt", ItemLevel, CurrValue, "", CurrTier)
+				If (ItemSubtype == "Helmet")
+				{
+					ValueRange := LookupAffixData("data\ToArmourHelmet_HybridBase.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubtype == "Gloves" or ItemSubType == "Boots")
+				{
+					ValueRange := LookupAffixData("data\ToArmourGlovesAndBoots_HybridBase.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else
+				{
+					ValueRange := LookupAffixData("data\ToArmourArmourAndShield_HybridBase.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				NumPrefixes += 0.5
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Prefix", ValueRange, CurrTier), A_Index)
+				Continue
 			}
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-			NumPrefixes += 1
-			Continue
 		}
 		IfInString, A_LoopField, increased Armour and Evasion
 		{
 			AffixType		:= "Prefix"
 			AEBracketLevel := 0
-			ValueRange	:= LookupAffixData("data\ArmourAndEvasion.txt", ItemLevel, CurrValue, AEBracketLevel, CurrTier)
+			ValueRange	:= LookupAffixData("data\IncrArmourAndEvasion.txt", ItemLevel, CurrValue, AEBracketLevel, CurrTier)
 			If (HasStunRecovery)
 			{
 				AEBracketLevel2 := AEBracketLevel
 
-				AEBracket := LookupAffixBracket("data\HybridDefences_StunRecovery.txt", ItemLevel, CurrValue, AEBracketLevel2)
+				AEBracket := LookupAffixBracket("data\IncrHybridDefences_StunRecovery.txt", ItemLevel, CurrValue, AEBracketLevel2)
 				If (Not IsValidRange(ValueRange) and IsValidBracket(AEBracket))
 				{
-					ValueRange := LookupAffixData("data\HybridDefences_StunRecovery.txt", ItemLevel, CurrValue, AEBracketLevel2, CurrTier)
+					ValueRange := LookupAffixData("data\IncrHybridDefences_StunRecovery.txt", ItemLevel, CurrValue, AEBracketLevel2, CurrTier)
 				}
 				AffixType			:= "Comp. Prefix"
 				BSRecBracketLevel	:= 0
@@ -4595,15 +4703,15 @@ ParseAffixes(ItemDataAffixes, Item)
 						BSRecPartial := LookupAffixBracket("data\StunRecovery_Hybrid.txt", ItemLevel, "", BSRecBracketLevel)
 					}
 
-					AEBSBracket := LookupAffixBracket("data\HybridDefences_StunRecovery.txt", BSRecBracketLevel)
+					AEBSBracket := LookupAffixBracket("data\IncrHybridDefences_StunRecovery.txt", BSRecBracketLevel)
 
 					If (Not WithinBounds(AEBSBracket, CurrValue))
 					{
-						AEBracket := LookupRemainingAffixBracket("data\ArmourAndEvasion.txt", ItemLevel, CurrValue, AEBSBracket)
+						AEBracket := LookupRemainingAffixBracket("data\IncrArmourAndEvasion.txt", ItemLevel, CurrValue, AEBSBracket)
 
 						If (Not IsValidBracket(AEBracket))
 						{
-							AEBracket := LookupAffixBracket("data\HybridDefences_StunRecovery.txt", ItemLevel, CurrValue)
+							AEBracket := LookupAffixBracket("data\IncrHybridDefences_StunRecovery.txt", ItemLevel, CurrValue)
 						}
 						If (IsValidBracket(AEBracket) and WithinBounds(AEBracket, CurrValue))
 						{
@@ -4616,7 +4724,7 @@ ParseAffixes(ItemDataAffixes, Item)
 							}
 							Else
 							{
-								ValueRange	:= LookupAffixData("data\ArmourAndEvasion.txt", ItemLevel, CurrValue, AEBracketLevel2, CurrTier)
+								ValueRange	:= LookupAffixData("data\IncrArmourAndEvasion.txt", ItemLevel, CurrValue, AEBracketLevel2, CurrTier)
 								AffixType		:= "Prefix"
 							}
 						}
@@ -4630,7 +4738,7 @@ ParseAffixes(ItemDataAffixes, Item)
 								; determined that Stun Recovery should be a simple suffix
 								BSRecPartial	:= ""
 								AffixType		:= "Prefix"
-								ValueRange	:= LookupAffixData("data\ArmourAndEvasion.txt", ItemLevel, CurrValue, AEBracketLevel, CurrTier)
+								ValueRange	:= LookupAffixData("data\IncrArmourAndEvasion.txt", ItemLevel, CurrValue, AEBracketLevel, CurrTier)
 							}
 						}
 					}
@@ -4650,15 +4758,15 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			AffixType		:= "Prefix"
 			AESBracketLevel:= 0
-			ValueRange	:= LookupAffixData("data\ArmourAndEnergyShield.txt", ItemLevel, CurrValue, AESBracketLevel, CurrTier)
+			ValueRange	:= LookupAffixData("data\IncrArmourAndEnergyShield.txt", ItemLevel, CurrValue, AESBracketLevel, CurrTier)
 			If (HasStunRecovery)
 			{
 				AESBracketLevel2 := AESBracketLevel
 
-				AESBracket := LookupAffixBracket("data\HybridDefences_StunRecovery.txt", ItemLevel, CurrValue, AESBracketLevel2)
+				AESBracket := LookupAffixBracket("data\IncrHybridDefences_StunRecovery.txt", ItemLevel, CurrValue, AESBracketLevel2)
 				If (Not IsValidRange(ValueRange) and IsValidBracket(AESBracket))
 				{
-					ValueRange := LookupAffixData("data\HybridDefences_StunRecovery.txt", ItemLevel, CurrValue, AESBracketLevel2, CurrTier)
+					ValueRange := LookupAffixData("data\IncrHybridDefences_StunRecovery.txt", ItemLevel, CurrValue, AESBracketLevel2, CurrTier)
 				}
 				AffixType			:= "Comp. Prefix"
 				BSRecBracketLevel	:= 0
@@ -4677,14 +4785,14 @@ ParseAffixes(ItemDataAffixes, Item)
 						BSRecPartial := LookupAffixBracket("data\StunRecovery_Hybrid.txt", ItemLevel, "", BSRecBracketLevel)
 					}
 
-					AESBSBracket := LookupAffixBracket("data\HybridDefences_StunRecovery.txt", BSRecBracketLevel)
+					AESBSBracket := LookupAffixBracket("data\IncrHybridDefences_StunRecovery.txt", BSRecBracketLevel)
 
 					If (Not WithinBounds(AESBSBracket, CurrValue))
 					{
-						AESBracket := LookupRemainingAffixBracket("data\ArmourAndEnergyShield.txt", ItemLevel, CurrValue, AESBSBracket)
+						AESBracket := LookupRemainingAffixBracket("data\IncrArmourAndEnergyShield.txt", ItemLevel, CurrValue, AESBSBracket)
 						If (Not IsValidBracket(AESBracket))
 						{
-							AESBracket := LookupAffixBracket("data\HybridDefences_StunRecovery.txt", ItemLevel, CurrValue)
+							AESBracket := LookupAffixBracket("data\IncrHybridDefences_StunRecovery.txt", ItemLevel, CurrValue)
 						}
 						If (Not WithinBounds(AESBracket, CurrValue))
 						{
@@ -4709,15 +4817,15 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			AffixType		:= "Prefix"
 			EESBracketLevel:= 0
-			ValueRange	:= LookupAffixData("data\EvasionAndEnergyShield.txt", ItemLevel, CurrValue, EESBracketLevel, CurrTier)
+			ValueRange	:= LookupAffixData("data\IncrEvasionAndEnergyShield.txt", ItemLevel, CurrValue, EESBracketLevel, CurrTier)
 			If (HasStunRecovery)
 			{
 				EESBracketLevel2 := EESBracketLevel
 
-				EESBracket := LookupAffixBracket("data\HybridDefences_StunRecovery.txt", ItemLevel, CurrValue, EESBracketLevel2)
+				EESBracket := LookupAffixBracket("data\IncrHybridDefences_StunRecovery.txt", ItemLevel, CurrValue, EESBracketLevel2)
 				If (Not IsValidRange(ValueRange) and IsValidBracket(EESBracket))
 				{
-					ValueRange := LookupAffixData("data\HybridDefences_StunRecovery.txt", ItemLevel, CurrValue, EESBracketLevel2, CurrTier)
+					ValueRange := LookupAffixData("data\IncrHybridDefences_StunRecovery.txt", ItemLevel, CurrValue, EESBracketLevel2, CurrTier)
 				}
 
 				AffixType			:= "Comp. Prefix"
@@ -4737,15 +4845,15 @@ ParseAffixes(ItemDataAffixes, Item)
 						BSRecPartial := LookupAffixBracket("data\StunRecovery_Hybrid.txt", ItemLevel, "", BSRecBracketLevel)
 					}
 
-					EESBSBracket := LookupAffixBracket("data\HybridDefences_StunRecovery.txt", BSRecBracketLevel)
+					EESBSBracket := LookupAffixBracket("data\IncrHybridDefences_StunRecovery.txt", BSRecBracketLevel)
 
 					If (Not WithinBounds(EESBSBracket, CurrValue))
 					{
-						EESBracket := LookupRemainingAffixBracket("data\EvasionAndEnergyShield.txt", ItemLevel, CurrValue, EESBSBracket)
+						EESBracket := LookupRemainingAffixBracket("data\IncrEvasionAndEnergyShield.txt", ItemLevel, CurrValue, EESBSBracket)
 
 						If (Not IsValidBracket(EESBracket))
 						{
-							EESBracket := LookupAffixBracket("data\HybridDefences_StunRecovery.txt", ItemLevel, CurrValue)
+							EESBracket := LookupAffixBracket("data\IncrHybridDefences_StunRecovery.txt", ItemLevel, CurrValue)
 						}
 						If (Not WithinBounds(EESBracket, CurrValue))
 						{
@@ -4773,15 +4881,15 @@ ParseAffixes(ItemDataAffixes, Item)
 			IABracketLevel	:= 0
 			If (ItemBaseType == "Item")
 			{
-				; Global
-				PrefixPath := "data\IncrArmour_Items.txt"
-				PrefixPathOther := "data\IncrArmour_WeaponsAndArmour.txt"
+				; Global (Amulet)
+				PrefixPath := "data\IncrArmour_Global.txt"
+				PrefixPathOther := "data\IncrArmour_Local.txt"
 			}
 			Else
 			{
 				; Local
-				PrefixPath := "data\IncrArmour_WeaponsAndArmour.txt"
-				PrefixPathOther := "data\IncrArmour_Items.txt"
+				PrefixPath := "data\IncrArmour_Local.txt"
+				PrefixPathOther := "data\IncrArmour_Global.txt"
 			}
 			ValueRange := LookupAffixData(PrefixPath, ItemLevel, CurrValue, IABracketLevel, CurrTier)
 			If (Not IsValidRange(ValueRange))
@@ -4792,10 +4900,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				IABracketLevel2 := IABracketLevel
 
-				ASRBracket := LookupAffixBracket("data\Armour_StunRecovery.txt", ItemLevel, CurrValue, IABracketLevel2)
+				ASRBracket := LookupAffixBracket("data\IncrArmour_StunRecovery.txt", ItemLevel, CurrValue, IABracketLevel2)
 				If (Not IsValidRange(ValueRange) and IsValidBracket(ASRBracket))
 				{
-					ValueRange := LookupAffixData("data\Armour_StunRecovery.txt", ItemLevel, CurrValue, IABracketLevel2, CurrTier)
+					ValueRange := LookupAffixData("data\IncrArmour_StunRecovery.txt", ItemLevel, CurrValue, IABracketLevel2, CurrTier)
 				}
 
 				AffixType			:= "Comp. Prefix"
@@ -4815,7 +4923,7 @@ ParseAffixes(ItemDataAffixes, Item)
 						BSRecPartial := LookupAffixBracket("data\StunRecovery_Armour.txt", ItemLevel, "", BSRecBracketLevel)
 					}
 
-					IABSBracket := LookupAffixBracket("data\Armour_StunRecovery.txt", BSRecBracketLevel)
+					IABSBracket := LookupAffixBracket("data\IncrArmour_StunRecovery.txt", BSRecBracketLevel)
 
 					If (Not WithinBounds(IABSBracket, CurrValue))
 					{
@@ -4844,30 +4952,52 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
 			Continue
 		}
+		
 		IfInString, A_LoopField, to Evasion Rating
 		{
-			; Slinkston edit. I am not sure if using 'Else If' statements are the best way here, but it seems to work.
-			; AR, EV, and ES items are all correct for Armour, Shields, Helmets, Boots, Gloves, and different jewelry.
-			; to Evasion Rating has Ring, but does not have Belt or Amulet.
-			If (ItemSubType == "Ring")
+			If(ItemIsHybridArmour == False)
 			{
-				ValueRange := LookupAffixData("data\ToEvasionRing.txt", ItemLevel, CurrValue, "", CurrTier)
-			}
-			Else If (ItemSubType == "Helmet")
-			{
-				ValueRange := LookupAffixData("data\ToEvasionHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
-			}
-			Else If (ItemSubType == "Gloves" or ItemSubType == "Boots")
-			{
-				ValueRange := LookupAffixData("data\ToEvasionGlovesandBoots.txt", ItemLevel, CurrValue, "", CurrTier)
+				; Slinkston edit. I am not sure if using 'Else If' statements are the best way here, but it seems to work.
+				; AR, EV, and ES items are all correct for Armour, Shields, Helmets, Boots, Gloves, and different jewelry.
+				; to Evasion Rating has Ring, but does not have Belt or Amulet.
+				If (ItemSubType == "Ring")
+				{
+					ValueRange := LookupAffixData("data\ToEvasionRing.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubType == "Helmet")
+				{
+					ValueRange := LookupAffixData("data\ToEvasionHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubType == "Gloves" or ItemSubType == "Boots")
+				{
+					ValueRange := LookupAffixData("data\ToEvasionGlovesAndBoots.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else
+				{
+					ValueRange := LookupAffixData("data\ToEvasionArmourAndShield.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				NumPrefixes += 1
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+				Continue
 			}
 			Else
 			{
-				ValueRange := LookupAffixData("data\ToEvasionArmourandShield.txt", ItemLevel, CurrValue, "", CurrTier)
+				If (ItemSubType == "Helmet")
+				{
+					ValueRange := LookupAffixData("data\ToEvasionHelmet_HybridBase.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubType == "Gloves" or ItemSubType == "Boots")
+				{
+					ValueRange := LookupAffixData("data\ToEvasionGlovesAndBoots_HybridBase.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else
+				{
+					ValueRange := LookupAffixData("data\ToEvasionArmourAndShield_HybridBase.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				NumPrefixes += 0.5
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Prefix", ValueRange, CurrTier), A_Index)
+				Continue
 			}
-			NumPrefixes += 1
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-			Continue
 		}
 		IfInString, A_LoopField, increased Evasion Rating
 		{
@@ -4899,10 +5029,10 @@ ParseAffixes(ItemDataAffixes, Item)
 				;   26% increased Stun and Block Recovery
 				;   => 8% is bracket level 2 (6-14), so 'B&S Recovery from Evasion' level 2 makes
 				;      BSRec partial 6-7
-				ERSRBracket := LookupAffixBracket("data\Evasion_StunRecovery.txt", ItemLevel, CurrValue, IEBracketLevel2)
+				ERSRBracket := LookupAffixBracket("data\IncrEvasion_StunRecovery.txt", ItemLevel, CurrValue, IEBracketLevel2)
 				If (Not IsValidRange(ValueRange) and IsValidBracket(ERSRBracket))
 				{
-					ValueRange := LookupAffixData("data\Evasion_StunRecovery.txt", ItemLevel, CurrValue, IEBracketLevel2, CurrTier)
+					ValueRange := LookupAffixData("data\IncrEvasion_StunRecovery.txt", ItemLevel, CurrValue, IEBracketLevel2, CurrTier)
 				}
 
 				AffixType			:= "Comp. Prefix"
@@ -4922,7 +5052,7 @@ ParseAffixes(ItemDataAffixes, Item)
 						BSRecPartial := LookupAffixBracket("data\StunRecovery_Evasion.txt", ItemLevel, "", BSRecBracketLevel)
 					}
 
-					IEBSBracket := LookupAffixBracket("data\Evasion_StunRecovery.txt", BSRecBracketLevel)
+					IEBSBracket := LookupAffixBracket("data\IncrEvasion_StunRecovery.txt", BSRecBracketLevel)
 
 					If (Not WithinBounds(IEBSBracket, CurrValue))
 					{
@@ -4951,41 +5081,62 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, AffixType, ValueRange, CurrTier), A_Index)
 			Continue
 		}
+		
 		IfInString, A_LoopField, to maximum Energy Shield
 		{
-			; Slinkston Edit. Seems I may have to do the same for EV and AR.
-			; AR, EV, and ES items are all correct for Armour, Shields, Helmets, Boots, Gloves, and different jewelry.
-			; to max ES is found is all jewelry; Amulet, Belt, and Ring.
-			PrefixType := "Prefix"
-			If (ItemSubType == "Amulet" or ItemSubType == "Belt")
+			If(ItemIsHybridArmour == False)
 			{
-				ValueRange := LookupAffixData("data\ToMaxESAmuletandBelt.txt", ItemLevel, CurrValue, "", CurrTier)
-			}
-			Else If (ItemSubType == "Ring")
-			{
-				ValueRange := LookupAffixData("data\ToMaxESRing.txt", ItemLevel, CurrValue, "", CurrTier)
-			}
-			Else If (ItemSubType == "Gloves" or ItemSubtype == "Boots")
-			{
-				ValueRange := LookupAffixData("data\ToMaxESGlovesandBoots.txt", ItemLevel, CurrValue, "", CurrTier)
-			}
-			Else If (ItemSubType == "Helmet")
-			{
-				ValueRange := LookupAffixData("data\ToMaxESHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
-			}
-			Else If (ItemSubType == "Shield")
-			{
-				ValueRange := LookupAffixData("data\ToMaxESShield.txt", ItemLevel, CurrValue, "", CurrTier)
+				; Slinkston Edit. Seems I may have to do the same for EV and AR.
+				; AR, EV, and ES items are all correct for Armour, Shields, Helmets, Boots, Gloves, and different jewelry.
+				; to max ES is found is all jewelry; Amulet, Belt, and Ring.
+				If (ItemSubType == "Amulet" or ItemSubType == "Belt")
+				{
+					ValueRange := LookupAffixData("data\ToMaxESAmuletAndBelt.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubType == "Ring")
+				{
+					ValueRange := LookupAffixData("data\ToMaxESRing.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubType == "Gloves" or ItemSubtype == "Boots")
+				{
+					ValueRange := LookupAffixData("data\ToMaxESGlovesAndBoots.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubType == "Helmet")
+				{
+					ValueRange := LookupAffixData("data\ToMaxESHelmet.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubType == "Shield")
+				{
+					ValueRange := LookupAffixData("data\ToMaxESShield.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else
+				{
+					ValueRange := LookupAffixData("data\ToMaxESArmour.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				NumPrefixes += 1
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+				Continue
 			}
 			Else
 			{
-				ValueRange := LookupAffixData("data\ToMaxESArmour.txt", ItemLevel, CurrValue, "", CurrTier)
+				If (ItemSubType == "Gloves" or ItemSubtype == "Boots")
+				{
+					ValueRange := LookupAffixData("data\ToMaxESGlovesAndBoots_HybridBase.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else If (ItemSubType == "Helmet")
+				{
+					ValueRange := LookupAffixData("data\ToMaxESHelmet_HybridBase.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				Else
+				{
+					ValueRange := LookupAffixData("data\ToMaxESArmourAndShield_HybridBase.txt", ItemLevel, CurrValue, "", CurrTier)
+				}
+				NumPrefixes += 0.5
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Prefix", ValueRange, CurrTier), A_Index)
+				Continue
 			}
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-			NumPrefixes += 1
-			Continue
 		}
-
+		
 		IfInString, A_LoopField, increased Energy Shield
 		{
 			AffixType		:= "Prefix"
@@ -4997,10 +5148,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				IESBracketLevel2 := IESBracketLevel
 
-				ESSRBracket := LookupAffixBracket("data\EnergyShield_StunRecovery.txt", ItemLevel, CurrValue, IESBracketLevel2)
+				ESSRBracket := LookupAffixBracket("data\IncrEnergyShield_StunRecovery.txt", ItemLevel, CurrValue, IESBracketLevel2)
 				If (Not IsValidRange(ValueRange) and IsValidBracket(ESSRBracket))
 				{
-					ValueRange := LookupAffixData("data\EnergyShield_StunRecovery.txt", ItemLevel, CurrValue, IESBracketLevel2, CurrTier)
+					ValueRange := LookupAffixData("data\IncrEnergyShield_StunRecovery.txt", ItemLevel, CurrValue, IESBracketLevel2, CurrTier)
 				}
 
 				AffixType			:= "Comp. Prefix"
@@ -5019,7 +5170,7 @@ ParseAffixes(ItemDataAffixes, Item)
 					{
 						BSRecPartial := LookupAffixBracket("data\StunRecovery_EnergyShield.txt", ItemLevel, "", BSRecBracketLevel)
 					}
-					IESBSBracket := LookupAffixBracket("data\EnergyShield_StunRecovery.txt", BSRecBracketLevel)
+					IESBSBracket := LookupAffixBracket("data\IncrEnergyShield_StunRecovery.txt", BSRecBracketLevel)
 
 					If (Not WithinBounds(IEBSBracket, CurrValue))
 					{
@@ -7473,6 +7624,21 @@ ItemIsMirrored(ItemDataText)
 	return False
 }
 
+ItemIsHybridArmour(ItemDataText)
+{
+	DefenseStatCount := 0
+	Loop, Parse, ItemDataText, `n, `r
+	{
+		If RegExMatch(Trim(A_LoopField), "^(Armour|Evasion Rating|Energy Shield): \d+( \(augmented\))?$")
+		{
+			DefenseStatCount += 1
+		}
+	}
+	return (DefenseStatCount > 1) ? True : False
+}
+
+
+
 ; ########### MAIN PARSE FUNCTION ##############
 
 ; Invocation stack (simplified) for full item parse:
@@ -7669,23 +7835,24 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
 	Item.RarityLevel	:= RarityLevel
 
-	Item.IsBow		:= (Item.SubType == "Bow")
+	Item.IsBow			:= (Item.SubType == "Bow")
 	Item.IsFlask		:= (Item.SubType == "Flask")
-	Item.IsBelt		:= (Item.SubType == "Belt")
-	Item.IsRing		:= (Item.SubType == "Ring")
+	Item.IsBelt			:= (Item.SubType == "Belt")
+	Item.IsRing			:= (Item.SubType == "Ring")
 	Item.IsUnsetRing	:= (Item.IsRing and InStr(ItemData.NamePlate, "Unset Ring"))
 	Item.IsAmulet		:= (Item.SubType == "Amulet")
-	Item.IsTalisman	:= (Item.IsAmulet and InStr(ItemData.NamePlate, "Talisman") and !InStr(ItemData.NamePlate, "Amulet"))
+	Item.IsTalisman		:= (Item.IsAmulet and InStr(ItemData.NamePlate, "Talisman") and !InStr(ItemData.NamePlate, "Amulet"))
 	Item.IsSingleSocket	:= (IsUnsetRing)
 	Item.IsFourSocket	:= (Item.SubType == "Gloves" or Item.SubType == "Boots" or Item.SubType == "Helmet")
 	Item.IsThreeSocket	:= (Item.GripType == "1H" or Item.SubType == "Shield")
 	Item.IsQuiver		:= (Item.SubType == "Quiver")
 	Item.IsWeapon		:= (Item.BaseType == "Weapon")
 	Item.IsArmour		:= (Item.BaseType == "Armour")
-	Item.IsMap		:= (Item.BaseType == "Map")
+	Item.IsHybridArmour	:= (ItemIsHybridArmour(ItemDataText))
+	Item.IsMap			:= (Item.BaseType == "Map")
 	Item.IsLeaguestone	:= (Item.BaseType == "Leaguestone")
 	Item.IsJewel		:= (Item.BaseType == "Jewel")
-	Item.IsMirrored	:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
+	Item.IsMirrored		:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
 	Item.Note			:= Globals.Get("ItemNote")	
 
@@ -7772,9 +7939,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		ParseLeagueStoneAffixes(ItemData.Affixes, Item)
 	}
 
-	NumPrefixes	:= AffixTotals.NumPrefixes
-	NumSuffixes	:= AffixTotals.NumSuffixes
-	TotalAffixes	:= NumPrefixes + NumSuffixes
+	NumPrefixes		:= NumFormatPointFiveOrInt(AffixTotals.NumPrefixes)
+	NumSuffixes		:= NumFormatPointFiveOrInt(AffixTotals.NumSuffixes)
+	TotalAffixes	:= NumFormatPointFiveOrInt(AffixTotals.NumPrefixes + AffixTotals.NumSuffixes)
 	AffixTotals.NumTotals := TotalAffixes
 
 	; We need to call this function a second time because now we know the AffixCount.

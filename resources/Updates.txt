@@ -1,6 +1,15 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy42
 
+3.0.03
+================================
+from aRTy42
+
+Improvements for 3.0 mods: All new ailment mods should now be supported. Old Energy Shield mods should now all be fixed.
+	Flat defense mods on hybrid armour bases are supported, hybrid life mods are not (if you see .5 prefixes, it's likely hybrid life).
+Fixed some gem quality information and changes to gem names.
+Updated Divination Cards and Uniques with data from the wiki.
+
 3.0.02
 ================================
 from aRTy42
