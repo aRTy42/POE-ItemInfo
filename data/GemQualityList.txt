@@ -82,6 +82,7 @@ gemQualityList["Double Strike"] := " 10% increased Attack Speed`n (0.5% per 1% Q
 gemQualityList["Dual Strike"] := " 10% increased Attack Speed`n (0.5% per 1% Q)"
 gemQualityList["Earthquake"] := " 20% increased Physical Damage`n (1% per 1% Q)"
 gemQualityList["Efficacy Support"] := " 10% increased Damage over Time`n (0.5% per 1% Q)"
+gemQualityList["Elemental Damage with Attacks Support"] := " 10% increased Elemental Damage with Attack Skills`n (0.5% per 1% Q)"
 gemQualityList["Elemental Focus Support"] := " 10% increased Elemental Damage`n (0.5% per 1% Q)"
 gemQualityList["Elemental Hit"] := " 20% increased Elemental Damage`n (1% per 1% Q)"
 gemQualityList["Elemental Proliferation Support"] := " 10% increased Ignite, Chill, Freeze and Shock Duration on Enemies`n (0.5% each per 1% Q)"
