@@ -7245,7 +7245,7 @@ UniqueHasFatedVariant(ItemName)
 		{
 			Continue
 		}
-		IfInString, ItemName, %Line%
+		If(ItemName == Line)
 		{
 			return True
 		}
