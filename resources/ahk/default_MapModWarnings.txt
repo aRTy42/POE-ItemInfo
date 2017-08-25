@@ -39,8 +39,8 @@
 ,"MonstPhysDmgReduction": 0
 ,"MonstTakeReducedCritDmg": 0
 ,"MonstAvoidPoisonBlindBleed": 0
-,"MonstAvoidStatusAilments": 0
-,"MonstCauseStatusAilments": 0
+,"MonstAvoidElementalAilments": 0
+,"MonstCauseElementalAilments": 0
 ,"MonstTwoAdditionalProj": 0
 ,"MonstSkillsChain": 0
 ,"MonstHitsPoison": 0
