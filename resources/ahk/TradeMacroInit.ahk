@@ -1298,7 +1298,7 @@ TradeFunc_DownloadDataFiles() {
 		If (FileExist(filePath) and not ErrorLevel) {
 			FileMove, %filePath%.bak, %bakDir%\%file%
 		}
-		Else {			
+		Else {
 			FileMove, %dir%\%file%.bak, %dir%\%file%
 		}
 		ErrorLevel := 0
@@ -1358,7 +1358,25 @@ TradeFunc_ReadCookieData() {
 				RegExMatch(A_LoopField, "i)=\s?(.*)", value)
 
 				If (InStr(key1, "useragent")) {
-					TradeGlobals.Set("UserAgent", Trim(value1))
+					ua := value1
+					
+					; remove feature tokens from user agent since they aren't included since IE 9.0 anymore but navigator.userAgent still contains them
+					featureTokenRegPaths := ["SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\5.0\User Agent\Post Platform", "SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\5.0\User Agent\Pre Platform"]
+					featureTokenRegRoots := ["HKEY_LOCAL_MACHINE", "HKEY_CURRENT_USER"]
+					
+					For key, root in featureTokenRegRoots {
+						For k, path in featureTokenRegPaths {							
+							Loop %root%, %path%, 1, 1
+							{
+								If (A_LoopRegType <> "KEY") {
+									RegRead Value								
+									ua := RegExReplace(ua, "i)\s?+" A_LoopRegName "\s?+;", "")
+								}
+							}		
+						}
+					}
+					
+					TradeGlobals.Set("UserAgent", Trim(ua))
 				}
 				Else If (InStr(key1, "cfduid")) {		   
 					TradeGlobals.Set("cfduid", Trim(value1))
