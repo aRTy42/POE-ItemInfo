@@ -1,2 +1,2 @@
 ReleaseVersion := "3.0.00"
-AHKVersionRequired := "1.1.24"
+AHKVersionRequired := "1.1.26.00"

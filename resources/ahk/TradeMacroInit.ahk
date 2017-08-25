@@ -57,7 +57,7 @@ class TradeUserOptions {
 	BrowserPath :=                  	; Show also sellers account name in the results window
 	OpenUrlsOnEmptyItem := 0			; Open wiki/poe.trade also when no item was checked
 	DownloadDataFiles := 0			; 
-	DeleteCookies := 1				; Delete Internet Explorer cookies on startup (only poe.trade)
+	DeleteCookies := 0				; Delete Internet Explorer cookies on startup (only poe.trade)
 	CookieSelect := "All"
 	UseGZip := 1
 	UpdateSkipSelection := 0
@@ -173,9 +173,9 @@ IfNotExist, %userDirectory%\config_trade.ini
 	}
 	CopyDefaultTradeConfig()
 }
-TradeFunc_CheckIfCloudFlareBypassNeeded()
 ReadTradeConfig()
 Sleep, 100
+TradeFunc_CheckIfCloudFlareBypassNeeded()
 
 ; set this variable to skip the update check in "PoE-ItemInfo.ahk"
 SkipItemInfoUpdateCall := 1
@@ -1298,7 +1298,7 @@ TradeFunc_DownloadDataFiles() {
 		If (FileExist(filePath) and not ErrorLevel) {
 			FileMove, %filePath%.bak, %bakDir%\%file%
 		}
-		Else {			
+		Else {
 			FileMove, %dir%\%file%.bak, %dir%\%file%
 		}
 		ErrorLevel := 0
@@ -1312,7 +1312,6 @@ TradeFunc_CheckIfCloudFlareBypassNeeded() {
 	If (!TradeFunc_TestCloudflareBypass("http://poe.trade", "", "", "", false, "PreventErrorMsg")) {
 		TradeFunc_ReadCookieData()
 	}
-
 }
 
 TradeFunc_ReadCookieData() {
@@ -1350,7 +1349,7 @@ TradeFunc_ReadCookieData() {
 		}		
 		
 		; read user-agent and cookies
-		ErrorLevel := 0
+		CookieErrorLevel := 0
 		If (FileExist(A_ScriptDir "\temp\cookie_data.txt")) {
 			FileRead, cookieFile, %A_ScriptDir%\temp\cookie_data.txt
 			Loop, parse, cookieFile, `n`r
@@ -1359,7 +1358,35 @@ TradeFunc_ReadCookieData() {
 				RegExMatch(A_LoopField, "i)=\s?(.*)", value)
 
 				If (InStr(key1, "useragent")) {
-					TradeGlobals.Set("UserAgent", Trim(value1))
+					url := "http://www.whatsmyua.info/"
+					wb := ComObjCreate("InternetExplorer.Application")
+					wb.Visible := False
+					wb.Navigate(url)
+					TradeFunc_IELoad(wb)
+					ua := wb.document.getElementById("rawUa").innerHTML
+					;ua := RegExReplace(ua, "i)[^:]*:\s?+", "")
+					ua := Trim(RegExReplace(ua, "i)rawUa:", ""))
+					wb.quit
+					
+					; user agent read via c# script seems to be wrong (at least sometimes)
+					ua := (ua = Trim(value1)) ? Trim(value1) : ua
+					; remove feature tokens from user agent since they aren't included since IE 9.0 anymore but navigator.userAgent still contains them
+					featureTokenRegPaths := ["SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\5.0\User Agent\Post Platform", "SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\5.0\User Agent\Pre Platform"]
+					featureTokenRegRoots := ["HKEY_LOCAL_MACHINE", "HKEY_CURRENT_USER"]
+					
+					For key, root in featureTokenRegRoots {
+						For k, path in featureTokenRegPaths {							
+							Loop %root%, %path%, 1, 1
+							{
+								If (A_LoopRegType <> "KEY") {
+									RegRead Value								
+									ua := RegExReplace(ua, "i)\s?+" A_LoopRegName "\s?+;", "")
+								}
+							}		
+						}
+					}
+					
+					TradeGlobals.Set("UserAgent", Trim(ua))
 				}
 				Else If (InStr(key1, "cfduid")) {		   
 					TradeGlobals.Set("cfduid", Trim(value1))
@@ -1367,7 +1394,7 @@ TradeFunc_ReadCookieData() {
 				Else If (InStr(key1, "cf_clearance")) {
 					TradeGlobals.Set("cfClearance", Trim(value1))
 				}		
-			}		
+			}
 		}
 		Else {
 			CookieFileNotFound := 1
@@ -1382,29 +1409,34 @@ TradeFunc_ReadCookieData() {
 	}
 	
 	; check if useragent/cookies are all set
+	cookiesSuccessfullyRead := 0
 	If (StrLen(TradeGlobals.Get("UserAgent")) < 1) {
-		ErrorLevel := 1
+		CookieErrorLevel := 1
+		cookiesSuccessfullyRead++
 	}
 	If (StrLen(TradeGlobals.Get("cfduid")) < 1) {
-		ErrorLevel := 1
+		CookieErrorLevel := 1
+		cookiesSuccessfullyRead++
 	}
 	If (StrLen(TradeGlobals.Get("cfClearance")) < 1) {
-		;ErrorLevel := 1
+		CookieErrorLevel := 1
+		cookiesSuccessfullyRead++
 	}	
 	
 	; test connection to poe.trade
-	If (!ErrorLevel) { 
-		If (!TradeFunc_TestCloudflareBypass("http://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"), true)) {
+	If (!CookieErrorLevel) {
+		accessForbidden := ""
+		If (!TradeFunc_TestCloudflareBypass("http://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"), true, "", accessForbidden)) {
 			BypassFailed := 1
 		}
 	}
 
 	SplashTextOff		
-	If (ErrorLevel or BypassFailed or CompiledExeNotFound) {
+	If (CookieErrorLevel or BypassFailed or CompiledExeNotFound) {
 		; collect debug information
 		ScriptVersion	:= TradeGlobals.Get("ReleaseVersion")
 		CookieFile	:= (!CookieFileNotFound) ? "Cookie file found." : "Cookie file not found."
-		Cookies		:= (!ErrorLevel) ? "Retrieving cookies successful." : "Retrieving cookies failed."
+		Cookies		:= (!CookieErrorLevel) ? "Retrieving cookies successful." : "Retrieving cookies failed."
 		OSInfo		:= TradeFunc_GetOSInfo()
 		Compilation	:= (!CompiledExeNotFound) ? "Compiling 'getCookieData' script successful." : "Compiling 'getCookieData' script failed."
 		NetFramework	:= DotNetFrameworkInstallation.Number  ? "Net Framework used for compiling: v" DotNetFrameworkInstallation.Number : "Using manual cookies"
@@ -1416,9 +1448,9 @@ TradeFunc_ReadCookieData() {
 		
 		; create GUI window
 		WinSet, AlwaysOnTop, Off, PoE-TradeMacro
-		
+
 		; something went wrong while compiling the script
-		If (CompiledExeNotFound) {			
+		If (CompiledExeNotFound and not TradeOpts.UseManualCookies) {			
 			Gui, CookieWindow:Add, Text, cRed, <ScriptDirectory\temp\getCookieData.exe> not found!
 			Gui, CookieWindow:Add, Text, , - It seems compiling and moving the .exe file failed.
 			If (WrongNetFrameworkVersion) {
@@ -1427,47 +1459,67 @@ TradeFunc_ReadCookieData() {
 			}
 		}
 		; something went wrong while testing the connection to poe.trade
-		Else If (BypassFailed) {
-			Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed!
-			Gui, CookieWindow:Add, Text, , - Cookies and user-agent were retrieved.`n- Lowered/disabled Internet Explorer security settings can cause this to fail.
-			cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "Cookies were deleted on script start." : ""
-			Gui, CookieWindow:Add, Text, , - %cookiesDeleted% Please try again and make sure that `n  you're not using any proxy server.
-			Gui, CookieWindow:Add, Text, , The connection test sometimes fails while using the correct user-agent/cookies. `nJust try it again to be sure.			
-			Gui, CookieWindow:Add, Text, , You can also try setting the cookies manually in the settings menu.
-			
-			Gui, CookieWindow:Add, Text, cRed, It's possible that poe.trade doesn't use CloudFlare protection in most regions but does so `nin a few. In these regions this may also include a Captcha challenge.
-			Gui, CookieWindow:Add, Text, , If that's the case try opening poe.trade in Internet Explorer and solving this challenge to `ngenerate cookies (make sure not to delete them on script start up -> settings menu).
-			Gui, CookieWindow:Add, Text, , If it still doesn't work it's possible that no solution for your issue is known, but you can still `nuse the macro and use all searches that open your Browser directly instead of showing a `ntooltip. 
-		}
-		; something went wrong while reading the cookies
-		Else {
-			Gui, CookieWindow:Add, Text, cRed, Reading Cookie data failed!
-			Gui, CookieWindow:Add, Text, cRed, This can be a false positive. Poe.trade doesn't always use CloudFlare protection `nbut the test to check this can fail if the request takes too long.
-			
-			Gui, CookieWindow:Add, Text, cRed, Poe.trade may not use CloudFlare protection in most regions but may do so `nin a few. In these regions this may also include a Captcha challenge.
-			Gui, CookieWindow:Add, Text, , If that's the case try opening poe.trade in Internet Explorer and solving this challenge to `ngenerate cookies (make sure not to delete them on script start up -> settings menu).
-			Gui, CookieWindow:Add, Text, , If it still doesn't work it's possible that no solution for your issue is known, but you can still `nuse the macro and use all searches that open your Browser directly instead of showing a `ntooltip. 
-			
-			If (CookieFileNotFound) {
-				Gui, CookieWindow:Add, Text, , - File <ScriptDirectory\temp\cookie_data.txt> could not be found.
+		Else If (BypassFailed or CookieErrorLevel) {
+			If (StrLen(accessForbidden)) {
+				Gui, CookieWindow:Add, Text, cRed, Bypassing poe.trades CloudFlare protection failed! Reason: Access forbidden.
+				Gui, CookieWindow:Add, Text, , - Cookies and user-agent were retrieved.`n- Lowered/disabled Internet Explorer security settings can cause this to fail.
+				cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "Cookies were deleted on script start." : ""
+				If (StrLen(cookiesDeleted)) {
+					Gui, CookieWindow:Add, Text, , - %cookiesDeleted% Please try again and make sure that `n  you're not using any proxy server.	
+				}				
+				Gui, CookieWindow:Add, Text, , The connection test sometimes fails while using the correct user-agent/cookies. `nJust try it again to be sure.			
+				Gui, CookieWindow:Add, Text, , You can also try setting the cookies manually in the settings menu.
+				
+				text := "It's very likely that you need valid cookies to access the requested page, which you don't have.`n"
+				text .= "A possible reason for this is that the requested page is protected not only by a Javascript challenge but also by`n"
+				text .= "a Captcha challenge which cannot be solved by the macro.`n"
+				text .= "You can either read your browsers cookies manually and add them to the settings menu under 'Manual cookie `n"
+				text .= "selection' or open your Internet Explorer, browse the requested page, manually solve the challenge and restart`n"
+				text .= "the macro."
+				Gui, CookieWindow:Add, Text, , % text
+				
+				Gui, CookieWindow:Add, Button, gOpenPageInInternetExplorer, Open IE
+				Gui, CookieWindow:Add, Button, x+10 yp+0 gReloadScriptAtCookieError, Reload macro (challenge has to be solved)
+			} Else {
+				Gui, CookieWindow:Add, Text, cRed, Accessing poe.trade using cURL failed!
 			}
-			Else {
-				cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "`n- Cookies were deleted on script start." : ""
-				If (!TradeOpts.UseManualCookies) {
-					Gui, CookieWindow:Add, Text, , - The contents of <ScriptDirectory\temp\cookie_data.txt> seem to be invalid/incomplete. %cookiesDeleted%.		
+			
+			; something went wrong while reading the cookies
+			If (CookieFileNotFound or CookieErrorLevel) {
+				Gui, CookieWindow:Add, Text, cRed x10, Reading Cookie data failed!
+				
+				If (CookieFileNotFound) {
+					Gui, CookieWindow:Add, Text, , - File <ProjectFolder\temp\cookie_data.txt> could not be found.
 				}
-				Else {
-					Gui, CookieWindow:Add, Text, , - Your cookies will change every few days (make sure they are correct).
-					Gui, CookieWindow:Add, Text, , - The user-agent/cookies set in the settings menu seem to be invalid/incomplete. %cookiesDeleted%.
+				Else {					
+					text := ""
+					cookiesDeleted := (TradeOpts.DeleteCookies and not TradeOpts.UseManualCookies) ? "`n- Cookies were deleted on script start." : ""
+					If (!TradeOpts.UseManualCookies) {
+						text .= "- The contents of <ProjectFolder\temp\cookie_data.txt> may be invalid." %cookiesDeleted% "`n"
+					}
+					Else {
+						text .= "- The user-agent/cookies set in the settings menu may be invalid." %cookiesDeleted% "`n"
+						text .= "  Make sure your cf_clearance is complete, it likely consists of 2 parts seperated by a '-'."
+					}
+
+					If (cookiesSuccessfullyRead < 3) {
+						textC := StrLen(TradeGlobals.Get("UserAgent")) ? "- User-Agent found, " : "- User-Agent missing, " 
+						textC .= StrLen(TradeGlobals.Get("cfduid")) ? "cfduid found, " : "cfduid missing, "
+						textC .= StrLen(TradeGlobals.Get("cfClearance")) ? "cf_clearance found, " : "cf_clearance missing.`n"
+						text .= textC
+					}
+					text .= "- Your cookies will change every few days (make sure they are correct/refreshed)."
+					Gui, CookieWindow:Add, Text, , %text%
 				}
 			}
 		}
-		
+
+		Gui, CookieWindow:Add, Text, cRed x10, Make sure that no file in the PoE-TradeMacro folder is blocked by your antivirus software/firewall, `nnotably the file "lib\curl.exe".
 		Gui, CookieWindow:Add, Link, cBlue, Take a look at the <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/FAQ">FAQ</a> first, especially the parts mentioning "cURL".
 		Gui, CookieWindow:Add, Link, cBlue, Report on <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Github</a>, <a href="https://discord.gg/taKZqWw">Discord</a>, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">the forum</a>.
 		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
-		Gui, CookieWindow:Add, Edit, r6 ReadOnly w430, %ScriptVersion% `n%CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
-		Gui, CookieWindow:Add, Text, , Continue the script to access the settings menu or to use searches opening `nyour Browser directly.
+		Gui, CookieWindow:Add, Edit, r8 ReadOnly w530, %ScriptVersion% `n%CookieFile% `n%Cookies% `n%OSInfo% `n%Compilation% `n%NetFramework% `n%IE%
+		Gui, CookieWindow:Add, Text, , Continue the script to access the settings menu or to use searches opening your Browser directly.
 		If (!TradeOpts.UseManualCookies) {
 			Gui, CookieWindow:Add, Button, y+10 gOpenCookieFile, Open cookie file
 			Gui, CookieWindow:Add, Button, yp+0 x+10 gCloseCookieWindow, Continue
@@ -1480,10 +1532,26 @@ TradeFunc_ReadCookieData() {
 			Gui, CookieWindow:Add, Text, x10, Delete Internet Explorer's poe.trade cookies and restart the script.
 			Gui, CookieWindow:Add, Button, gDeleteCookies, Delete cookies
 		}		
-		Gui, CookieWindow:Show, w450 xCenter yCenter, Notice
+		Gui, CookieWindow:Show, w550 xCenter yCenter, Notice
 		ControlFocus, Continue, Notice
 		WinWaitClose, Notice
 	}	
+}
+
+TradeFunc_IELoad(wb)	;You need to send the IE handle to the function unless you define it as global.
+{
+	If !wb    ;If wb is not a valid pointer then quit
+		Return False
+	Loop    ;Otherwise sleep for .1 seconds untill the page starts loading
+		Sleep,100
+	Until (wb.busy)
+	Loop    ;Once it starts loading wait until completes
+		Sleep,100
+	Until (!wb.busy)
+	Loop    ;optional check to wait for the page to completely load
+		Sleep,100
+	Until (wb.Document.Readystate = "Complete")
+	Return True
 }
 
 TradeFunc_GetLatestDotNetInstallation() {
@@ -1553,7 +1621,7 @@ TradeFunc_GetLatestDotNetInstallation() {
 	Return LatestDotNetInstall
 }
 
-TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", useCookies=false, PreventErrorMsg = "") {	
+TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", useCookies=false, PreventErrorMsg = "", ByRef forbiddenAccess = "") {	
 	postData		:= ""	
 	options		:= ""
 	options		.= "`n" PreventErrorMsg
@@ -1563,8 +1631,8 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 	If (StrLen(UserAgent)) {
 		reqHeaders.push("User-Agent: " UserAgent)
 		authHeaders.push("User-Agent: " UserAgent)
-		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
-		authHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
+		reqHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
+		authHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
 	} Else {
 		reqHeaders.push("User-Agent:Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")
 	}
@@ -1577,7 +1645,8 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 	reqHeaders.push("Upgrade-Insecure-Requests:1")	
 	
 	html := ""
-	html := PoEScripts_Download(Url, ioData := postData, ioHdr := reqHeaders, options, false)
+	html := PoEScripts_Download(Url, ioData := postData, ioHdr := reqHeaders, options, false, false, false, "", reqHeadersCurl, handleAccessForbidden := false)
+	TradeFunc_WriteToLogFile("Testing CloudFlare bypass, connecting to " url "...`n`n" "cURL command:`n" reqHeadersCurl "`n`nAnswer:`n" ioHdr)
 
 	; pathofexile.com link in page footer (forum thread)
 	RegExMatch(html, "i)pathofexile", match)
@@ -1587,19 +1656,20 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 		TradeFunc_ParseSearchFormOptions()	
 		Return 1
 	}
-	Else If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK") and not StrLen(PreventErrorMsg)) {
-		TradeFunc_HandleConnectionFailure(authHeaders, ioHdr)
+	Else If (not RegExMatch(ioHdr, "i)HTTP\/1.1 200 OK") and not StrLen(PreventErrorMsg) and not InStr(handleAccessForbidden, "Forbidden")) {
+		TradeFunc_HandleConnectionFailure(authHeaders, ioHdr, url)
 	}
 	Else {
 		FileDelete, %A_ScriptDir%\temp\poe_trade_gem_names.txt
+		forbiddenAccess := handleAccessForbidden
 		Return 0
 	}
 }
 
-TradeFunc_HandleConnectionFailure(authHeaders, returnedHeaders) {	
+TradeFunc_HandleConnectionFailure(authHeaders, returnedHeaders, url = "") {	
 	SplashTextOff
-	Gui, ConnectionFailure:Add, Text, x10 cRed, Request to poe.trade using cookies failed!
-	text := "You can continue to run PoE-TradeMacro with limited functionality.`nThe only searches that will probably work are the ones`ndirectly openend in your browser."
+	Gui, ConnectionFailure:Add, Text, x10 cRed, Request to %url% using cookies failed!
+	text := "You can continue to run PoE-TradeMacro with limited functionality.`nThe only searches that will work are the ones`ndirectly openend in your browser."
 	Gui, ConnectionFailure:Add, Text, , % text
 
 	headers := ""
@@ -1613,8 +1683,7 @@ TradeFunc_HandleConnectionFailure(authHeaders, returnedHeaders) {
 	LinkText := "Take a look at the <a href=""https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/FAQ"">FAQ</a>, especially the parts mentioning ""cURL""."
 	Gui, ConnectionFailure:Add, Link, x10 y+10 cBlue, % LinkText
 	
-	Gui, ConnectionFailure:Add, Button, gContinueAtConnectionFailure, Continue  
-	Gui, ConnectionFailure:Add, Edit, ReadOnly, sdsd
+	Gui, ConnectionFailure:Add, Button, gContinueAtConnectionFailure, Continue
 	Gui, ConnectionFailure:Show, w450 xCenter yCenter, Connection Failure
 
 	ControlFocus, %LinkText%, Connection Failure
@@ -1640,6 +1709,24 @@ TradeFunc_ClearWebHistory() {
 		RunWait %comspec% /c "chcp 1251 & "%A_ScriptDir%\lib\clearWebHistoryAll.bat"", , Hide
 	}
 
+}
+
+TradeFunc_WriteToLogFile(data) {
+	logFile	:= A_ScriptDir "\temp\StartupLog.txt"
+	If (not FileExist(logFile)) {
+		FileAppend, Starting up PoE-TradeMacro....`n`n, %logFile%
+	}	
+	
+	line		:= "----------------------------------------------------------"
+	timeStamp	:= ""	
+	UTCTimestamp := GetTimestampUTC()
+	UTCFormatStr := "yyyy-MM-dd'T'HH:mm'Z'"
+	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr%
+
+	entry	:= line "`n" TimeStr "`n" line "`n`n"  
+	entry	:= entry . data "`n`n"
+	
+	FileAppend, %entry%, %logFile%
 }
 
 TradeFunc_GetOSInfo() {
@@ -1687,6 +1774,7 @@ TradeFunc_StopSplashScreen() {
 		MsgBox, 4096, PoE-TradeMacro, Debug mode enabled! Disable in settings-menu unless you're developing!, 2
 		Class_Console("console",0,335,650,900,,,,9)
 		console.show()
+		SetTimer, BringPoEWindowToFrontAfterInit, 1000		
 		
 		gemList := TradeGlobals.Get("GemNameList")
 		If(gemList.Length()) {

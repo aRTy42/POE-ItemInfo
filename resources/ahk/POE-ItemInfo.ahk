@@ -142,7 +142,7 @@ GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 #Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
-If (A_AhkVersion <= AHKVersionRequired)
+If (A_AhkVersion < AHKVersionRequired)
 {
 	MsgBox, 16, Wrong AutoHotkey Version, % MsgWrongAHKVersion
 	ExitApp
@@ -8374,7 +8374,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			mod.simplifiedName := "xIncreased" element1 "Damage"
 		}
 		; % elemental damage with weapons
-		Else If (RegExMatch(mod.name, "i)(Cold|Fire|Lightning|Elemental) damage with weapons", element)) {
+		Else If (RegExMatch(mod.name, "i)(Cold|Fire|Lightning|Elemental) damage with attack skills", element)) {
 			%element1%Dmg_AttacksPercent := %element1%Dmg_AttacksPercent + mod.values[1]
 			mod.simplifiedName := "xIncreased" element1 "DamageAttacks"
 		}
@@ -8440,8 +8440,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	coldDmg_Percent	:= coldDmg_Percent + elementalDmg_Percent
 	lightningDmg_Percent:= lightningDmg_Percent + elementalDmg_Percent
 	
-	; ### Elemental damage - Weapons % increased
-	; ### - spreads Elemental damage with weapon to each 'element' damage with weapon and adds related % increased 'element' damage
+	; ### Elemental damage - attack skills % increased
+	; ### - spreads Elemental damage with attack skills to each 'element' damage with attack skills and adds related % increased 'element' damage
 	fireDmg_AttacksPercent      	:= fireDmg_AttacksPercent + elementalDmg_AttacksPercent + fireDmg_Percent
 	coldDmg_AttacksPercent		:= coldDmg_AttacksPercent + elementalDmg_AttacksPercent + coldDmg_Percent
 	lightningDmg_AttacksPercent	:= lightningDmg_AttacksPercent + elementalDmg_AttacksPercent + lightningDmg_Percent
@@ -8663,7 +8663,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	}
 	
 	; other damages
-	percentDamageModSuffixes := [" Damage", " Damage with Weapons", " Spell Damage"]
+	percentDamageModSuffixes := [" Damage", " Damage with Attack Skills", " Spell Damage"]
 	flatDamageModSuffixes    := ["", " to Attacks", " to Spells"]
 	
 	For i, element in ["Fire", "Cold", "Lightning", "Elemental"] {
@@ -8725,6 +8725,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 				If (mod.values[2]) {
 					mv := (mod.values[1] + mod.values[2]) / 2
 					tv := (tempMod.values[1] + tempMod.values[2]) / 2
+					
+					console.log(mod.name "`n" mv " - " tv)
 					If (tv <= mv) {
 						higher := false
 					}
@@ -8737,23 +8739,13 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			}
 		}
 		; add the tempMod to pseudos if it has greater values, or no parent
-		If (higher){
+		If (higher) {
 			tempMod.isVariable:= false
 			tempMod.type := "pseudo"
 			allPseudoMods.push(tempMod)
 		}
 	}
-
-	; ### This is mostly for TradeMacro
-	; returns all original mods and all the pseudo mods if requested
-	If (returnAllMods) {
-		returnedMods := mods
-		For i, mod in allPseudoMods {
-			returnedMods.push(mod)
-		}
-		Return returnedMods
-	}
-
+	
 	; 2nd pass
 	; now we remove pseudos that are shadowed by an original mod they inherited from
 	; ex ( '25% increased Cold Spell Damage' is shadowed by '%25 increased Spell Damage' )
@@ -8787,7 +8779,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			}
 		}
 		; add the tempMod to pseudos if it has greater values, or no parent
-		If (higher){
+		If (higher) {
 			tempMod.isVariable:= false
 			tempMod.type := "pseudo"
 			tempPseudoMods.push(tempMod)
@@ -8810,8 +8802,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 				isParentMod := false
 				For k, simplifiedName in tempPseudoA.possibleParentSimplifiedNames {
 					if (tempPseudoB.simplifiedName == simplifiedName) {
-							isParentMod := true
-							; TODO: match found we could exit loop here
+						isParentMod := true
+						; TODO: match found we could exit loop here
 					}
 				}
 				If ( isParentMod ) {
@@ -8839,7 +8831,17 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		}
 	}
 	
-	return pseudoMods
+	; ### This is mostly for TradeMacro
+	; returns all original mods and the pseudo mods if requested
+	If (returnAllMods) {
+		returnedMods := mods
+		For i, mod in pseudoMods {
+			returnedMods.push(mod)			
+		}
+		Return returnedMods
+	}
+	
+	Return pseudoMods
 }
 
 CheckIfTempModExists(needle, mods) {
@@ -9827,12 +9829,10 @@ StdOutStream(sCmd, Callback = "") {
 	VarSetCapacity( Buffer, 4096, 0 ), nSz := 0 
 
 	While DllCall( "ReadFile", UInt,hPipeRead, UInt,&Buffer, UInt,4094, UIntP,nSz, Int,0 ) {
+		tOutput := ( AIC && NumPut( 0, Buffer, nSz, "Char" ) && VarSetCapacity( Buffer,-1 ) ) 
+				? Buffer : %StrGet%( &Buffer, nSz, "CP850" )
 
-	tOutput := ( AIC && NumPut( 0, Buffer, nSz, "Char" ) && VarSetCapacity( Buffer,-1 ) ) 
-			? Buffer : %StrGet%( &Buffer, nSz, "CP850" )
-
-	Isfunc( Callback ) ? %Callback%( tOutput, A_Index ) : sOutput .= tOutput
-
+		Isfunc( Callback ) ? %Callback%( tOutput, A_Index ) : sOutput .= tOutput
 	}                   
 
 	DllCall( "GetExitCodeProcess", UInt,hProcess, UIntP,ExitCode )
@@ -9842,6 +9842,40 @@ StdOutStream(sCmd, Callback = "") {
 	DllCall( "SetLastError", UInt,ExitCode  )
 
 	Return Isfunc( Callback ) ? %Callback%( "", 0 ) : sOutput      
+}
+
+ReadConsoleOutputFromFile(command, fileName) {
+	file := "temp\" fileName ".txt"
+	RunWait %comspec% /c "chcp 1251 /f >nul 2>&1 & %command% > %file%", , Hide
+	FileRead, io, %file%
+	
+	Return io
+}
+
+StrPutVar(Str, ByRef Var, Enc = "") {
+	Len := StrPut(Str, Enc) * (Enc = "UTF-16" || Enc = "CP1200" ? 2 : 1)
+	VarSetCapacity(Var, Len, 0)
+	Return, StrPut(Str, &Var, Enc)
+}
+
+UriEncode(Uri, Enc = "UTF-8")	{
+	StrPutVar(Uri, Var, Enc)
+	f := A_FormatInteger
+	SetFormat, IntegerFast, H
+	Loop
+	{
+		Code := NumGet(Var, A_Index - 1, "UChar")
+		If (!Code)
+			Break
+		If (Code >= 0x30 && Code <= 0x39 ; 0-9
+			|| Code >= 0x41 && Code <= 0x5A ; A-Z
+			|| Code >= 0x61 && Code <= 0x7A) ; a-z
+			Res .= Chr(Code)
+		Else
+			Res .= "%" . SubStr(Code + 0x100, -1)
+	}
+	SetFormat, IntegerFast, %f%
+	Return, Res
 }
 
 GetContributors(AuthorsPerLine=0)
@@ -10098,6 +10132,41 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		}		
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
+}
+
+AdvancedItemInfoExt() {
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		Global Item, Opts, Globals, ItemData
+		
+		ClipBoardTemp := Clipboard
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		
+		Clipboard := 
+		Send ^{sc02E}	; ^{c}
+		Sleep 100		
+		
+		CBContents := GetClipboardContents()
+		CBContents := PreProcessContents(CBContents)		
+		Globals.Set("ItemText", CBContents)
+		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)		
+		ParsedData := ParseItemData(CBContents)
+		
+		If (Item.Name) {			
+			itemTextBase64 := ""
+			FileDelete, %A_ScriptDir%\temp\itemText.txt
+			FileAppend, %CBContents%, %A_ScriptDir%\temp\itemText.txt, utf-8
+			command		:= "certutil -encode -f %cd%\temp\itemText.txt %cd%\temp\base64ItemText.txt & type %cd%\temp\base64ItemText.txt"
+			itemTextBase64	:= ReadConsoleOutputFromFile(command, "encodeToBase64.txt")
+			itemTextBase64	:= Trim(RegExReplace(itemTextBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))				
+			itemTextBase64	:= UriEncode(itemTextBase64)
+			itemTextBase64	:= RegExReplace(itemTextBase64, "i)^(%0D)?(%0A)?|((%0D)?(%0A)?)+$", "")
+			url 			:= "http://pathof.info/?item=" itemTextBase64
+			openWith := AssociatedProgram("html")
+			Run, %openWith% -new-tab "%Url%"
+		}
+		SuspendPOEItemScript = 0
+	}	
 }
 
 LookUpAffixes() {

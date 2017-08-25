@@ -228,8 +228,11 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 
 	If (!Item.IsUnique) {
 		preparedItem  := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)
-		preparedItem.maxSockets := Item.maxSockets		
-		preparedItem.iLvl := Item.level
+		preparedItem.maxSockets	:= Item.maxSockets		
+		preparedItem.iLvl		:= Item.level
+		preparedItem.Name		:= Item.Name
+		preparedItem.TypeName	:= Item.TypeName
+		preparedItem.Rarity		:= Item.RarityLevel
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)		
 		
@@ -273,6 +276,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			preparedItem.isCorrupted	:= Item.isCorrupted
 			preparedItem.isRelic	:= Item.isRelic
 			preparedItem.iLvl 		:= Item.level
+			preparedItem.typeName	:= Item.TypeName
 			Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)
 
@@ -374,16 +378,33 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 				}						
 			}	
 		}
-		
+
 		; handle item sockets
 		If (s.UseSockets) {
 			RequestParams.sockets_min := ItemData.Sockets
 			Item.UsedInSearch.Sockets := ItemData.Sockets
-		}	
+		} 
+		If (s.UseSocketsMaxFour) {
+			RequestParams.sockets_min := 4
+			Item.UsedInSearch.Sockets := 4
+		} 
+		If (s.UseSocketsMaxThree) {
+			RequestParams.sockets_min := 3
+			Item.UsedInSearch.Sockets := 3
+		}		
+	
 		; handle item links
 		If (s.UseLinks) {
-			RequestParams.link_min := ItemData.Links
-			Item.UsedInSearch.Links := ItemData.Links
+			RequestParams.link_min	:= ItemData.Links
+			Item.UsedInSearch.Links	:= ItemData.Links
+		} 
+		If (s.UseLinksMaxFour) {
+			RequestParams.link_min	:= 4
+			Item.UsedInSearch.Links	:= 4
+		} 
+		If (s.UseLinksMaxThree) {
+			RequestParams.link_min	:= 3
+			Item.UsedInSearch.Links	:= 3
 		}					
 		
 		If (s.UsedInSearch) {
@@ -746,7 +767,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Else {
 			Item.UsedInSearch.SearchType := "Default" 
 		}
-		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest)
+		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest, isAdvancedPriceCheckRedirect)
 		
 		SetClipboardContents("")
 		ShowToolTip("")
@@ -1224,7 +1245,7 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	reqHeaders.push("Referer: http://poe.trade/")
 	If (StrLen(UserAgent)) {
 		reqHeaders.push("User-Agent: " UserAgent)
-		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
+		reqHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
 	}
 	
 	html := PoEScripts_Download(url, postData, reqHeaders, options, false)
@@ -1286,8 +1307,8 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	If (StrLen(UserAgent)) {
 		reqHeaders.push("User-Agent: " UserAgent)
 		authHeaders.push("User-Agent: " UserAgent)
-		reqHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
-		authHeaders.push("Cookie: __cfduid= " cfduid "; cf_clearance= " cfClearance)
+		reqHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
+		authHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
 	} Else {
 		reqHeaders.push("User-Agent:Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")
 	}
@@ -1699,7 +1720,7 @@ TradeFunc_MapCurrencyPoeTradeNameToIngameName(CurrencyName) {
 }
 
 ; Parse poe.trade html to display the search result tooltip with X listings
-TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false) {
+TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false, isAdvancedSearch = false) {
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
 	
@@ -1921,6 +1942,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		Title .= "`n"		
 	}	
 	Title .= (itemsListed > 0) ? "" : "`nNo item found.`n"
+	Title .= (isAdvancedSearch) ? "" : "`n`n" "Use Ctrl + Alt + D (default) instead for a more thorough search."
 	
 	Return, Title
 }
@@ -2738,26 +2760,52 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	Loop, 500 {
 		line := line . "-"
 	}
-
-	If (advItem.isUnique) {
+	
+	; Item "nameplate" including sockets and links
+	If (true) {
 		itemName := advItem.name
-		Gui, SelectModsGui:Add, Text, x0 w700 yp+13, %line%
-		Gui, SelectModsGui:Add, Text, x14 yp+15 cAF5F1C, %itemName%
+		itemType := advItem.TypeName
+		If (advItem.Rarity = 1) {
+			iPic 	:= "bg-normal.png"
+			tColor	:= "cc8c8c8"
+		} Else If (advItem.Rarity = 2) {
+			iPic 	:= "bg-magic.png"
+			tColor	:= "c8787fe"
+		} Else If (advItem.Rarity = 3) {
+			iPic 	:= "bg-rare.png"
+			tColor	:= "cfefe76"
+		} Else If (advItem.isUnique) {
+			iPic 	:= "bg-unique.png"
+			tColor	:= "cAF5F1C"
+		}
+		Gui, SelectModsGui:Add, Picture, w700 h30 x0 yp+20, %A_ScriptDir%\resources\images\%iPic%
+		Gui, SelectModsGui:Add, Text, x14 yp+9 %tColor% BackgroundTrans, %itemName%
+		If (advItem.Rarity > 2 or advItem.isUnique) {
+			Gui, SelectModsGui:Add, Text, x14 yp+0 x+5 cc8c8c8 BackgroundTrans, %itemType%
+		}
 		If (advItem.isRelic) {
-			Gui, SelectModsGui:Add, Text, x+10 yp+0 cGreen, Relic
+			Gui, SelectModsGui:Add, Text, x+10 yp+0 cGreen BackgroundTrans, Relic
 		}
 		If (advItem.isCorrupted) {
-			Gui, SelectModsGui:Add, Text, x+10 yp+0 cD20000, (Corrupted)
+			Gui, SelectModsGui:Add, Text, x+10 yp+0 cD20000 BackgroundTrans, (Corrupted)
 		}
-		Gui, SelectModsGui:Add, Text, x0 w700 yp+13 cc9cacd, %line%	
+		If (advItem.maxSockets > 0) {
+			tLinksSockets := "S (" Sockets "/" advItem.maxSockets ")"
+			If (advItem.maxSockets > 1) {
+				tLinksSockets .= " - " "L (" Links "/" advItem.maxSockets ")"
+			}
+			Gui, SelectModsGui:Add, Text, x+10 yp+0 cc8c8c8 BackgroundTrans, %tLinksSockets%
+		}
+			
+		Gui, SelectModsGui:Add, Text, x0 w700 yp+13 cBlack BackgroundTrans, %line%	
 	}
 	
-	ValueRangeMin := ValueRangeMin / 100 	
-	ValueRangeMax := ValueRangeMax / 100 	
+	ValueRangeMin	:= ValueRangeMin / 100 	
+	ValueRangeMax	:= ValueRangeMax / 100 	
 	
 	; calculate length of first column
-	modLengthMax := 0
-	modGroupBox := 0
+	modLengthMax	:= 0
+	modGroupBox	:= 0
 	Loop % advItem.mods.Length() {
 		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
 			continue
@@ -2786,7 +2834,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	
 	boxRows := modCount * 3 + statCount * 3
 	
-	modGroupYPos := advItem.isUnique ? 4 : 10
+	modGroupYPos := 4
 	Gui, SelectModsGui:Add, Text, x14 y+%modGroupYPos% w%modGroupBox%, Mods
 	Gui, SelectModsGui:Add, Text, x+10 yp+0 w90, min
 	Gui, SelectModsGui:Add, Text, x+10 yp+0 w45, current
@@ -3104,12 +3152,21 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	If (Sockets >= 5) {
 		m++
 		text := "Sockets: " . Trim(Sockets)
-		Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets     , % text
+		If (Links >= 5) {
+			Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets, % text
+		} Else {
+			Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSockets Checked, % text
+		}		
 	}
-	Else If (Sockets <= 4 and advItem.maxSockets > 4) {
+	Else If (Sockets <= 4 and advItem.maxSockets = 4) {
 		m++
 		text := "Sockets (max): 4"
 		Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSocketsMaxFour, % text
+	}
+	Else If (Sockets <= 3 and advItem.maxSockets = 3) {
+		m++
+		text := "Sockets (max): 3"
+		Gui, SelectModsGui:Add, CheckBox, x15 y+10 vTradeAdvancedUseSocketsMaxThree, % text
 	}
 	
 	If (Links >= 5) {
@@ -3118,19 +3175,50 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		text := "Links:  " . Trim(Links)
 		Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks Checked, % text
 	}
-	Else If (Links <= 4 and advItem.maxSockets > 4) {
+	Else If (Links <= 4 and advItem.maxSockets = 4) {
 		offset := (m > 1 ) ? "+15" : "15"
 		m++
 		text := "Links (max): 4"
-		Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour Checked, % text
+		If (Links = 4) {
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour Checked, % text	
+		} Else {
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour, % text
+		}		
 	}
-	
+	Else If (Links <= 3 and advItem.maxSockets = 3) {
+		offset := (m > 1 ) ? "+15" : "15"
+		m++
+		text := "Links (max): 3"
+		If (Links = 3) {
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxThree Checked, % text	
+		} Else {
+			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxThree, % text
+		}		
+	}
+
 	; ilvl
 	offsetX := (m = 1) ? "15" : "+15"
 	offsetY := (m = 1) ? "20" : "+0"
-	iLvlCheckState := TradeOpts.AdvancedSearchCheckILVL ? "Checked" : ""
-	Gui, SelectModsGui:Add, CheckBox, x%offsetX% yp%offsetY% vTradeAdvancedSelectedILvl %iLvlCheckState%, % "Item Level (min)"
-	iLvlValue := TradeOpts.AdvancedSearchCheckILVL ? advItem.iLvl : ""
+	iLvlCheckState := ""
+	iLvlValue		:= ""
+	If (TradeOpts.AdvancedSearchCheckILVL) {
+		iLvlCheckState := TradeOpts.AdvancedSearchCheckILVL ? "Checked" : ""
+		iLvlValue		:= TradeOpts.AdvancedSearchCheckILVL ? advItem.iLvl : ""	
+	} Else {
+		If (advItem.maxSockets > 1) {
+			If (advItem.iLvl >= 50 and advItem.maxSockets > 5) {
+				iLvlValue := 50
+			} Else If (advItem.iLvl >= 35 and advItem.maxSockets > 4) {
+				iLvlValue := 35
+			} Else If (advItem.iLvl >= 25 and advItem.maxSockets > 3) {
+				iLvlValue := 25
+			} Else If (advItem.iLvl >= 2 and advItem.maxSockets > 2) {
+				iLvlValue := 2
+			}
+			iLvlCheckState := "Checked"
+		}	
+	}
+	Gui, SelectModsGui:Add, CheckBox, x%offsetX% yp%offsetY% vTradeAdvancedSelectedILvl %iLvlCheckState%, % "Item Level (min)"	
 	Gui, SelectModsGui:Add, Edit    , x+5 yp-3 w30 vTradeAdvancedMinILvl , % iLvlValue
 	
 	; item base
@@ -3287,14 +3375,18 @@ TradeFunc_ResetGUI() {
 		}
 	}
 
-	TradeAdvancedUseSockets		:=
-	TradeAdvancedUseLinks		:=
-	TradeAdvancedSelectedILvl	:=
-	TradeAdvancedMinILvl		:=
-	TradeAdvancedSelectedItemBase	:=
+	TradeAdvancedUseSockets			:=
+	TradeAdvancedUseLinks			:=
+	TradeAdvancedUseSocketsMaxThree	:=
+	TradeAdvancedUseLinksMaxThree		:=
+	TradeAdvancedUseSocketsMaxFour	:=
+	TradeAdvancedUseLinksMaxFour		:=
+	TradeAdvancedSelectedILvl		:=
+	TradeAdvancedMinILvl			:=
+	TradeAdvancedSelectedItemBase		:=
 	TradeAdvancedSelectedCheckAllMods	:=
-	TradeAdvancedImplicitCount	:=
-	TradeAdvancedNormalModCount	:=
+	TradeAdvancedImplicitCount		:=
+	TradeAdvancedNormalModCount		:=
 	TradeAdvancedOverrideOnlineState	:=
 	
 	TradeGlobals.Set("AdvancedPriceCheckItem", {})
@@ -3346,14 +3438,18 @@ TradeFunc_HandleGuiSubmit() {
 		}
 	}
 	
-	newItem.mods       	:= mods
-	newItem.stats      	:= stats
-	newItem.useSockets	:= TradeAdvancedUseSockets
-	newItem.useLinks	:= TradeAdvancedUseLinks
-	newItem.useIlvl	:= TradeAdvancedSelectedILvl
-	newItem.minIlvl	:= TradeAdvancedMinILvl
-	newItem.useBase	:= TradeAdvancedSelectedItemBase
-	newItem.onlineOverride := TradeAdvancedOverrideOnlineState
+	newItem.mods				:= mods
+	newItem.stats				:= stats
+	newItem.useSockets			:= TradeAdvancedUseSockets
+	newItem.useLinks			:= TradeAdvancedUseLinks
+	newItem.useSocketsMaxThree	:= TradeAdvancedUseSocketsMaxThree
+	newItem.useLinksMaxThree		:= TradeAdvancedUseLinksMaxThree
+	newItem.useSocketsMaxFour	:= TradeAdvancedUseSocketsMaxFour
+	newItem.useLinksMaxFour		:= TradeAdvancedUseLinksMaxFour
+	newItem.useIlvl			:= TradeAdvancedSelectedILvl
+	newItem.minIlvl			:= TradeAdvancedMinILvl
+	newItem.useBase			:= TradeAdvancedSelectedItemBase
+	newItem.onlineOverride		:= TradeAdvancedOverrideOnlineState
 
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)	
 	Gui, SelectModsGui:Destroy
@@ -3550,7 +3646,7 @@ ChangeScriptListsTimer:
 		Global.Set("UpdateNoteFileList", l)
 
 		SetTimer, ChangeScriptListsTimer, Off
-	}	
+	}
 Return
 
 OverwriteSettingsNameTimer:
@@ -3568,14 +3664,19 @@ OverwriteSettingsNameTimer:
 			Globals.Set("SettingsUITitle", TradeGlobals.Get("SettingsUITitle"))
 			SetTimer, OverwriteSettingsNameTimer, Off
 		}
-		Menu, Tray, UseErrorLevel, off			
-	}	
+		Menu, Tray, UseErrorLevel, off	
+	}
 Return
 
 OverwriteUpdateOptionsTimer:	
 	If (InititalizedItemInfoUserOptions) {
 		TradeFunc_SyncUpdateSettings()
 	}
+Return
+
+BringPoEWindowToFrontAfterInit:
+	WinActivate, Path of Exile ahk_class POEWindowClass
+	SetTimer, BringPoEWindowToFrontAfterInit, OFF
 Return
 
 OpenGithubWikiFromMenu:
@@ -3686,6 +3787,16 @@ DeleteCookies:
 	TradeFunc_ClearWebHistory()
 	Run, Run_TradeMacro.ahk
 	ExitApp
+Return
+
+OpenPageInInternetExplorer:
+	RegRead, iexplore, HKLM, SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\iexplore.exe
+	Run, %iexplore% http://poe.trade
+Return
+
+ReloadScriptAtCookieError:
+	scriptName :="Run_TradeMacro.ahk"
+	Run, "%A_AhkPath%" "%A_ScriptDir%\%scriptName%"
 Return
 
 TradeAboutDlg_GitHub:

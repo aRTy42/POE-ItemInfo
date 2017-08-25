@@ -1,5 +1,24 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.4.0
+================================================================================================
+Improved advanced search GUI:
+	Reworked socket/link options.
+	Changed some options auto-select behaviour, added min. ilvl for socket requirements.
+	Added an "item nameplate".	
+Added hotkey in AdditionalMacros.txt to open an item on http://pathof.info for a more advanced affix breakdown.	
+Added hotkey in AdditionalMacros.txt to send "/whois" using the last whisper message (works on key release instead of press).
+Fixed some pseudo mods.
+Improved cURL request powershell script.
+Various cURL request improvements.
+Improved cURL request/cookie issue error handling.
+Various other small fixes and improvements that nobody will notice.
+
+Updated ItemInfo:
+Improvements for 3.0 mods: All new ailment mods should now be supported. Old Energy Shield mods should now all be fixed. Flat defense mods on hybrid armour bases are supported, hybrid life mods are not (if you see .5 prefixes, it's likely hybrid life).
+Fixed some gem quality information and changes to gem names.
+Updated Divination Cards and Uniques with data from the wiki.
+
 2.3.9
 ================================================================================================
 Added support for currencies not available on poe.trades currency search, which where previously not being able to be searched for (some shards).
@@ -74,7 +93,6 @@ Fixed an url encoding issue with the new browser search.
 ================================================================================================
 Changed the way that searches openend in your browser are functioning. They now also work when poe.trade has cloudflare protection enabled without needing to bypass this protection.
 
-
 2.3.2
 ================================================================================================
 Fixed the alternative currency search (via poe.ninja), it was broken due to some API changes.
@@ -94,7 +112,6 @@ Added new settings:
 	Show prices as chaos equivalent.
 Added a checkbox to override the online status (advanced search).
 Fixed quivers not working with the advanced search.
-
 
 2.1.1
 ================================================================================================

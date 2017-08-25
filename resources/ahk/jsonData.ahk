@@ -38,18 +38,16 @@ parsedJSON := JSON.Load(JSONFile)
 global TradeCurrencyIDsFallback := parsedJSON
 
 ; Download and parse the current leagues
-postData	:= ""
-reqHeaders =
-	(LTrim
-		Content-type: application/html
-	)
-options =
-	(LTrim
-		Charset: UTF-8
-		Codepage: 65001
-		Method: GET
-	)
-parsedLeagueJSON := PoEScripts_Download("http://api.pathofexile.com/leagues?type=main", ioData := postData, ioHdr := reqHeaders, options, true, true, false)
+postData		:= ""
+reqHeaders	:= []
+reqHeaders.push("Host: api.pathofexile.com")
+reqHeaders.push("Connection: keep-alive")
+reqHeaders.push("Cache-Control: max-age=0")
+reqHeaders.push("Content-type: application/x-www-form-urlencoded; charset=UTF-8")
+reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+reqHeaders.push("User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36")
+parsedLeagueJSON := PoEScripts_Download("http://api.pathofexile.com/leagues?type=main", postData, reqHeaders, options, true, true, false, "", reqHeadersCurl)
+TradeFunc_WriteToLogFile("Requesting leagues from api.pathofexile.com...`n`n" "cURL command:`n" reqHeadersCurl "`n`nAnswer:`n" reqHeaders)
 FileDelete, %A_ScriptDir%\temp\currentLeagues.json, 1
 FileAppend, %parsedLeagueJSON%, %A_ScriptDir%\temp\currentLeagues.json
 

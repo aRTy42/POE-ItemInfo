@@ -1,0 +1,2 @@
+SET workDir=%~dp0
+start PowerShell -NoProfile -ExecutionPolicy UnRestricted -Command "& {Start-Process PowerShell -ArgumentList '-NoProfile -ExecutionPolicy UnRestricted -File %workDir%\curl_test.ps1' -Verb RunAs}"
