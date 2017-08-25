@@ -1312,6 +1312,7 @@ TradeFunc_CheckIfCloudFlareBypassNeeded() {
 	If (!TradeFunc_TestCloudflareBypass("http://poe.trade", "", "", "", false, "PreventErrorMsg")) {
 		TradeFunc_ReadCookieData()
 	}
+	TradeFunc_ReadCookieData()
 }
 
 TradeFunc_ReadCookieData() {
@@ -1358,8 +1359,18 @@ TradeFunc_ReadCookieData() {
 				RegExMatch(A_LoopField, "i)=\s?(.*)", value)
 
 				If (InStr(key1, "useragent")) {
-					ua := value1
+					url := "http://www.whatsmyua.info/"
+					wb := ComObjCreate("InternetExplorer.Application")
+					wb.Visible := False
+					wb.Navigate(url)
+					TradeFunc_IELoad(wb)
+					ua := wb.document.getElementById("rawUa").innerHTML
+					;ua := RegExReplace(ua, "i)[^:]*:\s?+", "")
+					ua := Trim(RegExReplace(ua, "i)rawUa:", ""))
+					wb.quit
 					
+					; user agent read via c# script seems to be wrong (at least sometimes)
+					ua := (ua = Trim(value1)) ? Trim(value1) : ua
 					; remove feature tokens from user agent since they aren't included since IE 9.0 anymore but navigator.userAgent still contains them
 					featureTokenRegPaths := ["SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\5.0\User Agent\Post Platform", "SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\5.0\User Agent\Pre Platform"]
 					featureTokenRegRoots := ["HKEY_LOCAL_MACHINE", "HKEY_CURRENT_USER"]
@@ -1526,6 +1537,22 @@ TradeFunc_ReadCookieData() {
 		ControlFocus, Continue, Notice
 		WinWaitClose, Notice
 	}	
+}
+
+TradeFunc_IELoad(wb)	;You need to send the IE handle to the function unless you define it as global.
+{
+	If !wb    ;If wb is not a valid pointer then quit
+		Return False
+	Loop    ;Otherwise sleep for .1 seconds untill the page starts loading
+		Sleep,100
+	Until (wb.busy)
+	Loop    ;Once it starts loading wait until completes
+		Sleep,100
+	Until (!wb.busy)
+	Loop    ;optional check to wait for the page to completely load
+		Sleep,100
+	Until (wb.Document.Readystate = "Complete")
+	Return True
 }
 
 TradeFunc_GetLatestDotNetInstallation() {
