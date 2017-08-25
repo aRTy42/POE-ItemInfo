@@ -32,6 +32,10 @@ If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-TradeMacro")) {
 	ExitApp
 }
 
+If (InStr(A_ScriptDir, A_Desktop)) {
+	Msgbox, 0x1010, Invalid Installation Path, Executing PoE-TradeMacro from your Desktop may cause script errors, please choose a different directory.
+}
+
 /*	 
 	Set ProjectName to create user settings folder in A_MyDocuments
 */
