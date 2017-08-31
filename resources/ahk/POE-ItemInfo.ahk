@@ -1,129 +1,7 @@
-﻿; Path of Exile Item Info Tooltip
+﻿; Path of Exile ItemInfo
 ;
-; Version: 1.9.2 (hazydoc / IGN:Sadou) Original Author
 ; Script is currently maintained by various people and kept up to date by aRTy42 / IGN: Erinyen
 ; Forum thread: https://www.pathofexile.com/forum/view-thread/1678678
-;
-; This script was originally based on the POE_iLVL_DPS-Revealer script (v1.2d) found here:
-; https://www.pathofexile.com/forum/view-thread/594346
-;
-; Changes to the POE_iLVL_DPS-Revealer script as recent as it's version 1.4.1 have been
-; brought over. Thank you Nipper4369 and Kislorod!
-;
-; The script has been added to substantially to enable the following features in addition to
-; itemlevel and weapon DPS reveal:
-;
-;   - show total affix statistic for rare items
-;   - show possible min-max ranges for all affixes on rare items
-;   - reveal the combination of difficult compound affixes (you might be surprised what you find)
-;   - show affix ranges for uniques
-;   - show map info (thank you, Kislorod and Necrolis)
-;   - show max socket info (thank you, Necrolis)
-;   - has the ability to convert currency items to chaos orbs
-;   - adds a system tray icon and proper system tray description tooltip
-;
-; All of these features are user-adjustable by using a "database" of text files which come
-; with the script and are easy to edit by non developers. See header comments in those files
-; for format infos and data sources.
-;
-; Known issues:
-;
-;     Even though there have been tons of tests made on composite affix combinations, I expect
-;     there to be edge cases still that may return an invalid or not found affix bracket.
-;     You can see these entries in the affix detail lines if they have the text "n/a" (not available)
-;     somewhere in them or if you see an empty range " - *". The star by the way marks ranges
-;     that have been added together for a guessed attempt as to the composition of a possible
-;     compound affix. If you see this star, take a closer look for a moment to check if the
-;     projection is correct. I expect these edge cases to be properly dealt with over time as the
-;     script matures. For now I'd estimate that at least 80% of the truly hard cases are correctly
-;     identified.
-;
-;     Some background info: because the game concatenates values from multiple affix sources into
-;     one final entry on the ingame tooltip there is no reliable way to work backwards from the
-;     composite value to each individual part. For example, Stun Recovery can be added as suffix if
-;     it contributes alone, but can also be a prefix if it is a composite of Stun Recovery and
-;     Evasion Rating (or others). Because there is one final entry, while prefix and suffix can
-;     appear at the same time and will be added together, you can't reliably reverse engineer which
-;     affix contributed what part of the composite value. This is akin to taking a random source of
-;     numbers, adding them up to one value and then asking someone to work out backwards what the
-;     original source values were.
-;     Similarily, in cases like boosted Stun Recovery (1) and Evasion Rating (2) on an item in difficult
-;     cases there is no 100% reliable way to tell if the prefix "+ Evasion Rating / incr. Stun Recovery"
-;     contributed to both stats at once or if the suffix "+ Stun Recovery" contributed to (1)
-;     and the prefix "+ Evasion Rating" cotributed to (2) or possibly a combination of both.
-;     Often it is possible to make guesses by working your way backwards from both partial affixes, by
-;     looking at the affix bracket ranges and the item level to see what is even possible to be there and
-;     what isn't. In the worst case for a double compound affix, all four ranges will be possible to be
-;     combined.
-;
-;     I have tested the tooltip on many, many items in game from my own stash and from trade chat
-;     and I can say that in the overwhelming majority of cases the tooltip does indeed work correctly.
-;
-;     IMPORTANT: as you may know, the total amount of affixes (w/o implicit mods) can be 6, of which
-;     3 at most are prefixes and likewise 3 at most are suffixes. Be especially weary, then of cases
-;     where this prefix/suffix limit is overcapped. It may happen that the tooltip shows 4 suffixes,
-;     and 3 prefixes total. In this case the most likely explanation is that the script failed to properly
-;     determine composite affixes. Composite affixes ("Comp. Prefix" or "Comp. Suffix" in the tooltip)
-;     are two affix lines on the ingame tooltip that together form one single composite affix.
-;     Edit v1.4: This hasn't happened for a longer time now, but I am leaving this important note in
-;     so end users stay vigilant (assuming anyone even reads this wall of text :)).
-;
-;   - I do not know which affixes are affected by +% Item Quality. Currently I have functions in place
-;     that can boost a range or a single value to adjust for Item Quality but currently these aren't used
-;     much. Partially this is also because it is not easy to tell if out-of-bounds cases are the result
-;     of faulty input data (I initially pulled data from the PoE mods compendium but later made the PoE
-;     homepage the authoritative source overruling data from other sources) or of other unreckognized and
-;     unhandled entities or systems.
-;
-; Todo:
-;
-;   - handle ranges for implicit mods
-;   - find a way to deal with master crafted mods (currently that's a tough one, probably won't be possible)
-;   - show max possible for guesstimated ranges
-;   - de-globalize the script (almost done)
-;   - refactor ParseAffixes into ParseAffixesSimple and ParseAffixesComplex (low priority)
-;
-; Slinkston edit for Todo for 2.0 additions for hazydoc or someone Else knowledgable in coding:
-;    - FYI: All of the stuff I have edited has been marked with ; Slinkston edit.  Some may need to be cleaned up or redone if
-;      they are done improperly/sloppy.  I have tested all changes with stuff in my stash and with friends, but not every single possibility.
-;    - Accuracy is a nightmare.  Anyhow, "of the Assassin - 321 to 360 Accuracy (80) (Bow and Wand)" needs
-;      to be addressed for 2.0 or not /shrug.  I have passed on the request to GGG to perhaps mark up their affixes so they are decipherable.
-;    - Divination card info would be great such as a) what you can possibly get for the collection, b) where that card drops, and c) what supporter
-;      created it (if known).
-;    - Legacy item alert on the item would be useful for those players that take breaks and come back without reading all the patch notes and/or not recognizing some item may have changed or not.
-;
-; Notes:
-;
-;   - Global values marked with an inline comment "d" are globals for debugging so they can be easily
-;     (re-)enabled using global search and replace. Marking variables as global means they will show
-;     up in AHK's Variables and contents view of the script.
-;
-; Needs AutoHotKey v1.1.05 or later
-;   from http://ahkscript.org and NOT http://www.autohotkey.com
-;   the latter domain was apparently taken over by a for-profit company!
-;
-; Original credits:
-;
-;   mcpower - for the base iLVL display of the script 5months ago before Immo.
-;   Immo - for the base iLVL display of the script.(Which was taken from mcpower.)
-;   olop4444 - for helping me figure out the calculations for Q20 items.
-;   Aeons - for a rewrite and fancy tooltips.
-;   kongyuyu - for base item level display.
-;   Fayted - for testing the script.
-;
-; Original author's comment:
-;
-; If you have any questions or comments please post them there as well. If you think you can help
-; improve this project. I am looking for contributors. So Pm me if you think you can help.
-;
-; If you have a issue please post what version you are using.
-; Reason being is that something that might be a issue might already be fixed.
-;
-
-; Run test suites (see end of script)
-; Note: don't set this to true for normal every day use...
-; This is just for fellow developers.
-RunTests := False
 
 #SingleInstance force
 #NoEnv ; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -3097,13 +2975,13 @@ ParseMapAffixes(ItemDataAffixes)
 		; Second part of this affix is further below under complex affixes
 		If (RegExMatch(A_LoopField, "Monsters cannot be Stunned"))
 		{
+			If (MapModWarn.MonstNotStunned)
+			{
+				MapModWarnings := MapModWarnings . "`nNot Stunned"
+			}
+			
 			If (Not Index_MonstStunLife)
 			{
-				If (MapModWarn.MonstNotStunned)
-				{
-					MapModWarnings := MapModWarnings . "`nNot Stunned"
-				}
-				
 				MapAffixCount += 1
 				Index_MonstStunLife := MapAffixCount
 				NumPrefixes += 1
@@ -3752,14 +3630,14 @@ ParseAffixes(ItemDataAffixes, Item)
 				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
 				Continue
 			}
-			IfInString, A_LoopField, chance to Bleed
+			IfInString, A_LoopField, chance to cause Bleeding
 			{
 				NumSuffixes += 1
 				ValueRange := LookupAffixData("data\jewel\ChanceToBleed.txt", ItemLevel, CurrValue, "", CurrTier)
 				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
 				Continue
 			}
-			IfInString, A_LoopField, increased Bleeding Duration on Enemies
+			IfInString, A_LoopField, increased Bleed duration
 			{
 				; Don't increase number of suffixes, combined with "chance to Bleed" this is just 1 suffix
 				ValueRange := LookupAffixData("data\jewel\BleedingDurationOnEnemies.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -4196,9 +4074,12 @@ ParseAffixes(ItemDataAffixes, Item)
 				ValueRange := LookupAffixData("data\CastSpeedAmulets.txt", ItemLevel, CurrValue, "", CurrTier)
 			} Else If (Item.IsRing) {
 				ValueRange := LookupAffixData("data\CastSpeedRings.txt", ItemLevel, CurrValue, "", CurrTier)
+			} Else If (ItemSubtype == "Shield") {
+				; The native mod only appears on bases with ES
+				ValueRange := LookupAffixData("data\CastSpeedShield.txt", ItemLevel, CurrValue, "", CurrTier)
 			} Else {
-				; Shields can receive a cast speed master mod.
-				; Leaving this as non shield specific if the master mod ever applicable on something Else
+				; All shields can receive a cast speed master mod.
+				; Leaving this as non shield specific if the master mod ever becomes applicable on something else
 				ValueRange := LookupAffixData("data\CastSpeedCraft.txt", ItemLevel, CurrValue, "", CurrTier)
 			}
 			NumSuffixes += 1
@@ -9082,187 +8963,6 @@ ShowToolTip(String, Centered = false)
 	SetTimer, ToolTipTimer, 100
 }
 
-; ############## TESTS #################
-
-Globals.Set("TestCaseSeparator", "####################")
-
-RunRareTestSuite(Path, SuiteNumber)
-{
-	Global AffixTotals
-
-	NumTestCases := 0
-	Loop, Read, %Path%
-	{
-		IfInString, A_LoopReadLine, % Globals.TestCaseSeparator
-		{
-			NumTestCases += 1
-			Continue
-		}
-		TestCaseText := A_LoopReadLine
-		TestCases%NumTestCases% := TestCases%NumTestCases% . TestCaseText . "`r`n"
-	}
-
-	Failures := 0
-	Successes := 0
-	FailureNumbers =
-	TestCase =
-	Loop, %NumTestCases%
-	{
-		TestCase := TestCases%A_Index%
-
-		RarityLevel := 0
-		TestCaseResult := ParseItemData(TestCase, RarityLevel)
-		NumPrefixes := AffixTotals.NumPrefixes
-		NumSuffixes := AffixTotals.NumSuffixes
-
-		StringReplace, TempResult, TestCaseResult, --------, ``, All
-		StringSplit, TestCaseResultParts, TempResult, ``
-
-		NameAndDPSPart := TestCaseResultParts1
-		TotalAffixStatsPart := TestCaseResultParts2
-		AffixCompositionPart := TestCaseResultParts3
-
-		; failure conditions
-		TotalAffixes := 0
-		TotalAffixes := NumPrefixes + NumSuffixes
-		InvalidTotalAffixNumber := (TotalAffixes > 6)
-		BracketLookupFailed := InStr(TestCaseResult, "n/a")
-		CompositeRangeCalcFailed := InStr(TestCaseResult, " - ")
-
-		Prefixes := 0
-		Suffixes := 0
-		CompPrefixes := 0
-		CompSuffixes := 0
-		ExtractTotalAffixBalance(AffixCompositionPart, Prefixes, Suffixes, CompPrefixes, CompSuffixes)
-
-		HasDanglingComposites := False
-		If (Mod(CompPrefixes, 2)) ; True, if not evenly divisible by 2
-		{
-			HasDanglingComposites := True
-		}
-		If (Mod(CompSuffixes, 2))
-		{
-			HasDanglingComposites := True
-		}
-
-		TotalCountByAffixTypes := (Floor(CompPrefixes / 2) + Floor(CompSuffixes / 2) + Prefixes + Suffixes)
-
-		AffixTypesCountedIncorrectly := (Not (TotalCountByAffixTypes == TotalAffixes))
-		If (InvalidTotalAffixNumber or BracketLookupFailed or CompositeRangeCalcFailed or HasDanglingComposites or AffixTypesCountedIncorrectly)
-		{
-			Failures += 1
-			FailureNumbers := FailureNumbers . A_Index . ","
-		}
-		Else
-		{
-			Successes += 1
-		}
-		; needed so global variables can be yanked from memory and reset between calls
-		; (if you reload the script really fast globals vars that are out of date can
-		; cause failures when there are none)
-		Sleep, 1
-	}
-
-	Result := "Suite " . SuiteNumber . ": " . StrPad(Successes, 5, "left") . " OK" . ", " . StrPad(Failures, 5, "left")  . " Failed"
-	If (Failures > 0)
-	{
-		FailureNumbers := SubStr(FailureNumbers, 1, -1)
-		Result := Result . " (" . FailureNumbers . ")"
-	}
-	return Result
-}
-
-RunUniqueTestSuite(Path, SuiteNumber)
-{
-	Global AffixTotals
-
-	NumTestCases := 0
-	Loop, Read, %Path%
-	{
-		IfInString, A_LoopReadLine, % Globals.TestCaseSeparator
-		{
-			NumTestCases += 1
-			Continue
-		}
-		TestCaseText := A_LoopReadLine
-		TestCases%NumTestCases% := TestCases%NumTestCases% . TestCaseText . "`r`n"
-	}
-
-	Failures := 0
-	Successes := 0
-	FailureNumbers =
-	TestCase =
-	Loop, %NumTestCases%
-	{
-		TestCase := TestCases%A_Index%
-		TestCaseResult := ParseItemData(TestCase)
-
-		FailedToSepImplicit := InStr(TestCaseResult, "@")  ; failed to properly seperate implicit from normal affixes
-		; TODO: add more unique item test failure conditions
-
-		If (FailedToSepImplicit)
-		{
-			Failures += 1
-			FailureNumbers := FailureNumbers . A_Index . ","
-		}
-		Else
-		{
-			Successes += 1
-		}
-		; needed so global variables can be yanked from memory and reset between calls
-		; (if you reload the script really fast globals vars that are out of date can
-		; cause failures where there are none)
-		Sleep, 1
-	}
-
-	Result := "Suite " . SuiteNumber . ": " . StrPad(Successes, 5, "left") . " OK" . ", " . StrPad(Failures, 5, "left")  . " Failed"
-	If (Failures > 0)
-	{
-		FailureNumbers := SubStr(FailureNumbers, 1, -1)
-		Result := Result . " (" . FailureNumbers . ")"
-	}
-	return Result
-}
-
-RunAllTests()
-{
-	; change this to the number of available test suites
-	TestDataBasePath = %A_ScriptDir%\extras\tests
-
-	NumRareTestSuites := 5
-	RareResults := "Rare Items"
-	Loop, %NumRareTestSuites%
-	{
-		If (A_Index > 0) ; change condition to only run certain tests
-		{
-			TestSuitePath = %TestDataBasePath%\Rares%A_Index%.txt
-			TestSuiteResult := RunRareTestSuite(TestSuitePath, A_Index)
-			RareResults := RareResults . "`n    " . TestSuiteResult
-		}
-	}
-
-	NumUniqueTestSuites := 1
-	UniqResults := "Unique Items"
-	Loop, %NumUniqueTestSuites%
-	{
-		If (A_Index > 0) ; change condition to only run certain tests
-		{
-			TestSuitePath = %TestDataBasePath%\Uniques%A_Index%.txt
-			TestSuiteResult := RunUniqueTestSuite(TestSuitePath, A_Index)
-			UniqResults := UniqResults . "`n    " . TestSuiteResult
-		}
-	}
-
-	MsgBox, %RareResults%`n`n%UniqResults%
-}
-
-; ########### TESTS ############
-
-If (RunTests)
-{
-	RunAllTests()
-}
-
 ; ############ GUI #############
 
 GuiSet(ControlID, Param3="", SubCmd="")
@@ -10494,11 +10194,11 @@ MenuTray_About:
 		Gui, About:Font, S10 CA03410,verdana
 		Gui, About:Add, Text, x260 y27 w170 h20 Center, Release %RelVer%
 		Gui, About:Add, Button, 0x8000 x316 y300 w70 h21, Close
-		Gui, About:Add, Picture, 0x1000 x17 y16 w230 h180 gAboutDlg_Fishing, %A_ScriptDir%\resources\images\splash.png
+		Gui, About:Add, Picture, 0x1000 x17 y16 w230 h180, %A_ScriptDir%\resources\images\splash.png
 		Gui, About:Font, Underline C3571AC,verdana
 		Gui, About:Add, Text, x260 y57 w170 h20 gVisitForumsThread Center, PoE forums thread
 		Gui, About:Add, Text, x260 y87 w170 h20 gAboutDlg_AhkHome Center, AutoHotkey homepage
-		Gui, About:Add, Text, x260 y117 w170 h20 gAboutDlg_GitHub Center, PoE-Item-Info GitHub
+		Gui, About:Add, Text, x260 y117 w170 h20 gAboutDlg_GitHub Center, PoE-ItemInfo GitHub
 		Gui, About:Font, S7 CDefault normal, Verdana
 		Gui, About:Add, Text, x16 y207 w410 h80,
 		(LTrim
@@ -10525,11 +10225,6 @@ MenuTray_About:
 		ControlMove, Static1,,,, %tmpH%, About..
 		Sleep, 100
 	}
-	return
-
-AboutDlg_Fishing:
-	; See, GGG Chris, I have your best interests at heart. Hire me! :)
-	MsgBox, 32, Did You Know?, Fishing is reel!
 	return
 
 AboutDlg_AhkHome:
