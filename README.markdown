@@ -15,7 +15,7 @@ Never completely trust any price checking tool. Inform yourself about what this 
 
 #### Usage / Instructions ####
 
-1. Install AHK (http://ahkscript.org)
+1. Install AHK (http://ahkscript.org). Don't install AutoHotkey v2.x.
 2. Download the [latest release](https://github.com/POE-TradeMacro/POE-TradeMacro/releases/latest) and extract the zip-file. 
 3. Make sure to run PoE in (borderless) windowed mode. Otherwise it won't work!
 4. Run **_Run_TradeMacro.ahk_**.
