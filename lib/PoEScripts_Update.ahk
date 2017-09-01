@@ -92,14 +92,13 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 				WinSet, AlwaysOnTop, Off, %SplashScreenTitle%
 			}
 			Gui, UpdateNotification:Font,, Consolas
-			
-			boxHeight := isPrerelease ? 80 : 60
-			Gui, UpdateNotification:Add, GroupBox, w580 h%boxHeight% cGreen, Update available!			
+
+			Gui, UpdateNotification:Add, GroupBox, w630 h80 cGreen, Update available!			
 			If (isPrerelease) {
 				Gui, UpdateNotification:Add, Text, x20 yp+20, Warning: This is a pre-release.
 				Gui, UpdateNotification:Add, Text, x20 y+10, Installed version:
 			} Else {
-				Gui, UpdateNotification:Add, Text, x20 yp+20, Installed version:
+				Gui, UpdateNotification:Add, Text, x20 yp+30, Installed version:
 			}
 			
 			currentLabel := versions.current.label
@@ -114,10 +113,17 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 			Gui, UpdateNotification:Add, Button, x+20 yp-5 gUpdateScript, Update
 			
 			Gui, UpdateNotification:Add, Text, x10 cGreen, Update notes:
-			Gui, UpdateNotification:Add, Edit, r20 ReadOnly w580 BackgroundTrans, %updateNotes%
+			Gui, UpdateNotification:Add, Edit, r20 ReadOnly w630 BackgroundTrans, %updateNotes%
 			
-			Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close
-			Gui, UpdateNotification:Show, w600 xCenter yCenter, Update 
+			Gui, UpdateNotification:Add, Button, gCloseUpdateWindow, Close			
+			
+			If (repo = "PoE-TradeMacro") {
+				payPalUrl := "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4ZVTWJNH6GSME"
+				Gui, UpdateNotification:Add, Picture, x460 y17 w150 h-1, %A_ScriptDir%\resources\images\Paypal-Logo.png
+				Gui, UpdateNotification:Add, Link, x450 y63 cBlue, <a href="%payPalUrl%">Donate / Buy me a Mystery Box</a>
+			}
+			
+			Gui, UpdateNotification:Show, w650 xCenter yCenter, Update 
 			ControlFocus, Update, Update
 			WinWaitClose, Update
 		}
@@ -148,9 +154,9 @@ ParsePublishDate(date) {
 }
 
 CreateTextBlock(description, date, tag) {
-	block := "-----------------------------------------------------------------------------------------" . "`n"
+	block := "----------------------------------------------------------------------------------------------------" . "`n"
 	block .= "[" . date . "]  Version: " . tag . "`n"
-	block .= "-----------------------------------------------------------------------------------------" . "`n"
+	block .= "----------------------------------------------------------------------------------------------------" . "`n"
 	block .= description . "`n`n"
 	
 	Return block

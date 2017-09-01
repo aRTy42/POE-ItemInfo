@@ -20,7 +20,7 @@ GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 #Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
-If (A_AhkVersion <= AHKVersionRequired)
+If (A_AhkVersion < AHKVersionRequired)
 {
 	MsgBox, 16, Wrong AutoHotkey Version, % MsgWrongAHKVersion
 	ExitApp
@@ -438,6 +438,7 @@ GoSub, FetchCurrencyData
 
 Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
 Menu, TextFiles, Add, Map Mod Warnings, EditMapModWarnings
+Menu, TextFiles, Add, Custom Macros Example, EditCustomMacrosExample
 
 ; Menu tooltip
 RelVer := Globals.Get("ReleaseVersion")
@@ -447,16 +448,16 @@ Menu, Tray, NoStandard
 Menu, Tray, Add, Reload Script (Use only this), ReloadScript
 Menu, Tray, Add ; Separator
 Menu, Tray, Add, About..., MenuTray_About
+Menu, Tray, Add, Show all assigned Hotkeys, ShowAssignedHotkeys
 Menu, Tray, Add, % Globals.Get("SettingsUITitle", "PoE Item Info Settings"), ShowSettingsUI
 Menu, Tray, Add, Check for updates, CheckForUpdates
 Menu, Tray, Add, Update Notes, ShowUpdateNotes
 Menu, Tray, Add ; Separator
-Menu, Tray, Add, Edit, :TextFiles
+Menu, Tray, Add, Edit Files, :TextFiles
 Menu, Tray, Add, Open User Folder, EditOpenUserSettings
 Menu, Tray, Add ; Separator
 Menu, Tray, Standard
 Menu, Tray, Default, % Globals.Get("SettingsUITitle", "PoE Item Info Settings")
-
 
 IfNotExist, %A_ScriptDir%\data
 {
@@ -7012,7 +7013,7 @@ AssembleDamageDetails(FullItemData)
 
 	; Only show Q20 values if item is not Q20
 	If (Quality < 20) {
-		Q20Dps		:= PhysDps * (PhysMult + 120) / (PhysMult + Quality + 100)
+		Q20Dps := Q20PhysDps := PhysDps * (PhysMult + 120) / (PhysMult + Quality + 100)
 
 		If ( twoColDisplay )
 		{
@@ -7023,6 +7024,9 @@ AssembleDamageDetails(FullItemData)
 		Else
 		{
 			Q20Dps	:= Q20Dps + EleDps + ChaosDps
+			If (Q20Dps != Q20PhysDps) {
+				Result	= %Result%`nQ20 PDPS:   %Q20PhysDps%	
+			}			
 			Result	= %Result%`nQ20 DPS:    %Q20Dps%
 		}
 	}
@@ -8422,7 +8426,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			mod.simplifiedName := "xIncreased" element1 "Damage"
 		}
 		; % elemental damage with weapons
-		Else If (RegExMatch(mod.name, "i)(Cold|Fire|Lightning|Elemental) damage with weapons", element)) {
+		Else If (RegExMatch(mod.name, "i)(Cold|Fire|Lightning|Elemental) damage with attack skills", element)) {
 			%element1%Dmg_AttacksPercent := %element1%Dmg_AttacksPercent + mod.values[1]
 			mod.simplifiedName := "xIncreased" element1 "DamageAttacks"
 		}
@@ -8438,7 +8442,9 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		; flat 'element' damage; source: various (wands/rings/amulets etc)
 		Else If (RegExMatch(mod.name, "i)adds .* (Cold|Fire|Lightning|Elemental) damage to (Attacks|Spells)$", element)) {
 			%element1%Dmg_%element2%FlatLow := %element1%Dmg_%element2%FlatLow + mod.values[1]
-			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi  + mod.values[2]
+			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi  + mod.values[2]			
+			ElementalDmg_%element2%FlatLow  += %element1%Dmg_%element2%FlatLow
+			ElementalDmg_%element2%FlatHi   += %element1%Dmg_%element2%FlatHi
 			mod.simplifiedName := "xFlat" element1 "Damage" element2
 		}
 		; this would catch any * Spell * Damage * ( we might need to be more precise here )
@@ -8488,8 +8494,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	coldDmg_Percent	:= coldDmg_Percent + elementalDmg_Percent
 	lightningDmg_Percent:= lightningDmg_Percent + elementalDmg_Percent
 	
-	; ### Elemental damage - Weapons % increased
-	; ### - spreads Elemental damage with weapon to each 'element' damage with weapon and adds related % increased 'element' damage
+	; ### Elemental damage - attack skills % increased
+	; ### - spreads Elemental damage with attack skills to each 'element' damage with attack skills and adds related % increased 'element' damage
 	fireDmg_AttacksPercent      	:= fireDmg_AttacksPercent + elementalDmg_AttacksPercent + fireDmg_Percent
 	coldDmg_AttacksPercent		:= coldDmg_AttacksPercent + elementalDmg_AttacksPercent + coldDmg_Percent
 	lightningDmg_AttacksPercent	:= lightningDmg_AttacksPercent + elementalDmg_AttacksPercent + lightningDmg_Percent
@@ -8520,75 +8526,76 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	; ### Generate Basic Stats pseudos
 	If (lifeFlat > 0) {
 		temp := {}
-		temp.values := [lifeFlat]
-		temp.name_orig := "+" . lifeFlat . " to maximum Life"
-		temp.name     := "+# to maximum Life"
-		temp.simplifiedName := "xToMaximumLife"
+		temp.values		:= [lifeFlat]
+		temp.name_orig		:= "+" . lifeFlat . " to maximum Life"
+		temp.name			:= "+# to maximum Life"
+		temp.simplifiedName	:= "xToMaximumLife"
+		temp.exception		:= true
 		temp.possibleParentSimplifiedNames := ["xToMaximumLife"]
 		tempMods.push(temp)
 	}
 	If (manaFlat > 0) {
 		temp := {}
-		temp.values := [manaFlat]
-		temp.name_orig := "+" . manaFlat . " to maximum Mana"
-		temp.name     := "+# to maximum Mana"
-		temp.simplifiedName := "xToMaximumMana"
+		temp.values		:= [manaFlat]
+		temp.name_orig		:= "+" . manaFlat . " to maximum Mana"
+		temp.name			:= "+# to maximum Mana"
+		temp.simplifiedName	:= "xToMaximumMana"
 		temp.possibleParentSimplifiedNames := ["xToMaximumMana"]
 		tempMods.push(temp)
 	}
 	If (energyShieldFlat > 0) {
 		temp := {}
-		temp.values := [energyShieldFlat]
-		temp.name_orig := "+" . energyShieldFlat . " to maximum Energy Shield"
-		temp.name     := "+# to maximum Energy Shield"
-		temp.simplifiedName := "xToMaximumEnergyShield"
+		temp.values		:= [energyShieldFlat]
+		temp.name_orig		:= "+" . energyShieldFlat . " to maximum Energy Shield"
+		temp.name			:= "+# to maximum Energy Shield"
+		temp.simplifiedName	:= "xToMaximumEnergyShield"
 		temp.possibleParentSimplifiedNames := ["xToMaximumEnergyShield"]
 		tempMods.push(temp)
 	}
 	If (energyShieldPercent > 0) {
 		temp := {}
-		temp.values := [energyShieldPercent]
-		temp.name_orig := energyShieldPercent . "% increased maximum Energy Shield"
-		temp.name     := "#% increased maximum Energy Shield"
-		temp.simplifiedName := "xIncreasedMaximumEnergyShield"
+		temp.values		:= [energyShieldPercent]
+		temp.name_orig		:= energyShieldPercent . "% increased maximum Energy Shield"
+		temp.name			:= "#% increased maximum Energy Shield"
+		temp.simplifiedName	:= "xIncreasedMaximumEnergyShield"
 		temp.possibleParentSimplifiedNames := ["xIncreasedMaximumEnergyShield"]
 		tempMods.push(temp)
 	}
 	; ### Generate rarity item found pseudo
 	If (rarityItemsFoundPercent > 0) {
 		temp := {}
-		temp.values := [rarityItemsFoundPercent]
-		temp.name_orig := rarityItemsFoundPercent . "% increased Rarity of items found"
-		temp.name     := "#% increased Rarity of items found"
-		temp.simplifiedName := "xIncreasedRarityOfItemsFound"
+		temp.values		:= [rarityItemsFoundPercent]
+		temp.name_orig		:= rarityItemsFoundPercent . "% increased Rarity of items found"
+		temp.name			:= "#% increased Rarity of items found"
+		temp.simplifiedName	:= "xIncreasedRarityOfItemsFound"
 		temp.possibleParentSimplifiedNames := ["xIncreasedRarityOfItemsFound"]
 		tempMods.push(temp)
 	}
 	; ### Generate crit pseudos	
 	If (globalCritChancePercent > 0) {
 		temp := {}
-		temp.values := [globalCritChancePercent]
-		temp.name_orig := globalCritChancePercent . "% increased Global Critical Strike Chance"
-		temp.name     := "#% increased Global Critical Strike Chance"
-		temp.simplifiedName := "xIncreasedGlobalCriticalChance"
+		temp.values		:= [globalCritChancePercent]
+		temp.name_orig		:= globalCritChancePercent . "% increased Global Critical Strike Chance"
+		temp.name			:= "#% increased Global Critical Strike Chance"
+		temp.simplifiedName	:= "xIncreasedGlobalCriticalChance"
 		temp.possibleParentSimplifiedNames := ["xIncreasedGlobalCriticalChance"]
 		tempMods.push(temp)
 	}
 	If (globalCritMultiplierPercent > 0) {
 		temp := {}
-		temp.values := [globalCritMultiplierPercent]
-		temp.name_orig := "+" . globalCritMultiplierPercent . "% to Global Critical Strike Multiplier"
-		temp.name     := "+#% to Global Critical Strike Multiplier"
-		temp.simplifiedName := "xIncreasedGlobalCriticalMultiplier"
+		temp.values		:= [globalCritMultiplierPercent]
+		temp.name_orig		:= "+" . globalCritMultiplierPercent . "% to Global Critical Strike Multiplier"
+		temp.name			:= "+#% to Global Critical Strike Multiplier"
+		temp.simplifiedName	:= "xIncreasedGlobalCriticalMultiplier"
 		temp.possibleParentSimplifiedNames := ["xIncreasedGlobalCriticalMultiplier"]
 		tempMods.push(temp)
 	}
 	If (critChanceForSpellsPercent > 0) {
 		temp := {}
-		temp.values := [critChanceForSpellsPercent]
-		temp.name_orig := critChanceForSpellsPercent . "% increased Critical Strike Chance for Spells"
-		temp.name     := "#% increased Critical Strike Chance for Spells"
-		temp.simplifiedName := "xIncreasedCriticalSpells"
+		temp.values		:= [critChanceForSpellsPercent]
+		temp.name_orig		:= critChanceForSpellsPercent . "% increased Critical Strike Chance for Spells"
+		temp.name			:= "#% increased Critical Strike Chance for Spells"
+		temp.simplifiedName	:= "xIncreasedCriticalSpells"
 		temp.possibleParentSimplifiedNames := ["xIncreasedCriticalSpells"]
 		tempMods.push(temp)
 	}
@@ -8596,10 +8603,10 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	For i, attribute in ["Strength", "Dexterity", "Intelligence"] {
 		If ( %attribute%Flat > 0 ) {
 			temp := {}
-			temp.values := [%attribute%Flat]
-			temp.name_orig := "+" .  %attribute%Flat . " to " .  attribute
-			temp.name     := "+# to " . attribute
-			temp.simplifiedName := "xTo" attribute
+			temp.values		:= [%attribute%Flat]
+			temp.name_orig		:= "+" .  %attribute%Flat . " to " .  attribute
+			temp.name			:= "+# to " . attribute
+			temp.simplifiedName	:= "xTo" attribute
 			temp.possibleParentSimplifiedNames := ["xTo" attribute, "xToAllAttributes"]
 			tempMods.push(temp)
 		}
@@ -8607,10 +8614,10 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	; cumulative all attributes mods
 	If (allAttributesFlat > 0) {
 		temp := {}
-		temp.values := [allAttributesFlat]
-		temp.name_orig := "+" . allAttributesFlat . " to all Attributes"
-		temp.name     := "+#% to all Attributes"
-		temp.simplifiedName := "xToAllAttributes"
+		temp.values		:= [allAttributesFlat]
+		temp.name_orig		:= "+" . allAttributesFlat . " to all Attributes"
+		temp.name			:= "+#% to all Attributes"
+		temp.simplifiedName	:= "xToAllAttributes"
 		temp.possibleParentSimplifiedNames := ["xToAllAttributes"]
 		tempMods.push(temp)
 	}
@@ -8619,10 +8626,10 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	For i, element in ["Fire", "Cold", "Lightning"] {
 		If ( %element%Resist > 0) {
 			temp := {}
-			temp.values := [%element%Resist]
-			temp.name_orig := "+" %element%Resist "% to " element " Resistance"
-			temp.name     := "+#% to " element " Resistance"
-			temp.simplifiedName := "xTo" element "Resistance"
+			temp.values		:= [%element%Resist]
+			temp.name_orig		:= "+" %element%Resist "% to " element " Resistance"
+			temp.name			:= "+#% to " element " Resistance"
+			temp.simplifiedName	:= "xTo" element "Resistance"
 			temp.possibleParentSimplifiedNames := ["xTo" element "Resistance", "xToAllElementalResistances"]
 			temp.hideForTradeMacro := true
 			tempMods.push(temp)
@@ -8630,10 +8637,11 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	}
 	If (toAllElementalResist > 0) {
 		temp := {}
-		temp.values := [toAllElementalResist]
-		temp.name_orig := "+" . toAllElementalResist . "% to all Elemental Resistances"
-		temp.name     := "+#% to all Elemental Resistances"
-		temp.simplifiedName := "xToAllElementalResistances"
+		temp.values		:= [toAllElementalResist]
+		temp.name_orig		:= "+" . toAllElementalResist . "% to all Elemental Resistances"
+		temp.name			:= "+#% to all Elemental Resistances"
+		temp.simplifiedName	:= "xToAllElementalResistances"
+		temp.exception		:= true
 		temp.possibleParentSimplifiedNames := ["xToAllElementalResistances"]
 		temp.hideForTradeMacro := true
 		tempMods.push(temp)
@@ -8641,59 +8649,61 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	; Note that total resistances are calculated values with no possible child mods, so they have no simplifiedName
 	If (totalElementalResistance > 0) {
 		temp := {}
-		temp.values := [totalElementalResistance]
-		temp.name_orig := "+" . totalElementalResistance . "% total Elemental Resistance"
-		temp.name     := "+#% total Elemental Resistance"
-		temp.possibleParentSimplifiedNames := ["xToFireResistance", "xToColdResistance", "xToLignthningResistance", "xToAllElementalResistances"]
+		temp.values		:= [totalElementalResistance]
+		temp.name_orig		:= "+" . totalElementalResistance . "% total Elemental Resistance"
+		temp.name			:= "+#% total Elemental Resistance"
+		temp.exception		:= true
+		temp.possibleParentSimplifiedNames := ["xToFireResistance", "xToColdResistance", "xToLightningResistance", "xToAllElementalResistances"]
 		tempMods.push(temp)
 	}
 	; without chaos resist, this would have the same value as totalElementalResistance
 	If ((totalResistance > 0) AND (chaosResist > 0)) {
 		temp := {}
-		temp.values := [totalResistance]
-		temp.name_orig := "+" . totalResistance . "% total Resistance"
-		temp.name     := "+#% total Resistance"
-		temp.possibleParentSimplifiedNames := ["xToFireResistance", "xToColdResistance", "xToLignthningResistance", "xToAllElementalResistances", "xToChaosResistance"]
+		temp.values		:= [totalResistance]
+		temp.name_orig		:= "+" . totalResistance . "% total Resistance"
+		temp.name			:= "+#% total Resistance"
+		temp.exception		:= true
+		temp.possibleParentSimplifiedNames := ["xToFireResistance", "xToColdResistance", "xToLightningResistance", "xToAllElementalResistances", "xToChaosResistance"]
 		tempMods.push(temp)
 	}
 	
 	; ### Generate remaining pseudos derived from attributes
 	If (meleePhysDmgGlobal_Percent > 0) {
 		temp := {}
-		temp.values := [meleePhysDmgGlobal_Percent]
-		temp.name_orig := meleePhysDmgGlobal_Percent . "% increased Melee Physical Damage"
-		temp.name     := "#% increased Melee Physical Damage"
-		temp.simplifiedName := "xIncreasedMeleePhysicalDamage"
+		temp.values		:= [meleePhysDmgGlobal_Percent]
+		temp.name_orig		:= meleePhysDmgGlobal_Percent . "% increased Melee Physical Damage"
+		temp.name			:= "#% increased Melee Physical Damage"
+		temp.simplifiedName	:= "xIncreasedMeleePhysicalDamage"
 		temp.possibleParentSimplifiedNames := ["xIncreasedMeleePhysicalDamage"]
 		temp.hideForTradeMacro := true
 		tempMods.push(temp)
 	}
 	If (energyShieldPercentGlobal > 0) {
 		temp := {}
-		temp.values := [energyShieldPercentGlobal]
-		temp.name_orig := energyShieldPercentGlobal . "% increased Energy Shield (Global)"
-		temp.name     := "#% increased Energy Shield (Global)"
-		temp.simplifiedName := "xIncreasedEnergyShieldPercentGlobal"
+		temp.values		:= [energyShieldPercentGlobal]
+		temp.name_orig		:= energyShieldPercentGlobal . "% increased Energy Shield (Global)"
+		temp.name			:= "#% increased Energy Shield (Global)"
+		temp.simplifiedName	:= "xIncreasedEnergyShieldPercentGlobal"
 		temp.possibleParentSimplifiedNames := ["xIncreasedEnergyShieldPercentGlobal"]
 		temp.hideForTradeMacro := true
 		tempMods.push(temp)
 	}
 	If (evasionRatingPercentGlobal > 0) {
 		temp := {}
-		temp.values := [evasionRatingPercentGlobal]
-		temp.name_orig := evasionRatingPercentGlobal . "% increased Evasion (Global)"
-		temp.name     := "#% increased Evasion (Global)"
-		temp.simplifiedName := "xIncreasedEvasionRatingPercentGlobal"
+		temp.values		:= [evasionRatingPercentGlobal]
+		temp.name_orig		:= evasionRatingPercentGlobal . "% increased Evasion (Global)"
+		temp.name			:= "#% increased Evasion (Global)"
+		temp.simplifiedName	:= "xIncreasedEvasionRatingPercentGlobal"
 		temp.possibleParentSimplifiedNames := ["xIncreasedEvasionRatingPercentGlobal"]
 		temp.hideForTradeMacro := true
 		tempMods.push(temp)
 	}
 	If (accuracyRatingFlat > 0) {
 		temp := {}
-		temp.values := [accuracyRatingFlat]
-		temp.name_orig := "+" . accuracyRatingFlat . " to Accuracy Rating"
-		temp.name     := "+# to Accuracy Rating"
-		temp.simplifiedName := "xToAccuracyRating"
+		temp.values		:= [accuracyRatingFlat]
+		temp.name_orig		:= "+" . accuracyRatingFlat . " to Accuracy Rating"
+		temp.name			:= "+# to Accuracy Rating"
+		temp.simplifiedName	:= "xToAccuracyRating"
 		temp.possibleParentSimplifiedNames := ["xToAccuracyRating"]
 		tempMods.push(temp)
 	}
@@ -8702,44 +8712,53 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	; spell damage global
 	If (spellDmg_Percent > 0) {
 		temp := {}
-		temp.values := [spellDmg_Percent]
-		temp.name_orig := spellDmg_Percent . "% increased Spell Damage"
-		temp.name     := "#% increased Spell Damage"
-		temp.simplifiedName := "xIncreasedSpellDamage"
+		temp.values		:= [spellDmg_Percent]
+		temp.name_orig		:= spellDmg_Percent . "% increased Spell Damage"
+		temp.name			:= "#% increased Spell Damage"
+		temp.simplifiedName	:= "xIncreasedSpellDamage"
 		temp.possibleParentSimplifiedNames := ["xIncreasedSpellDamage"]
 		tempMods.push(temp)
 	}
 	
 	; other damages
-	percentDamageModSuffixes := [" Damage", " Damage with Weapons", " Spell Damage"]
+	percentDamageModSuffixes := [" Damage", " Damage with Attack Skills", " Spell Damage"]
 	flatDamageModSuffixes    := ["", " to Attacks", " to Spells"]
 	
-	For i, element in ["Fire", "Cold", "Lightning", "Elemental"] {
+	For i, element in dmgTypes {
+		StringUpper, element, element, T
 		
 		For j, dmgType in ["", "Attacks",  "Spells"]	{			
 			; ### Percentage damages
 			If (%element%Dmg_%dmgType%Percent > 0) {
 				modSuffix := percentDamageModSuffixes[j]
 				temp := {}
-				temp.values := [%element%Dmg_%dmgType%Percent]
-				temp.name_orig := %element%Dmg_%dmgType%Percent "% increased " element . modSuffix
-				temp.name     := "#% increased " element . modSuffix
-				temp.simplifiedName := "xIncreased" element "Damage" dmgType
+				temp.values		:= [%element%Dmg_%dmgType%Percent]
+				temp.name_orig		:= %element%Dmg_%dmgType%Percent "% increased " element . modSuffix
+				temp.name			:= "#% increased " element . modSuffix
+				temp.simplifiedName	:= "xIncreased" element "Damage" dmgType
 				temp.possibleParentSimplifiedNames := ["xIncreased" element "Damage" dmgType, "xIncreased" element "Damage"]
 				( element != "Elemental" ) ? temp.possibleParentSimplifiedNames.push("xIncreasedElementalDamage" dmgType) : False
 				( dmgType == "Spells" ) ? temp.possibleParentSimplifiedNames.push("xIncreasedSpellDamage") : False
 				tempMods.push(temp)
 			}
 			; ### Flat damages
-			If (%element%Dmg_%dmgType%FlatLow > 0) {
+			If (%element%Dmg_%dmgType%FlatLow > 0 or %element%Dmg_%dmgType%FlatHi > 0) {				
 				modSuffix := flatDamageModSuffixes[j]
 				temp := {}
-				temp.values := [%element%Dmg_%dmgType%FlatLow, %element%Dmg_%dmgType%FlatHi]
-				temp.name_orig := "Adds " %element%Dmg_%dmgType%FlatLow " to " %element%Dmg_%dmgType%FlatHi " " element " Damage" modSuffix
-				temp.name     := "Adds # " element " Damage" modSuffix
-				temp.simplifiedName := "xFlat" element "Damage" dmgType
+				temp.values		:= [%element%Dmg_%dmgType%FlatLow, %element%Dmg_%dmgType%FlatHi]
+				temp.name_orig		:= "Adds " %element%Dmg_%dmgType%FlatLow " to " %element%Dmg_%dmgType%FlatHi " " element " Damage" modSuffix
+				temp.name			:= "Adds # " element " Damage" modSuffix
+				temp.simplifiedName	:= "xFlat" element "Damage" dmgType
 				temp.possibleParentSimplifiedNames := ["xFlat" element "Damage" dmgType]
-				( element != "Elemental" ) ? temp.possibleParentSimplifiedNames.push("xFlatElementalDamage" dmgType) : False
+				If (element != "Elemental") {
+					temp.possibleParentSimplifiedNames.push("xFlatElementalDamage" dmgType)
+				} Else {
+					temp.possibleParentSimplifiedNames := []
+					For e, el in dmgTypes {
+						StringUpper, upperEl, el, T
+						temp.possibleParentSimplifiedNames.push("xFlat" upperEl "Damage" dmgType)
+					}
+				}
 				tempMods.push(temp)
 			}
 		}
@@ -8771,8 +8790,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			If ( tempMod.name == mod.name ) {
 				; check if it's a flat damage mod
 				If (mod.values[2]) {
-					mv := (mod.values[1] + mod.values[2]) / 2
-					tv := (tempMod.values[1] + tempMod.values[2]) / 2
+					mv := Round((mod.values[1] + mod.values[2]) / 2, 3)
+					tv := Round((tempMod.values[1] + tempMod.values[2]) / 2, 3)
 					If (tv <= mv) {
 						higher := false
 					}
@@ -8785,32 +8804,21 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			}
 		}
 		; add the tempMod to pseudos if it has greater values, or no parent
-		If (higher){
+		If (higher or (tempMod.exception and returnAllMods)) {
 			tempMod.isVariable:= false
 			tempMod.type := "pseudo"
 			allPseudoMods.push(tempMod)
 		}
 	}
 
-	; ### This is mostly for TradeMacro
-	; returns all original mods and all the pseudo mods if requested
-	If (returnAllMods) {
-		returnedMods := mods
-		For i, mod in allPseudoMods {
-			returnedMods.push(mod)
-		}
-		Return returnedMods
-	}
-
 	; 2nd pass
 	; now we remove pseudos that are shadowed by an original mod they inherited from
 	; ex ( '25% increased Cold Spell Damage' is shadowed by '%25 increased Spell Damage' )
- 
 	tempPseudoMods := []
 	For i, tempMod in allPseudoMods {
 		higher := true
 		For j, mod in mods {
-			; check if its a parent mod
+			; check if it's a parent mod
 			isParentMod := false
 			For k, simplifiedName in tempMod.possibleParentSimplifiedNames {
 				If (mod.simplifiedName == simplifiedName) {
@@ -8819,10 +8827,10 @@ CreatePseudoMods(mods, returnAllMods := False) {
 				}
 			}
 			If ( isParentMod ) {
-				; check if its a flat damage mod
+				; check if it's a flat damage mod
 				If (mod.values[2]) {
-					mv := (mod.values[1] + mod.values[2]) / 2
-					tv := (tempMod.values[1] + tempMod.values[2]) / 2
+					mv := Round((mod.values[1] + mod.values[2]) / 2, 3)
+					tv := Round((tempMod.values[1] + tempMod.values[2]) / 2, 3)
 					If (tv <= mv) {
 						higher := false
 					}
@@ -8834,14 +8842,14 @@ CreatePseudoMods(mods, returnAllMods := False) {
 				}
 			}
 		}
-		; add the tempMod to pseudos if it has greater values, or no parent
-		If (higher){
+		; add the tempMod to pseudos if it has greater values, or no parent		
+		If (higher or (tempMod.exception and returnAllMods)) {
 			tempMod.isVariable:= false
 			tempMod.type := "pseudo"
 			tempPseudoMods.push(tempMod)
 		}
 	}
-	
+
 	; 3rd Pass
 	; same logic as above but compare pseudo with other pseudos
 	; remove pseudos that are shadowed by another pseudo
@@ -8853,20 +8861,20 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		higher := true
 		For j, tempPseudoB in tempPseudoMods {
 			; skip if its the same object
-			if( i != j ) {
-				; check if its a parent mod
+			If ( i != j ) {
+				; check if it's a parent mod
 				isParentMod := false
 				For k, simplifiedName in tempPseudoA.possibleParentSimplifiedNames {
 					if (tempPseudoB.simplifiedName == simplifiedName) {
-							isParentMod := true
-							; TODO: match found we could exit loop here
+						isParentMod := true
+						; TODO: match found we could exit loop here
 					}
 				}
 				If ( isParentMod ) {
-					; check if its a flat damage mod
+					; check if it's a flat damage mod
 					If (tempPseudoB.values[2]) {
-						mv := (tempPseudoB.values[1] + tempPseudoB.values[2]) / 2
-						tv := (tempPseudoA.values[1] + tempPseudoA.values[2]) / 2
+						mv := Round((tempPseudoB.values[1] + tempPseudoB.values[2]) / 2, 3)
+						tv := Round((tempPseudoA.values[1] + tempPseudoA.values[2]) / 2, 3)
 						If (tv <= mv) {
 							higher := false
 						}
@@ -8880,14 +8888,24 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			}
 		}
 		; add the tempMod to pseudos if it has greater values, or no parent
-		If (higher){
+		If (higher) {
 			tempPseudoA.isVariable:= false
 			tempPseudoA.type := "pseudo"
 			pseudoMods.push(tempPseudoA)
 		}
 	}
+
+	; ### This is mostly for TradeMacro
+	; returns all original mods and the pseudo mods if requested
+	If (returnAllMods) {
+		returnedMods := mods
+		For i, mod in pseudoMods {
+			returnedMods.push(mod)			
+		}
+		Return returnedMods
+	}
 	
-	return pseudoMods
+	Return pseudoMods
 }
 
 CheckIfTempModExists(needle, mods) {
@@ -9694,12 +9712,10 @@ StdOutStream(sCmd, Callback = "") {
 	VarSetCapacity( Buffer, 4096, 0 ), nSz := 0 
 
 	While DllCall( "ReadFile", UInt,hPipeRead, UInt,&Buffer, UInt,4094, UIntP,nSz, Int,0 ) {
+		tOutput := ( AIC && NumPut( 0, Buffer, nSz, "Char" ) && VarSetCapacity( Buffer,-1 ) ) 
+				? Buffer : %StrGet%( &Buffer, nSz, "CP850" )
 
-	tOutput := ( AIC && NumPut( 0, Buffer, nSz, "Char" ) && VarSetCapacity( Buffer,-1 ) ) 
-			? Buffer : %StrGet%( &Buffer, nSz, "CP850" )
-
-	Isfunc( Callback ) ? %Callback%( tOutput, A_Index ) : sOutput .= tOutput
-
+		Isfunc( Callback ) ? %Callback%( tOutput, A_Index ) : sOutput .= tOutput
 	}                   
 
 	DllCall( "GetExitCodeProcess", UInt,hProcess, UIntP,ExitCode )
@@ -9709,6 +9725,73 @@ StdOutStream(sCmd, Callback = "") {
 	DllCall( "SetLastError", UInt,ExitCode  )
 
 	Return Isfunc( Callback ) ? %Callback%( "", 0 ) : sOutput      
+}
+
+ReadConsoleOutputFromFile(command, fileName) {
+	file := "temp\" fileName ".txt"
+	RunWait %comspec% /c "chcp 1251 /f >nul 2>&1 & %command% > %file%", , Hide  
+	FileRead, io, %file%
+	
+	Return io
+}
+
+StrPutVar(Str, ByRef Var, Enc = "") {
+	Len := StrPut(Str, Enc) * (Enc = "UTF-16" || Enc = "CP1200" ? 2 : 1)
+	VarSetCapacity(Var, Len, 0)
+	Return, StrPut(Str, &Var, Enc)
+}
+
+UriEncode(Uri, Enc = "UTF-8")	{
+	StrPutVar(Uri, Var, Enc)
+	f := A_FormatInteger
+	SetFormat, IntegerFast, H
+	Loop
+	{
+		Code := NumGet(Var, A_Index - 1, "UChar")
+		If (!Code)
+			Break
+		If (Code >= 0x30 && Code <= 0x39 ; 0-9
+			|| Code >= 0x41 && Code <= 0x5A ; A-Z
+			|| Code >= 0x61 && Code <= 0x7A) ; a-z
+			Res .= Chr(Code)
+		Else
+			Res .= "%" . SubStr(Code + 0x100, -1)
+	}
+	SetFormat, IntegerFast, %f%
+	Return, Res
+}
+
+ScriptInfo(Command) {
+	; https://autohotkey.com/boards/viewtopic.php?t=9656
+	; Command must be "ListLines", "ListVars", "ListHotkeys" or "KeyHistory".
+    static hEdit := 0, pfn, bkp
+    if !hEdit {
+        hEdit := DllCall("GetWindow", "ptr", A_ScriptHwnd, "uint", 5, "ptr")
+        user32 := DllCall("GetModuleHandle", "str", "user32.dll", "ptr")
+        pfn := [], bkp := []
+        for i, fn in ["SetForegroundWindow", "ShowWindow"] {
+            pfn[i] := DllCall("GetProcAddress", "ptr", user32, "astr", fn, "ptr")
+            DllCall("VirtualProtect", "ptr", pfn[i], "ptr", 8, "uint", 0x40, "uint*", 0)
+            bkp[i] := NumGet(pfn[i], 0, "int64")
+        }
+    }
+ 
+    if (A_PtrSize=8) {  ; Disable SetForegroundWindow and ShowWindow.
+        NumPut(0x0000C300000001B8, pfn[1], 0, "int64")  ; return TRUE
+        NumPut(0x0000C300000001B8, pfn[2], 0, "int64")  ; return TRUE
+    } else {
+        NumPut(0x0004C200000001B8, pfn[1], 0, "int64")  ; return TRUE
+        NumPut(0x0008C200000001B8, pfn[2], 0, "int64")  ; return TRUE
+    }
+ 
+    static cmds := {ListLines:65406, ListVars:65407, ListHotkeys:65408, KeyHistory:65409}
+    cmds[Command] ? DllCall("SendMessage", "ptr", A_ScriptHwnd, "uint", 0x111, "ptr", cmds[Command], "ptr", 0) : 0
+ 
+    NumPut(bkp[1], pfn[1], 0, "int64")  ; Enable SetForegroundWindow.
+    NumPut(bkp[2], pfn[2], 0, "int64")  ; Enable ShowWindow.
+ 
+    ControlGetText, text,, ahk_id %hEdit%
+    return text
 }
 
 GetContributors(AuthorsPerLine=0)
@@ -9729,6 +9812,62 @@ GetContributors(AuthorsPerLine=0)
 		}
 	}
 	return Authors
+}
+
+ShowAssignedHotkeys() {
+	scriptInfo	:= ScriptInfo("ListHotkeys")
+	hotkeys		:= []
+	
+	Loop, Parse, scriptInfo, `n`r, 
+	{
+		line		:= RegExReplace(A_Loopfield, "[\t]", "|")
+		line		:= RegExReplace(line, "\|(?!\s)", "| ") . "|"
+		fields	:= []
+		
+		If (StrLen(line)) {
+			Pos		:= 0
+			While Pos	:= RegExMatch(line, "i)(.*?\|+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
+				fields.push(Trim(RegExReplace(value1, "\|")))
+			}
+			If (StrLen(fields[1]) and not InStr(fields[1], "--------")) {				
+				hotkeys.push(fields)	
+			}
+		}
+	}
+
+	Gui, ShowHotkeys:Add, Text, , List of this scripts assigned hotkeys.
+	Gui, ShowHotkeys:Default
+	Gui, Font, , Courier New
+	Gui, Font, , Consolas
+	Gui, ShowHotkeys:Add, ListView, r25 w800 NoSortHdr Grid ReadOnly, Type | Enabled | Level | Running | Key combination	
+	For key, val in hotkeys {	
+		If (key != 1) {
+			LV_Add("", val*)
+			LV_ModifyCol()
+		}
+	}
+	
+	i := 0
+	Loop % LV_GetCount("Column")
+	{
+		i++
+		LV_ModifyCol(a_index,"AutoHdr")
+	}
+	
+	text := "reg: The hotkey is implemented via the operating system's RegisterHotkey() function." . "`n"
+	text .= "reg(no): Same as above except that this hotkey is inactive (due to being unsupported, disabled, or suspended)." . "`n"
+	text .= "k-hook: The hotkey is implemented via the keyboard hook." . "`n"
+	text .= "m-hook: The hotkey is implemented via the mouse hook." . "`n"
+	text .= "2-hooks: The hotkey requires both the hooks mentioned above." . "`n"
+	text .= "joypoll: The hotkey is implemented by polling the joystick at regular intervals." . "`n"
+	text .= "`n"
+	text .= "Enabled: Hotkey is assigned but enabled/disabled [on/off] via the Hotkey command." . "`n"
+	
+	Gui, ShowHotkeys:Add, Text, , % text
+	
+	Gui, ShowHotkeys:Show, w820 xCenter yCenter, Assigned Hotkeys
+	Gui, 1:Default
+	Gui, Font
 }
 
 CloseScripts() {
@@ -9967,6 +10106,53 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 	}
 }
 
+AdvancedItemInfoExt() {
+	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	{
+		Global Item, Opts, Globals, ItemData
+		
+		ClipBoardTemp := Clipboard
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		
+		Clipboard := 
+		Send ^{sc02E}	; ^{c}
+		Sleep 100		
+		
+		CBContents := GetClipboardContents()
+		CBContents := PreProcessContents(CBContents)		
+		Globals.Set("ItemText", CBContents)
+		Globals.Set("TierRelativeToItemLevelOverride", Opts.TierRelativeToItemLevel)		
+		ParsedData := ParseItemData(CBContents)
+		
+		If (Item.Name) {			
+			itemTextBase64 := ""
+			FileDelete, %A_ScriptDir%\temp\itemText.txt
+			FileAppend, %CBContents%, %A_ScriptDir%\temp\itemText.txt, utf-8
+			command		:= "certutil -encode -f ""%cd%\temp\itemText.txt"" ""%cd%\temp\base64ItemText.txt"" & type ""%cd%\temp\base64ItemText.txt"""
+			itemTextBase64	:= ReadConsoleOutputFromFile(command, "encodeToBase64.txt")
+			itemTextBase64	:= Trim(RegExReplace(itemTextBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))				
+			itemTextBase64	:= UriEncode(itemTextBase64)
+			itemTextBase64	:= RegExReplace(itemTextBase64, "i)^(%0D)?(%0A)?|((%0D)?(%0A)?)+$", "")
+			url 			:= "http://pathof.info/?item=" itemTextBase64
+			openWith := AssociatedProgram("html")
+			OpenWebPageWith(openWith, Url)
+		}
+		SuspendPOEItemScript = 0
+	}	
+}
+
+OpenWebPageWith(application, url) {
+	If (InStr(application, "iexplore")) {
+		ie := ComObjCreate("InternetExplorer.Application")
+		ie.Visible:=True
+		ie.Navigate(url)
+	} Else {
+		; while this should work with IE there may be cases where it doesn't
+		Run, "%application%" -new-tab "%Url%"
+	}
+	Return
+}
+
 LookUpAffixes() {
 	/*
 		Opens item base on poeaffix.net
@@ -9999,7 +10185,7 @@ LookUpAffixes() {
 				ev		:= RegExMatch(ItemData.Stats, "i)Evasion Rating") ? "ev" : ""
 				ar		:= RegExMatch(ItemData.Stats, "i)Armour") ? "ar" : ""
 				es		:= RegExMatch(ItemData.Stats, "i)Energy Shield") ? "es" : ""
-				RegExMatch(Item.SubType, "i)Axe|Sword|Mace|Sceptre|Bow|Staff|Wand|Fish", weapon)
+				RegExMatch(Item.SubType, "i)Axe|Sword|Mace|Sceptre|Bow|Staff|Wand|Fish|Dagger", weapon)
 				RegExMatch(Item.Subtype, "i)Amulet|Ring|Belt|Quiver|Flask", accessory)
 				RegExMatch(Item.Subtype, "i)Cobalt|Viridian|Crimson", jewel)
 				
@@ -10021,7 +10207,7 @@ LookUpAffixes() {
 				url		.= prefix "-" suffix ; ".html"
 			}			
 			openWith := AssociatedProgram("html")
-			Run, %openWith% -new-tab "%Url%"
+			OpenWebPageWith(openWith, Url)
 		}
 		
 		Sleep, 10
@@ -10257,6 +10443,10 @@ EditAdditionalMacros:
 EditMapModWarnings:
 	OpenUserDirFile("MapModWarnings.txt")
 	return
+	
+EditCustomMacrosExample:
+	OpenUserDirFile("CustomMacros\customMacros_example.txt")
+	return
 
 EditCurrencyRates:
 	OpenCreateDataTextFile("CurrencyRates.txt")
@@ -10265,6 +10455,10 @@ EditCurrencyRates:
 ReloadScript:
 	scriptName := RegExReplace(Globals.Get("ProjectName"), "i)poe-", "Run_") . ".ahk"
 	Run, "%A_AhkPath%" "%A_ScriptDir%\%scriptName%"
+	return
+	
+ShowAssignedHotkeys:
+	ShowAssignedHotkeys()
 	return
 
 3GuiClose:
