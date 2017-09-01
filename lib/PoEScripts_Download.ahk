@@ -103,6 +103,7 @@
 	Else If (not e.what) {
 		; check returned request headers
 		ioHdr := ParseReturnedHeaders(html)
+		goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
 		If (not goodStatusCode) {
 			MsgBox, 16,, % "Error downloading file to " SavePath
 			Return "Error: Wrong Status"
