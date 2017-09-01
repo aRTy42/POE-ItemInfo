@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.5.2
+================================================================================================
+Fixed an issue with calling Internet Explorer via ComObjects that some users experienced.
+
 2.5.1
 ================================================================================================
 Fixed an issue with binary download error handling that mistakenly reports a failed download, resulting in the updater not working.
