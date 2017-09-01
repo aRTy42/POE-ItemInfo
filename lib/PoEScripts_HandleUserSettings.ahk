@@ -1,11 +1,12 @@
-﻿#Include, CalcChecksum.ahk
+﻿; ignore include errors to support two different paths
+#Include, *i CalcChecksum.ahk
+#Include, *i %A_ScriptDir%\..\..\lib\CalcChecksum.ahk
 
-
-PoEScripts_HandleUserSettings(ProjectName, BaseDir, External, FilesToCopy, sourceDir) {
+PoEScripts_HandleUserSettings(ProjectName, BaseDir, External, sourceDir, scriptDir = "") {
 	Dir := BaseDir . "\" . ProjectName
 	
 	; check for git files to determine if it's a development version, return a path using the branch name
-	devBranch := PoEScripts_isDevelopmentVersion()
+	devBranch := PoEScripts_isDevelopmentVersion(scriptDir)
 	If (StrLen(devBranch)) {
 		Dir := Dir . devBranch
 	}
@@ -13,59 +14,28 @@ PoEScripts_HandleUserSettings(ProjectName, BaseDir, External, FilesToCopy, sourc
 	PoEScripts_CreateDirIfNotExist(Dir)
 	
 	; copy files after checking if it's neccessary (files do not exist, files were changed in latest update)
-	; copy .ini files and AdditionalMacros.txt to A_MyDocuments/ProjectName
-	PoEScripts_CopyFiles(FilesToCopy, sourceDir, Dir, fileList)
+	PoEScripts_CopyFiles(sourceDir, Dir, fileList)
 	
 	Return fileList
 }
 
-PoEScripts_CopyFiles(Files, sourceDir, Dir, ByRef fileList) {
-	tempObj 		:= PoEScripts_ParseFileHashes(Dir)
+PoEScripts_CopyFiles(SrcDir, DestDir, ByRef fileList) {
+	tempObj 		:= PoEScripts_ParseFileHashes(DestDir)
 	hashes 		:= tempObj.dynamic
 	hashes_locked 	:= tempObj.static
 
-	fileNames := []
+	fileNames		:= []
 	overwrittenFiles := []
-	FileRemoveDir, %Dir%\temp, 1
-	FileCreateDir, %Dir%\temp
-	
-	For key, file in Files {
-		file := sourceDir . file
-		If (FileExist(file)) {
-			; remove "default_" prefix in file-names and copy them to temp folder
-			SplitPath, file, f_name, f_dir, f_ext, f_name_no_ext, f_drive
-			file_orig := file
-			file_name := RegExReplace(f_name_no_ext, "i)default_", "") . "." . f_ext
-			FileCopy, %file%, %Dir%\temp\%file_name%
-			file := f_dir . "\" . file_name			
-			fileNames.push(file_name)
-			
-			; hash the file from the new script version
-			sourceHash := HashFile(Dir . "\temp\" . file_name, "SHA")
-			hashes[file_name] := sourceHash
-			
-			; if the file from the new release was changed since the last release or does not exist, copy it over
-			If (PoEScripts_CopyNeeded(file, Dir, sourceHash, hashes_locked)) {
-				; remember which files we will overwrite and create backups
-				If (FileExist(Dir "\" file_name)) {
-					overwrittenFiles.push(file_name)
-					PoEScripts_CreateDirIfNotExist(Dir "\backup")
-					FileMove, %Dir%\%file_name%, %Dir%\backup\%file_name%, 1
-				}				
-				FileCopy, %Dir%\temp\%file_name%, %Dir%\%file_name%, 1
-			}			
-			FileDelete, %Dir%\temp\%file_name%			
-		}
-	}
+	PoEScripts_CopyFolderContentsRecursive(SrcDir, DestDir, fileNames, hashes, hashes_locked, overwrittenFiles)
 	
 	; recreate hashes file and fill it with array/object contents
-	FileDelete, %Dir%\data\FileHashes.txt
+	FileDelete, %DestDir%\data\FileHashes.txt
 	For key, hash in hashes {
 		; make sure to write only hashes for files that we wanted to copy over,  removing files not included in the new release
 		For k, name in fileNames {
 			If (key == name) {
-				PoEScripts_CreateDirIfNotExist(Dir "\data")
-				FileAppend, %key% = %hash%`n, %Dir%\data\FileHashes.txt
+				PoEScripts_CreateDirIfNotExist(DestDir "\data")
+				FileAppend, %key% = %hash%`n, %DestDir%\data\FileHashes.txt
 			}			
 		}
 	}
@@ -77,17 +47,72 @@ PoEScripts_CopyFiles(Files, sourceDir, Dir, ByRef fileList) {
 			fileList .= "- " . overwrittenFiles[A_Index] . "`n"
 		}
 	}
-	
-	FileRemoveDir, %Dir%\temp, 1
 }
 
-PoEScripts_CopyNeeded(file, targetDir, sourceHash, hashes_locked) {
-	SplitPath, file, f_name, f_dir, f_ext, f_name_no_ext, f_drive
+PoEScripts_CopyFolderContentsRecursive(SourcePattern, DestinationFolder, ByRef fileNames, ByRef hashes, ByRef hashes_locked, ByRef overwrittenFiles, DoOverwrite = false) {
+	; Copies all files and folders matching SourcePattern into the folder named DestinationFolder (recursively), skipping empty folders.
+	If (!InStr(FileExist(DestinationFolder), "D")) {
+		count := 0
+		Loop, %SourcePattern%\*.*, 1, 1
+			count++
+		If (count > 0) {
+			FileCreateDir, %DestinationFolder%
+		} Else {
+			Return
+		}
+	}
 
+	FileRemoveDir, %DestinationFolder%\temp, 1
+	FileCreateDir, %DestinationFolder%\temp
+	
+	Loop %SourcePattern%\*.*, 1
+	{
+		If (InStr(FileExist(A_LoopFileFullPath), "D")) {
+			PoEScripts_CopyFolderContentsRecursive(A_LoopFileFullPath, DestinationFolder "\" A_LoopFileName, fileNames, hashes, hashes_locked, overwrittenFiles, DoOverwrite)
+		} Else If (not RegExMatch(A_LoopFileFullPath, "i)\.bak$")) {
+			SplitPath, A_LoopFileFullPath, f_name, f_dir, f_ext, f_name_no_ext, f_drive
+			file_orig := A_LoopFileFullPath
+			RegExMatch(f_name_no_ext, "i)(_dontOverwrite)", dontOverwrite)
+			file_name := RegExReplace(f_name_no_ext, "i)_dontOverwrite", "") . "." . f_ext
+			FileCopy, %A_LoopFileFullPath%, %DestinationFolder%\temp\%file_name%, 1
+			file		:= f_dir . "\" . file_name
+			fileNames.push(file_name)
+			
+			; hash the file from the new script version
+			If (not StrLen(dontOverwrite)) {			
+				sourceHash := HashFile(DestinationFolder . "\temp\" . file_name, "SHA")
+				hashes[file_name] := sourceHash
+			}
+
+			; if the file from the new release was changed since the last release or does not exist, copy it over
+			If (PoEScripts_CopyNeeded(file_name, DestinationFolder, sourceHash, hashes_locked, dontOverwrite)) {
+				; remember which files we will overwrite and create backups
+				If (FileExist(DestinationFolder "\" file_name)) {
+					overwrittenFiles.push(file_name)
+					PoEScripts_CreateDirIfNotExist(DestinationFolder "\backup")
+					FileMove, %DestinationFolder%\%file_name%, %DestinationFolder%\backup\%file_name%, 1
+				}				
+				ErrorLevel := 0
+				FileCopy, %DestinationFolder%\temp\%file_name%, %DestinationFolder%\%file_name%, 1
+				If (ErrorLevel) {
+					Msgbox % "File: " file_name "could not be copied to the user folder. Please make sure this folder is not protected/readonly."
+				}
+			}	
+			FileDelete, %DestinationFolder%\temp\%file_name%
+		}
+	}
+	FileRemoveDir, %DestinationFolder%\temp, 1
+	
+	Return
+}
+
+PoEScripts_CopyNeeded(file, targetDir, sourceHash, hashes_locked, dontOverwrite = "") {
+	SplitPath, file, f_name, f_dir, f_ext, f_name_no_ext, f_drive
+	
 	If (FileExist(targetDir . "\" . f_name)) {
 		; file exists already in target folder
-		If (PoEScripts_CompareFileHashes(f_name, sourceHash, hashes_locked)) {
-			; file hashes are different = file was changed since last release
+		If (PoEScripts_CompareFileHashes(f_name, sourceHash, hashes_locked) and not StrLen(dontOverwrite)) {
+			; file hashes are different -> default file was changed since last release
 			Return 1
 		}
 		Else {
@@ -96,7 +121,7 @@ PoEScripts_CopyNeeded(file, targetDir, sourceHash, hashes_locked) {
 	}
 	Else {
 		; file doesn't exist in target folder
-		return 1
+		Return 1
 	}
 }
 
@@ -116,12 +141,6 @@ PoEScripts_ParseFileHashes(Dir) {
 	Return hashes
 }
 
-PoEScripts_CreateDirIfNotExist(directory) {	
-	If (!InStr(FileExist(directory), "D")) {
-		FileCreateDir, %directory%
-	}
-}
-
 PoEScripts_CompareFileHashes(name, sourceHash, hashes_locked) {
 	If (hashes_locked[name] != sourceHash) {
 		Return 1
@@ -129,10 +148,17 @@ PoEScripts_CompareFileHashes(name, sourceHash, hashes_locked) {
 	Return 0
 }
 
-PoEScripts_isDevelopmentVersion() {
-	If (FileExist(A_ScriptDir "\.git")) {
-		If (FileExist(A_ScriptDir "\.git\HEAD")) {
-			FileRead, head, %A_ScriptDir%\.git\HEAD
+PoEScripts_CreateDirIfNotExist(directory) {	
+	If (!InStr(FileExist(directory), "D")) {
+		FileCreateDir, %directory%
+	}
+}
+
+PoEScripts_isDevelopmentVersion(directory = "") {
+	directory := StrLen(directory) ? directory : A_ScriptDir
+	If (FileExist(directory "\.git")) {
+		If (FileExist(directory "\.git\HEAD")) {
+			FileRead, head, %directory%\.git\HEAD
 			branch := ""
 			Loop, Parse, head, `n, `r
 			{

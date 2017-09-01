@@ -24,6 +24,10 @@
 ;#                                                                                       #
 ;# Curated list of awesome AHK libs, lib distributions, scripts, tools and resources:    # 
 ;# https://github.com/ahkscript/awesome-AutoHotkey                                       #
+;#                                                                                       #
+;#                                                                                       #
+;# AdditionalMacros Wiki entry:                                                          #
+;#     https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/AdditionalMacros            #
 ;###########-------------------------------------------------------------------###########
 	
 AM_AssignHotkeys:
@@ -32,7 +36,7 @@ AM_AssignHotkeys:
 	global AM_Minimize			:= ["on", "#D"]
 	global AM_HighlightItems	:= ["on", "^F"]
 	global AM_HighlightItemsAlt	:= ["on", "^!F"]
-	global AM_LookUpAffixes		:= ["on", "^L"]
+	global AM_LookUpAffixes		:= ["on", "^M"]
 	global AM_CloseScripts		:= ["off", "^Escape"]
 	global AM_KickYourself		:= ["off", "F4", "Input your character name here"]
 	global AM_Hideout			:= ["on", "F5"]
@@ -42,7 +46,11 @@ AM_AssignHotkeys:
 	global AM_Remaining			:= ["off", "F9"]
 	global AM_JoinGlobal820		:= ["off", "F10"]
 	global AM_SetAfkMessage		:= ["off", "F11"]
+	global AM_AdvancedItemInfo	:= ["on", "^!c"]
+	global AM_WhoisLastWhisper	:= ["on", "^!Enter"]
 
+	; This option can be set in the settings menu (ItemInfo tab) to completely disable assigning 
+	; AdditionalMacros hotkeys.
 	If (Opts.EnableAdditionalMacros) {
 		Hotkey, % AM_TogglePOEItemScript[2]	, AM_TogglePOEItemScript_HKey	, % AM_TogglePOEItemScript[1]
 		Hotkey, % AM_Minimize[2]			, AM_Minimize_HKey				, % AM_Minimize[1]
@@ -60,7 +68,11 @@ AM_AssignHotkeys:
 		Hotkey, % AM_Remaining[2]			, AM_Remaining_HKey				, % AM_Remaining[1]
 		Hotkey, % AM_JoinGlobal820[2]		, AM_JoinGlobal820_HKey			, % AM_JoinGlobal820[1]
 		Hotkey, % AM_SetAfkMessage[2]		, AM_SetAfkMessage_HKey			, % AM_SetAfkMessage[1]
+		Hotkey, % AM_AdvancedItemInfo[2]	, AM_AdvancedItemInfo_HKey		, % AM_AdvancedItemInfo[1]
+		Hotkey, % AM_WhoisLastWhisper[2]	, AM_WhoisLastWhisper_HKey		, % AM_WhoisLastWhisper[1]
 	}
+	
+	GoSub, CM_ExecuteCustomMacrosCode_Label
 Return
 
 AM_TogglePOEItemScript_HKey:
@@ -127,6 +139,16 @@ Return
 
 AM_SetAfkMessage_HKey:
 	setAfkMessage()							; Pastes afk message to your chat and marks "X" so you can type in the estimated time.
+Return
+
+AM_AdvancedItemInfo_HKey:
+	AdvancedItemInfoExt()					; Opens an item on pathof.info for an advanced affix breakdown.
+Return
+
+AM_WhoisLastWhisper_HKey:
+	KeyWait, Ctrl							; Sends "/whois lastWhisperCharacterName" when keys are released (not when pressed).
+	KeyWait, Alt
+	SendInput {Enter}{Home}{Del}/whois{Space}{Enter}
 Return
 
 setAfkMessage(){		
