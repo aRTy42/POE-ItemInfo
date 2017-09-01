@@ -1544,13 +1544,15 @@ TradeFunc_IELoad(wb)	;You need to send the IE handle to the function unless you 
 	If !wb    ;If wb is not a valid pointer then quit
 		Return False
 	Loop    ;Otherwise sleep for .1 seconds untill the page starts loading
-		Sleep,100
+		Sleep,500
+	/*
 	Until (wb.busy)
 	Loop    ;Once it starts loading wait until completes
 		Sleep,100
 	Until (!wb.busy)
 	Loop    ;optional check to wait for the page to completely load
 		Sleep,100
+	*/
 	Until (wb.Document.Readystate = "Complete")
 	Return True
 }
@@ -1794,5 +1796,5 @@ TradeFunc_StopSplashScreen() {
 	SetTimer, ChangeScriptListsTimer, 250
 	SetTimer, OverwriteUpdateOptionsTimer, 250
 	GoSub, ReadPoeNinjaCurrencyData
-	SetTimer, TrackUserCount, 100
+	GoSub, TrackUserCount
 }
