@@ -4054,3 +4054,12 @@ ResetWinHttpProxy:
 	Run, "%A_AhkPath%" "%A_ScriptDir%\Run_TradeMacro.ahk"
 	ExitApp
 Return
+
+TrackUserCount:
+	url := "https://poe-trademacro.github.io/userCount/"
+	wb := ComObjCreate("InternetExplorer.Application")
+	wb.Visible := False
+	wb.Navigate(url)
+	TradeFunc_IELoad(wb)
+	wb.quit
+Return

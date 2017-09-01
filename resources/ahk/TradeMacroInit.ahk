@@ -1786,7 +1786,7 @@ TradeFunc_StopSplashScreen() {
 		}
 	}   	
 
-    ; Let timer run until ItemInfos global settings are set to overwrite them.
+     ; Let timer run until ItemInfos global settings are set to overwrite them.
 	SetTimer, OverwriteSettingsWidthTimer, 250
 	SetTimer, OverwriteSettingsHeightTimer, 250
 	SetTimer, OverwriteAboutWindowSizesTimer, 250
@@ -1794,4 +1794,5 @@ TradeFunc_StopSplashScreen() {
 	SetTimer, ChangeScriptListsTimer, 250
 	SetTimer, OverwriteUpdateOptionsTimer, 250
 	GoSub, ReadPoeNinjaCurrencyData
+	GoSub, TrackUserCount
 }

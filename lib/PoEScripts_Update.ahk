@@ -126,6 +126,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 			Gui, UpdateNotification:Show, w650 xCenter yCenter, Update 
 			ControlFocus, Update, Update
 			WinWaitClose, Update
+			Gui, UpdateNotification:Destroy
 		}
 		Else {
 			s := "no update"
