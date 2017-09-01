@@ -1,5 +1,20 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.5.0
+================================================================================================
+Fixed some pseudomods (Some of them were unintentionally removed under certain conditions).
+Fixed the advanced affix lookup via pathof.info, which didn't work for people having spaces in their TradeMacro folder path.
+Fixed poaffix.net lookup for daggers.
+Disabled the forced 3L/4L selection on the advanced search GUI.
+Improved some error handling related to missing file write permissions.
+Fixed some harbinger items not being searchable (the reason being that they are correctly parsed as "uniques" but not handled/flagged as such on poe.trade).
+Added 20% quality phys dps value to the ItemInfo tooltip.
+Added fallbacks for the poe.ninja currency data request failing (site not available).
+Added config entries for features yet to be implemented (poeapp support, UI scaling).
+Added custom macros example/main file. You can find further explanations about this on the github wiki.
+Added sytem tray context menu option to show all assigned hotkeys.
+Other small bugfixes.
+
 2.4.0
 ================================================================================================
 Improved advanced search GUI:

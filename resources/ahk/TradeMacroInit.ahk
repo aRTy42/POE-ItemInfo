@@ -22,6 +22,7 @@ If (A_AhkVersion < TradeAHKVersionRequired)
 }
 
 Menu, Tray, Icon, %A_ScriptDir%\resources\images\poe-trade-bl.ico
+Menu, Tray, Add, Donate, OpenPayPal
 Menu, Tray, Add, Open Wiki/FAQ, OpenGithubWikiFromMenu
 
 argumentSkipSplash = %6%
@@ -148,9 +149,9 @@ argumentOverwrittenFiles = %4%
 ; when using the fallback exe we're missing the parameters passed by the merge script
 If (!StrLen(argumentProjectName) > 0) {
 	argumentProjectName		:= "PoE-TradeMacro"
-	FilesToCopyToUserFolder	:= ["\resources\config\default_config_trade.ini", "\resources\config\default_config.ini", "\resources\ahk\default_AdditionalMacros.txt"]
+	FilesToCopyToUserFolder	:= A_ScriptDir . "\resources\default_UserFiles"
 	argumentOverwrittenFiles	:= PoEScripts_HandleUserSettings(projectName, A_MyDocuments, projectName, FilesToCopyToUserFolder, A_ScriptDir)
-	argumentIsDevVersion	:= PoEScripts_isDevelopmentVersion()
+	argumentIsDevVersion	:= PoEScripts_isDevelopmentVersion(A_ScriptDir)
 	argumentUserDirectory	:= A_MyDocuments . "\" . projectName . isDevelopmentVersion
 	
 	If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-TradeMacro")) {
@@ -965,7 +966,7 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("Pre-Fill Min-Values", "x287 yp+25 w110 h40", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
 	AddToolTip(PrefillMinValueH, "Automatically fill the min-values in the advanced search GUI.")
 	
-	GuiAddCheckbox("Pre-Fill Max-Values", "x407 yp0 w110 h40", TradeOpts.PrefillMinValue, "PrefillMaxValue", "PrefillMaxValueH")
+	GuiAddCheckbox("Pre-Fill Max-Values", "x407 yp0 w110 h40", TradeOpts.PrefillMaxValue, "PrefillMaxValue", "PrefillMaxValueH")
 	AddToolTip(PrefillMaxValueH, "Automatically fill the max-values in the advanced search GUI.")
 	
 	; option group start

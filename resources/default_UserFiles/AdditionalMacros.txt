@@ -24,6 +24,10 @@
 ;#                                                                                       #
 ;# Curated list of awesome AHK libs, lib distributions, scripts, tools and resources:    # 
 ;# https://github.com/ahkscript/awesome-AutoHotkey                                       #
+;#                                                                                       #
+;#                                                                                       #
+;# AdditionalMacros Wiki entry:                                                          #
+;#     https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/AdditionalMacros            #
 ;###########-------------------------------------------------------------------###########
 	
 AM_AssignHotkeys:
@@ -45,6 +49,8 @@ AM_AssignHotkeys:
 	global AM_AdvancedItemInfo	:= ["on", "^!c"]
 	global AM_WhoisLastWhisper	:= ["on", "^!Enter"]
 
+	; This option can be set in the settings menu (ItemInfo tab) to completely disable assigning 
+	; AdditionalMacros hotkeys.
 	If (Opts.EnableAdditionalMacros) {
 		Hotkey, % AM_TogglePOEItemScript[2]	, AM_TogglePOEItemScript_HKey	, % AM_TogglePOEItemScript[1]
 		Hotkey, % AM_Minimize[2]			, AM_Minimize_HKey				, % AM_Minimize[1]
@@ -65,6 +71,8 @@ AM_AssignHotkeys:
 		Hotkey, % AM_AdvancedItemInfo[2]	, AM_AdvancedItemInfo_HKey		, % AM_AdvancedItemInfo[1]
 		Hotkey, % AM_WhoisLastWhisper[2]	, AM_WhoisLastWhisper_HKey		, % AM_WhoisLastWhisper[1]
 	}
+	
+	GoSub, CM_ExecuteCustomMacrosCode_Label
 Return
 
 AM_TogglePOEItemScript_HKey:

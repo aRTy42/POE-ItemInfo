@@ -226,6 +226,11 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		hasAdvancedSearch := true
 	}
 
+	; Harbinger fragments/maps are unique but not flagged as such on poe.trade
+	If (RegExMatch(Item.Name, "i)(First|Second|Third|Fourth) Piece of.*|The Beachhead.*")) {
+		Item.IsUnique 	:= false
+	}
+	
 	If (!Item.IsUnique) {
 		preparedItem  := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)
 		preparedItem.maxSockets	:= Item.maxSockets		
@@ -602,10 +607,20 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	
 	If (Item.IsMap) {	
 		; add Item.subtype to make sure to only find maps
-		RequestParams.xbase := Item.SubType
+		If (not RegExMatch(Item.Name, "i)The Beachhead.*", isHarbingerMap)) {
+			RequestParams.xbase := Item.SubType	
+		} Else {
+			RequestParams.xbase := ""
+		}
 		RequestParams.xtype := ""
-		If (!Item.IsUnique) {
-			RequestParams.name := ""	
+		If (not Item.IsUnique) {
+			console.log(isHarbingerMap)
+			If (StrLen(isHarbingerMap)) {
+				; Beachhead Map workaround (unique but not flagged as such on poe.trade)
+				RequestParams.name := Item.Name	
+			} Else {
+				RequestParams.name := ""	
+			}
 		}		
 		
 		; Ivory Temple fix, not sure why it's not recognized and if there are more cases like it
@@ -1343,11 +1358,11 @@ TradeFunc_OpenUrlInBrowser(Url) {
 	openWith := 
 	If (TradeFunc_CheckBrowserPath(TradeOpts.BrowserPath, false)) {
 		openWith := TradeOpts.BrowserPath
-		Run, %openWith% -new-tab "%Url%"
+		OpenWebPageWith(openWith, Url)
 	}		
 	Else If (TradeOpts.OpenWithDefaultWin10Fix) {
 		openWith := AssociatedProgram("html") 
-		Run, %openWith% -new-tab "%Url%"
+		OpenWebPageWith(openWith, Url)
 	}
 	Else {		
 		Run %Url%
@@ -3179,21 +3194,27 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		offset := (m > 1 ) ? "+15" : "15"
 		m++
 		text := "Links (max): 4"
+		/*
 		If (Links = 4) {
 			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour Checked, % text	
 		} Else {
 			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour, % text
-		}		
+		}
+		*/
+		Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour, % text
 	}
 	Else If (Links <= 3 and advItem.maxSockets = 3) {
 		offset := (m > 1 ) ? "+15" : "15"
 		m++
 		text := "Links (max): 3"
+		/*
 		If (Links = 3) {
 			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxThree Checked, % text	
 		} Else {
 			Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxThree, % text
-		}		
+		}
+		*/
+		Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxThree, % text
 	}
 
 	; ilvl
@@ -3685,6 +3706,11 @@ OpenGithubWikiFromMenu:
 	TradeFunc_OpenUrlInBrowser("https://github.com/" user "/" repo "/wiki")
 Return
 
+OpenPayPal:
+	url := "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4ZVTWJNH6GSME"
+	TradeFunc_OpenUrlInBrowser(url)
+Return
+
 TradeSettingsUI_BtnOK:
 	Global TradeOpts
 	Gui, Submit
@@ -3726,11 +3752,11 @@ ReadPoeNinjaCurrencyData:
 	If (TempChangingLeagueInProgress) {
 		ShowToolTip("Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ")...", true)
 	}
-	
+	sampleValue	:= ChaosEquivalents["Chaos Orb"]
 	league		:= TradeUtils.UriEncode(TradeGlobals.Get("LeagueName"))
 	fallback		:= ""
 	url			:= "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league
-	parsedJSON 	:= TradeFunc_DowloadURLtoJSON(url)
+	parsedJSON 	:= TradeFunc_DowloadURLtoJSON(url, sampleValue)
 	
 	; fallback to Standard and Hardcore league if used league seems to not be available 
 	If (!parsedjson.currencyDetails.length()) {
@@ -3741,8 +3767,9 @@ ReadPoeNinjaCurrencyData:
 			league	:= "Standard"
 			fallback	:= "Standard"
 		}
+		
 		url			:= "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league		
-		parsedJSON	:= TradeFunc_DowloadURLtoJSON(url)
+		parsedJSON	:= TradeFunc_DowloadURLtoJSON(url, sampleValue, true, league)
 	}
 	global CurrencyHistoryData := parsedJSON.lines
 	TradeGlobals.Set("LastAltCurrencyUpdate", A_NowUTC)
@@ -3760,13 +3787,40 @@ ReadPoeNinjaCurrencyData:
 		msg .= StrLen(fallback) ? "`n- Using data from " fallback " league since the requested data is not available." : ""
 		ShowToolTip(msg, true)
 	}
+	
 	TempChangingLeagueInProgress := False
 Return
 
-TradeFunc_DowloadURLtoJSON(url) {
-	UrlDownloadToFile, %url%, %A_ScriptDir%\temp\currencyData.json
-	FileRead, JSONFile, %A_ScriptDir%\temp\currencyData.json
-	parsedJSON 	:= JSON.Load(JSONFile)
+TradeFunc_DowloadURLtoJSON(url, sampleValue, critical = false, league = "") {	
+	errorMsg := "Parsing the currency data (json) from poe.ninja failed.`n"
+	errorMsg .= "This should only happen when the servers are down / unavailable." 
+	errorMsg .= "`n`n"
+	errorMsg .= "Using archived data from a fallback file. League: "" league ""."
+	errorMsg .= "`n`n"
+	errorMsg .= "This can fix itself when the servers are up again and the data gets updated automatically or if you restart the script at such a time."
+	
+	errors := 0
+	Try {
+		UrlDownloadToFile, %url%, %A_ScriptDir%\temp\currencyData.json
+		FileRead, JSONFile, %A_ScriptDir%\temp\currencyData.json
+		parsedJSON := JSON.Load(JSONFile)
+		
+		; first currency data parsing (script start)
+		If (critical and not sampleValue or not parsedJSON.lines.length()) {
+			errors++
+		}
+	} Catch error {
+		; first currency data parsing (script start)
+		If (critical and not sampleValue) {	
+			errors++
+		}
+	}
+	
+	If (errors and critical and not sampleValue) {
+		MsgBox, 16, PoE-TradeMacro - Error, %errorMsg%
+		FileRead, JSONFile, %A_ScriptDir%\data_trade\currencyData_Fallback_%league%.json
+		parsedJSON := JSON.Load(JSONFile)
+	}
 	
 	Return parsedJSON
 }
