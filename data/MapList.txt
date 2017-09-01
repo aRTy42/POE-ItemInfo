@@ -377,7 +377,7 @@ mapList["Gorge Map"] := "Tier: 13, Level: 80, Atlas position: bottom`nTileset: T
 
 mapList["High Gardens Map"] := "Tier: 13, Level: 80, Atlas position: left`nTileset:  (Outdoors)`n`nProduced by: none`nUpgrades to: Palace Map`nAlso connected to: Shipyard Map`n`nBoss: Suncalled Asha (based on: Soulmourn)`nFire Damage`n`nDifficulty: 3/5, Layout: A, Boss Arena: No"
 
-mapList["Lair Map"] := "Tier: 13, Level: 80, Atlas position: bottom right`nTileset:  (Outdoors/indoors/outdoors. Multilevel. Boss is located on the last level.)`n`nProduced by: Necropolis Map`nUpgrades to: Spider Forest Map`n`nDivination cards:`n- The Gambler`n- The Pack Leader`n- Treasure Hunter`n- The Wolf's Shadow`n`nBoss: Lycius, Midnight's Howl (based on: Rigwald)`nWhen shooting wolves - stand behind trees, when in wolf form - run around`n`nDifficulty: 5/5, Layout: B, Boss Arena: Yes"
+mapList["Lair Map"] := "Tier: 13, Level: 80, Atlas position: bottom right`nTileset:  (Outdoors/indoors/outdoors. Multilevel. Boss is located on the last level.)`n`nProduced by: Necropolis Map`nUpgrades to: Mineral Pools Map`n`nDivination cards:`n- The Gambler`n- The Pack Leader`n- Treasure Hunter`n- The Wolf's Shadow`n`nBoss: Lycius, Midnight's Howl (based on: Rigwald)`nWhen shooting wolves - stand behind trees, when in wolf form - run around`n`nDifficulty: 5/5, Layout: B, Boss Arena: Yes"
 
 mapList["Plaza Map"] := "Tier: 13, Level: 80, Atlas position: bottom left`nTileset: The Labyrinth (Outdoors.)`n`nProduced by: Ivory Temple Map`nUpgrades to: Maze Map`n`nBoss: The Goddess`nMortar Attacks`n`nDifficulty: 5/5, Layout: B, Boss Arena: Yes"
 
