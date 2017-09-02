@@ -58,10 +58,6 @@ See the following pages for more information.
 
 [Path of Exile Forum Thread](https://www.pathofexile.com/forum/view-thread/1757730)
 
-#### Screenshots ####
+#### Media / Video ####
 
-![screenshot](http://i.imgur.com/Zw2frfP.png)   
-
-![screenshot](http://i.imgur.com/Q3V9ODC.png)   
-
-![screenshot](http://i.imgur.com/ThuzbtI.png)
+[![PoE-TradeMacro Tool Guide - Engineering Eternity](http://i.imgur.com/NPsBuJo.png)](https://www.youtube.com/watch?v=D4l8ZOyCAbs)
