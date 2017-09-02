@@ -1,4 +1,4 @@
-[ [DISCORD](https://discord.gg/taKZqWw) ] - [ [FORUM](https://www.pathofexile.com/forum/view-thread/1757730) ] - [ [WIKI / FAQ](https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki) ] - [ [DONATIONS](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4ZVTWJNH6GSME) ]
+[ [DISCORD](https://discord.gg/taKZqWw) ] - [ [FORUM](https://www.pathofexile.com/forum/view-thread/1757730) ] - [ [WIKI / FAQ](https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki) ] - [ [VIDEO](https://github.com/PoE-TradeMacro/POE-TradeMacro#media--video) ] - [ [DONATIONS](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4ZVTWJNH6GSME) ]
 
 -----------------------------------
 
