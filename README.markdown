@@ -54,6 +54,12 @@ See the following pages for more information.
 
 [Go to: Troubleshooting](https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Troubleshooting)
 
+[Go to: Cookie retrieval](https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Cookie-retrieval)
+
+[Go to: AdditionalMacros](https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/AdditionalMacros)
+
+[Go to: Custom Macros](https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Custom-Macros)
+
 #### Forum ####
 
 [Path of Exile Forum Thread](https://www.pathofexile.com/forum/view-thread/1757730)
