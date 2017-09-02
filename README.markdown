@@ -60,4 +60,5 @@ See the following pages for more information.
 
 #### Media / Video ####
 
-[![PoE-TradeMacro Tool Guide - Engineering Eternity](http://i.imgur.com/NPsBuJo.png)](https://www.youtube.com/watch?v=D4l8ZOyCAbs)
+<a href="https://www.youtube.com/watch?v=D4l8ZOyCAbs" target="_blank">![](http://i.imgur.com/NPsBuJo.png)</a>
+
