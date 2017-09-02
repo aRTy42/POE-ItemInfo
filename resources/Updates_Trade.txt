@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.5.3
+================================================================================================
+Improved error handling so that users can't run the script from inside zip-archives anymore all the time without getting the proper error messages.
+
 2.5.2
 ================================================================================================
 Fixed an issue with calling Internet Explorer via ComObjects that some users experienced.

@@ -4056,5 +4056,5 @@ ResetWinHttpProxy:
 Return
 
 TrackUserCount:
-	Run, "%A_AhkPath%" "%A_ScriptDir%\lib\IEComObjectTestCall.ahk" 
+	Run, "%A_AhkPath%" "%A_ScriptDir%\lib\IEComObjectTestCall.ahk" "%userDirectory%" 
 Return

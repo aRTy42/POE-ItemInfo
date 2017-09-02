@@ -5,7 +5,7 @@
 	
 	**TLDR**:
 		You can add your own code below, use the existing Label.
-		View a formatted description/how to here -> https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Custom-Macros.
+		View a formatted description/how to here -> https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Custom-Macros .
 
 	*/
 
