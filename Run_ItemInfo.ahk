@@ -9,7 +9,7 @@ If (not StrLen(AHKVersionRequired) or error) {
 	If (RegExMatch(A_ScriptDir, "i)\.zip$")) {
 		MsgBox, 16, PoE-ItemInfo - Critical error, % "You are trying to run PoE-ItemInfo from inside a zip-archive, please unzip the whole folder. `n`nClosing script..."
 		ExitApp
-	} Else If (error) {
+	} Else {
 		MsgBox, 16, PoE-ItemInfo - Critical error, % "Script couldn't read file """ A_ScriptDir "\resources\VersionTrade.txt"". `n`nClosing script..."
 		ExitApp
 	}

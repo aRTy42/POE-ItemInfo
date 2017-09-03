@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.5.4
+================================================================================================
+Fixed some issues with opening links in the browser, specificially starting Edge.
+Fixed one more issue with starting IE via ComObjects.
+Fixed an issue with the AHK version comparison.
+
 2.5.3
 ================================================================================================
 Improved error handling so that users can't run the script from inside zip-archives anymore all the time without getting the proper error messages.

@@ -1,11 +1,11 @@
 #SingleInstance, force
 
-arg1 = %1%
+userFolderPath = %1%
 
 ; don't use the fallback if it was completed successfully once
 ; 
 Fallback := True
-If (FileExist(arg1 "\IEComObjectCall.txt")) {
+If (FileExist(userFolderPath "\IEComObjectCall.txt")) {
 	Fallback := False
 }
 
@@ -14,18 +14,15 @@ Try {
 	wb := ComObjCreate("InternetExplorer.Application")
 	wb.Visible := False
 	wb.Navigate(url)	
-	IELoad(wb, loaded)
+	IELoad(wb, loaded, userFolderPath)
 	wb.quit
-	If (loaded and not FileExist(arg1 "\IEComObjectCall.txt")) {
-		FileAppend, true, %arg1%\IEComObjectCall.txt
-	}
 } Catch error {
 	If (Fallback) {
 		Try {
 			wb := ComObjCreate("InternetExplorer.Application")
 			wb.Visible := True		
 			wb.Navigate(url)
-			IELoad(wb)
+			IELoad(wb, loaded, userFolderPath)
 			wb.quit
 		} Catch e {
 			ExitApp
@@ -35,7 +32,7 @@ Try {
 
 ExitApp
 
-IELoad(wb, ByRef loaded = false)	;You need to send the IE handle to the function unless you define it as global.
+IELoad(wb, ByRef loaded = false, path = "")	;You need to send the IE handle to the function unless you define it as global.
 {
 	i := 0
 	If !wb    ;If wb is not a valid pointer then quit
@@ -51,5 +48,10 @@ IELoad(wb, ByRef loaded = false)	;You need to send the IE handle to the function
 		i++
 	}
 	Until ((wb.Document.Readystate = "Complete" and loaded or i = 2000))
+	
+	If (loaded and not FileExist(path "\IEComObjectCall.txt")) {
+		FileAppend, true, %path%\IEComObjectCall.txt
+	}
+	
 	Return True
 }

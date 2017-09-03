@@ -3,10 +3,12 @@
 ;   a file extension (p_FileExt).
 ;-- Original author: TheGood
 ;       http://www.autohotkey.com/forum/viewtopic.php?p=363558#363558
+;-- Modified by: Eruyome
 ;-- Programming note: AssocQueryStringA is never called because it returns
 ;   invalid results on Windows XP.
-AssociatedProgram(p_FileExt)
-    {
+AssociatedProgram(p_FileExt) {
+    program := ""
+    ext     := p_FileExt
     Static ASSOCSTR_EXECUTABLE:=2
 
     ;-- Workaround for AutoHotkey Basic
@@ -37,14 +39,28 @@ AssociatedProgram(p_FileExt)
 
     ;-- If needed, convert result back to ANSI
     if A_IsUnicode
-        Return l_EXENameW
-     else
-        {
+        program := l_EXENameW
+     else {
         nSize:=DllCall("WideCharToMultiByte","UInt",0,"UInt",0,PtrType,&l_EXENameW,"Int",-1,PtrType,0,"Int",0,PtrType,0,PtrType,0)
             ;-- Returns the number of bytes including the terminating null
 
         VarSetCapacity(l_EXEName,nSize)
         DllCall("WideCharToMultiByte","UInt",0,"UInt",0,PtrType,&l_EXENameW,"Int",-1,PtrType,&l_EXEName,"Int",nSize,PtrType,0,PtrType,0)
-        Return l_EXEName
-        }
+        program := l_EXEName
     }
+
+    if (not StrLen(program)) {
+        program := AssocQueryApp(ext)
+    }
+    Return program
+}
+
+AssocQueryApp(ext) {
+    RegRead, type, HKCR, .%ext%
+    RegRead, act , HKCR, %type%\shell
+    If ErrorLevel
+        act = open
+    RegRead, cmd , HKCR, %type%\shell\%act%\command
+    app := Trim(RegExReplace(cmd, """(.*?)"".*","$1"))
+    Return, app
+}

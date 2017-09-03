@@ -1360,14 +1360,18 @@ TradeFunc_ReadCookieData() {
 
 				If (InStr(key1, "useragent")) {
 					url := "http://www.whatsmyua.info/"
-					wb := ComObjCreate("InternetExplorer.Application")
-					wb.Visible := False
-					wb.Navigate(url)
-					TradeFunc_IELoad(wb)
-					ua := wb.document.getElementById("rawUa").innerHTML
-					;ua := RegExReplace(ua, "i)[^:]*:\s?+", "")
-					ua := Trim(RegExReplace(ua, "i)rawUa:", ""))
-					wb.quit
+					Try {
+						wb := ComObjCreate("InternetExplorer.Application")
+						wb.Visible := False
+						wb.Navigate(url)
+						TradeFunc_IELoad(wb)
+						ua := wb.document.getElementById("rawUa").innerHTML
+						;ua := RegExReplace(ua, "i)[^:]*:\s?+", "")
+						ua := Trim(RegExReplace(ua, "i)rawUa:", ""))
+						wb.quit
+					} Catch e {
+						
+					}
 					
 					; user agent read via c# script seems to be wrong (at least sometimes)
 					ua := (ua = Trim(value1)) ? Trim(value1) : ua
@@ -1536,25 +1540,27 @@ TradeFunc_ReadCookieData() {
 		Gui, CookieWindow:Show, w550 xCenter yCenter, Notice
 		ControlFocus, Continue, Notice
 		WinWaitClose, Notice
-	}	
+	}
 }
 
 TradeFunc_IELoad(wb)	;You need to send the IE handle to the function unless you define it as global.
 {
-	If !wb    ;If wb is not a valid pointer then quit
+	Try {
+		If !wb    ;If wb is not a valid pointer then quit
+			Return False
+		Loop    ;Otherwise sleep for .1 seconds untill the page starts loading
+			Sleep,500
+		Until (wb.busy)
+		Loop    ;Once it starts loading wait until completes
+			Sleep,100
+		Until (!wb.busy)
+		Loop    ;optional check to wait for the page to completely load
+			Sleep,100
+		Until (wb.Document.Readystate = "Complete")		
+		Return True
+	} Catch e {
 		Return False
-	Loop    ;Otherwise sleep for .1 seconds untill the page starts loading
-		Sleep,500
-	/*
-	Until (wb.busy)
-	Loop    ;Once it starts loading wait until completes
-		Sleep,100
-	Until (!wb.busy)
-	Loop    ;optional check to wait for the page to completely load
-		Sleep,100
-	*/
-	Until (wb.Document.Readystate = "Complete")
-	Return True
+	}
 }
 
 TradeFunc_GetLatestDotNetInstallation() {
