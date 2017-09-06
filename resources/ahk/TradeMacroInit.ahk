@@ -1254,7 +1254,7 @@ TradeFunc_CheckBrowserPath(path, showMsg) {
 TradeFunc_ParseSearchFormOptions() {
 	FileRead, html, %A_ScriptDir%\temp\poe_trade_search_form_options.txt
 	
-	RegExMatch(html, "i)(var)?\s*(items_types\s*=\s*{.*})", match)	
+	RegExMatch(html, "i)(var)?\s*(items_types\s*=\s*{.*?})", match)	
 	itemTypes := RegExReplace(match2, "i)items_types\s*=", "{""items_types"" :")
 	itemTypes .= "}"
 	parsedJSON := JSON.Load(itemTypes)

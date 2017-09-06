@@ -4,26 +4,26 @@ userFolderPath = %1%
 
 ; don't use the fallback if it was completed successfully once
 ; 
-Fallback := True
+global Fallback := True
 If (FileExist(userFolderPath "\IEComObjectCall.txt")) {
 	Fallback := False
 }
 
 url := "https://poe-trademacro.github.io/userCount/index.html"
 Try {   
-	wb := ComObjCreate("InternetExplorer.Application")
-	wb.Visible := False
-	wb.Navigate(url)	
-	IELoad(wb, loaded, userFolderPath)
-	wb.quit
+	wb1 := ComObjCreate("InternetExplorer.Application")
+	wb1.Visible := False
+	wb1.Navigate(url)	
+	IELoad(wb1, loaded, userFolderPath)
+	wb1.quit
 } Catch error {
 	If (Fallback) {
 		Try {
-			wb := ComObjCreate("InternetExplorer.Application")
-			wb.Visible := True		
-			wb.Navigate(url)
-			IELoad(wb, loaded, userFolderPath)
-			wb.quit
+			wb2 := ComObjCreate("InternetExplorer.Application")
+			wb2.Visible := True		
+			wb2.Navigate(url)
+			IELoad(wb2, loaded, userFolderPath)
+			wb2.quit
 		} Catch e {
 			ExitApp
 		}	
@@ -51,6 +51,7 @@ IELoad(wb, ByRef loaded = false, path = "")	;You need to send the IE handle to t
 	
 	If (loaded and not FileExist(path "\IEComObjectCall.txt")) {
 		FileAppend, true, %path%\IEComObjectCall.txt
+		Fallback := False
 	}
 	
 	Return True

@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.5.5
+================================================================================================
+Fixed some issues with opening links in the browser.
+Fixed more issues with starting IE via ComObjects.
+
 2.5.4
 ================================================================================================
 Fixed some issues with opening links in the browser, specificially starting Edge.

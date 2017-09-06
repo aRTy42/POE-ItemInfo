@@ -10150,18 +10150,20 @@ OpenWebPageWith(application, url) {
 		; Microsoft Edge
 		Run, %comspec% /c "chcp 1251 & start microsoft-edge:%Url%", , Hide
 	} Else {
-		; while this should work with IE there may be cases where it doesn't
 		args := ""
 		If (StrLen(application)) {
 			args := "-new-tab"
-		}
-		
-		Try {
-		    Run, "%application%" %args% "%Url%"
-		} Catch e {
-		    Run, "%application%" "%Url%"
+			
+			Try {
+				Run, "%application%" %args% "%Url%"
+			} Catch e {
+				Run, "%application%" "%Url%"
+			}
+		} Else {
+			Run %Url%
 		}
 	}
+	
 	Return
 }
 
