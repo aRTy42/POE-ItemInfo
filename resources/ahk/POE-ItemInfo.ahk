@@ -5442,7 +5442,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				NumPrefixes += 1
 				ValueRange := LookupAffixData("data\IncrAttackDamage_Shield.txt", ItemLevel, CurrValue, "", CurrTier)
-				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Suffix", ValueRange, CurrTier), A_Index)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
 				Continue
 			}
 		}
