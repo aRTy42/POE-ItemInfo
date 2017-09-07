@@ -35,7 +35,6 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 			Return
 		}	
 		
-		msgbox % ioHdr
 		parsedJSON	:= JSON.Load(html)
 		LatestRelease	:= {}
 		LastXReleases	:= []
