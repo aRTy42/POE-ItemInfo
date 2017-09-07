@@ -25,12 +25,17 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 		errorMsg	:= "Update check failed. Please check manually on the Github page for updates.`nThe script will now continue."
 		html 	:= PoEScripts_Download(url, ioData := postData, ioHdr := reqHeaders, options, true, false, false, errorMsg)
 		
+		If (HandleGithubAPIRateLimit(html, ioHdr)) {			
+			Return
+		}
+		
 		If (StrLen(html) < 1) {	
 			; all download errors should have been catched and handled by the download functions
 			; exit the update check to skip all additional error handling
-			return
+			Return
 		}	
 		
+		msgbox % ioHdr
 		parsedJSON	:= JSON.Load(html)
 		LatestRelease	:= {}
 		LastXReleases	:= []
@@ -547,6 +552,39 @@ ExtractRelease(file, project) {
 	}
 	
 	Return folderName
+}
+
+HandleGithubAPIRateLimit(html, ioHdr) {
+	RegExMatch(html, "i)message""\s?+:\s?+""api rate limit exceeded for (\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b)?", match)
+	If (StrLen(Trim(match))) {
+		RegExMatch(ioHdr, "i)X-RateLimit-Reset\s?+:\s?+(\d+)", epoch)
+		If (StrLen(epoch1)) {
+			; get timezone difference
+			T1 := A_Now
+			T2 := A_NowUTC
+			EnvSub, T1, %T2%, M
+			TZD := Round( T1/60, 2 ) ; GMT +			
+			
+			;convert epoch time to readable UTC
+			epoch	:= epoch1
+			current	:= 1970
+			current	+= epoch, Seconds
+			EnvAdd, current, TZD, H
+			FormatTime, TimeString, %current%, HH:mm:ss
+		}		
+		IP	:= match1
+		t	:= StrLen(TimeString) ? TimeString : ""
+		msg	:= "Github error!`n`n"
+		msg	.= "This only concerns the update check so you can ignore this error for now.`n"
+		msg	.= StrLen(IP) ? "API rate limit exceeded for IP address: " IP ".`n" : "API rate limit exceeded.`n"
+		msg	.= "Reset your IP address or wait until the limit was resetted (every hour)."
+		msg	.= StrLen(t) ? "`nTime where the reset occurs: " t ".`n" : "" 
+		MsgBox, 4096, Github API Error, %msg%
+		
+		Return 1
+	} Else {
+		Return 0
+	}
 }
 
 GetFileFolderSize(fPath="") {
