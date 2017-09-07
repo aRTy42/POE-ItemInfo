@@ -67,9 +67,9 @@ IELoad(wb, ByRef loaded = false, path = "", visible = false)	;You need to send t
 		Fallback := False
 		CleanIE()
 	}
-	
-	If (Fallback and visible) {	
-		CleanIE()	
+
+	If (not Fallback and visible) {	
+		CleanIE()
 	}
 	
 	Return True
