@@ -23,7 +23,7 @@ Try {
 			wb2 := ComObjCreate("InternetExplorer.Application")
 			wb2.Visible := True		
 			wb2.Navigate(url)
-			IELoad(wb2, loaded, userFolderPath)			
+			IELoad(wb2, loaded, userFolderPath, true)			
 		} Catch e {
 			CleanIE()
 		}	
@@ -40,7 +40,7 @@ CleanIE() {
 	ExitApp
 }	
 
-IELoad(wb, ByRef loaded = false, path = "")	;You need to send the IE handle to the function unless you define it as global.
+IELoad(wb, ByRef loaded = false, path = "", visible = false)	;You need to send the IE handle to the function unless you define it as global.
 {
 	i := 0
 	If !wb    ;If wb is not a valid pointer then quit
@@ -65,9 +65,12 @@ IELoad(wb, ByRef loaded = false, path = "")	;You need to send the IE handle to t
 	If (loaded and not FileExist(path "\IEComObjectCall.txt")) {
 		FileAppend, true, %path%\IEComObjectCall.txt
 		Fallback := False
+		CleanIE()
 	}
 	
-	CleanIE()
+	If (Fallback and visible) {	
+		CleanIE()	
+	}
 	
 	Return True
 }
