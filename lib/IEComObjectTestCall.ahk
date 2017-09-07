@@ -31,7 +31,7 @@ Try {
 }
 
 CleanIE() {
-	Try {			
+	Try {	
 		wb1.Quit
 		wb2.Quit	
 	} Catch e {
@@ -67,8 +67,7 @@ IELoad(wb, ByRef loaded = false, path = "", visible = false)	;You need to send t
 		Fallback := False
 		CleanIE()
 	}
-
-	If (not Fallback and visible) {	
+	If (not Fallback or (Fallback and not visible)) {
 		CleanIE()
 	}
 	
