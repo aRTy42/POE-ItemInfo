@@ -4058,3 +4058,12 @@ Return
 TrackUserCount:
 	Run, "%A_AhkPath%" "%A_ScriptDir%\lib\IEComObjectTestCall.ahk" "%userDirectory%" 
 Return
+
+Kill_CookieDataExe:
+	Try {
+		WinKill % "ahk_pid " cdePID
+	} Catch e {
+		
+	}
+	SetTimer, Kill_CookieDataExe, Off
+Return

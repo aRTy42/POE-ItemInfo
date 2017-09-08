@@ -1315,7 +1315,7 @@ TradeFunc_CheckIfCloudFlareBypassNeeded() {
 	}
 }
 
-TradeFunc_ReadCookieData() {
+TradeFunc_ReadCookieData() {	
 	If (!TradeOpts.UseManualCookies) {
 		SplashTextOn, 500, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`na few seconds if your Internet Explorer doesn't have the cookies cached.
 		
@@ -1343,7 +1343,9 @@ TradeFunc_ReadCookieData() {
 				}
 			}
 			Else {
-				RunWait %A_ScriptDir%\temp\getCookieData.exe, , Hide		
+				SetTimer, Kill_CookieDataExe, -15000
+				global cdePID := 
+				RunWait,  %A_ScriptDir%\temp\getCookieData.exe, , Hide, cdePID
 			}
 		} Catch e {
 			CompiledExeNotFound := 1
