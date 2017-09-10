@@ -3618,7 +3618,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Comp. Suffix", ValueRange, CurrTier), A_Index)
 				Continue
 			}
-			IfInString, A_LoopField, increased Poison Duration on Enemies
+			IfInString, A_LoopField, increased Poison Duration
 			{
 				; Don't increase number of suffixes, combined with "chance to Poison" this is just 1 suffix
 				ValueRange := LookupAffixData("data\jewel\PoisonDurationOnEnemies.txt", ItemLevel, CurrValue, "", CurrTier)
@@ -8134,7 +8134,7 @@ GetNegativeAffixOffset(Item)
 	}
 	If (Item.IsFlask)
 	{
-		; Flaks have an info text
+		; Flasks have an info text
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.IsMap)
