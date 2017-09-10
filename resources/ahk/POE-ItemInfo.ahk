@@ -19,12 +19,6 @@ GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 #Include, %A_ScriptDir%\lib\JSON.ahk
 #Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
 
-MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
-If (A_AhkVersion < AHKVersionRequired)
-{
-	MsgBox, 16, Wrong AutoHotkey Version, % MsgWrongAHKVersion
-	ExitApp
-}
 
 #Include %A_ScriptDir%\resources\Messages.txt
 IfNotExist, %A_ScriptDir%\temp
@@ -5401,10 +5395,21 @@ ParseAffixes(ItemDataAffixes, Item)
 		}
 		IfInString, A_LoopField, increased Elemental Damage with Attack Skills
 		{
-			NumPrefixes	+= 1
-			ValueRange	:= LookupAffixData("data\IncrElementalDamageWithAttackSkills.txt", ItemLevel, CurrValue, "", CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
-			Continue
+			If (ItemBaseType == "Weapon")
+			{
+				; Because GGG apparently thought having the exact same iLvls and tiers except for one single percentage point is necessary
+				NumPrefixes	+= 1
+				ValueRange	:= LookupAffixData("data\IncrElementalDamageWithAttackSkills_Weapon.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
+			Else
+			{
+				NumPrefixes	+= 1
+				ValueRange	:= LookupAffixData("data\IncrElementalDamageWithAttackSkills.txt", ItemLevel, CurrValue, "", CurrTier)
+				AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Prefix", ValueRange, CurrTier), A_Index)
+				Continue
+			}
 		}
 
 		; Flask effects (on belts)
@@ -8122,35 +8127,39 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 GetNegativeAffixOffset(Item)
 {
 	NegativeAffixOffset := 0
-	If (Item.IsFlask or Item.IsUnique or Item.IsTalisman)
+	If (Item.IsUnique or Item.IsTalisman)
 	{
-		; Uniques as well as flasks have descriptive text as last item,
-		; so decrement item index to get to the item before last one
+		; Uniques and Talismans have a flavour text, so decrement item index to account for that.
+		NegativeAffixOffset := NegativeAffixOffset + 1
+	}
+	If (Item.IsFlask)
+	{
+		; Flaks have an info text
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.IsMap)
 	{
-		; Maps have a descriptive text as the last item
+		; Maps have an info text
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.IsJewel)
 	{
-		; Jewels, like maps and flask, have a descriptive text as the last item
+		; Jewels have an info text
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.HasEffect)
 	{
-		; Same with weapon skins or other effects
+		; Weapon skins and other effects get a line that points them out
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.IsCorrupted)
 	{
-		; And corrupted items
+		; Corrupted items have "Corrupted" as a line
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.IsMirrored)
 	{
-		; And mirrored items
+		; Mirrored items have "Mirrored" as a line
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	return NegativeAffixOffset
