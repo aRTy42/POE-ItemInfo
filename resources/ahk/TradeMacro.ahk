@@ -1448,6 +1448,8 @@ TradeFunc_ParseCurrencyHtml(html, payload, ParsingError = "") {
 	Title .= StrPad("--------",8)		
 	Title .= "`n"
 	
+    SetFormat, float, 0.4
+
 	While A_Index < NoOfItemsToShow {
 		Offer       := TradeUtils.StrX( html,   "data-username=""",     N, 0, "Contact Seller"   , 1,1, N )
 		SellCurrency:= TradeUtils.StrX( Offer,  "data-sellcurrency=""", 1,19, """"        , 1,1, T )
