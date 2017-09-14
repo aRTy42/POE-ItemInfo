@@ -7824,8 +7824,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		ParseLeagueStoneAffixes(ItemData.Affixes, Item)
 	}
 
-	NumPrefixes		:= NumFormatPointFiveOrInt(AffixTotals.NumPrefixes)
-	NumSuffixes		:= NumFormatPointFiveOrInt(AffixTotals.NumSuffixes)
+	NumPrefixes	:= NumFormatPointFiveOrInt(AffixTotals.NumPrefixes)
+	NumSuffixes	:= NumFormatPointFiveOrInt(AffixTotals.NumSuffixes)
 	TotalAffixes	:= NumFormatPointFiveOrInt(AffixTotals.NumPrefixes + AffixTotals.NumSuffixes)
 	AffixTotals.NumTotals := TotalAffixes
 
@@ -8168,19 +8168,25 @@ PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
 	For i, modString in modStrings {
 		tempMods := ModStringToObject(modString, true)
 		For i, tempMod in tempMods {
-			mods.push(tempMod)
-		}
-	}	
-	
-	; ### Convert affix lines to mod objects
-	modStrings := StrSplit(Affixes, "`n")	
-	For i, modString in modStrings {
-		tempMods := ModStringToObject(modString, false)
-		For i, tempMod in tempMods {
-			mods.push(tempMod)
+			If (tempMod.name) {
+				mods.push(tempMod)
+			}			
 		}
 	}
-
+	
+	; ### Convert affix lines to mod objects
+	If (Rarity > 1) {
+		modStrings := StrSplit(Affixes, "`n")	
+		For i, modString in modStrings {
+			tempMods := ModStringToObject(modString, false)
+			For i, tempMod in tempMods {
+				If (tempMod.name) {
+					mods.push(tempMod)
+				}
+			}
+		}
+	}
+	
 	; return only pseudoMods, this is changed from PoE-TradeMacro where all mods are returned.
 	mods := CreatePseudoMods(mods)
 
