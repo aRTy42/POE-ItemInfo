@@ -7,5 +7,7 @@
 
 SplitPath, A_AhkPath,, AhkDir
 RunWait %comspec% /c ""%AhkDir%"\Compiler\Ahk2Exe.exe /in "_TradeMacroMain.ahk" /out "Fallback.exe" /icon "resources\images\fb.ico""
-;RunWait %comspec% /c "git update-index --chmod=+x "%AhkDir%\"Fallback.exe""
+
+fallbackExe := A_ScriptDir "\Fallback.exe"
+RunWait %comspec% /c "git update-index --chmod=+x "%fallbackExe%""
 ExitApp
