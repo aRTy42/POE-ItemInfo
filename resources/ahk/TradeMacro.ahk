@@ -1448,8 +1448,6 @@ TradeFunc_ParseCurrencyHtml(html, payload, ParsingError = "") {
 	Title .= StrPad("--------",8)		
 	Title .= "`n"
 	
-    SetFormat, float, 0.4
-
 	While A_Index < NoOfItemsToShow {
 		Offer       := TradeUtils.StrX( html,   "data-username=""",     N, 0, "Contact Seller"   , 1,1, N )
 		SellCurrency:= TradeUtils.StrX( Offer,  "data-sellcurrency=""", 1,19, """"        , 1,1, T )
@@ -3000,13 +2998,13 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		displayName := ChangedImplicit.name
 		
 		xPosMin := xPosMin + 40 + 5 + 45 + 10 + 45 + 10 + 40 + 5 + 45 + 10 ; edit/text field widths and offsets
-		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%  , % displayName
+		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%, % displayName
 		Gui, SelectModsGui:Add, CheckBox, x%xPosMin% yp+1 vTradeAdvancedSelected%e%
 		
 		TradeAdvancedModMin%e% 		:= ChangedImplicit.min
 		TradeAdvancedModMax%e% 		:= ChangedImplicit.max
 		TradeAdvancedParam%e%  		:= ChangedImplicit.param
-		TradeAdvancedIsImplicit%e%  := true
+		TradeAdvancedIsImplicit%e%	:= true
 	}
 	TradeAdvancedImplicitCount := e
 	
@@ -3070,24 +3068,37 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 				ErrorMsg := modValues
 				ModNotFound := true
 			}
-			modValue := modValues[1]			
-		}	
+			modValue := modValues[1]		
+		}
+		
+		; make sure that the lower vaule is always min (reduced mana cost of minion skills)
+		If (StrLen(theoreticalMinValue) and StrLen(theoreticalMaxValue)) {
+			If (theoreticalMinValue > theoreticalMaxValue) {				
+				switchValue		:= theoreticalMinValue
+				theoreticalMinValue := theoreticalMaxValue
+				theoreticalMaxValue := switchValue				
+			}
+		}
 
 		; calculate values to prefill min/max fields		
 		; assume the difference between the theoretical max and min value as 100%
 		If (advItem.mods[A_Index].ranges[1]) {
-		
-			modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMin)
-			modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMax)
-		}
-		Else {
+			If (not StrLen(switchValue)) {
+				modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMin)
+				modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMax)	
+			} Else {
+				modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMin)
+				modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMax)	
+			}			
+		} Else {
 			modValueMin := modValue - (modValue * valueRangeMin)
 			modValueMax := modValue + (modValue * valueRangeMax)
-		}		
+		}
+
 		; floor values only if greater than 2, in case of leech/regen mods, use Abs() to support negative numbers
 		modValueMin := (Abs(modValueMin) > 2) ? Floor(modValueMin) : modValueMin
 		modValueMax := (Abs(modValueMax) > 2) ? Floor(modValueMax) : modValueMax
-		
+
 		; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
 		If (advItem.mods[A_Index].ranges[1]) {
 			modValueMin := TradeUtils.ZeroTrim((modValueMin < theoreticalMinValue and not staticValue) ? theoreticalMinValue : modValueMin)
@@ -3096,17 +3107,27 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		
 		; create Labels to show unique items min/max rolls		
 		If (advItem.mods[A_Index].ranges[2][1]) {
-			minLabelFirst := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[1][1] + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
-			maxLabelFirst := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[2][1] + advItem.mods[A_Index].ranges[2][2]) / 2) ")"
+			minLF := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[1][1] + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
+			maxLF := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[2][1] + advItem.mods[A_Index].ranges[2][2]) / 2) ")"
 		}
 		Else If (staticValue) {
-			minLabelFirst := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][1]) / 2) ")"
-			maxLabelFirst := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
+			minLF := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][1]) / 2) ")"
+			maxLF := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
 		}
 		Else {
-			minLabelFirst := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][1]) ")"
-			maxLabelFirst := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][2]) ")"
+			minLF := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][1]) ")"
+			maxLF := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][2]) ")"
 		}
+		
+		; make sure that the lower vaule is always min (reduced mana cost of minion skills)
+		console.log(switchValue)
+		If (not StrLen(switchValue)) {
+			minLabelFirst	:= minLF
+			maxLabelFirst	:= maxLF	
+		} Else {
+			minLabelFirst	:= maxLF
+			maxLabelFirst	:= minLF	
+		}		
 		
 		If (not TradeOpts.PrefillMinValue or ErrorMsg) {
 			modValueMin := 
