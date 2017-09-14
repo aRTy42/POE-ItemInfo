@@ -6,7 +6,7 @@
 ;# Please make sure that any issues that you are experiencing aren't related to your own #
 ;# macros before reporting them.                                                         #
 ;# For example, paste the line "^Space::SendInput {Enter}/oos{Enter}" in an ".ahk" file, #
-;# place it in the CustomMacros folder and you have your macro ready. It's that easy.    #                              
+;# place it in the CustomMacros folder and you have your macro ready. It's that easy.    #
 ;#                                                                                       #
 ;# Hotkeys you can use: https://autohotkey.com/docs/KeyList.htm.                         #
 ;# Autohotkey Quick Reference: https://autohotkey.com/docs/AutoHotkey.htm.               #
@@ -19,59 +19,31 @@
 ;# https://autohotkey.com/docs/Scripts.htm#auto (script auto-execute section).           #
 ;# Function calls via hotkeys work though.                                               #
 ;#                                                                                       #
-;# AutoHotkey IDE's and Editor setups (NotePad++, Sublime, Vim):                         #                                             
+;# AutoHotkey IDE's and Editor setups (NotePad++, Sublime, Vim):                         #
 ;# https://github.com/ahkscript/awesome-AutoHotkey#integrated-development-environment    #
 ;#                                                                                       #
-;# Curated list of awesome AHK libs, lib distributions, scripts, tools and resources:    # 
+;# Curated list of awesome AHK libs, lib distributions, scripts, tools and resources:    #
 ;# https://github.com/ahkscript/awesome-AutoHotkey                                       #
 ;#                                                                                       #
 ;#                                                                                       #
 ;# AdditionalMacros Wiki entry:                                                          #
 ;#     https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/AdditionalMacros            #
 ;###########-------------------------------------------------------------------###########
-	
-AM_AssignHotkeys:
-	; Assign and enable/disable the hotkeys here
-	global AM_TogglePOEItemScript := ["on", "Pause"]
-	global AM_Minimize			:= ["on", "#D"]
-	global AM_HighlightItems	:= ["on", "^F"]
-	global AM_HighlightItemsAlt	:= ["on", "^!F"]
-	global AM_LookUpAffixes		:= ["on", "^M"]
-	global AM_CloseScripts		:= ["off", "^Escape"]
-	global AM_KickYourself		:= ["off", "F4", "Input your character name here"]
-	global AM_Hideout			:= ["on", "F5"]
-	global AM_ScrollTabRight	:= ["on", "^WheelDown", "~RButton & WheelDown"]
-	global AM_ScrollTabLeft		:= ["on", "^WheelUp", "~RButton & WheelUp"]
-	global AM_SendCtrlC			:= ["off", "^RButton"]
-	global AM_Remaining			:= ["off", "F9"]
-	global AM_JoinGlobal820		:= ["off", "F10"]
-	global AM_SetAfkMessage		:= ["off", "F11"]
-	global AM_AdvancedItemInfo	:= ["on", "^!c"]
-	global AM_WhoisLastWhisper	:= ["on", "^!Enter"]
 
-	; This option can be set in the settings menu (ItemInfo tab) to completely disable assigning 
+AM_AssignHotkeys:
+	global AM_Config := class_EasyIni(argumentUserDirectory "\AdditionalMacros.ini")
+	global AM_CharacterName := AM_Config["AM_KickYourself"].CharacterName
+
+	; This option can be set in the settings menu (ItemInfo tab) to completely disable assigning
 	; AdditionalMacros hotkeys.
 	If (Opts.EnableAdditionalMacros) {
-		Hotkey, % AM_TogglePOEItemScript[2]	, AM_TogglePOEItemScript_HKey	, % AM_TogglePOEItemScript[1]
-		Hotkey, % AM_Minimize[2]			, AM_Minimize_HKey				, % AM_Minimize[1]
-		Hotkey, % AM_HighlightItems[2]		, AM_HighlightItems_HKey		, % AM_HighlightItems[1]
-		Hotkey, % AM_HighlightItemsAlt[2]	, AM_HighlightItemsAlt_HKey		, % AM_HighlightItemsAlt[1]
-		Hotkey, % AM_LookUpAffixes[2]		, AM_LookUpAffixes_HKey			, % AM_LookUpAffixes[1]
-		Hotkey, % AM_CloseScripts[2]		, AM_CloseScripts_HKey			, % AM_CloseScripts[1]
-		Hotkey, % AM_KickYourself[2]		, AM_KickYourself_HKey			, % AM_KickYourself[1]
-		Hotkey, % AM_Hideout[2]				, AM_Hideout_HKey				, % AM_Hideout[1]
-		Hotkey, % AM_ScrollTabRight[2]		, AM_ScrollTabRight_HKey		, % AM_ScrollTabRight[1]
-		Hotkey, % AM_ScrollTabLeft[2]		, AM_ScrollTabLeft_HKey			, % AM_ScrollTabLeft[1]
-		Hotkey, % AM_ScrollTabRight[3]		, AM_ScrollTabRightAlt_HKey		, % AM_ScrollTabRight[1]
-		Hotkey, % AM_ScrollTabLeft[3]		, AM_ScrollTabLeftAlt_HKey		, % AM_ScrollTabLeft[1]
-		Hotkey, % AM_SendCtrlC[2]			, AM_SendCtrlC_HKey				, % AM_SendCtrlC[1]
-		Hotkey, % AM_Remaining[2]			, AM_Remaining_HKey				, % AM_Remaining[1]
-		Hotkey, % AM_JoinGlobal820[2]		, AM_JoinGlobal820_HKey			, % AM_JoinGlobal820[1]
-		Hotkey, % AM_SetAfkMessage[2]		, AM_SetAfkMessage_HKey			, % AM_SetAfkMessage[1]
-		Hotkey, % AM_AdvancedItemInfo[2]	, AM_AdvancedItemInfo_HKey		, % AM_AdvancedItemInfo[1]
-		Hotkey, % AM_WhoisLastWhisper[2]	, AM_WhoisLastWhisper_HKey		, % AM_WhoisLastWhisper[1]
+		for labelIndex, labelName in StrSplit(AM_Config.GetSections("|", "C"), "|") {
+			for labelKeyIndex, labelKeyName in StrSplit(AM_Config[labelName].Hotkeys, ", ") {
+				Hotkey, % labelKeyName, %labelName%_HKey, % AM_Config[labelName].State
+			}
+		}
 	}
-	
+
 	GoSub, CM_ExecuteCustomMacrosCode_Label
 Return
 
@@ -81,7 +53,7 @@ Return
 
 AM_Minimize_HKey:
 	WinMinimize, A					; Winkey+D minimizes the active PoE window (PoE stays minimized this way).
-Return 
+Return
 
 AM_HighlightItems_HKey:
 	HighlightItems(false,true)		; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
@@ -103,8 +75,7 @@ AM_CloseScripts_HKey:
 Return
 
 AM_KickYourself_HKey:
-	charName := AM_KickYourself[3]
-	SendInput {Enter}/kick %charName%{Enter}		; Quickly leave a group by kicking yourself. Only works for one specific character name.
+	SendInput {Enter}/kick %AM_CharacterName%{Enter}		; Quickly leave a group by kicking yourself. Only works for one specific character name.
 Return
 
 AM_Hideout_HKey:
@@ -117,8 +88,8 @@ Return
 AM_ScrollTabLeft_HKey:
 	SendInput {Left}		; Ctrl+scroll up scrolls through stash tabs leftward.
 Return
-	
-AM_ScrollTabRightAlt_HKey:	
+
+AM_ScrollTabRightAlt_HKey:
 	Send {Right}			; Holding right mouse button+scroll down scrolls through stash tabs rightward
 Return
 AM_ScrollTabLeftAlt_HKey:
@@ -151,15 +122,15 @@ AM_WhoisLastWhisper_HKey:
 	SendInput {Enter}{Home}{Del}/whois{Space}{Enter}
 Return
 
-setAfkMessage(){		
+setAfkMessage(){
 	T1 := A_Now
 	T2 := A_NowUTC
 	EnvSub, T1, %T2%, M
 	TZD := "UTC +" Round( T1/60, 2 )
 	FormatTime, currentTime, A_NowUTC, HH:mm
 	clipboard := "/afk AFK for about X minutes, since " currentTime " (" TZD "). Leave a message and I'll reply."
-	
-	IfWinActive, Path of Exile ahk_class POEWindowClass 
+
+	IfWinActive, Path of Exile ahk_class POEWindowClass
 	{
 		SendInput {Enter} ^{v} {Home}
 		Pos := RegExMatch(clipboard, " X ")
@@ -170,11 +141,11 @@ setAfkMessage(){
 					Break
 				}
 			}
-			Send {Shift Down} 
+			Send {Shift Down}
 			Sleep 100
-			Send {Right} 
+			Send {Right}
 			Sleep 100
-			Send {Shift Up} 
+			Send {Shift Up}
 		}
-	}		
+	}
 }
