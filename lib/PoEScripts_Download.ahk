@@ -24,7 +24,7 @@
 		If (RegExMatch(val, "i)^Cookie:(.*)", cookie)) {
 			cookies .= cookie1 " "		
 		}
-	}	
+	}
 	cookies := StrLen(cookies) ? "-b """ Trim(cookies) """ " : ""
 	
 	redirect := "L"
@@ -66,6 +66,9 @@
 		If (StrLen(ioData)) {
 			commandData .= "--data """ ioData """ "
 		}
+
+		commandData	.= "--max-time 90 "
+		commandHdr	.= "--max-time 90 "
 
 		; get data
 		html	:= StdOutStream(curl """" url """" commandData)
