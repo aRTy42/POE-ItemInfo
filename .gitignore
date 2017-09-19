@@ -62,9 +62,6 @@ backup/*
 backup/
 test.ahk
 
-config.ini
-config_trade.ini
-
 lib/node_modules
 lib/npm-debug.log.*
 release
