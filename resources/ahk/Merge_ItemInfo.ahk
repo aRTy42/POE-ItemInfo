@@ -47,7 +47,7 @@ info		:= ReadFileToMerge(scriptDir "\resources\ahk\POE-ItemInfo.ahk")
 addMacros := ReadFileToMerge(userDirectory "\AdditionalMacros.txt", FilesToCopyToUserFolder)
 
 info		:= info . "`n`r`n`r"
-addMacros	:= "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros
+addMacros	:= "#IfWinActive ahk_group PoEWindowGrp" . "`n`r`n`r" . addMacros
 addMacros	.= AppendCustomMacros(userDirectory)
 
 CloseScript("ItemInfoMain.ahk")
