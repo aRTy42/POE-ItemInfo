@@ -19,6 +19,8 @@ GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 #Include, %A_ScriptDir%\lib\JSON.ahk
 #Include, %A_ScriptDir%\lib\EasyIni.ahk
 #Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
+; keyboard layout hotfix
+#Include, %A_ScriptDir%\resources\ahk\ConvertKeyToKeyCode.ahk
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
 If (A_AhkVersion < AHKVersionRequired)
@@ -8198,7 +8200,7 @@ PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
 			}			
 		}
 	}
-	
+
 	; ### Convert affix lines to mod objects
 	If (Rarity > 1) {
 		modStrings := StrSplit(Affixes, "`n")	
@@ -9045,6 +9047,16 @@ GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabe
 	Else {
 		Options := Param4 . " BackgroundTrans "
 	}
+	; keyboard layout hotfix
+	If (ControlType = "Hotkey") {
+		KeyToSCStatePattern := "KeyToSCState\=(1|0)"
+		RegExMatch(Options, KeyToSCStatePattern, FoundKeyToSC)
+		If FoundKeyToSC {
+			Options := RegExReplace(Options, FoundKeyToSC)
+		}
+		KeyToSCState := (FoundKeyToSC1 = "1") ? true : false
+		Contents := KeyNameToKeyCode(Contents, KeyToSCState)
+}
 
 	GuiName := (StrLen(GuiName) > 0) ? Trim(GuiName) . ":Add" : "Add"
 	Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Options%, %Contents%
@@ -9866,11 +9878,22 @@ ShowAssignedHotkeys() {
 		}
 	}
 
+	; keyboard layout hotfix
+	; supposed that array length wouldn't change, otherwise it's better to switch for associative array
+	For key, val in hotkeys {
+		If (key = 1) {
+			val.Push("NameENG")
+		}
+		Else {
+			val.Push(KeyCodeToKeyName(val[5]))
+		}
+	}
+
 	Gui, ShowHotkeys:Add, Text, , List of this scripts assigned hotkeys.
 	Gui, ShowHotkeys:Default
 	Gui, Font, , Courier New
 	Gui, Font, , Consolas
-	Gui, ShowHotkeys:Add, ListView, r25 w800 NoSortHdr Grid ReadOnly, Type | Enabled | Level | Running | Key combination
+	Gui, ShowHotkeys:Add, ListView, r25 w800 NoSortHdr Grid ReadOnly, Type | Enabled | Level | Running | Key combination (Code) | Key combination (ENG name)
 	For key, val in hotkeys {
 		If (key != 1) {
 			LV_Add("", val*)

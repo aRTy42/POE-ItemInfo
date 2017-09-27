@@ -14,6 +14,8 @@ SetWorkingDir, %A_ScriptDir%
 #Include, %A_ScriptDir%\lib\EasyIni.ahk
 #Include, %A_ScriptDir%\resources\ahk\jsonData.ahk
 #Include, %A_ScriptDir%\resources\VersionTrade.txt
+; keyboard layout hotfix
+#Include, %A_ScriptDir%\resources\ahk\ConvertKeyToKeyCode.ahk
 
 TradeMsgWrongAHKVersion := "AutoHotkey v" . TradeAHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
 If (A_AhkVersion < TradeAHKVersionRequired)
@@ -61,6 +63,8 @@ class TradeUserOptions {
 	DownloadDataFiles := 0			;
 	DeleteCookies := 0				; Delete Internet Explorer cookies on startup (only poe.trade)
 	CookieSelect := "All"
+	; keyboard layout hotfix
+	KeyToSCState := 0 			; If set to `true`, hotkeys will be converted into scan codes, otherwise virtual keys will be used
 	UseGZip := 1
 	UpdateSkipSelection := 0
 	UpdateSkipBackup := 0
@@ -233,6 +237,8 @@ ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 		TradeOpts.DownloadDataFiles := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DownloadDataFiles", TradeOpts.DownloadDataFiles)
 		TradeOpts.DeleteCookies := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DeleteCookies", TradeOpts.DeleteCookies)
 		TradeOpts.CookieSelect := TradeFunc_ReadIniValue(TradeConfigPath, "General", "CookieSelect", TradeOpts.CookieSelect)
+		; keyboard layout hotfix
+		TradeOpts.KeyToSCState := TradeFunc_ReadIniValue(TradeConfigPath, "General", "KeyToSCState", TradeOpts.KeyToSCState)
 		TradeOpts.UpdateSkipSelection := TradeFunc_ReadIniValue(TradeConfigPath, "General", "UpdateSkipSelection", TradeOpts.UpdateSkipSelection)
 		TradeOpts.UpdateSkipBackup := TradeFunc_ReadIniValue(TradeConfigPath, "General", "UpdateSkipBackup", TradeOpts.UpdateSkipBackup)
 		TradeFunc_SyncUpdateSettings()
@@ -250,12 +256,13 @@ ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 		TradeOpts.Debug := TradeFunc_ReadIniValue(TradeConfigPath, "Debug", "Debug", 0)
 
 		; Hotkeys
-		TradeOpts.PriceCheckHotKey := TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "PriceCheckHotKey", TradeOpts.PriceCheckHotKey)
-		TradeOpts.AdvancedPriceCheckHotKey := TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "AdvancedPriceCheckHotKey", TradeOpts.AdvancedPriceCheckHotKey)
-		TradeOpts.OpenWikiHotKey := TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "OpenWiki", TradeOpts.OpenWikiHotKey)
-		TradeOpts.CustomInputSearchHotKey := TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey", TradeOpts.CustomInputSearchHotKey)
-		TradeOpts.OpenSearchOnPoeTradeHotKey := TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "OpenSearchOnPoeTradeHotKey", TradeOpts.OpenSearchOnPoeTradeHotKey)
-		TradeOpts.ShowItemAgeHotKey := TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "ShowItemAgeHotKey", TradeOpts.ShowItemAgeHotKey)
+		; keyboard layout hotfix
+		TradeOpts.PriceCheckHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "PriceCheckHotKey", TradeOpts.PriceCheckHotKey), TradeOpts.KeyToSCState)
+		TradeOpts.AdvancedPriceCheckHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "AdvancedPriceCheckHotKey", TradeOpts.AdvancedPriceCheckHotKey), TradeOpts.KeyToSCState)
+		TradeOpts.OpenWikiHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "OpenWiki", TradeOpts.OpenWikiHotKey), TradeOpts.KeyToSCState)
+		TradeOpts.CustomInputSearchHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey", TradeOpts.CustomInputSearchHotKey), TradeOpts.KeyToSCState)
+		TradeOpts.OpenSearchOnPoeTradeHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "OpenSearchOnPoeTradeHotKey", TradeOpts.OpenSearchOnPoeTradeHotKey), TradeOpts.KeyToSCState)
+		TradeOpts.ShowItemAgeHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "ShowItemAgeHotKey", TradeOpts.ShowItemAgeHotKey), TradeOpts.KeyToSCState)
 
 		TradeOpts.PriceCheckEnabled := TradeFunc_ReadIniValue(TradeConfigPath, "HotkeyStates", "PriceCheckEnabled", TradeOpts.PriceCheckEnabled)
 		TradeOpts.AdvancedPriceCheckEnabled := TradeFunc_ReadIniValue(TradeConfigPath, "HotkeyStates", "AdvancedPriceCheckEnabled", TradeOpts.AdvancedPriceCheckEnabled)
@@ -402,6 +409,8 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 		TradeOpts.DownloadDataFiles		:= DownloadDataFiles
 		TradeOpts.DeleteCookies			:= DeleteCookies
 		TradeOpts.CookieSelect			:= CookieSelect
+		; keyboard layout hotfix
+		TradeOpts.KeyToSCState			:= KeyToSCState
 		TradeOpts.UpdateSkipSelection 	:= UpdateSkipSelection
 		TradeOpts.UpdateSkipBackup		:= UpdateSkipBackup
 
@@ -414,13 +423,14 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 			TradeOpts.BrowserPath := ""
 		}
 
-		TradeOpts.PriceCheckHotKey 		:= PriceCheckHotKey
-		TradeOpts.AdvancedPriceCheckHotKey := AdvancedPriceCheckHotKey
-		TradeOpts.OpenWikiHotKey 		:= OpenWikiHotKey
-		TradeOpts.CustomInputSearchHotKey 	:= CustomInputSearchHotKey
-		TradeOpts.OpenSearchOnPoeTradeHotKey := OpenSearchOnPoeTradeHotKey
-		TradeOpts.ShowItemAgeHotKey		:= ShowItemAgeHotKey
-		TradeOpts.ChangeLeagueHotKey		:= ChangeLeagueHotKey
+		; keyboard layout hotfix
+		TradeOpts.PriceCheckHotKey 		:= KeyNameToKeyCode(PriceCheckHotKey, TradeOpts.KeyToSCState)
+		TradeOpts.AdvancedPriceCheckHotKey := KeyNameToKeyCode(AdvancedPriceCheckHotKey, TradeOpts.KeyToSCState)
+		TradeOpts.OpenWikiHotKey 		:= KeyNameToKeyCode(OpenWikiHotKey, TradeOpts.KeyToSCState)
+		TradeOpts.CustomInputSearchHotKey 	:= KeyNameToKeyCode(CustomInputSearchHotKey, TradeOpts.KeyToSCState)
+		TradeOpts.OpenSearchOnPoeTradeHotKey := KeyNameToKeyCode(OpenSearchOnPoeTradeHotKey, TradeOpts.KeyToSCState)
+		TradeOpts.ShowItemAgeHotKey		:= KeyNameToKeyCode(ShowItemAgeHotKey, TradeOpts.KeyToSCState)
+		TradeOpts.ChangeLeagueHotKey		:= KeyNameToKeyCode(ChangeLeagueHotKey, TradeOpts.KeyToSCState)
 
 		TradeOpts.PriceCheckEnabled		:= PriceCheckEnabled
 		TradeOpts.AdvancedPriceCheckEnabled:= AdvancedPriceCheckEnabled
@@ -496,6 +506,8 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 	TradeFunc_WriteIniValue(TradeOpts.DownloadDataFiles, TradeConfigPath, "General", "DownloadDataFiles")
 	TradeFunc_WriteIniValue(TradeOpts.DeleteCookies, TradeConfigPath, "General", "DeleteCookies")
 	TradeFunc_WriteIniValue(TradeOpts.CookieSelect, TradeConfigPath, "General", "CookieSelect")
+	; keyboard layout hotfix
+	TradeFunc_WriteIniValue(TradeOpts.KeyToSCState, TradeConfigPath, "General", "KeyToSCState")
 	TradeFunc_WriteIniValue(TradeOpts.UpdateSkipSelection, TradeConfigPath, "General", "UpdateSkipSelection")
 	TradeFunc_WriteIniValue(TradeOpts.UpdateSkipBackup, TradeConfigPath, "General", "UpdateSkipBackup")
 	TradeFunc_SyncUpdateSettings()
@@ -631,6 +643,8 @@ TradeFunc_WriteIniValue(Val, TradeConfigPath, Section_, Key) {
 
 ; ------------------ ASSIGN HOTKEY AND HANDLE ERRORS ------------------
 TradeFunc_AssignHotkey(Key, Label) {
+	; keyboard layout hotfix
+	Key := KeyNameToKeyCode(Key, TradeOpts.KeyToSCState)
 	Hotkey, %Key%, %Label%, UseErrorLevel
 	If (ErrorLevel)	{
 		If (errorlevel = 1)
@@ -842,51 +856,52 @@ CreateTradeSettingsUI()
 
 	GuiAddGroupBox("[TradeMacro] Hotkeys", "x7 yp+42 w260 h255")
 
+	; keyboard layout hotfix
 	GuiAddText("Price Check:", "x17 yp+28 w100 h20 0x0100", "LblPriceCheckHotKey", "LblPriceCheckHotKeyH")
 	AddToolTip(LblPriceCheckHotKeyH, "Check item prices.")
-	GuiAddHotkey(TradeOpts.PriceCheckHotKey, "x+1 yp-2 w120 h20", "PriceCheckHotKey", "PriceCheckHotKeyH")
+	GuiAddHotkey(TradeOpts.PriceCheckHotKey, "x+1 yp-2 w120 h20", "PriceCheckHotKey", "PriceCheckHotKeyH", , "KeyToSCState=" . TradeOpts.KeyToSCState)
 	AddToolTip(PriceCheckHotKeyH, "Press key/key combination.`nDefault: ctrl + d")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.PriceCheckEnabled, "PriceCheckEnabled", "PriceCheckEnabledH")
 	AddToolTip(PriceCheckEnabledH, "Enable Hotkey.")
 
 	GuiAddText("Adv. Price Check:", "x17 yp+38 w100 h20 0x0100", "LblAdvancedPriceCheckHotKey", "LblAdvancedPriceCheckHotKeyH")
 	AddToolTip(LblAdvancedPriceCheckHotKeyH, "Select mods to include in your search`nbefore checking prices.")
-	GuiAddHotkey(TradeOpts.AdvancedPriceCheckHotKey, "x+1 yp-2 w120 h20", "AdvancedPriceCheckHotKey", "AdvancedPriceCheckHotKeyH")
+	GuiAddHotkey(TradeOpts.AdvancedPriceCheckHotKey, "x+1 yp-2 w120 h20", "AdvancedPriceCheckHotKey", "AdvancedPriceCheckHotKeyH", , "KeyToSCState=" . TradeOpts.KeyToSCState)
 	AddToolTip(AdvancedPriceCheckHotKeyH, "Press key/key combination.`nDefault: ctrl + alt + d")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.AdvancedPriceCheckEnabled, "AdvancedPriceCheckEnabled", "AdvancedPriceCheckEnabledH")
 	AddToolTip(AdvancedPriceCheckEnabledH, "Enable Hotkey.")
 
 	GuiAddText("Custom Search:", "x17 yp+38 w100 h20 0x0100", "LblCustomInputSearchHotkey", "LblCustomInputSearchHotkeyH")
 	AddToolTip(LblCustomInputSearchHotkeyH, "Custom text input search.")
-	GuiAddHotkey(TradeOpts.CustomInputSearchHotkey, "x+1 yp-2 w120 h20", "CustomInputSearchHotkey", "CustomInputSearchHotkeyH")
+	GuiAddHotkey(TradeOpts.CustomInputSearchHotkey, "x+1 yp-2 w120 h20", "CustomInputSearchHotkey", "CustomInputSearchHotkeyH", , "KeyToSCState=" . TradeOpts.KeyToSCState)
 	AddToolTip(CustomInputSearchHotkeyH, "Press key/key combination.`nDefault: ctrl + i")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.CustomInputSearchEnabled, "CustomInputSearchEnabled", "CustomInputSearchEnabledH")
 	AddToolTip(CustomInputSearchEnabledH, "Enable Hotkey.")
 
 	GuiAddText("Search (Browser):", "x17 yp+38 w100 h20 0x0100", "LblOpenSearchOnPoeTradeHotKey", "LblOpenSearchOnPoeTradeHotKeyH")
 	AddToolTip(LblOpenSearchOnPoeTradeHotKeyH, "Open your search on poe.trade instead of showing`na tooltip with results.")
-	GuiAddHotkey(TradeOpts.OpenSearchOnPoeTradeHotKey, "x+1 yp-2 w120 h20", "OpenSearchOnPoeTradeHotKey", "OpenSearchOnPoeTradeHotKeyH")
+	GuiAddHotkey(TradeOpts.OpenSearchOnPoeTradeHotKey, "x+1 yp-2 w120 h20", "OpenSearchOnPoeTradeHotKey", "OpenSearchOnPoeTradeHotKeyH", , "KeyToSCState=" . TradeOpts.KeyToSCState)
 	AddToolTip(OpenSearchOnPoeTradeHotKeyH, "Press key/key combination.`nDefault: ctrl + q")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.OpenSearchOnPoeTradeEnabled, "OpenSearchOnPoeTradeEnabled", "OpenSearchOnPoeTradeEnabledH")
 	AddToolTip(OpenSearchOnPoeTradeEnabledH, "Enable Hotkey.")
 
 	GuiAddText("Open Item (Wiki):", "x17 yp+38 w100 h20 0x0100", "LblOpenWikiHotkey", "LblOpenWikiHotkeyH")
 	AddToolTip(LblOpenWikiHotKeyH, "Open your items page on the PoE-Wiki.")
-	GuiAddHotkey(TradeOpts.OpenWikiHotKey, "x+1 yp-2 w120 h20", "OpenWikiHotKey", "OpenWikiHotKeyH")
+	GuiAddHotkey(TradeOpts.OpenWikiHotKey, "x+1 yp-2 w120 h20", "OpenWikiHotKey", "OpenWikiHotKeyH", , "KeyToSCState=" . TradeOpts.KeyToSCState)
 	AddToolTip(OpenWikiHotKeyH, "Press key/key combination.`nDefault: ctrl + w")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.OpenWikiEnabled, "OpenWikiEnabled", "OpenWikiEnabledH")
 	AddToolTip(OpenWikiEnabledH, "Enable Hotkey.")
 
 	GuiAddText("Show Item Age:", "x17 yp+38 w100 h20 0x0100", "LblShowItemAgeHotkey", "LblShowItemAgeHotkeyH")
 	AddToolTip(LblShowItemAgeHotkeyH, "Checks your item's age.")
-	GuiAddHotkey(TradeOpts.ShowItemAgeHotkey, "x+1 yp-2 w120 h20", "ShowItemAgeHotkey", "ShowItemAgeHotkeyH")
+	GuiAddHotkey(TradeOpts.ShowItemAgeHotkey, "x+1 yp-2 w120 h20", "ShowItemAgeHotkey", "ShowItemAgeHotkeyH", , "KeyToSCState=" . TradeOpts.KeyToSCState)
 	AddToolTip(ShowItemAgeHotkeyH, "Press key/key combination.`nDefault: ctrl + e")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.ShowItemAgeEnabled, "ShowItemAgeEnabled", "ShowItemAgeEnabledH")
 	AddToolTip(ShowItemAgeEnabledH, "Enable Hotkey.")
 
 	GuiAddText("Change League:", "x17 yp+38 w100 h20 0x0100", "LblChangeLeagueHotkey", "LblChangeLeagueH")
 	AddToolTip(LblChangeLeagueHotkeyH, "Checks your item's age.")
-	GuiAddHotkey(TradeOpts.ChangeLeagueHotkey, "x+1 yp-2 w120 h20", "ChangeLeagueHotkey", "ChangeLeagueHotkeyH")
+	GuiAddHotkey(TradeOpts.ChangeLeagueHotkey, "x+1 yp-2 w120 h20", "ChangeLeagueHotkey", "ChangeLeagueHotkeyH", , "KeyToSCState=" . TradeOpts.KeyToSCState)
 	AddToolTip(ChangeLeagueHotkeyH, "Press key/key combination.`nDefault: ctrl + l")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.ChangeLeagueEnabled, "ChangeLeagueEnabled", "ChangeLeagueEnabledH")
 	AddToolTip(ChangeLeagueEnabledH, "Enable Hotkey.")
