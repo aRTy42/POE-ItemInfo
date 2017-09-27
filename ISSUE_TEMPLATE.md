@@ -11,5 +11,4 @@ Information to include:
 Fill out everything that may be relevant and remove everything except these informations below:  
 
 AHK version:
-<br>
 Windows version:
