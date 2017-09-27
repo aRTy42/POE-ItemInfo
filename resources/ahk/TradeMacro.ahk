@@ -3073,6 +3073,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			modValue := modValues[1]		
 		}
 		
+		switchValue :=
 		; make sure that the lower vaule is always min (reduced mana cost of minion skills)
 		If (StrLen(theoreticalMinValue) and StrLen(theoreticalMaxValue)) {
 			If (theoreticalMinValue > theoreticalMaxValue) {				
