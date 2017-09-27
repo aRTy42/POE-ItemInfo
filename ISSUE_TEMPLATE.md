@@ -1,7 +1,7 @@
 _TEMPLATE_ (Remove the explanations here from your post) 
 
 Make sure:
-* That you have checked the [Wiki/FAQ](https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki) before creating any issue.
+* That you have checked the Wiki/FAQ before creating any issue.
 * That poe.trade/GGG's website don't have any issues if loading the script takes too long or failes.
 
 Information to include:
@@ -10,7 +10,6 @@ Information to include:
 
 Fill out everything that may be relevant and remove everything except these informations below:  
 
-| | |
-|---|---|
-|AHK version | x.x.x.x |
-|Windows version | x |
+AHK version:
+<br>
+Windows version:
