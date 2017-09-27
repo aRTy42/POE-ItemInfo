@@ -9679,7 +9679,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 
 CopyDefaultConfig()
 {
-	FileCopy, %A_ScriptDir%\resources\config\default_config.ini, %userDirectory%\config.ini
+	FileCopy, %A_ScriptDir%\resources\default_UserFiles\config.ini, %userDirectory%\config.ini
 }
 
 RemoveConfig()

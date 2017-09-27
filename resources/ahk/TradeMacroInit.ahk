@@ -168,7 +168,7 @@ global overwrittenUserFiles	:= argumentOverwrittenFiles
 ; Create config file if neccessary and read it
 IfNotExist, %userDirectory%\config_trade.ini
 {
-	IfNotExist, %A_ScriptDir%\resources\config\default_config_trade.ini
+	IfNotExist, %A_ScriptDir%\resources\default_UserFiles\config_trade.ini
 	{
 		CreateDefaultTradeConfig()
 	}
@@ -566,9 +566,9 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 }
 
 CopyDefaultTradeConfig() {
-	FileCopy, %A_ScriptDir%\resources\config\default_config_trade.ini, %userDirectory%
-	FileMove, %userDirectory%\default_config_trade.ini, %userDirectory%\config_trade.ini
-	FileDelete, %userDirectory%\default_config_trade.ini	
+	FileCopy, %A_ScriptDir%\resources\default_UserFiles\config_trade.ini, %userDirectory%, 1
+	;FileMove, %userDirectory%\default_config_trade.ini, %userDirectory%\config_trade.ini
+	;FileDelete, %userDirectory%\default_config_trade.ini	
 }
 
 RemoveTradeConfig() {
@@ -576,7 +576,7 @@ RemoveTradeConfig() {
 }
 
 CreateDefaultTradeConfig() {
-	path := A_ScriptDir "\resources\config\default_config_trade.ini"	
+	path := A_ScriptDir "\resources\default_UserFiles\config_trade.ini"	
 	WriteTradeConfig(path)
 }
 
