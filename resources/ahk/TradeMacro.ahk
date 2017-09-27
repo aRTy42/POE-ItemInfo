@@ -1448,6 +1448,8 @@ TradeFunc_ParseCurrencyHtml(html, payload, ParsingError = "") {
 	Title .= StrPad("--------",8)		
 	Title .= "`n"
 	
+	SetFormat, float, 0.4
+	
 	While A_Index < NoOfItemsToShow {
 		Offer       := TradeUtils.StrX( html,   "data-username=""",     N, 0, "Contact Seller"   , 1,1, N )
 		SellCurrency:= TradeUtils.StrX( Offer,  "data-sellcurrency=""", 1,19, """"        , 1,1, T )
@@ -1566,7 +1568,7 @@ TradeFunc_ParseAlternativeCurrencySearch(name, payload) {
 		}
 	}
 
-	SetFormat, float, 0.2
+	SetFormat, float, 0.4
 	
 	Loop % prices.receive.pay.length() {
 		If (A_Index = 1) {
@@ -3071,6 +3073,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			modValue := modValues[1]		
 		}
 		
+		switchValue :=
 		; make sure that the lower vaule is always min (reduced mana cost of minion skills)
 		If (StrLen(theoreticalMinValue) and StrLen(theoreticalMaxValue)) {
 			If (theoreticalMinValue > theoreticalMaxValue) {				
