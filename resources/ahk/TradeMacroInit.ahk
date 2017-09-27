@@ -168,7 +168,7 @@ global overwrittenUserFiles	:= argumentOverwrittenFiles
 ; Create config file if neccessary and read it
 IfNotExist, %userDirectory%\config_trade.ini
 {
-	IfNotExist, %A_ScriptDir%\resources\config\default_config_trade.ini
+	IfNotExist, %A_ScriptDir%\resources\default_UserFiles\config_trade.ini
 	{
 		CreateDefaultTradeConfig()
 	}
@@ -566,9 +566,9 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 }
 
 CopyDefaultTradeConfig() {
-	FileCopy, %A_ScriptDir%\resources\config\default_config_trade.ini, %userDirectory%
-	FileMove, %userDirectory%\default_config_trade.ini, %userDirectory%\config_trade.ini
-	FileDelete, %userDirectory%\default_config_trade.ini	
+	FileCopy, %A_ScriptDir%\resources\default_UserFiles\config_trade.ini, %userDirectory%, 1
+	;FileMove, %userDirectory%\default_config_trade.ini, %userDirectory%\config_trade.ini
+	;FileDelete, %userDirectory%\default_config_trade.ini	
 }
 
 RemoveTradeConfig() {
@@ -576,7 +576,7 @@ RemoveTradeConfig() {
 }
 
 CreateDefaultTradeConfig() {
-	path := A_ScriptDir "\resources\config\default_config_trade.ini"	
+	path := A_ScriptDir "\resources\default_UserFiles\config_trade.ini"	
 	WriteTradeConfig(path)
 }
 
@@ -1315,7 +1315,7 @@ TradeFunc_CheckIfCloudFlareBypassNeeded() {
 	}
 }
 
-TradeFunc_ReadCookieData() {
+TradeFunc_ReadCookieData() {	
 	If (!TradeOpts.UseManualCookies) {
 		SplashTextOn, 500, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`na few seconds if your Internet Explorer doesn't have the cookies cached.
 		
@@ -1343,7 +1343,9 @@ TradeFunc_ReadCookieData() {
 				}
 			}
 			Else {
-				RunWait %A_ScriptDir%\temp\getCookieData.exe, , Hide		
+				SetTimer, Kill_CookieDataExe, -15000
+				global cdePID := 
+				RunWait,  %A_ScriptDir%\temp\getCookieData.exe, , Hide, cdePID
 			}
 		} Catch e {
 			CompiledExeNotFound := 1
@@ -1546,17 +1548,30 @@ TradeFunc_ReadCookieData() {
 TradeFunc_IELoad(wb)	;You need to send the IE handle to the function unless you define it as global.
 {
 	Try {
-		If !wb    ;If wb is not a valid pointer then quit
+		If !wb	;If wb is not a valid pointer then quit
 			Return False
-		Loop    ;Otherwise sleep for .1 seconds untill the page starts loading
+		
+		Loop		;Otherwise sleep for .1 seconds until the page starts loading
 			Sleep,500
 		Until (wb.busy)
-		Loop    ;Once it starts loading wait until completes
+		
+		Loop		;Once it starts loading wait until completes
 			Sleep,100
 		Until (!wb.busy)
-		Loop    ;optional check to wait for the page to completely load
-			Sleep,100
-		Until (wb.Document.Readystate = "Complete")		
+		
+		i := 0
+		Loop		;optional check to wait for the page to completely load
+		{
+			Sleep, 100
+			i++
+			Try {				
+				ready := wb.Document.Readystate	
+			} Catch e {
+				
+			}
+		}		
+		Until (ready = "Complete" or i = 200)
+		
 		Return True
 	} Catch e {
 		Return False

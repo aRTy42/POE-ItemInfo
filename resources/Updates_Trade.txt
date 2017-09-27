@@ -1,5 +1,14 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.5.6
+================================================================================================
+Changed the currency search tooltip to show 4 decimal places.
+Fixed pseudomods for normal rarity items (multiple implicit resistances/attributes were added together a few times instead of once).
+Reversed mod value order for mods that display the higher value first since they didn't work on poe.trade that way, for example "(15-10)% reduced Mana Cost of Minion Skills" (advanced search).
+Improved cURL requests.
+Fixed more issues with starting IE via ComObjects.
+Fixed various other small issues.
+
 2.5.5
 ================================================================================================
 Fixed some issues with opening links in the browser.

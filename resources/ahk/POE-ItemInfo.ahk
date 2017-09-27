@@ -278,17 +278,17 @@ class Fonts {
 class ItemData_ {
 	Init() 
 	{
-		This.Links		:= ""
+		This.Links	:= ""
 		This.Sockets	:= ""
-		This.Stats		:= ""
+		This.Stats	:= ""
 		This.NamePlate	:= ""
 		This.Affixes	:= ""
 		This.FullText	:= ""
 		This.IndexAffixes := -1
 		This.IndexLast	:= -1
 		This.PartsLast	:= ""
-		This.Rarity		:= ""
-		This.Parts		:= []
+		This.Rarity	:= ""
+		This.Parts	:= []
 	}
 }
 Global ItemData := new ItemData_
@@ -305,7 +305,7 @@ class Item_ {
 		This.RarityLevel 	:= ""
 		This.BaseType 		:= ""
 		This.GripType 		:= ""
-		This.Level			:= ""
+		This.Level		:= ""
 		This.MapLevel 		:= ""
 		This.MapTier 		:= ""
 		This.MaxSockets 	:= ""
@@ -322,23 +322,23 @@ class Item_ {
 		This.IsHybridArmour := False
 		This.IsQuiver 		:= False
 		This.IsFlask 		:= False
-		This.IsGem			:= False
+		This.IsGem		:= False
 		This.IsCurrency 	:= False
 		This.IsUnidentified := False
 		This.IsBelt 		:= False
 		This.IsRing 		:= False
 		This.IsUnsetRing 	:= False
-		This.IsBow			:= False
+		This.IsBow		:= False
 		This.IsAmulet 		:= False
 		This.IsSingleSocket := False
 		This.IsFourSocket 	:= False
 		This.IsThreeSocket 	:= False
-		This.IsMap			:= False
+		This.IsMap		:= False
 		This.IsTalisman 	:= False
 		This.IsJewel 		:= False
 		This.IsLeaguestone	:= False
 		This.IsDivinationCard := False
-		This.IsProphecy		:= False
+		This.IsProphecy	:= False
 		This.IsUnique 		:= False
 		This.IsRare 		:= False
 		This.IsCorrupted 	:= False
@@ -1656,12 +1656,23 @@ AssembleAffixDetails()
 {
 	Global Opts, AffixLines
 
-	AffixLine =
-	AffixType =
-	ValueRange =
-	AffixTier =
-	NumAffixLines := AffixLines.MaxIndex()
-	AffixLineParts := 0
+	AffixLine		=
+	AffixType		=
+	ValueRange	=
+	AffixTier		=
+	NumAffixLines	:= AffixLines.MaxIndex()
+	AffixLineParts	:= 0
+	
+	AffixNameHeader	:= ""
+	ValueRangeHeader	:= ""
+	TierStringHeader	:= ""
+	AffixTypeHeader	:= ""
+	
+	AffixNameWidth		:=
+	ValueRangeWidth	:=
+	TierStringWidth	:=
+	AffixTypeWidth		:=
+	
 	Loop, %NumAffixLines%
 	{
 		CurLine := AffixLines[A_Index]
@@ -1674,13 +1685,13 @@ AssembleAffixDetails()
 				AffixLineParts%A_Index% =
 			}
 			StringSplit, AffixLineParts, CurLine, |
-			AffixLine := AffixLineParts1
-			ValueRange := AffixLineParts2
-			AffixType := AffixLineParts3
-			AffixTier := AffixLineParts4
+			AffixLine		:= AffixLineParts1
+			ValueRange	:= AffixLineParts2
+			AffixType		:= AffixLineParts3
+			AffixTier		:= AffixLineParts4
 
-			Delim := Opts.AffixDetailDelimiter
-			Ellipsis := Opts.AffixDetailEllipsis
+			Delim		:= Opts.AffixDetailDelimiter
+			Ellipsis		:= Opts.AffixDetailEllipsis
 
 			If (Opts.ValueRangeFieldWidth > 0)
 			{
@@ -1707,6 +1718,7 @@ AssembleAffixDetails()
 						AffixLine := StrPad(AffixLine, Opts.MirrorLineFieldWidth + 10 + StrLen(Ellipsis))
 					}
 				}
+				AffixNameWidth := StrLen(AffixLine . Delim)
 				ProcessedLine := AffixLine . Delim
 			}
 			IfInString, ValueRange, *
@@ -1717,6 +1729,7 @@ AssembleAffixDetails()
 			{
 				ValueRangeString := ValueRange
 			}
+			ValueRangeWidth := StrLen(ValueRangeString) ? StrLen(ValueRangeString . Delim) : StrLen(Delim)
 			ProcessedLine := ProcessedLine . ValueRangeString . Delim
 			If (Opts.ShowAffixBracketTier == 1 and Not (ItemDataRarity == "Unique") and Not StrLen(AffixTier) = 0)
 			{
@@ -1747,10 +1760,13 @@ AssembleAffixDetails()
 						AddedWidth += 2
 
 					}
-					TierString := StrPad("T" . AffixTier, 3+AddedWidth, "left")
+					AddedWith := AddedWith + 3
+					TierString := StrPad("T" . AffixTier, AddedWidth, "left")
 				}
+				TierStringWidth := StrLen(TierString . Delim)
 				ProcessedLine := ProcessedLine . TierString . Delim
 			}
+			AffixTypeWidth := StrLen(AffixType) ? StrLen(AffixType . Delim) : StrLen(Delim)
 			ProcessedLine := ProcessedLine . AffixType . Delim
 		}
 		Else
@@ -1760,6 +1776,11 @@ AssembleAffixDetails()
 		
 		Result := Result . "`n" . ProcessedLine
 	}
+	
+	Header := ""
+
+	Result := Header . Result  
+	
 	return Result
 }
 
@@ -7824,8 +7845,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		ParseLeagueStoneAffixes(ItemData.Affixes, Item)
 	}
 
-	NumPrefixes		:= NumFormatPointFiveOrInt(AffixTotals.NumPrefixes)
-	NumSuffixes		:= NumFormatPointFiveOrInt(AffixTotals.NumSuffixes)
+	NumPrefixes	:= NumFormatPointFiveOrInt(AffixTotals.NumPrefixes)
+	NumSuffixes	:= NumFormatPointFiveOrInt(AffixTotals.NumSuffixes)
 	TotalAffixes	:= NumFormatPointFiveOrInt(AffixTotals.NumPrefixes + AffixTotals.NumSuffixes)
 	AffixTotals.NumTotals := TotalAffixes
 
@@ -8062,7 +8083,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			{
 				AffixDetails := AssembleAffixDetails()
 				TT = %TT%`n--------%AffixDetails%
-		   }
+			}
 		}
 		
 	}
@@ -8168,19 +8189,25 @@ PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
 	For i, modString in modStrings {
 		tempMods := ModStringToObject(modString, true)
 		For i, tempMod in tempMods {
-			mods.push(tempMod)
-		}
-	}	
-	
-	; ### Convert affix lines to mod objects
-	modStrings := StrSplit(Affixes, "`n")	
-	For i, modString in modStrings {
-		tempMods := ModStringToObject(modString, false)
-		For i, tempMod in tempMods {
-			mods.push(tempMod)
+			If (tempMod.name) {
+				mods.push(tempMod)
+			}			
 		}
 	}
-
+	
+	; ### Convert affix lines to mod objects
+	If (Rarity > 1) {
+		modStrings := StrSplit(Affixes, "`n")	
+		For i, modString in modStrings {
+			tempMods := ModStringToObject(modString, false)
+			For i, tempMod in tempMods {
+				If (tempMod.name) {
+					mods.push(tempMod)
+				}
+			}
+		}
+	}
+	
 	; return only pseudoMods, this is changed from PoE-TradeMacro where all mods are returned.
 	mods := CreatePseudoMods(mods)
 
@@ -9652,7 +9679,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 
 CopyDefaultConfig()
 {
-	FileCopy, %A_ScriptDir%\resources\config\default_config.ini, %userDirectory%\config.ini
+	FileCopy, %A_ScriptDir%\resources\default_UserFiles\config.ini, %userDirectory%\config.ini
 }
 
 RemoveConfig()
