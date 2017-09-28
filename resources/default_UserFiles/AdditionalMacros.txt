@@ -33,13 +33,16 @@
 AM_AssignHotkeys:
 	global AM_Config := class_EasyIni(argumentUserDirectory "\AdditionalMacros.ini")
 	global AM_CharacterName := AM_Config["AM_KickYourself"].CharacterName
+	global AM_KeyToSCState := (TradeOpts.KeyToSCState != "") ? TradeOpts.KeyToSCState : AM_Config["General"].KeyToSCState
 
 	; This option can be set in the settings menu (ItemInfo tab) to completely disable assigning
 	; AdditionalMacros hotkeys.
 	If (Opts.EnableAdditionalMacros) {
 		for labelIndex, labelName in StrSplit(AM_Config.GetSections("|", "C"), "|") {
-			for labelKeyIndex, labelKeyName in StrSplit(AM_Config[labelName].Hotkeys, ", ") {
-				Hotkey, % labelKeyName, %labelName%_HKey, % AM_Config[labelName].State
+			if (labelName != "General") {
+				for labelKeyIndex, labelKeyName in StrSplit(AM_Config[labelName].Hotkeys, ", ") {
+					Hotkey, % KeyNameToKeyCode(labelKeyName, AM_KeyToSCState), %labelName%_HKey, % AM_Config[labelName].State
+				}
 			}
 		}
 	}

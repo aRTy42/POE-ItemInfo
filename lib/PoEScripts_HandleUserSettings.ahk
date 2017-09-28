@@ -40,7 +40,7 @@ PoEScripts_CopyFiles(sourceDir, destDir, ByRef fileList) {
 	Return
 }
 
-; TODO: add docstring and comments
+; TODO: this is temporary function and must be removed after a few releases
 PoEScripts_ConvertOldFiles(sourceDir, destDir, ByRef overwrittenFiles) {
 	; TODO: trim whitespaces in key names in current configs?
 	If (FileExist(destDir "\MapModWarnings.txt")) {
@@ -91,6 +91,8 @@ PoEScripts_ConvertAdditionalMacrosSettings(destDir) {
 		labelList.Push(labelStr)
 	}
 	AdditionalMacros_INI := class_EasyIni()
+	AdditionalMacros_INI.AddSection("General")
+	AdditionalMacros_INI.AddKey("General", "KeyToSCState", 0)
 	for labelIndex, labelContent in labelList {
 		labelHotkeys := ""
 		RegExMatch(labelContent, "(AM_.*?)\s", labelName)
@@ -176,7 +178,6 @@ PoEScripts_CleanFileName(fileName, removeStr="") {
 	Return fileName_cleaned
 }
 
-; TODO: add docstring and comments
 PoEScripts_GetActionForFile(filePath, destDir) {
 	; List of possible actions:
 	; - skip (=0)
@@ -205,7 +206,6 @@ PoEScripts_GetActionForFile(filePath, destDir) {
 	Return 0
 }
 
-; TODO: add docstring and comments
 PoEScripts_DoActionForFile(fileAction, filePath, destDir, ByRef overwrittenFiles) {
 	If (fileAction == 0) {
 		Return
