@@ -5,6 +5,7 @@
 ; ####################################################################################################
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_CheckFolderWriteAccess.ahk
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_CompareUserFolderWithScriptFolder.ahk
+#Include, %A_ScriptDir%\..\..\lib\PoEScripts_CheckCorrectClientLanguage.ahk
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_CreateTempFolder.ahk
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_HandleUserSettings.ahk
 
@@ -23,6 +24,9 @@ projectName := "PoE-ItemInfo"
 PoE_Scripts_CheckFolderWriteAccess(A_MyDocuments . "\" . projectName)
 PoE_Scripts_CheckFolderWriteAccess(scriptDir)
 
+If (not PoEScripts_CheckCorrectClientLanguage()) {
+	ExitApp
+}
 If (!PoEScripts_CreateTempFolder(scriptDir, projectName)) {
 	ExitApp
 }

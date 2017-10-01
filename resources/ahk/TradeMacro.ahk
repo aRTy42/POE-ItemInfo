@@ -3123,7 +3123,6 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		}
 		
 		; make sure that the lower vaule is always min (reduced mana cost of minion skills)
-		console.log(switchValue)
 		If (not StrLen(switchValue)) {
 			minLabelFirst	:= minLF
 			maxLabelFirst	:= maxLF	
@@ -3781,7 +3780,7 @@ ReadPoeNinjaCurrencyData:
 	sampleValue	:= ChaosEquivalents["Chaos Orb"]
 	league		:= TradeUtils.UriEncode(TradeGlobals.Get("LeagueName"))
 	fallback		:= ""
-	url			:= "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league
+	url			:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
 	parsedJSON 	:= TradeFunc_DowloadURLtoJSON(url, sampleValue)
 	
 	; fallback to Standard and Hardcore league if used league seems to not be available 
@@ -3794,7 +3793,7 @@ ReadPoeNinjaCurrencyData:
 			fallback	:= "Standard"
 		}
 		
-		url			:= "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . league		
+		url			:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . league		
 		parsedJSON	:= TradeFunc_DowloadURLtoJSON(url, sampleValue, true, league)
 	}
 	global CurrencyHistoryData := parsedJSON.lines

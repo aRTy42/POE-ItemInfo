@@ -1,4 +1,4 @@
-﻿PoE_Scripts_CheckFolderWriteAccess(Folder, critical = true) {
+﻿PoEScripts_CheckFolderWriteAccess(Folder, critical = true) {
 	access := FolderWriteAccess(Folder) 
 	
 	msg := "The script is not able to write any file to " Folder ".`nYour user may not have the necessary permissions. "

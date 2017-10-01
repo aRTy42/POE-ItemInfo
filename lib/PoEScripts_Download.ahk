@@ -72,9 +72,14 @@
 			If (StrLen(ioData)) {
 				commandData .= "--data """ ioData """ "
 			}
-
-			commandData	.= "--max-time 90 "
-			commandHdr	.= "--max-time 90 "
+			
+			If (binaryDL) {
+				commandData	.= "--connect-timeout 30 "
+				commandData	.= "--connect-timeout 30 "
+			} Else {				
+				commandData	.= "--max-time 30 "
+				commandHdr	.= "--max-time 30 "
+			}
 
 			; get data
 			html	:= StdOutStream(curl """" url """" commandData)

@@ -1290,8 +1290,12 @@ TradeFunc_DownloadDataFiles() {
 	Loop % files.Length() {
 		file := files[A_Index]
 		filePath = %dir%\%file%
-		FileCopy, %filePath%, %filePath%.bak		
-		output := PoEScripts_Download(url . file, postData := "", reqHeaders := "", options := "", false)
+		FileCopy, %filePath%, %filePath%.bak
+		output := PoEScripts_Download(url . file, postData := "", ioHdr := reqHeaders := "", options := "", false, false, false, "", reqHeadersCurl)
+		If (A_Index = 1) {
+			TradeFunc_WriteToLogFile("Data file download from " url "...`n`n" "cURL command:`n" reqHeadersCurl "`n`nAnswer:`n" ioHdr)	
+		}		
+		
 		FileDelete, %filePath%
 		FileAppend, %output%, %filePath%
 		
