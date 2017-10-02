@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.5.7
+================================================================================================
+Added client language check since ItemInfo/TradeMacro only work with the english client.
+Fixed the changed poe.ninja API url.
+Improved cURL timeouts and StartupLog.txt.
+
 2.5.6
 ================================================================================================
 Changed the currency search tooltip to show 4 decimal places.
