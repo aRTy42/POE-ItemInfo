@@ -10512,7 +10512,7 @@ FetchCurrencyData:
 	
 	Loop, % currencyLeagues.Length() {
 		currencyLeague := currencyLeagues[A_Index]
-		url  := "http://poeninja.azureedge.net/api/Data/GetCurrencyOverview?league=" . currencyLeague
+		url  := "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
 		file := A_ScriptDir . "\temp\currencyData_" . currencyLeague . ".json"
 		UrlDownloadToFile, %url% , %file%
 
