@@ -33,8 +33,13 @@
 
 AM_AssignHotkeys:
 	global AM_Config := class_EasyIni(argumentUserDirectory "\AdditionalMacros.ini")
-	global AM_CharacterName := AM_Config["AM_KickYourself"].CharacterName
-	global AM_KeyToSCState := (TradeOpts.KeyToSCState != "") ? TradeOpts.KeyToSCState : AM_Config["General"].KeyToSCState
+	global AM_CharacterName		:= AM_Config["AM_KickYourself"].CharacterName
+	global AM_ChannelName		:= AM_Config["AM_JoinChannel"].ChannelName
+	global AM_HighlightArg1		:= AM_Config["AM_HighlightItems"].Arg1
+	global AM_HighlightArg2		:= AM_Config["AM_HighlightItems"].Arg2	
+	global AM_HighlightAltArg1	:= AM_Config["AM_HighlightItemsAlt"].Arg1
+	global AM_HighlightAltArg2	:= AM_Config["AM_HighlightItemsAlt"].Arg2
+	global AM_KeyToSCState		:= (TradeOpts.KeyToSCState != "") ? TradeOpts.KeyToSCState : AM_Config["General"].KeyToSCState
 
 	; This option can be set in the settings menu (ItemInfo tab) to completely disable assigning
 	; AdditionalMacros hotkeys.
@@ -60,14 +65,14 @@ AM_Minimize_HKey:
 Return
 
 AM_HighlightItems_HKey:
-	HighlightItems(false,true)		; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
-										; Function parameters, change if needed or wanted:
-										;	1. Use broader terms, default = false.
-										;	2. Leave the search field after pasting the search terms, default = true.
+	HighlightItems(%AM_HighlightArg1%,%AM_HighlightArg2%)		; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
+													; Function parameters, change if needed or wanted:
+													;	1. Use broader terms, default = false.
+													;	2. Leave the search field after pasting the search terms, default = true.
 Return
 
 AM_HighlightItemsAlt_HKey:
-	HighlightItems(true,true)		; Ctrl+Alt+F uses much broader search terms for the highlight function.
+	HighlightItems(%AM_HighlightAltArg1%,%AM_HighlightAltArg2%)		; Ctrl+Alt+F uses much broader search terms for the highlight function.
 Return
 
 AM_LookUpAffixes_HKey:
@@ -108,8 +113,8 @@ AM_Remaining_HKey:
 	SendInput {Enter}/remaining{Enter}			; Mobs remaining with F9.
 Return
 
-AM_JoinGlobal820_HKey:
-	SendInput {Enter}/global 820{Enter}		; Join a channel with F10.
+AM_JoinChannel_HKey:
+	SendInput {Enter}/%AM_ChannelName%{Enter}		; Join a channel with F10. Default = global 820.
 Return
 
 AM_SetAfkMessage_HKey:
