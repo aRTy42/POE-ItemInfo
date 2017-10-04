@@ -133,7 +133,7 @@ class EasyIni
 	{
 		; Define prototype object for ini arrays:
 		; --- MODIFICATION START (dein0s) ---
-		static base := {__Set: "EasyIni_Set", _NewEnum: "EasyIni_NewEnum", Delete: "Delete", Remove: "EasyIni_Remove", Insert: "EasyIni_Insert", InsertBefore: "EasyIni_InsertBefore", AddSection: "EasyIni.AddSection", RenameSection: "EasyIni.RenameSection", DeleteSection: "EasyIni.DeleteSection", GetSections: "EasyIni.GetSections", FindSecs: "EasyIni.FindSecs", AddKey: "EasyIni.AddKey", RenameKey: "EasyIni.RenameKey", DeleteKey: "EasyIni.DeleteKey", GetKeys: "EasyIni.GetKeys", FindKeys: "EasyIni.FindKeys", GetVals: "EasyIni.GetVals", FindVals: "EasyIni.FindVals", HasVal: "EasyIni.HasVal", SetKeyVal: "EasyIni.SetKeyVal", GetCommentContent: "EasyIni.GetCommentContent", GetTopComments: "EasyIni.GetTopComments", GetSectionComments: "EasyIni.GetSectionComments", GetKeyComments: "EasyIni.GetKeyComments", AddComment: "EasyIni.AddComment", AddTopComment: "EasyIni.AddTopComment", AddSectionComment: "EasyIni.AddSectionComment", AddKeyComment: "EasyIni.AddKeyComment", DeleteComment: "EasyIni.DeleteComment", Update: "EasyIni.Update", Compare: "EasyIni.Compare", Copy: "EasyIni.Copy", Merge: "EasyIni.Merge", GetFileName: "EasyIni.GetFileName", GetOnlyIniFileName:"EasyIni.GetOnlyIniFileName", IsEmpty:"EasyIni.IsEmpty", Reload: "EasyIni.Reload", GetIsSaved: "EasyIni.GetIsSaved", Save: "EasyIni.Save", ToVar: "EasyIni.ToVar"}
+		static base := {__Set: "EasyIni_Set", _NewEnum: "EasyIni_NewEnum", Delete: "Delete", Remove: "EasyIni_Remove", Insert: "EasyIni_Insert", InsertBefore: "EasyIni_InsertBefore", AddSection: "EasyIni.AddSection", RenameSection: "EasyIni.RenameSection", DeleteSection: "EasyIni.DeleteSection", GetSections: "EasyIni.GetSections", FindSecs: "EasyIni.FindSecs", AddKey: "EasyIni.AddKey", RenameKey: "EasyIni.RenameKey", DeleteKey: "EasyIni.DeleteKey", RemoveKey: "EasyIni.RemoveKey", GetKeys: "EasyIni.GetKeys", FindKeys: "EasyIni.FindKeys", GetVals: "EasyIni.GetVals", FindVals: "EasyIni.FindVals", HasVal: "EasyIni.HasVal", SetKeyVal: "EasyIni.SetKeyVal", GetCommentContent: "EasyIni.GetCommentContent", GetTopComments: "EasyIni.GetTopComments", GetSectionComments: "EasyIni.GetSectionComments", GetKeyComments: "EasyIni.GetKeyComments", AddComment: "EasyIni.AddComment", AddTopComment: "EasyIni.AddTopComment", AddSectionComment: "EasyIni.AddSectionComment", AddKeyComment: "EasyIni.AddKeyComment", DeleteComment: "EasyIni.DeleteComment", Update: "EasyIni.Update", Compare: "EasyIni.Compare", Copy: "EasyIni.Copy", Merge: "EasyIni.Merge", GetFileName: "EasyIni.GetFileName", GetOnlyIniFileName:"EasyIni.GetOnlyIniFileName", IsEmpty:"EasyIni.IsEmpty", Reload: "EasyIni.Reload", GetIsSaved: "EasyIni.GetIsSaved", Save: "EasyIni.Save", ToVar: "EasyIni.ToVar"}
 		; --- MODIFICATION END (dein0s) ---
 		; Create and return new object:
 		return Object("_keys", Object(), "base", base, parms*)
@@ -581,7 +581,7 @@ class EasyIni
 				}
 				; Remove old key comment
 				if (key_comments and SourceIni[sectionName].HasKey(keyName)){
-					for commentIndex, commentContent in StrSplit(this.GetKeyComments(sectionName, keyName)) {
+					for commentIndex, commentContent in StrSplit(this.GetKeyComments(sectionName, keyName), "`n") {
 						if (!InStr(SourceIni.GetKeyComments(sectionName, keyName), commentContent)) {
 							this.DeleteKeyComment(sectionName, keyName, commentContent)
 						}
@@ -1017,7 +1017,7 @@ CalcStringMD5(string, case=true)
 		DeleteTopComment(comment, ByRef rsError="")
 		DeleteSectionComment(sec, comment, ByRef rsError="")
 		DeleteKeyComment(sec, key, comment, ByRef rsError="")
-		Update(SourceIni, sections=true, keys=true, values=false, comments=true)
+		Update(SourceIni, sections=true, keys=true, values=false, top_comments=false, section_comments=true, key_comments=true)
 		Compare(SourceIni, sections=true, keys=true, comments=false)
 		Copy(SourceIni, bCopyFileName = true)
 		Merge(vOtherIni, bRemoveNonMatching = false, bOverwriteMatching = false, vExceptionsIni = "")
