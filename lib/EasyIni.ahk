@@ -503,14 +503,14 @@ class EasyIni
 		return this.DeleteComment(sec, key, comment, , rsError)
 	}
 
-	Update(SourceIni, sections=true, keys=true, values=false, comments=true)
+	Update(SourceIni, sections=true, keys=true, values=false, top_comments=false, section_comments=true, key_comments=true)
 	; TODO: add docstring
 	{
 		if (!IsObject(SourceIni)) {
 			SourceIni := class_EasyIni(SourceIni)
 		}
 		; Add new items from SourceIni object
-		if (comments) {
+		if (top_comments) {
 			for commentIndex, commentContent in StrSplit(SourceIni.GetTopComments(), "`n") {
 				; Add new top comment
 				if (!InStr(this.GetTopComments(), commentContent)) {
@@ -524,7 +524,7 @@ class EasyIni
 				this.AddSection(sectionName)
 			}
 			; Add new section comment
-			if (comments and this.HasKey(sectionName)) {
+			if (section_comments and this.HasKey(sectionName)) {
 				for commentIndex, commentContent in StrSplit(SourceIni.GetSectionComments(sectionName), "`n") {
 					if (!InStr(this.GetSectionComments(sectionName), commentContent)) {
 						this.AddSectionComment(sectionName, commentContent)
@@ -542,7 +542,7 @@ class EasyIni
 						this.SetKeyVal(sectionName, keyName, keyVal)
 					}
 					; Add new key comment
-					if (comments) {
+					if (key_comments) {
 						for commentIndex, commentContent in StrSplit(SourceIni.GetKeyComments(sectionName, keyName), "`n") {
 							if (!InStr(this.GetKeyComments(sectionName, keyName), commentContent)) {
 								this.AddKeyComment(sectionName, keyName, commentContent)
@@ -553,7 +553,7 @@ class EasyIni
 			}
 		}
 		; Remove old items from current EasyIni object
-		if (comments) {
+		if (top_comments) {
 			for commentIndex, commentContent in StrSplit(this.GetTopComments(), "`n") {
 				; Remove old top comment
 				if (!InStr(SourceIni.GetTopComments(), commentContent)) {
@@ -567,7 +567,7 @@ class EasyIni
 				this.DeleteSection(sectionName)
 			}
 			; Remove old section comment
-			if (comments and SourceIni.HasKey(sectionName)) {
+			if (section_comments and SourceIni.HasKey(sectionName)) {
 				for commentIndex, commentContent in StrSplit(this.GetSectionComments(sectionName), "`n") {
 					if (!InStr(SourceIni.GetSectionComments(sectionName), commentContent)) {
 						this.DeleteSection(sectionName, commentContent)
@@ -580,7 +580,7 @@ class EasyIni
 					this.RemoveKey(sectionName, keyName)
 				}
 				; Remove old key comment
-				if (comments and SourceIni[sectionName].HasKey(keyName)){
+				if (key_comments and SourceIni[sectionName].HasKey(keyName)){
 					for commentIndex, commentContent in StrSplit(this.GetKeyComments(sectionName, keyName)) {
 						if (!InStr(SourceIni.GetKeyComments(sectionName, keyName), commentContent)) {
 							this.DeleteKeyComment(sectionName, keyName, commentContent)

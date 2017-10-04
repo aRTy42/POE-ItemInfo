@@ -438,10 +438,10 @@ If (StrLen(overwrittenUserFiles)) {
 GoSub, AM_AssignHotkeys
 GoSub, FetchCurrencyData
 
-Menu, TextFiles, Add, Additional Macros, EditAdditionalMacrosConfig
-Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
+Menu, TextFiles, Add, Additional Macros Settings, EditAdditionalMacrosSettings
 Menu, TextFiles, Add, Map Mod Warnings, EditMapModWarningsConfig
 Menu, TextFiles, Add, Custom Macros Example, EditCustomMacrosExample
+Menu, PreviewTextFiles, Add, Additional Macros, PreviewAdditionalMacros
 
 ; Menu tooltip
 RelVer := Globals.Get("ReleaseVersion")
@@ -457,6 +457,7 @@ Menu, Tray, Add, Check for updates, CheckForUpdates
 Menu, Tray, Add, Update Notes, ShowUpdateNotes
 Menu, Tray, Add ; Separator
 Menu, Tray, Add, Edit Files, :TextFiles
+Menu, Tray, Add, Preview Files, :PreviewTextFiles
 Menu, Tray, Add, Open User Folder, EditOpenUserSettings
 Menu, Tray, Add ; Separator
 Menu, Tray, Standard
@@ -513,6 +514,35 @@ OpenCreateDataTextFile(Filename)
 	}
 	return
 
+}
+
+OpenTextFileReadOnly(FilePath)
+{
+	ExecuteString := FilePath
+	if (FileExist(FilePath)) {
+		openWith := AssociatedProgram("txt")
+		if (openWith) {
+			if (InStr(openWith, "system32\NOTEPAD.exe")) {
+				if (InStr(openWith, "SystemRoot")) {
+					; because `Run` cannot expand environment variable for some reason
+					EnvGet, SystemRoot, SystemRoot
+					StringReplace, openWith, openWith, `%SystemRoot`%, %SystemRoot%
+				}
+			}
+			if (InStr(openWith, " %1")) {
+				; trim `%1`
+				StringTrimRight, openWith, openWith, 2
+			}
+			ExecuteString := openWith " " FilePath
+		}
+		FileSetAttrib, +R, %FilePath%
+		RunWait, %ExecuteString%
+		FileSetAttrib, -R, %FilePath%
+	}
+	else {
+		MsgBox, 16, Error, File not found.
+	}
+	return
 }
 
 OpenUserDirFile(Filename)
@@ -9258,7 +9288,7 @@ CreateSettingsUI()
 	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 ys50 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
 	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")
 	GuiAddCheckbox("Enable Additional Macros", "xs10 ys80 w210 h30", Opts.EnableAdditionalMacros, "EnableAdditionalMacros", "EnableAdditionalMacrosH")
-	AddToolTip(EnableAdditionalMacrosH, "Enables or disables the entire 'AdditionalMacros.txt' file.`nNeeds a script reload to take effect.")
+	AddToolTip(EnableAdditionalMacrosH, "Enables or disables the entire 'AdditionalMacros.ahk' file.`nNeeds a script reload to take effect.")
 	If (!SkipItemInfoUpdateCall) {
 		GuiAddCheckbox("Update: Show Notifications", "xs10 ys110 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
 		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")
@@ -10492,12 +10522,12 @@ EditOpenUserSettings:
     OpenUserSettingsFolder(Globals.Get("ProjectName"))
     return
 
-EditAdditionalMacrosConfig:
+EditAdditionalMacrosSettings:
 	OpenUserDirFile("AdditionalMacros.ini")
 	return
 
-EditAdditionalMacros:
-	OpenUserDirFile("AdditionalMacros.txt")
+PreviewAdditionalMacros:
+	OpenTextFileReadOnly(A_ScriptDir "\resources\ahk\AdditionalMacros.ahk")
 	return
 
 EditMapModWarningsConfig:
