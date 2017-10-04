@@ -1,8 +1,9 @@
 ;###########----------------------- Additional Macros -------------------------###########
-;# Use the global variables to enable/disable hotkeys and set a key combination.         #
+;# Use AdditionaMacros.ini in the user folder to enable/disable hotkeys and set a key    #
+;# combination.                                                                          #
 ;#                                                                                       #
-;# You can also add your own macros here, but adding your own files in the subfolder     #
-;# "CustomMacros\" is the more preferable solution. All files there will be appended.    #
+;# You shouldn't add your own macros here, but you can add them in the user folders      #
+;# subfolder "CustomMacros\". All files there will be appended.                          #
 ;# Please make sure that any issues that you are experiencing aren't related to your own #
 ;# macros before reporting them.                                                         #
 ;# For example, paste the line "^Space::SendInput {Enter}/oos{Enter}" in an ".ahk" file, #
@@ -70,7 +71,7 @@ AM_HighlightItemsAlt_HKey:
 Return
 
 AM_LookUpAffixes_HKey:
-	LookUpAffixes()					; Opens poeaffix.net in your browser, navigating to the item that you're hovering over.
+	LookUpAffixes()				; Opens poeaffix.net in your browser, navigating to the item that you're hovering over.
 Return
 
 AM_CloseScripts_HKey:
@@ -82,7 +83,7 @@ AM_KickYourself_HKey:
 Return
 
 AM_Hideout_HKey:
-	SendInput {Enter}/hideout{Enter}				; Go to hideout with F5.
+	SendInput {Enter}/hideout{Enter}					; Go to hideout with F5.
 Return
 
 AM_ScrollTabRight_HKey:
@@ -96,7 +97,7 @@ AM_ScrollTabRightAlt_HKey:
 	Send {Right}			; Holding right mouse button+scroll down scrolls through stash tabs rightward
 Return
 AM_ScrollTabLeftAlt_HKey:
-	Send {Left}				; Holding right mouse button+scroll up scrolls through stash tabs leftward.
+	Send {Left}			; Holding right mouse button+scroll up scrolls through stash tabs leftward.
 Return
 
 AM_SendCtrlC_HKey:
@@ -104,7 +105,7 @@ AM_SendCtrlC_HKey:
 Return
 
 AM_Remaining_HKey:
-	SendInput {Enter}/remaining{Enter}		; Mobs remaining with F9.
+	SendInput {Enter}/remaining{Enter}			; Mobs remaining with F9.
 Return
 
 AM_JoinGlobal820_HKey:
@@ -112,7 +113,7 @@ AM_JoinGlobal820_HKey:
 Return
 
 AM_SetAfkMessage_HKey:
-	setAfkMessage()							; Pastes afk message to your chat and marks "X" so you can type in the estimated time.
+	setAfkMessage()						; Pastes afk message to your chat and marks "X" so you can type in the estimated time.
 Return
 
 AM_AdvancedItemInfo_HKey:
