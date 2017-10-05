@@ -177,8 +177,7 @@ class GdipTooltip
 		Size.W := NumGet(RECT,  8, "Int")
 		Size.H := NumGet(RECT, 12, "Int")
 		Return Size
-	}
-	
+	}	
 
 	UpdateFromOptions(Opts)
 	{		
@@ -200,7 +199,8 @@ class GdipTooltip
 	}
 	
 	ValidateRGBColor(Color, Default) {
-		RegExMatch(Color, "i)(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)", hex)
+		RegExMatch(Trim(Color), "i)(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)", hex)
+		console.log(Color)
 		Return hex ? hex : Default
 	}
 	

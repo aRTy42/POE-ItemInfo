@@ -9563,9 +9563,9 @@ UpdateSettingsUI()
 	
 	GuiControl,, GDIWindowColor, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, "000000")
 	GuiControl,, GDIWindowTrans, % gdipTooltip.ValidateTransparency(Opts.WindowTrans, 85)
-	GuiControl,, GDIBorderColor, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, "91603B")
+	GuiControl,, GDIBorderColor, % gdipTooltip.ValidateRGBColor(Opts.GDIBorderColor, "91603B")
 	GuiControl,, GDIBorderTrans, % gdipTooltip.ValidateTransparency(Opts.BorderTrans, 85)
-	GuiControl,, GDITextColor, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, "FFFFFF")
+	GuiControl,, GDITextColor, % gdipTooltip.ValidateRGBColor(Opts.GDITextColor, "FFFFFF")
 	GuiControl,, GDITextTrans, % gdipTooltip.ValidateTransparency(Opts.TextTrans, 85)
 	gdipTooltip.UpdateFromOptions(Opts)	
 	
