@@ -36,7 +36,7 @@ AM_AssignHotkeys:
 	global AM_CharacterName		:= AM_Config["AM_KickYourself"].CharacterName
 	global AM_ChannelName		:= AM_Config["AM_JoinChannel"].ChannelName
 	global AM_HighlightArg1		:= AM_Config["AM_HighlightItems"].Arg1
-	global AM_HighlightArg2		:= AM_Config["AM_HighlightItems"].Arg2	
+	global AM_HighlightArg2		:= AM_Config["AM_HighlightItems"].Arg2
 	global AM_HighlightAltArg1	:= AM_Config["AM_HighlightItemsAlt"].Arg1
 	global AM_HighlightAltArg2	:= AM_Config["AM_HighlightItemsAlt"].Arg2
 	global AM_KeyToSCState		:= (TradeOpts.KeyToSCState != "") ? TradeOpts.KeyToSCState : AM_Config["General"].KeyToSCState
@@ -65,14 +65,14 @@ AM_Minimize_HKey:
 Return
 
 AM_HighlightItems_HKey:
-	HighlightItems(%AM_HighlightArg1%,%AM_HighlightArg2%)		; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
+	HighlightItems(AM_HighlightArg1, AM_HighlightArg2)		; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
 													; Function parameters, change if needed or wanted:
 													;	1. Use broader terms, default = false.
 													;	2. Leave the search field after pasting the search terms, default = true.
 Return
 
 AM_HighlightItemsAlt_HKey:
-	HighlightItems(%AM_HighlightAltArg1%,%AM_HighlightAltArg2%)		; Ctrl+Alt+F uses much broader search terms for the highlight function.
+	HighlightItems(AM_HighlightAltArg1, AM_HighlightAltArg2)		; Ctrl+Alt+F uses much broader search terms for the highlight function.
 Return
 
 AM_LookUpAffixes_HKey:

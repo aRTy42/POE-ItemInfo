@@ -391,6 +391,9 @@ class EasyIni
 					commentContent := "; " commentContent
 				}
 				if (topComment) {
+					if (!this.HasKey("EasyIni_ReservedFor_TopComments")) {
+						this.Insert("EasyIni_ReservedFor_TopComments", [])
+					}
 					this.EasyIni_ReservedFor_TopComments.Insert(commentContent)
 				}
 				else {
@@ -401,22 +404,23 @@ class EasyIni
 						else {
 							rsError := "Error! Could not add comment to key '" key "' because Section [" sec "] does not exist."
 						}
+							MsgBox, %rsError%
+							return false
+					}
+					if (key != "SectionComment" and !this[sec].HasKey(key)) {
+						rsError := "Error! Could not add comment to key '" key "' because this key does not exist in Section [" sec "]."
 						MsgBox, %rsError%
 						return false
 					}
+					if (!this[sec].HasKey("EasyIni_ReservedFor_Comments")) {
+						this[sec].Insert("EasyIni_ReservedFor_Comments", {})
+					}
+					commentCurrent := this[sec].EasyIni_ReservedFor_Comments[key]
+					if (IsStringEmpty(commentCurrent)) {
+						this[sec].EasyIni_ReservedFor_Comments.Insert(key, commentContent)
+					}
 					else {
-						if (key != "SectionComment" and !this[sec].HasKey(key)) {
-							rsError := "Error! Could not add comment to key '" key "' because this key does not exist in Section [" sec "]."
-							MsgBox, %rsError%
-							return false
-						}
-						commentCurrent := this[sec].EasyIni_ReservedFor_Comments[key]
-						if (IsStringEmpty(commentCurrent)) {
-							this[sec].EasyIni_ReservedFor_Comments.Insert(key, commentContent)
-						}
-						else {
-							this[sec].EasyIni_ReservedFor_Comments.Insert(key, commentCurrent "`n" commentContent)
-						}
+						this[sec].EasyIni_ReservedFor_Comments.Insert(key, commentCurrent "`n" commentContent)
 					}
 				}
 			}
