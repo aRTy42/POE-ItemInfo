@@ -9817,7 +9817,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	IniWrite(Opts.FontSize, ConfigPath, "Tooltip", "FontSize")
 
 	; GDI+
-	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "Enabled")
+	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "UseGDI")
 	IniWrite(Opts.GDIWindowColor, ConfigPath, "GDI", "WindowColor")
 	IniWrite(Opts.GDIWindowTrans, ConfigPath, "GDI", "WindowTrans")
 	IniWrite(Opts.GDIBorderColor, ConfigPath, "GDI", "BorderColor")
