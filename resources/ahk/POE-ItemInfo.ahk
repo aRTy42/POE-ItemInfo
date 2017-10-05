@@ -10565,20 +10565,32 @@ SettingsUI_ChkUseGDI:
 	If (Not IsChecked)
 	{
 		GuiControl, Disable, LblGDIWindowColor
+		GuiControl, Disable, LblGDIWindowTrans		
 		GuiControl, Disable, GDIWindowColor
+		GuiControl, Disable, GDIWindowTrans
 		GuiControl, Disable, LblGDIBorderColor
+		GuiControl, Disable, LblGDIBorderTrans
 		GuiControl, Disable, GDIBorderColor
+		GuiControl, Disable, GDIBorderTrans
 		GuiControl, Disable, LblGDITextColor
+		GuiControl, Disable, LblGDITextTrans
 		GuiControl, Disable, GDITextColor
+		GuiControl, Disable, GDITextTrans
 	}
 	Else
 	{
 		GuiControl, Enable, LblGDIWindowColor
+		GuiControl, Enable, LblGDIWindowTrans		
 		GuiControl, Enable, GDIWindowColor
+		GuiControl, Enable, GDIWindowTrans
 		GuiControl, Enable, LblGDIBorderColor
+		GuiControl, Enable, LblGDIBorderTrans
 		GuiControl, Enable, GDIBorderColor
+		GuiControl, Enable, GDIBorderTrans
 		GuiControl, Enable, LblGDITextColor
+		GuiControl, Enable, LblGDITextTrans
 		GuiControl, Enable, GDITextColor
+		GuiControl, Enable, GDITextTrans
 	}
 
 	return
