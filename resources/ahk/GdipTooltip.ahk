@@ -117,10 +117,59 @@ class GdipTooltip
 	}
 
 	UpdateFromOptions(Opts)
-	{
-		;console.log("UpdateFromOptions: " . Ops.GDIWindowColor . " " . Opts.GDIBorderColor . " " . Opts.GDITextColor)
-		this.fillBrush := new gdip.Brush(Opts.GDIWindowColor)
-		this.borderBrush := new gdip.Brush(Opts.GDIBorderColor)
-		this.fontBrush := new gdip.Brush(Opts.GDITextColor)
+	{		
+		this.AssembleHexARGBColors(Opts, windowColor, borderColor, textColor)
+		;console.log("UpdateFromOptions: " . windowColor . " " . borderColor . " " . textColor)
+		this.fillBrush := new gdip.Brush(windowColor)
+		this.borderBrush := new gdip.Brush(borderColor)
+		this.fontBrush := new gdip.Brush(textColor)
+	}
+	
+	AssembleHexARGBColors(Opts, ByRef windowColor, ByRef borderColor, ByRef textColor) {
+		_windowTrans	:= this.ConvertTransparencyFromPercentToHex(Opts.GDIWindowTrans)
+		_borderTrans	:= this.ConvertTransparencyFromPercentToHex(Opts.GDIBorderTrans)
+		_textTrans	:= this.ConvertTransparencyFromPercentToHex(Opts.GDITextTrans)
+		
+		windowColor	:= _windowTrans . Opts.GDIWindowColor
+		borderColor	:= _borderTrans . Opts.GDIBorderColor
+		textColor		:= _textTrans . Opts.GDITextColor
+	}
+	
+	ValidateRGBColor(Color, Default) {
+		RegExMatch(Color, "i)(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)", hex)
+		Return hex ? hex : Default
+	}
+	
+	ValidateTransparency(Transparency, Default) {
+		If (not RegExMatch(Transparency, "i)[0-9]+")) {
+			Transparency := Default
+		}
+		If (Transparency > 100) {
+			Transparency := 100
+		} Else If (Transparency < 0) {
+			Transparency := 0
+		}
+		
+		Return Transparency
+	}
+	
+	ConvertTransparencyFromPercentToHex(Transparency) {
+		percToHex := (Transparency / 100) * 255
+		hex		:= this.FHex(percToHex)		
+		
+		Return hex
+	}
+	
+	FHex( int, pad=0 ) {	; Function by [VxE]. Formats an integer (decimals are truncated) as hex.
+						; "Pad" may be the minimum number of digits that should appear on the right of the "0x".
+		Static hx := "0123456789ABCDEF"
+		If !( 0 < int |= 0 )
+			Return !int ? "0x0" : "-" this.FHex( -int, pad )
+		s := 1 + Floor( Ln( int ) / Ln( 16 ) )
+		h := SubStr( "0x0000000000000000", 1, pad := pad < s ? s + 2 : pad < 16 ? pad + 2 : 18 )
+		u := A_IsUnicode = 1
+		Loop % s
+			NumPut( *( &hx + ( ( int & 15 ) << u ) ), h, pad - A_Index << u, "UChar" ), int >>= 4
+		Return h
 	}
 }

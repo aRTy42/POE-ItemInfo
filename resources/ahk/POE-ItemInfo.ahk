@@ -188,9 +188,12 @@ class UserOptions {
 	UseGDI := 0
 
 	; Format: 0xAARRGGBB
-	GDIWindowColor := "0xE1000000"
-	GDIBorderColor := "0xE191603B"
-	GDITextColor := "0xE1FFFFFF"
+	GDIWindowColor := "000000"
+	GDIBorderColor := "91603B"
+	GDITextColor 	:= "FFFFFF"
+	GDIWindowTrans := 85
+	GDIBorderTrans := 85
+	GDITextTrans := 85
 
 	ScanUI()
 	{
@@ -9365,20 +9368,26 @@ CreateSettingsUI()
 	GuiAddEdit(Opts.FontSize, "xs180 ys155 w50 h20 Number", "FontSize")
 
 	; GDI+
-	GuiAddGroupBox("GDI+", "x7 y+20 w260 h130 Section")
+	GuiAddGroupBox("GDI+", "x7 y+20 w260 h220 Section")
 	GuiAddCheckBox("Enable GDI+", "xs10 ys20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
-	AddToolTip(UseGDIH, "Enables GDI rendering of tooltips")
-	GuiAddText("Window Color (0xARGB):", "xs20 ys45 w150", "LblGDIWindowColor")
-	GuiAddEdit(Opts.GDIWindowColor, "xs180 ys41 w70", "GDIWindowColor")
-	GuiAddText("Border Color (0xARGB):", "xs20 ys75 w150", "LblGDIBorderColor")
-	GuiAddEdit(Opts.GDIBorderColor, "xs180 ys71 w70", "GDIBorderColor")
-	GuiAddText("Text Color (0xARGB):", "xs20 ys105 w150", "LblGDITextColor")
-	GuiAddEdit(Opts.GDITextColor, "xs180 ys101 w70", "GDITextColor")
+	AddToolTip(UseGDIH, "Enables GDI rendering of tooltips")	
+	GuiAddText("Window Color (hex RGB):", "xs20 ys45 w150", "LblGDIWindowColor")
+	GuiAddEdit(Opts.GDIWindowColor, "xs180 ys41 w70", "GDIWindowColor")	
+	GuiAddText("Window Transparency (0-100):", "xs20 ys75 w150", "LblGDIWindowTrans")
+	GuiAddEdit(Opts.GDIWindowTrans, "xs180 ys71 w70", "GDIWindowTrans")	
+	GuiAddText("Border Color (hex RGB):", "xs20 ys105 w150", "LblGDIBorderColor")
+	GuiAddEdit(Opts.GDIBorderColor, "xs180 ys101 w70", "GDIBorderColor")	
+	GuiAddText("Border Transparency (0-100):", "xs20 ys135 w150", "LblGDIBorderTrans")
+	GuiAddEdit(Opts.GDIBorderTrans, "xs180 ys131 w70", "GDIBorderTrans")	
+	GuiAddText("Text Color (hex RGB):", "xs20 ys165 w150", "LblGDITextColor")
+	GuiAddEdit(Opts.GDITextColor, "xs180 ys161 w70", "GDITextColor")	
+	GuiAddText("Text Transparency (0-100):", "xs20 ys195 w150", "LblGDITextTrans")
+	GuiAddEdit(Opts.GDITextTrans, "xs180 ys191 w70", "GDITextTrans")
 	
 	; Display - Affixes
 
 	; This groupbox is positioned relative to the last control (first column), this is not optimal but makes it possible to wrap these groupboxes in Tabs without further repositing.
-	displayAffixesPos := SkipItemInfoUpdateCall ? "515" : "605"
+	displayAffixesPos := SkipItemInfoUpdateCall ? "675" : "765"
 	GuiAddGroupBox("Display - Affixes", "xs270 yp-" displayAffixesPos " w260 h360 Section")
 
 	GuiAddCheckbox("Show affix totals", "xs10 ys20 w210 h30", Opts.ShowAffixTotals, "ShowAffixTotals", "ShowAffixTotalsH")
@@ -9550,27 +9559,45 @@ UpdateSettingsUI()
 	GuiControl,, FontSize, % Opts.FontSize
 
 	; GDI+
-	GuiControl,, UseGDI, % Opts.UseGDI
+	GuiControl,, UseGDI, % Opts.UseGDI	
 	
-	gdipTooltip.UpdateFromOptions(Opts)
+	GuiControl,, GDIWindowColor, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, "000000")
+	GuiControl,, GDIWindowTrans, % gdipTooltip.ValidateTransparency(Opts.WindowTrans, 85)
+	GuiControl,, GDIBorderColor, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, "91603B")
+	GuiControl,, GDIBorderTrans, % gdipTooltip.ValidateTransparency(Opts.BorderTrans, 85)
+	GuiControl,, GDITextColor, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, "FFFFFF")
+	GuiControl,, GDITextTrans, % gdipTooltip.ValidateTransparency(Opts.TextTrans, 85)
+	gdipTooltip.UpdateFromOptions(Opts)	
 	
 	If (Opts.UseGDI == False)
 	{
 		GuiControl, Disable, LblGDIWindowColor
+		GuiControl, Disable, LblGDIWindowTrans		
 		GuiControl, Disable, GDIWindowColor
+		GuiControl, Disable, GDIWindowTrans
 		GuiControl, Disable, LblGDIBorderColor
+		GuiControl, Disable, LblGDIBorderTrans
 		GuiControl, Disable, GDIBorderColor
+		GuiControl, Disable, GDIBorderTrans
 		GuiControl, Disable, LblGDITextColor
+		GuiControl, Disable, LblGDITextTrans
 		GuiControl, Disable, GDITextColor
+		GuiControl, Disable, GDITextTrans
 	}
 	Else
 	{
 		GuiControl, Enable, LblGDIWindowColor
+		GuiControl, Enable, LblGDIWindowTrans
 		GuiControl, Enable, GDIWindowColor
+		GuiControl, Enable, GDIWindowTrans
 		GuiControl, Enable, LblGDIBorderColor
+		GuiControl, Enable, LblGDIBorderTrans
 		GuiControl, Enable, GDIBorderColor
+		GuiControl, Enable, GDIBorderTrans
 		GuiControl, Enable, LblGDITextColor
+		GuiControl, Enable, LblGDITextTrans
 		GuiControl, Enable, GDITextColor
+		GuiControl, Enable, GDITextTrans
 	}
 }
 
@@ -9664,58 +9691,61 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 	{
 		; General
 
-		Opts.OnlyActiveIfPOEIsFront := IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
-		Opts.PutResultsOnClipboard := IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
-		Opts.EnableAdditionalMacros := IniRead(ConfigPath, "General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
-		Opts.ShowUpdateNotifications := IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
-		Opts.UpdateSkipSelection := IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
-		Opts.UpdateSkipBackup := IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
+		Opts.OnlyActiveIfPOEIsFront	:= IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
+		Opts.PutResultsOnClipboard	:= IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
+		Opts.EnableAdditionalMacros	:= IniRead(ConfigPath, "General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
+		Opts.ShowUpdateNotifications	:= IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
+		Opts.UpdateSkipSelection		:= IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
+		Opts.UpdateSkipBackup		:= IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
 
 		; Display
 
-		Opts.ShowItemLevel := IniRead(ConfigPath, "Display", "ShowItemLevel", Opts.ShowItemLevel)
-		Opts.ShowMaxSockets := IniRead(ConfigPath, "Display", "ShowMaxSockets", Opts.ShowMaxSockets)
-		Opts.ShowDamageCalculations := IniRead(ConfigPath, "Display", "ShowDamageCalculations", Opts.ShowDamageCalculations)
-		Opts.ShowCurrencyValueInChaos := IniRead(ConfigPath, "Display", "ShowCurrencyValueInChaos", Opts.ShowCurrencyValueInChaos)
+		Opts.ShowItemLevel			:= IniRead(ConfigPath, "Display", "ShowItemLevel", Opts.ShowItemLevel)
+		Opts.ShowMaxSockets			:= IniRead(ConfigPath, "Display", "ShowMaxSockets", Opts.ShowMaxSockets)
+		Opts.ShowDamageCalculations	:= IniRead(ConfigPath, "Display", "ShowDamageCalculations", Opts.ShowDamageCalculations)
+		Opts.ShowCurrencyValueInChaos	:= IniRead(ConfigPath, "Display", "ShowCurrencyValueInChaos", Opts.ShowCurrencyValueInChaos)
 
 		; Display - Affixes
 
-		Opts.ShowAffixTotals := IniRead(ConfigPath, "DisplayAffixes", "ShowAffixTotals", Opts.ShowAffixTotals)
-		Opts.ShowAffixDetails := IniRead(ConfigPath, "DisplayAffixes", "ShowAffixDetails", Opts.ShowAffixDetails)
-		Opts.MirrorAffixLines := IniRead(ConfigPath, "DisplayAffixes", "MirrorAffixLines", Opts.MirrorAffixLines)
-		Opts.ShowAffixLevel := IniRead(ConfigPath, "DisplayAffixes", "ShowAffixLevel", Opts.ShowAffixLevel)
-		Opts.ShowAffixBracket := IniRead(ConfigPath, "DisplayAffixes", "ShowAffixBracket", Opts.ShowAffixBracket)
-		Opts.ShowAffixMaxPossible := IniRead(ConfigPath, "DisplayAffixes", "ShowAffixMaxPossible", Opts.ShowAffixMaxPossible)
-		Opts.MaxSpanStartingFromFirst := IniRead(ConfigPath, "DisplayAffixes", "MaxSpanStartingFromFirst", Opts.MaxSpanStartingFromFirst)
-		Opts.ShowAffixBracketTier := IniRead(ConfigPath, "DisplayAffixes", "ShowAffixBracketTier", Opts.ShowAffixBracketTier)
-		Opts.TierRelativeToItemLevel := IniRead(ConfigPath, "DisplayAffixes", "TierRelativeToItemLevel", Opts.TierRelativeToItemLevel)
-		Opts.ShowAffixBracketTierTotal := IniRead(ConfigPath, "DisplayAffixes", "ShowAffixBracketTierTotal", Opts.ShowAffixBracketTierTotal)
-		Opts.ShowDarkShrineInfo := IniRead(ConfigPath, "DisplayAffixes", "ShowDarkShrineInfo", Opts.ShowDarkShrineInfo)
+		Opts.ShowAffixTotals			:= IniRead(ConfigPath, "DisplayAffixes", "ShowAffixTotals", Opts.ShowAffixTotals)
+		Opts.ShowAffixDetails			:= IniRead(ConfigPath, "DisplayAffixes", "ShowAffixDetails", Opts.ShowAffixDetails)
+		Opts.MirrorAffixLines			:= IniRead(ConfigPath, "DisplayAffixes", "MirrorAffixLines", Opts.MirrorAffixLines)
+		Opts.ShowAffixLevel				:= IniRead(ConfigPath, "DisplayAffixes", "ShowAffixLevel", Opts.ShowAffixLevel)
+		Opts.ShowAffixBracket			:= IniRead(ConfigPath, "DisplayAffixes", "ShowAffixBracket", Opts.ShowAffixBracket)
+		Opts.ShowAffixMaxPossible		:= IniRead(ConfigPath, "DisplayAffixes", "ShowAffixMaxPossible", Opts.ShowAffixMaxPossible)
+		Opts.MaxSpanStartingFromFirst		:= IniRead(ConfigPath, "DisplayAffixes", "MaxSpanStartingFromFirst", Opts.MaxSpanStartingFromFirst)
+		Opts.ShowAffixBracketTier		:= IniRead(ConfigPath, "DisplayAffixes", "ShowAffixBracketTier", Opts.ShowAffixBracketTier)
+		Opts.TierRelativeToItemLevel		:= IniRead(ConfigPath, "DisplayAffixes", "TierRelativeToItemLevel", Opts.TierRelativeToItemLevel)
+		Opts.ShowAffixBracketTierTotal	:= IniRead(ConfigPath, "DisplayAffixes", "ShowAffixBracketTierTotal", Opts.ShowAffixBracketTierTotal)
+		Opts.ShowDarkShrineInfo			:= IniRead(ConfigPath, "DisplayAffixes", "ShowDarkShrineInfo", Opts.ShowDarkShrineInfo)
 
 		; Display - Results
 
-		Opts.CompactDoubleRanges := IniRead(ConfigPath, "DisplayResults", "CompactDoubleRanges", Opts.CompactDoubleRanges)
-		Opts.CompactAffixTypes := IniRead(ConfigPath, "DisplayResults", "CompactAffixTypes", Opts.CompactAffixTypes)
-		Opts.MirrorLineFieldWidth := IniRead(ConfigPath, "DisplayResults", "MirrorLineFieldWidth", Opts.MirrorLineFieldWidth)
-		Opts.ValueRangeFieldWidth := IniRead(ConfigPath, "DisplayResults", "ValueRangeFieldWidth", Opts.ValueRangeFieldWidth)
-		Opts.AffixDetailDelimiter := IniRead(ConfigPath, "DisplayResults", "AffixDetailDelimiter", Opts.AffixDetailDelimiter)
-		Opts.AffixDetailEllipsis := IniRead(ConfigPath, "DisplayResults", "AffixDetailEllipsis", Opts.AffixDetailEllipsis)
+		Opts.CompactDoubleRanges		:= IniRead(ConfigPath, "DisplayResults", "CompactDoubleRanges", Opts.CompactDoubleRanges)
+		Opts.CompactAffixTypes		:= IniRead(ConfigPath, "DisplayResults", "CompactAffixTypes", Opts.CompactAffixTypes)
+		Opts.MirrorLineFieldWidth	:= IniRead(ConfigPath, "DisplayResults", "MirrorLineFieldWidth", Opts.MirrorLineFieldWidth)
+		Opts.ValueRangeFieldWidth	:= IniRead(ConfigPath, "DisplayResults", "ValueRangeFieldWidth", Opts.ValueRangeFieldWidth)
+		Opts.AffixDetailDelimiter	:= IniRead(ConfigPath, "DisplayResults", "AffixDetailDelimiter", Opts.AffixDetailDelimiter)
+		Opts.AffixDetailEllipsis		:= IniRead(ConfigPath, "DisplayResults", "AffixDetailEllipsis", Opts.AffixDetailEllipsis)
 
 		; Tooltip
 
-		Opts.MouseMoveThreshold := IniRead(ConfigPath, "Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold)
-		Opts.UseTooltipTimeout := IniRead(ConfigPath, "Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout)
+		Opts.MouseMoveThreshold	:= IniRead(ConfigPath, "Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold)
+		Opts.UseTooltipTimeout	:= IniRead(ConfigPath, "Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout)
 		Opts.DisplayToolTipAtFixedCoords := IniRead(ConfigPath, "Tooltip", "DisplayToolTipAtFixedCoords", Opts.DisplayToolTipAtFixedCoords)
-		Opts.ScreenOffsetX := IniRead(ConfigPath, "Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX)
-		Opts.ScreenOffsetY := IniRead(ConfigPath, "Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY)
-		Opts.ToolTipTimeoutTicks := IniRead(ConfigPath, "Tooltip", "ToolTipTimeoutTicks", Opts.ToolTipTimeoutTicks)
-		Opts.FontSize := IniRead(ConfigPath, "Tooltip", "FontSize", Opts.FontSize)
+		Opts.ScreenOffsetX		:= IniRead(ConfigPath, "Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX)
+		Opts.ScreenOffsetY		:= IniRead(ConfigPath, "Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY)
+		Opts.ToolTipTimeoutTicks	:= IniRead(ConfigPath, "Tooltip", "ToolTipTimeoutTicks", Opts.ToolTipTimeoutTicks)
+		Opts.FontSize			:= IniRead(ConfigPath, "Tooltip", "FontSize", Opts.FontSize)
 
 		; GDI+
-		Opts.UseGDI := IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
-		Opts.GDIWindowColor := IniRead(ConfigPath, "GDI", "WindowColor", Opts.GDIWindowColor)
-		Opts.GDIBorderColor := IniRead(ConfigPath, "GDI", "BorderColor", Opts.GDIBorderColor)
-		Opts.GDITextColor := IniRead(ConfigPath, "GDI", "TextColor", Opts.GDITextColor)
+		Opts.UseGDI		:= IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
+		Opts.GDIWindowColor	:= IniRead(ConfigPath, "GDI", "WindowColor", Opts.GDIWindowColor)
+		Opts.GDIWindowTrans	:= IniRead(ConfigPath, "GDI", "WindowTrans", Opts.GDIWindowTrans)
+		Opts.GDIBorderColor	:= IniRead(ConfigPath, "GDI", "BorderColor", Opts.GDIBorderColor)
+		Opts.GDIBorderTrans	:= IniRead(ConfigPath, "GDI", "BorderTrans", Opts.GDIBorderTrans)
+		Opts.GDITextColor	:= IniRead(ConfigPath, "GDI", "TextColor", Opts.GDITextColor)
+		Opts.GDITextTrans	:= IniRead(ConfigPath, "GDI", "TextTrans", Opts.GDITextTrans)
 		gdipTooltip.UpdateFromOptions(Opts)
 	}
 }
@@ -9789,8 +9819,11 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	; GDI+
 	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "Enabled")
 	IniWrite(Opts.GDIWindowColor, ConfigPath, "GDI", "WindowColor")
+	IniWrite(Opts.GDIWindowTrans, ConfigPath, "GDI", "WindowTrans")
 	IniWrite(Opts.GDIBorderColor, ConfigPath, "GDI", "BorderColor")
+	IniWrite(Opts.GDIBorderTrans, ConfigPath, "GDI", "BorderTrans")
 	IniWrite(Opts.GDITextColor, ConfigPath, "GDI", "TextColor")
+	IniWrite(Opts.GDITextTrans, ConfigPath, "GDI", "TextTrans")
 }
 
 CopyDefaultConfig()

@@ -234,7 +234,7 @@ PoEScripts_DoActionForFile(fileAction, filePath, destDir, ByRef overwrittenFiles
 			; TODO: add top comment with update date/script release version?
 			; save changes to file
 			destIniObj.Save(destDir "\" fileFullName)
-			overwrittenFiles.Push(fileFullName)
+			;overwrittenFiles.Push(fileFullName)
 		}
 		Else If (fileAction == 3) {
 			; make backup
