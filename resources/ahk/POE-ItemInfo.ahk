@@ -9370,7 +9370,7 @@ CreateSettingsUI()
 	; GDI+
 	GuiAddGroupBox("GDI+", "x7 y+20 w260 h220 Section")
 	GuiAddCheckBox("Enable GDI+", "xs10 ys20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
-	AddToolTip(UseGDIH, "Enables GDI rendering of tooltips")	
+	AddToolTip(Opts.UseGDI, "Enables GDI rendering of tooltips")	
 	GuiAddText("Window Color (hex RGB):", "xs20 ys45 w150", "LblGDIWindowColor")
 	GuiAddEdit(Opts.GDIWindowColor, "xs180 ys41 w70", "GDIWindowColor")	
 	GuiAddText("Window Transparency (0-100):", "xs20 ys75 w150", "LblGDIWindowTrans")
@@ -9738,7 +9738,7 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 		Opts.ToolTipTimeoutTicks	:= IniRead(ConfigPath, "Tooltip", "ToolTipTimeoutTicks", Opts.ToolTipTimeoutTicks)
 		Opts.FontSize			:= IniRead(ConfigPath, "Tooltip", "FontSize", Opts.FontSize)
 
-		; GDI+
+		; GDI+		
 		Opts.UseGDI		:= IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
 		Opts.GDIWindowColor	:= IniRead(ConfigPath, "GDI", "WindowColor", Opts.GDIWindowColor)
 		Opts.GDIWindowTrans	:= IniRead(ConfigPath, "GDI", "WindowTrans", Opts.GDIWindowTrans)
@@ -9817,7 +9817,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	IniWrite(Opts.FontSize, ConfigPath, "Tooltip", "FontSize")
 
 	; GDI+
-	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "UseGDI")
+	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "Enabled")
 	IniWrite(Opts.GDIWindowColor, ConfigPath, "GDI", "WindowColor")
 	IniWrite(Opts.GDIWindowTrans, ConfigPath, "GDI", "WindowTrans")
 	IniWrite(Opts.GDIBorderColor, ConfigPath, "GDI", "BorderColor")
