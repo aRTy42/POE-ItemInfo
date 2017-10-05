@@ -20,6 +20,9 @@ GroupAdd, PoEexe, ahk_exe PathOfExile_x64Steam.exe
 #Include, %A_ScriptDir%\lib\EasyIni.ahk
 #Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
 #Include, %A_ScriptDir%\lib\ConvertKeyToKeyCode.ahk
+#Include, %A_ScriptDir%\resources\ahk\GdipTooltip.ahk
+
+global gdipTooltip = new GdipTooltip()
 
 MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
 If (A_AhkVersion < AHKVersionRequired)
@@ -180,6 +183,14 @@ class UserOptions {
 	; Only used if DisplayToolTipAtFixedCoords is 1.
 	ScreenOffsetX := 0
 	ScreenOffsetY := 0
+	
+	; Set this to 1 to enable GDI+ rendering
+	UseGDI := 0
+
+	; Format: 0xAARRGGBB
+	GDIWindowColor := "0xE1000000"
+	GDIBorderColor := "0xE191603B"
+	GDITextColor := "0xE1FFFFFF"
 
 	ScanUI()
 	{
@@ -8989,7 +9000,7 @@ ExtractRareItemTypeName(ItemName)
 ; Show tooltip, with fixed width font
 ShowToolTip(String, Centered = false)
 {
-	Global X, Y, ToolTipTimeout, Opts
+	Global X, Y, ToolTipTimeout, Opts, gdipTooltip
 
 	; Get position of mouse cursor
 	MouseGetPos, X, Y
@@ -9004,17 +9015,32 @@ ShowToolTip(String, Centered = false)
 			XCoord := 0 + ScreenOffsetX
 			YCoord := 0 + ScreenOffsetY
 
-			ToolTip, %String%, XCoord, YCoord
-			Fonts.SetFixedFont()
-			ToolTip, %String%, XCoord, YCoord
+			If (Opts.UseGDI) 
+			{
+				gdipTooltip.ShowGdiTooltip(String, XCoord, YCoord)
+			}
+			Else
+			{
+				ToolTip, %String%, XCoord, YCoord
+				Fonts.SetFixedFont()
+				ToolTip, %String%, XCoord, YCoord
+			}
 		}
 		Else
 		{
 			XCoord := (X - 135 >= 0) ? X - 135 : 0
 			YCoord := (Y +  35 >= 0) ? Y +  35 : 0
-			ToolTip, %String%, XCoord, YCoord
-			Fonts.SetFixedFont()
-			ToolTip, %String%, XCoord, YCoord
+			
+			If (Opts.UseGDI) 
+			{
+				gdipTooltip.ShowGdiTooltip(String, XCoord, YCoord)
+			}
+			Else
+			{
+				ToolTip, %String%, XCoord, YCoord
+				Fonts.SetFixedFont()
+				ToolTip, %String%, XCoord, YCoord
+			}
 		}
 	}
 	Else
@@ -9032,9 +9058,16 @@ ShowToolTip(String, Centered = false)
 		XCoord := 0 + ScreenOffsetX
 		YCoord := 0 + ScreenOffsetY
 
-		ToolTip, %String%, XCoord, YCoord
-		Fonts.SetFixedFont()
-		ToolTip, %String%, XCoord, YCoord
+		If (Opts.UseGDI) 
+		{
+			gdipTooltip.ShowGdiTooltip(String, XCoord, YCoord)
+		}
+		Else
+		{
+			ToolTip, %String%, XCoord, YCoord
+			Fonts.SetFixedFont()
+			ToolTip, %String%, XCoord, YCoord
+		}
 	}
 	;Fonts.SetFixedFont()
 
@@ -9331,10 +9364,21 @@ CreateSettingsUI()
 	GuiAddText("Font Size:", "xs10 ys157 w160 h20", "LblFontSize")
 	GuiAddEdit(Opts.FontSize, "xs180 ys155 w50 h20 Number", "FontSize")
 
+	; GDI+
+	GuiAddGroupBox("GDI+", "x7 y+20 w260 h130 Section")
+	GuiAddCheckBox("Enable GDI+", "xs10 ys20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
+	AddToolTip(UseGDIH, "Enables GDI rendering of tooltips")
+	GuiAddText("Window Color (0xARGB):", "xs20 ys45 w150", "LblGDIWindowColor")
+	GuiAddEdit(Opts.GDIWindowColor, "xs180 ys41 w70", "GDIWindowColor")
+	GuiAddText("Border Color (0xARGB):", "xs20 ys75 w150", "LblGDIBorderColor")
+	GuiAddEdit(Opts.GDIBorderColor, "xs180 ys71 w70", "GDIBorderColor")
+	GuiAddText("Text Color (0xARGB):", "xs20 ys105 w150", "LblGDITextColor")
+	GuiAddEdit(Opts.GDITextColor, "xs180 ys101 w70", "GDITextColor")
+	
 	; Display - Affixes
 
 	; This groupbox is positioned relative to the last control (first column), this is not optimal but makes it possible to wrap these groupboxes in Tabs without further repositing.
-	displayAffixesPos := SkipItemInfoUpdateCall ? "415" : "505"
+	displayAffixesPos := SkipItemInfoUpdateCall ? "515" : "605"
 	GuiAddGroupBox("Display - Affixes", "xs270 yp-" displayAffixesPos " w260 h360 Section")
 
 	GuiAddCheckbox("Show affix totals", "xs10 ys20 w210 h30", Opts.ShowAffixTotals, "ShowAffixTotals", "ShowAffixTotalsH")
@@ -9504,6 +9548,30 @@ UpdateSettingsUI()
 	GuiControl,, ToolTipTimeoutTicks, % Opts.ToolTipTimeoutTicks
 	GuiControl,, MouseMoveThreshold, % Opts.MouseMoveThreshold
 	GuiControl,, FontSize, % Opts.FontSize
+
+	; GDI+
+	GuiControl,, UseGDI, % Opts.UseGDI
+	
+	gdipTooltip.UpdateFromOptions(Opts)
+	
+	If (Opts.UseGDI == False)
+	{
+		GuiControl, Disable, LblGDIWindowColor
+		GuiControl, Disable, GDIWindowColor
+		GuiControl, Disable, LblGDIBorderColor
+		GuiControl, Disable, GDIBorderColor
+		GuiControl, Disable, LblGDITextColor
+		GuiControl, Disable, GDITextColor
+	}
+	Else
+	{
+		GuiControl, Enable, LblGDIWindowColor
+		GuiControl, Enable, GDIWindowColor
+		GuiControl, Enable, LblGDIBorderColor
+		GuiControl, Enable, GDIBorderColor
+		GuiControl, Enable, LblGDITextColor
+		GuiControl, Enable, GDITextColor
+	}
 }
 
 ShowSettingsUI()
@@ -9642,6 +9710,13 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 		Opts.ScreenOffsetY := IniRead(ConfigPath, "Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY)
 		Opts.ToolTipTimeoutTicks := IniRead(ConfigPath, "Tooltip", "ToolTipTimeoutTicks", Opts.ToolTipTimeoutTicks)
 		Opts.FontSize := IniRead(ConfigPath, "Tooltip", "FontSize", Opts.FontSize)
+
+		; GDI+
+		Opts.UseGDI := IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
+		Opts.GDIWindowColor := IniRead(ConfigPath, "GDI", "WindowColor", Opts.GDIWindowColor)
+		Opts.GDIBorderColor := IniRead(ConfigPath, "GDI", "BorderColor", Opts.GDIBorderColor)
+		Opts.GDITextColor := IniRead(ConfigPath, "GDI", "TextColor", Opts.GDITextColor)
+		gdipTooltip.UpdateFromOptions(Opts)
 	}
 }
 
@@ -9710,6 +9785,12 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	IniWrite(Opts.ScreenOffsetY, ConfigPath, "Tooltip", "ScreenOffsetY")
 	IniWrite(Opts.ToolTipTimeoutTicks, ConfigPath, "Tooltip", "ToolTipTimeoutTicks")
 	IniWrite(Opts.FontSize, ConfigPath, "Tooltip", "FontSize")
+
+	; GDI+
+	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "Enabled")
+	IniWrite(Opts.GDIWindowColor, ConfigPath, "GDI", "WindowColor")
+	IniWrite(Opts.GDIBorderColor, ConfigPath, "GDI", "BorderColor")
+	IniWrite(Opts.GDITextColor, ConfigPath, "GDI", "TextColor")
 }
 
 CopyDefaultConfig()
@@ -10309,14 +10390,21 @@ LookUpAffixes() {
 ; Tick every 100 ms
 ; Remove tooltip if mouse is moved or 5 seconds pass
 ToolTipTimer:
-	Global Opts, ToolTipTimeout
+	Global Opts, ToolTipTimeout, gdipTooltip
 	ToolTipTimeout += 1
 	MouseGetPos, CurrX, CurrY
 	MouseMoved := (CurrX - X) ** 2 + (CurrY - Y) ** 2 > Opts.MouseMoveThreshold ** 2
 	If (MouseMoved or ((UseTooltipTimeout == 1) and (ToolTipTimeout >= Opts.ToolTipTimeoutTicks)))
 	{
 		SetTimer, ToolTipTimer, Off
-		ToolTip
+		If (Opts.UseGDI) 
+		{
+			gdipTooltip.HideGdiTooltip(true)
+		}
+		Else
+		{
+			ToolTip
+		}
 	}
 	return
 
@@ -10437,6 +10525,29 @@ SettingsUI_ChkUseTooltipTimeout:
 		GuiControl, Enable, LblToolTipTimeoutTicks
 		GuiControl, Enable, ToolTipTimeoutTicks
 	}
+	return
+
+SettingsUI_ChkUseGDI:
+	GuiControlGet, IsChecked,, UseGDI
+	If (Not IsChecked)
+	{
+		GuiControl, Disable, LblGDIWindowColor
+		GuiControl, Disable, GDIWindowColor
+		GuiControl, Disable, LblGDIBorderColor
+		GuiControl, Disable, GDIBorderColor
+		GuiControl, Disable, LblGDITextColor
+		GuiControl, Disable, GDITextColor
+	}
+	Else
+	{
+		GuiControl, Enable, LblGDIWindowColor
+		GuiControl, Enable, GDIWindowColor
+		GuiControl, Enable, LblGDIBorderColor
+		GuiControl, Enable, GDIBorderColor
+		GuiControl, Enable, LblGDITextColor
+		GuiControl, Enable, GDITextColor
+	}
+
 	return
 
 SettingsUI_ChkDisplayToolTipAtFixedCoords:
