@@ -18,24 +18,29 @@ class GdipTooltip
 		this.HideGdiTooltip()
 	}
 
-	ShowGdiTooltip(String, XCoord, YCoord, debug = false)
+	ShowGdiTooltip(Opts, String, XCoord, YCoord, debug = false)
 	{
 		; Ignore empty strings
 		If(String == "")
 			return
 
 		position := new this.gdip.Point(XCoord, YCoord)
-
-		lineWidth := this.CalcStringWidth(String)
+		fontSize := Opts.FontSize + 3	
+		
+		/*
+		lineWidth := this.CalcStringWidth(String, Opts)
 		lineHeight := this.CalcStringHeight(String)
-
+		*/
+		this.CalculateToolTipDimensions(String, fontSize, ttWidth, ttLineHeight, ttheight)
+	
+		/*
 		if (lineWidth == 0) {
 			lineWidth := 1
 		}
 		if (lineHeight == 0) {
 			lineHeight := 1
 		}
-
+		
 		lineWidth := lineWidth * 8
 
 		if (lineWidth > 800) {
@@ -47,19 +52,19 @@ class GdipTooltip
 		if (lineHeight > 600) {
 			lineHeight := 600
 		}
-
+		
 		textAreaWidth := lineWidth + (2*this.padding.width)
 		textAreaHeight := lineHeight + (2*this.padding.height)
+		*/
+		
+		textAreaWidth	:= ttWidth + (2 * this.padding.width)
+		textAreaHeight	:= ttHeight + (2 * this.padding.height)
 
-		If (debug)
-		{
+		If (debug) {
 			console.log("[" . String . "]")
 			console.log("lineDims: " . lineWidth . "x" . lineHeight)
 			console.log("textArea: " . textAreaWidth . "x" . textAreaHeight)
 		}
-		
-		;console.log("lineDims: " . lineWidth . "x" . lineHeight . "`n" . "textArea: " . textAreaWidth . "x" . textAreaHeight)
-		;this.window.Update({ x: XCoord, y: YCoord})
 
 		this.window.Clear()
 		this.window.FillRectangle(this.fillBrush, new this.gdip.Point(this.borderSize.width, this.borderSize.height), new this.gdip.Size(textAreaWidth-(this.borderSize.width*2), textAreaHeight-(this.borderSize.height*2)))
@@ -68,14 +73,25 @@ class GdipTooltip
 		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0, 0), new gdip.Size(textAreaWidth, this.borderSize.height))
 		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0, textAreaHeight-this.borderSize.height), new gdip.Size(textAreaWidth, this.borderSize.height))
 
+		/*
 		options := {}
 		options.font := "Consolas"
 		options.brush := this.fontBrush
 		options.width := lineWidth
 		options.height := lineHeight
-		options.size := 12
+		options.size := Opts.FontSize
 		options.left := this.padding.width
 		options.top := this.padding.height
+		*/
+		
+		options := {}
+		options.font	:= "Consolas"
+		options.brush	:= this.fontBrush
+		options.width	:= ttWidth
+		options.height	:= ttHeight
+		options.size	:= fontSize
+		options.left	:= this.padding.width
+		options.top	:= this.padding.height
 
 		this.window.WriteText(String, options)
 		this.window.Update({ x: XCoord, y: YCoord})
@@ -91,7 +107,8 @@ class GdipTooltip
 		this.window.Update()
 	}
 
-	CalcStringWidth(String)
+	/*
+	CalcStringWidth(String, Opts)
 	{
 		width := 0
 		StringArray := StrSplit(String, "`n")
@@ -108,13 +125,60 @@ class GdipTooltip
 
 		return width
 	}
-
+	*/
+	
+	CalculateToolTipDimensions(String, fontSize, ByRef ttWidth, ByRef ttLineHeight, ByRef ttHeight) {
+		ttWidth	:= 0
+		ttHeight	:= 0
+		StringArray := StrSplit(String, "`n")
+		Loop % StringArray.MaxIndex()
+		{
+			element := StringArray[a_index]
+			console.log(fontSize)
+			dim	:= this.MeasureText(element, fontSize + 1, "Consolas")
+			len	:= dim["W"] * (fontSize / 10)
+			hi	:= dim["H"] * ((fontSize - 1) / 10)
+			
+			if (len > ttWidth)
+			{
+				ttWidth := len
+			}
+			
+			ttHeight += hi
+			ttLineHeight := hi
+		}	
+	}
+	
+	/*
 	CalcStringHeight(String)
 	{
 		StringReplace, String, String, `n, `n, UseErrorLevel
 		height := ErrorLevel
 		return height
 	}
+	*/
+	
+	MeasureText(Str, FontOpts = "", FontName = "") {
+		Static DT_FLAGS := 0x0520 ; DT_SINGLELINE = 0x20, DT_NOCLIP = 0x0100, DT_CALCRECT = 0x0400
+		Static WM_GETFONT := 0x31
+		Size := {}
+		Gui, New
+		If (FontOpts <> "") || (FontName <> "")
+			Gui, Font, %FontOpts%, %FontName%
+		Gui, Add, Text, hwndHWND
+		SendMessage, WM_GETFONT, 0, 0, , ahk_id %HWND%
+		HFONT := ErrorLevel
+		HDC := DllCall("User32.dll\GetDC", "Ptr", HWND, "Ptr")
+		DllCall("Gdi32.dll\SelectObject", "Ptr", HDC, "Ptr", HFONT)
+		VarSetCapacity(RECT, 16, 0)
+		DllCall("User32.dll\DrawText", "Ptr", HDC, "Str", Str, "Int", -1, "Ptr", &RECT, "UInt", DT_FLAGS)
+		DllCall("User32.dll\ReleaseDC", "Ptr", HWND, "Ptr", HDC)
+		Gui, Destroy
+		Size.W := NumGet(RECT,  8, "Int")
+		Size.H := NumGet(RECT, 12, "Int")
+		Return Size
+	}
+	
 
 	UpdateFromOptions(Opts)
 	{		
