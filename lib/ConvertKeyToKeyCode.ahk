@@ -23,7 +23,7 @@ Global PrefixVK := "VK"
 SetSettingsExecution() {
   DetectHiddenWindows, On
   SetTitleMatchMode, 2
-  SetFormat, integer, H
+  SetFormat, IntegerFast, H
   Return
 }
 
@@ -31,7 +31,7 @@ SetSettingsExecution() {
 SetSettingsDefault() {
   DetectHiddenWindows, %DetectHiddenWindowsDefault%
   SetTitleMatchMode, %TitleMatchModeDefault%
-  SetFormat, integer, %FormatIntegerDefault%
+  SetFormat, IntegerFast, %FormatIntegerDefault%
   Return
 }
 
