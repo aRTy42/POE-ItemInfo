@@ -26,36 +26,8 @@ class GdipTooltip
 
 		position := new this.gdip.Point(XCoord, YCoord)
 		fontSize := Opts.FontSize + 3	
-		
-		/*
-		lineWidth := this.CalcStringWidth(String, Opts)
-		lineHeight := this.CalcStringHeight(String)
-		*/
-		this.CalculateToolTipDimensions(String, fontSize, ttWidth, ttLineHeight, ttheight)
-	
-		/*
-		if (lineWidth == 0) {
-			lineWidth := 1
-		}
-		if (lineHeight == 0) {
-			lineHeight := 1
-		}
-		
-		lineWidth := lineWidth * 8
 
-		if (lineWidth > 800) {
-			lineWidth := 800
-		}
-		
-		lineHeight := lineHeight * 14
-		
-		if (lineHeight > 600) {
-			lineHeight := 600
-		}
-		
-		textAreaWidth := lineWidth + (2*this.padding.width)
-		textAreaHeight := lineHeight + (2*this.padding.height)
-		*/
+		this.CalculateToolTipDimensions(String, fontSize, ttWidth, ttLineHeight, ttheight)
 		
 		textAreaWidth	:= ttWidth + (2 * this.padding.width)
 		textAreaHeight	:= ttHeight + (2 * this.padding.height)
@@ -72,17 +44,6 @@ class GdipTooltip
 		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(textAreaWidth-this.borderSize.width, 0), new this.gdip.Size(this.borderSize.width, textAreaHeight))
 		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0, 0), new gdip.Size(textAreaWidth, this.borderSize.height))
 		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0, textAreaHeight-this.borderSize.height), new gdip.Size(textAreaWidth, this.borderSize.height))
-
-		/*
-		options := {}
-		options.font := "Consolas"
-		options.brush := this.fontBrush
-		options.width := lineWidth
-		options.height := lineHeight
-		options.size := Opts.FontSize
-		options.left := this.padding.width
-		options.top := this.padding.height
-		*/
 		
 		options := {}
 		options.font	:= "Consolas"
@@ -106,26 +67,6 @@ class GdipTooltip
 		this.window.Clear()
 		this.window.Update()
 	}
-
-	/*
-	CalcStringWidth(String, Opts)
-	{
-		width := 0
-		StringArray := StrSplit(String, "`n")
-		Loop % StringArray.MaxIndex()
-		{
-			element := StringArray[a_index]
-			len := StrLen(element)
-			
-			if (len > width)
-			{
-				width := len
-			}
-		}
-
-		return width
-	}
-	*/
 	
 	CalculateToolTipDimensions(String, fontSize, ByRef ttWidth, ByRef ttLineHeight, ByRef ttHeight) {
 		ttWidth	:= 0
@@ -148,16 +89,7 @@ class GdipTooltip
 			ttLineHeight := hi
 		}	
 	}
-	
-	/*
-	CalcStringHeight(String)
-	{
-		StringReplace, String, String, `n, `n, UseErrorLevel
-		height := ErrorLevel
-		return height
-	}
-	*/
-	
+
 	MeasureText(Str, FontOpts = "", FontName = "") {
 		Static DT_FLAGS := 0x0520 ; DT_SINGLELINE = 0x20, DT_NOCLIP = 0x0100, DT_CALCRECT = 0x0400
 		Static WM_GETFONT := 0x31
@@ -189,9 +121,9 @@ class GdipTooltip
 	}
 	
 	AssembleHexARGBColors(Opts, ByRef windowColor, ByRef borderColor, ByRef textColor) {
-		_windowTrans	:= this.ConvertTransparencyFromPercentToHex(Opts.GDIWindowTrans)
-		_borderTrans	:= this.ConvertTransparencyFromPercentToHex(Opts.GDIBorderTrans)
-		_textTrans	:= this.ConvertTransparencyFromPercentToHex(Opts.GDITextTrans)
+		_windowTrans	:= this.ConvertOpacityFromPercentToHex(Opts.GDIWindowTrans)
+		_borderTrans	:= this.ConvertOpacityFromPercentToHex(Opts.GDIBorderTrans)
+		_textTrans	:= this.ConvertOpacityFromPercentToHex(Opts.GDITextTrans)
 		
 		windowColor	:= _windowTrans . Opts.GDIWindowColor
 		borderColor	:= _borderTrans . Opts.GDIBorderColor
@@ -199,26 +131,27 @@ class GdipTooltip
 	}
 	
 	ValidateRGBColor(Color, Default) {
+		StringUpper, Color, Color
 		RegExMatch(Trim(Color), "i)(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)", hex)
-		console.log(Color)
-		Return hex ? hex : Default
+		Return StrLen(hex) ? hex : Default
 	}
 	
-	ValidateTransparency(Transparency, Default) {
-		If (not RegExMatch(Transparency, "i)[0-9]+")) {
-			Transparency := Default
-		}
-		If (Transparency > 100) {
-			Transparency := 100
-		} Else If (Transparency < 0) {
-			Transparency := 0
+	ValidateOpacity(Opacity, Default) {
+		Opacity := Opacity + 0	; convert string to int
+		If (not RegExMatch(Opacity, "i)[0-9]+")) {
+			Opacity := Default
 		}
 		
-		Return Transparency
+		If (Opacity > 100) {
+			Opacity := 100
+		} Else If (Opacity < 0) {
+			Opacity := 0
+		}
+		Return Opacity
 	}
 	
-	ConvertTransparencyFromPercentToHex(Transparency) {
-		percToHex := (Transparency / 100) * 255
+	ConvertOpacityFromPercentToHex(Opacity) {
+		percToHex := (Opacity / 100) * 255
 		hex		:= this.FHex(percToHex)		
 		
 		Return hex
