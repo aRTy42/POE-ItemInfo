@@ -9394,6 +9394,7 @@ CreateSettingsUI()
 	GuiAddText("Opacity (0-100):", "xs95 ys195 w150", "LblGDITextOpacity")
 	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys191 w60", "GDITextOpacity", "GDITextOpacityH")
 	
+	GuiAddButton("Defaults", "xs9 ys230 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults")
 	GuiAddButton("Preview", "xs170 ys230 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip")
 	
 	
@@ -10601,6 +10602,15 @@ SettingsUI_BtnGDIPreviewTooltip:
 	; reset options
 	Opts.UseGDI := _tempGDIState
 	gdipTooltip.UpdateFromOptions(Opts)
+	return
+	
+SettingsUI_BtnGDIDefaults:
+	GuiControl, , % GDIWindowColorH  , % Opts.GDIWindowColorDefault 
+	GuiControl, , % GDIWindowOpacityH, % Opts.GDIWindowOpacityDefault
+	GuiControl, , % GDIBorderColorH  , % Opts.GDIBorderColorDefault
+	GuiControl, , % GDIBorderOpacityH, % Opts.GDIBorderOpacityDefault 
+	GuiControl, , % GDITextColorH    , % Opts.GDITextColorDefault
+	GuiControl, , % GDITextOpacityH  , % Opts.GDITextOpacityDefault	
 	return
 
 SettingsUI_ChkShowAffixDetails:

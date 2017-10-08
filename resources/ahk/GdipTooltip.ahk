@@ -75,6 +75,7 @@ class GdipTooltip
 
 		this.window.WriteText(String, options)
 		this.window.Update({ x: XCoord, y: YCoord})
+		;this.window.Update({ x: 0, y: 0})
 	}
 	
 	SetInnerBorder(state = true, luminosityFactor = 0, argbColorHex = "") {
