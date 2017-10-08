@@ -1,45 +1,62 @@
+; AutoHotkey
+; Language:       	English 
+; Authors:		esunder | https://github.com/esunder
+;				Eruyome |	https://github.com/eruyome
+;
+; Class Function:
+;	GDI+ Tooltip
+;	
+; Functions need the following arguments to set color options:
+;	- Window/Border/Font Color in RBG ("000000" - "FFFFFF").
+;	- Window/Border/Font Opacity in percent (0 - 100).
+
 #Include, %A_ScriptDir%\lib\Gdip2.ahk
 
 class GdipTooltip
 {
-	__New() 
+	__New(boSize = 2, padding = 5, w = 800, h = 600, wColor = "0xE5000000", bColor = "0xE57A7A7A", fColor = "0xFFFFFFFF", innerBorder = false) 
 	{
 		; Initialize Gdip
 		this.gdip := new Gdip()
-		this.window := new gdip.Window(new gdip.Size(800, 600))
-		this.fillBrush := new gdip.Brush(0xE5000000)
-		this.borderBrush := new gdip.Brush(0xE5513101)
-		this.fontBrush := new gdip.Brush(0xFFFEFEFE)
-
-		this.borderSize := new this.gdip.Size(2, 2)
-		this.padding := new this.gdip.Size(5, 5)
-
+		this.window := new gdip.Window(new gdip.Size(w, h))
+		this.fillBrush := new gdip.Brush(wColor)
+		this.borderBrush := new gdip.Brush(bColor)
+		this.borderBrushInner := new gdip.Brush(0xE50000FF)
+		this.fontBrush := new gdip.Brush(fColor)
+		
+		this.innerBorder := innerBorder	
+		this.borderSize := new this.gdip.Size(boSize, boSize)
+		this.padding := new this.gdip.Size(padding, padding)
+		
 		; Start off with a clear window
 		this.HideGdiTooltip()
 	}
 
-	ShowGdiTooltip(Opts, String, XCoord, YCoord, debug = false)
+	ShowGdiTooltip(fontSize, String, XCoord, YCoord, debug = false)
 	{
 		; Ignore empty strings
-		If(String == "")
+		If (String == "")
 			return
 
 		position := new this.gdip.Point(XCoord, YCoord)
-		fontSize := Opts.FontSize + 3	
+		fontSize := fontSize + 3	
 
 		this.CalculateToolTipDimensions(String, fontSize, ttWidth, ttLineHeight, ttheight)
 		
 		textAreaWidth	:= ttWidth + (2 * this.padding.width)
 		textAreaHeight	:= ttHeight + (2 * this.padding.height)
 
-		If (debug) {
-			console.log("[" . String . "]")
-			console.log("lineDims: " . lineWidth . "x" . lineHeight)
-			console.log("textArea: " . textAreaWidth . "x" . textAreaHeight)
-		}
-
 		this.window.Clear()
 		this.window.FillRectangle(this.fillBrush, new this.gdip.Point(this.borderSize.width, this.borderSize.height), new this.gdip.Size(textAreaWidth-(this.borderSize.width*2), textAreaHeight-(this.borderSize.height*2)))
+
+		; optional inner border
+		If (this.innerBorder) {
+			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(this.borderSize.width, this.borderSize.height), new this.gdip.Size(this.borderSize.width, textAreaHeight - this.borderSize.height))
+			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(textAreaWidth - this.borderSize.width - this.borderSize.width, 0), new this.gdip.Size(this.borderSize.width, textAreaHeight - this.borderSize.height))
+			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(this.borderSize.width, this.borderSize.height), new gdip.Size(textAreaWidth - this.borderSize.width, this.borderSize.height))
+			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(0, textAreaHeight - this.borderSize.height - this.borderSize.height), new gdip.Size(textAreaWidth - this.borderSize.width, this.borderSize.height))
+		}
+		
 		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0, 0), new this.gdip.Size(this.borderSize.width, textAreaHeight))
 		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(textAreaWidth-this.borderSize.width, 0), new this.gdip.Size(this.borderSize.width, textAreaHeight))
 		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0, 0), new gdip.Size(textAreaWidth, this.borderSize.height))
@@ -57,13 +74,35 @@ class GdipTooltip
 		this.window.WriteText(String, options)
 		this.window.Update({ x: XCoord, y: YCoord})
 	}
+	
+	SetInnerBorder(state = true, luminosityFactor = 0, argbColorHex = "") {
+		this.innerBorder := state
+		
+		; use passed color 
+		argbColorHex := RegExReplace(Trim(argbColorHex), "i)^0x")
+		If (StrLen(argbColorHex)) {
+			argbColorHex := "0x" this.ValidateRGBColor(argbColorHex, "E5FFFFFF", true)
+			this.borderBrushInner := new gdip.Brush(argbColorHex)
+		} 
+		; darken/lighten the default borders color
+		Else If (luminosityFactor > 0 or luminosityFactor < 0) {
+			_r := this.ChangeLuminosity(this.borderBrush.Color.r, luminosityFactor)
+			_g := this.ChangeLuminosity(this.borderBrush.Color.g, luminosityFactor)
+			_b := this.ChangeLuminosity(this.borderBrush.Color.b, luminosityFactor)
+			_a := this.borderBrush.Color.a	
+			this.borderBrushInner := new gdip.Brush(_a, _r, _g, _b)			
+		}
+	}	
+	
+	SetBorderSize(w, h) {
+		this.borderSize := new this.gdip.Size(w, h)
+	}
+	SetPadding(w, h) {
+		this.padding := new this.gdip.Size(w, h)
+	}
 
 	HideGdiTooltip(debug = false)
 	{
-		If (debug) {
-			console.log("HideGdiTooltip")
-		}
-
 		this.window.Clear()
 		this.window.Update()
 	}
@@ -113,7 +152,6 @@ class GdipTooltip
 	UpdateFromOptions(Opts)
 	{		
 		this.AssembleHexARGBColors(Opts, wColor, bColor, tColor)
-		;console.log("UpdateFromOptions: " . wColor . " " . bColor . " " . tColor)
 		this.fillBrush		:= new gdip.Brush(wColor)
 		this.borderBrush	:= new gdip.Brush(bColor)
 		this.fontBrush		:= new gdip.Brush(tColor)
@@ -129,9 +167,13 @@ class GdipTooltip
 		tColor	:= _textOpacity   . Opts.GDITextColor
 	}
 	
-	ValidateRGBColor(Color, Default) {
+	ValidateRGBColor(Color, Default, hasOpacity = false) {
 		StringUpper, Color, Color
-		RegExMatch(Trim(Color), "i)(^[0-9A-F]{6}$)|(^[0-9A-F]{3}$)", hex)
+		If (hasOpacity) {
+			RegExMatch(Trim(Color), "i)(^[0-9A-F]{8}$)", hex)	
+		} Else {
+			RegExMatch(Trim(Color), "i)(^[0-9A-F]{6}$)", hex)
+		}		
 		Return StrLen(hex) ? hex : Default
 	}
 	
@@ -167,5 +209,36 @@ class GdipTooltip
 		Loop % s
 			NumPut( *( &hx + ( ( int & 15 ) << u ) ), h, pad - A_Index << u, "UChar" ), int >>= 4
 		Return h
+	}
+	
+	ChangeLuminosity(c, l = 0) {
+		black := 0
+		white := 255
+		
+		If (l > 0) {
+			l := l > 1 ? 1 : l
+		} Else {
+			l := l < -1 ? -1 : l
+		}
+		
+		c := Round(this.Min(this.Max(0, c + (c * l)), 255))	
+		;c := this.Min(this.Max(black, c + (l * white)) , white)
+		Return Round(c)
+	}
+	
+	Min(x,x1="",x2="",x3="",x4="",x5="",x6="",x7="",x8="",x9="") { 
+	   Loop 
+		 IfEqual x%A_Index%,,Break 
+		 Else If (x  > x%A_Index%) 
+				x := x%A_Index% 
+	   Return x 
+	}
+	
+	Max(x,x1="",x2="",x3="",x4="",x5="",x6="",x7="",x8="",x9="") { 
+	   Loop 
+		 IfEqual x%A_Index%,,Break 
+		 Else If (x  < x%A_Index%) 
+				x := x%A_Index% 
+	   Return x 
 	}
 }

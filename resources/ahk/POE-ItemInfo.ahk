@@ -9027,7 +9027,7 @@ ShowToolTip(String, Centered = false)
 
 			If (Opts.UseGDI) 
 			{
-				gdipTooltip.ShowGdiTooltip(Opts, String, XCoord, YCoord)
+				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord)
 			}
 			Else
 			{
@@ -9043,7 +9043,7 @@ ShowToolTip(String, Centered = false)
 			
 			If (Opts.UseGDI) 
 			{
-				gdipTooltip.ShowGdiTooltip(Opts, String, XCoord, YCoord)
+				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord)
 			}
 			Else
 			{
@@ -9070,7 +9070,7 @@ ShowToolTip(String, Centered = false)
 
 		If (Opts.UseGDI) 
 		{
-			gdipTooltip.ShowGdiTooltip(Opts, String, XCoord, YCoord)
+			gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord)
 		}
 		Else
 		{
