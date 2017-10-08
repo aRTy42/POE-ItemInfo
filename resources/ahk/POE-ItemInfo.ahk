@@ -9375,29 +9375,32 @@ CreateSettingsUI()
 	GuiAddEdit(Opts.FontSize, "xs180 ys155 w50 h20 Number", "FontSize")
 
 	; GDI+
-	GuiAddGroupBox("GDI+", "x7 y+20 w260 h220 Section")
+	GuiAddGroupBox("GDI+", "x7 y+20 w260 h260 Section")
 	GuiAddCheckBox("Enable GDI+", "xs10 ys20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
 	AddToolTip(Opts.UseGDI, "Enables GDI rendering of tooltips")	
 	GuiAddButton("Edit Window", "xs9 ys40 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
 	GuiAddText("Color (hex RGB):", "x+5 yp+5 w150", "LblGDIWindowColor")
 	GuiAddEdit(Opts.GDIWindowColor, "xs190 ys41 w60", "GDIWindowColor", "GDIWindowColorH")
-	GuiAddText("Opactiy (0-100):", "xs105 ys75 w150", "LblGDIWindowOpacity")
+	GuiAddText("Opactiy (0-100):", "xs95 ys75 w150", "LblGDIWindowOpacity")
 	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys71 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
 	GuiAddButton("Edit Border", "xs9 ys100 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
 	GuiAddText("Color (hex RGB):", "x+5 yp+5 w150", "LblGDIBorderColor")
 	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys101 w60", "GDIBorderColor", "GDIBorderColorH")	
-	GuiAddText("Opacity (0-100):", "xs105 ys135 w150", "LblGDIBorderOpacity")
+	GuiAddText("Opacity (0-100):", "xs95 ys135 w150", "LblGDIBorderOpacity")
 	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys131 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
 	GuiAddButton("Edit Text", "xs9 ys160 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
 	GuiAddText("Color (hex RGB):", "x+5 ys165 w150", "LblGDITextColor")
 	GuiAddEdit(Opts.GDITextColor, "xs190 ys161 w60", "GDITextColor", "GDITextColorH")
-	GuiAddText("Opacity (0-100):", "xs105 ys195 w150", "LblGDITextOpacity")
+	GuiAddText("Opacity (0-100):", "xs95 ys195 w150", "LblGDITextOpacity")
 	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys191 w60", "GDITextOpacity", "GDITextOpacityH")
+	
+	GuiAddButton("Preview", "xs170 ys230 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip")
+	
 	
 	; Display - Affixes
 
 	; This groupbox is positioned relative to the last control (first column), this is not optimal but makes it possible to wrap these groupboxes in Tabs without further repositing.
-	displayAffixesPos := SkipItemInfoUpdateCall ? "675" : "765"
+	displayAffixesPos := SkipItemInfoUpdateCall ? "715" : "805"
 	GuiAddGroupBox("Display - Affixes", "xs270 yp-" displayAffixesPos " w260 h360 Section")
 
 	GuiAddCheckbox("Show affix totals", "xs10 ys20 w210 h30", Opts.ShowAffixTotals, "ShowAffixTotals", "ShowAffixTotalsH")
@@ -10515,6 +10518,7 @@ SettingsUI_BtnDefaults:
 	return
 
 OpenGDIColorPicker(type, rgb, opacity, title, image) {
+	; GDI+
 	global	
 	_defaultColor		:= Opts["GDI" type "Color"]
 	_defaultOpacity	:= Opts["GDI" type "Opacity"]
@@ -10534,25 +10538,69 @@ OpenGDIColorPicker(type, rgb, opacity, title, image) {
 SettingsUI_BtnGDIWindowColor:
 	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"	
 	_type	:= "Window"
-	GuiControlGet, _cGDIColor1  , , % GDIWindowColorH
-	GuiControlGet, _cGDIOpacity1, , % GDIWindowOpacityH
-	OpenGDIColorPicker(_type, _cGDIColor1, _cGDIOpacity1, "GDI+ Tooltip " _type " Color Picker", _image)
+	GuiControlGet, _cGDIColor  , , % GDIWindowColorH
+	GuiControlGet, _cGDIOpacity, , % GDIWindowOpacityH
+	OpenGDIColorPicker(_type, _cGDIColor, _cGDIOpacity, "GDI+ Tooltip " _type " Color Picker", _image)
 	return
 	
 SettingsUI_BtnGDIBorderColor:
 	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"	
 	_type	:= "Border"
-	GuiControlGet, _cGDIColor2  , , % GDIBorderColorH
-	GuiControlGet, _cGDIOpacity2, , % GDIBorderOpacityH	
-	OpenGDIColorPicker(_type, _cGDIColor2, _cGDIOpacity2, "GDI+ Tooltip " _type " Color Picker", _image)
+	GuiControlGet, _cGDIColor  , , % GDIBorderColorH
+	GuiControlGet, _cGDIOpacity, , % GDIBorderOpacityH	
+	OpenGDIColorPicker(_type, _cGDIColor, _cGDIOpacity, "GDI+ Tooltip " _type " Color Picker", _image)
 	return
 	
 SettingsUI_BtnGDITextColor:
 	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"	
 	_type	:= "Text"
-	GuiControlGet, _cGDIColor3  , , % GDITextColorH
-	GuiControlGet, _cGDIOpacity3, , % GDITextOpacityH
-	OpenGDIColorPicker(_type, _cGDIColor3, _cGDIOpacity3, "GDI+ Tooltip " _type " Color Picker", _image)
+	GuiControlGet, _cGDIColor  , , % GDITextColorH
+	GuiControlGet, _cGDIOpacity, , % GDITextOpacityH
+	OpenGDIColorPicker(_type, _cGDIColor, _cGDIOpacity, "GDI+ Tooltip " _type " Color Picker", _image)
+	return
+
+SettingsUI_BtnGDIPreviewTooltip:
+	; temporarily save GDI state as true
+	_tempGDIState := Opts.UseGDI
+	GuiControlGet, _tempUseGDI, , % UseGDIH
+	Opts.UseGDI := _tempUseGDI
+	
+	_tempGDIOpts := {}
+	GuiControlGet, _tempGDIWindowColor   , , % GDIWindowColorH
+	GuiControlGet, _tempGDIWindowOpacity , , % GDIWindowOpacityH
+	GuiControlGet, _tempGDIBorderColor   , , % GDIBorderColorH
+	GuiControlGet, _tempGDIBorderOpacity , , % GDIBorderOpacityH
+	GuiControlGet, _tempGDITextColor   , , % GDITextColorH
+	GuiControlGet, _tempGDITextOpacity , , % GDITextOpacityH
+	_tempGDIOpts.GDIWindowColor	:= _tempGDIWindowColor
+	_tempGDIOpts.GDIWindowOpacity	:= _tempGDIWindowOpacity
+	_tempGDIOpts.GDIBorderColor	:= _tempGDIBorderColor
+	_tempGDIOpts.GDIBorderOpacity	:= _tempGDIBorderOpacity
+	_tempGDIOpts.GDITextColor	:= _tempGDITextColor
+	_tempGDIOpts.GDITextOpacity	:= _tempGDITextOpacity
+	
+	gdipTooltip.UpdateFromOptions(_tempGDIOpts)
+	_testString =
+	(
+		TOOLIP Preview Window
+		
+		Voidbringer
+		Conjurer Gloves
+		Item Level:    70
+		Base Level:    55
+		Max Sockets:    4
+		--------
+		+1 to Level of Socketed Elem…          
+		Increased Critical Strike Ch… 125-150  
+		Increased Energy Shield       180-250  
+		Increased Mana Cost of Skill…   80-40  
+		Energy Shield gained on Kill    15-20
+	)
+	ShowToolTip(_testString)
+	
+	; reset options
+	Opts.UseGDI := _tempGDIState
+	gdipTooltip.UpdateFromOptions(Opts)
 	return
 
 SettingsUI_ChkShowAffixDetails:

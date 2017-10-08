@@ -113,21 +113,21 @@ class GdipTooltip
 
 	UpdateFromOptions(Opts)
 	{		
-		this.AssembleHexARGBColors(Opts, windowColor, borderColor, textColor)
-		;console.log("UpdateFromOptions: " . windowColor . " " . borderColor . " " . textColor)
-		this.fillBrush := new gdip.Brush(windowColor)
-		this.borderBrush := new gdip.Brush(borderColor)
-		this.fontBrush := new gdip.Brush(textColor)
+		this.AssembleHexARGBColors(Opts, wColor, bColor, tColor)
+		;console.log("UpdateFromOptions: " . wColor . " " . bColor . " " . tColor)
+		this.fillBrush		:= new gdip.Brush(wColor)
+		this.borderBrush	:= new gdip.Brush(bColor)
+		this.fontBrush		:= new gdip.Brush(tColor)
 	}
 	
-	AssembleHexARGBColors(Opts, ByRef windowColor, ByRef borderColor, ByRef textColor) {
-		_windowTrans	:= this.ConvertOpacityFromPercentToHex(Opts.GDIWindowTrans)
-		_borderTrans	:= this.ConvertOpacityFromPercentToHex(Opts.GDIBorderTrans)
-		_textTrans	:= this.ConvertOpacityFromPercentToHex(Opts.GDITextTrans)
+	AssembleHexARGBColors(Opts, ByRef wColor, ByRef bColor, ByRef tColor) {
+		_windowOpacity	:= this.ConvertOpacityFromPercentToHex(Opts.GDIWindowOpacity)
+		_borderOpacity	:= this.ConvertOpacityFromPercentToHex(Opts.GDIBorderOpacity)
+		_textOpacity	:= this.ConvertOpacityFromPercentToHex(Opts.GDITextOpacity)
 		
-		windowColor	:= _windowTrans . Opts.GDIWindowColor
-		borderColor	:= _borderTrans . Opts.GDIBorderColor
-		textColor		:= _textTrans . Opts.GDITextColor
+		wColor	:= _windowOpacity . Opts.GDIWindowColor
+		bColor	:= _borderOpacity . Opts.GDIBorderColor
+		tColor	:= _textOpacity   . Opts.GDITextColor
 	}
 	
 	ValidateRGBColor(Color, Default) {
