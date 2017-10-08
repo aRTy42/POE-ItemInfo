@@ -14,7 +14,7 @@
 
 class GdipTooltip
 {
-	__New(boSize = 2, padding = 5, w = 800, h = 600, wColor = "0xE5000000", bColor = "0xE57A7A7A", fColor = "0xFFFFFFFF", innerBorder = false) 
+	__New(boSize = 2, padding = 4, w = 800, h = 600, wColor = "0xE5000000", bColor = "0xE57A7A7A", fColor = "0xFFFFFFFF", innerBorder = false) 
 	{
 		; Initialize Gdip
 		this.gdip := new Gdip()
@@ -43,8 +43,8 @@ class GdipTooltip
 
 		this.CalculateToolTipDimensions(String, fontSize, ttWidth, ttLineHeight, ttheight)
 		
-		textAreaWidth	:= ttWidth + (2 * this.padding.width)
-		textAreaHeight	:= ttHeight + (2 * this.padding.height)
+		textAreaWidth	:= Ceil(ttWidth + (2 * this.padding.width))
+		textAreaHeight	:= Ceil(ttHeight + (2 * this.padding.height))
 
 		this.window.Clear()
 		this.window.FillRectangle(this.fillBrush, new this.gdip.Point(this.borderSize.width, this.borderSize.height), new this.gdip.Size(textAreaWidth-(this.borderSize.width*2), textAreaHeight-(this.borderSize.height*2)))
@@ -125,7 +125,9 @@ class GdipTooltip
 			
 			ttHeight += hi
 			ttLineHeight := hi
-		}	
+		}
+		ttWidth := Ceil(ttWidth)
+		ttHeight := Ceil(ttHeight)
 	}
 
 	MeasureText(Str, FontOpts = "", FontName = "") {
@@ -173,7 +175,7 @@ class GdipTooltip
 			RegExMatch(Trim(Color), "i)(^[0-9A-F]{8}$)", hex)	
 		} Else {
 			RegExMatch(Trim(Color), "i)(^[0-9A-F]{6}$)", hex)
-		}		
+		}
 		Return StrLen(hex) ? hex : Default
 	}
 	
