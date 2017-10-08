@@ -188,19 +188,19 @@ class UserOptions {
 	; Set this to 1 to enable GDI+ rendering
 	UseGDI := 0
 
-	; Format: 0xAARRGGBB
+	; Format: RRGGBB
 	GDIWindowColor			:= "000000"
 	GDIWindowColorDefault	:= "000000"
-	GDIBorderColor			:= "91603B"
-	GDIBorderColorDefault	:= "91603B"
-	GDITextColor 			:= "FFFFFF"
-	GDITextColorDefault 	:= "FFFFFF"
-	GDIWindowOpacity		:= 85
-	GDIWindowOpacityDefault	:= 85
-	GDIBorderOpacity		:= 85
-	GDIBorderOpacityDefault	:= 85
-	GDITextOpacity			:= 85
-	GDITextOpacityDefault	:= 85
+	GDIBorderColor			:= "513101"
+	GDIBorderColorDefault	:= "513101"
+	GDITextColor			:= "FEFEFE"
+	GDITextColorDefault		:= "FEFEFE"
+	GDIWindowOpacity		:= 90
+	GDIWindowOpacityDefault	:= 90
+	GDIBorderOpacity		:= 90
+	GDIBorderOpacityDefault	:= 90
+	GDITextOpacity			:= 100
+	GDITextOpacityDefault	:= 100
 
 	ScanUI()
 	{

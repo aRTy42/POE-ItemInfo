@@ -7,9 +7,9 @@ class GdipTooltip
 		; Initialize Gdip
 		this.gdip := new Gdip()
 		this.window := new gdip.Window(new gdip.Size(800, 600))
-		this.fillBrush := new gdip.Brush(0xE1000000)
-		this.borderBrush := new gdip.Brush(0xE191603B)
-		this.fontBrush := new gdip.Brush(0xE1FFFFFF)
+		this.fillBrush := new gdip.Brush(0xE5000000)
+		this.borderBrush := new gdip.Brush(0xE5513101)
+		this.fontBrush := new gdip.Brush(0xFFFEFEFE)
 
 		this.borderSize := new this.gdip.Size(2, 2)
 		this.padding := new this.gdip.Size(5, 5)
