@@ -14,19 +14,19 @@
 
 class GdipTooltip
 {
-	__New(boSize = 2, padding = 4, w = 800, h = 600, wColor = "0xE5000000", bColor = "0xE57A7A7A", fColor = "0xFFFFFFFF", innerBorder = false) 
+	__New(boSize = 2, padding = 5, w = 800, h = 600, wColor = "0xE5000000", bColor = "0xE57A7A7A", fColor = "0xFFFFFFFF", innerBorder = false) 
 	{
 		; Initialize Gdip
-		this.gdip := new Gdip()
-		this.window := new gdip.Window(new gdip.Size(w, h))
-		this.fillBrush := new gdip.Brush(wColor)
-		this.borderBrush := new gdip.Brush(bColor)
-		this.borderBrushInner := new gdip.Brush(0xE50000FF)
-		this.fontBrush := new gdip.Brush(fColor)
+		this.gdip				:= new Gdip()
+		this.window			:= new gdip.Window(new gdip.Size(w, h))
+		this.fillBrush			:= new gdip.Brush(wColor)
+		this.borderBrush 		:= new gdip.Brush(bColor)
+		this.borderBrushInner	:= new gdip.Brush(0xE50000FF)
+		this.fontBrush			:= new gdip.Brush(fColor)
 		
-		this.innerBorder := innerBorder	
-		this.borderSize := new this.gdip.Size(boSize, boSize)
-		this.padding := new this.gdip.Size(padding, padding)
+		this.innerBorder	:= innerBorder	
+		this.borderSize	:= new this.gdip.Size(boSize, boSize)
+		this.padding		:= new this.gdip.Size(padding, padding)
 		
 		; Start off with a clear window
 		this.HideGdiTooltip()
@@ -47,9 +47,11 @@ class GdipTooltip
 		textAreaHeight	:= Ceil(ttHeight + (2 * this.padding.height))
 
 		this.window.Clear()
+		this.window.size.width	:= textAreaWidth  + this.borderSize.width
+		this.window.size.height	:= textAreaHeight + this.borderSize.height
 		this.window.FillRectangle(this.fillBrush, new this.gdip.Point(this.borderSize.width, this.borderSize.height), new this.gdip.Size(textAreaWidth-(this.borderSize.width*2), textAreaHeight-(this.borderSize.height*2)))
 
-		; optional inner border
+		; optional inner border - default = false
 		If (this.innerBorder) {
 			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(this.borderSize.width, this.borderSize.height), new this.gdip.Size(this.borderSize.width, textAreaHeight - this.borderSize.height))
 			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(textAreaWidth - this.borderSize.width - this.borderSize.width, 0), new this.gdip.Size(this.borderSize.width, textAreaHeight - this.borderSize.height))
