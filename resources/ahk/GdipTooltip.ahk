@@ -75,7 +75,6 @@ class GdipTooltip
 		Loop % StringArray.MaxIndex()
 		{
 			element := StringArray[a_index]
-			console.log(fontSize)
 			dim	:= this.MeasureText(element, fontSize + 1, "Consolas")
 			len	:= dim["W"] * (fontSize / 10)
 			hi	:= dim["H"] * ((fontSize - 1) / 10)
