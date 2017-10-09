@@ -9,12 +9,17 @@
 ; Functions need the following arguments to set color options:
 ;	- Window/Border/Font Color in RBG ("000000" - "FFFFFF").
 ;	- Window/Border/Font Opacity in percent (0 - 100).
+;
+; Other optional arguments:
+;	innerBorder		Renders a second inner border, using the default color or a color set by SetInnerBorder()
+;	renderingHack		For some reason all graphics where rendered "blurry", while their starting coordinates where whole pixels
+;					they needed an offset of (about) 0.3999 to render correctly and sharp.
 
 #Include, %A_ScriptDir%\lib\Gdip2.ahk
 
 class GdipTooltip
 {
-	__New(boSize = 2, padding = 5, w = 800, h = 600, wColor = "0xE5000000", bColor = "0xE57A7A7A", fColor = "0xFFFFFFFF", innerBorder = false) 
+	__New(boSize = 2, padding = 5, w = 800, h = 600, wColor = "0xE5000000", bColor = "0xE57A7A7A", fColor = "0xFFFFFFFF", innerBorder = false, renderingHack = true) 
 	{
 		; Initialize Gdip
 		this.gdip				:= new Gdip()
@@ -27,6 +32,7 @@ class GdipTooltip
 		this.innerBorder	:= innerBorder	
 		this.borderSize	:= new this.gdip.Size(boSize, boSize)
 		this.padding		:= new this.gdip.Size(padding, padding)
+		this.renderingHack	:= renderingHack
 		
 		; Start off with a clear window
 		this.HideGdiTooltip()
@@ -43,8 +49,9 @@ class GdipTooltip
 
 		this.CalculateToolTipDimensions(String, fontSize, ttWidth, ttLineHeight, ttheight)
 		
-		textAreaWidth	:= Ceil(ttWidth + (2 * this.padding.width))
-		textAreaHeight	:= Ceil(ttHeight + (2 * this.padding.height))
+		renderingOffset := this.renderingHack ? 0.3999 : 0	
+		textAreaWidth	:= ttWidth  + (2 * this.padding.width)  + renderingOffset
+		textAreaHeight	:= ttHeight + (2 * this.padding.height) + renderingOffset
 
 		this.window.Clear()
 		this.window.size.width	:= textAreaWidth  + this.borderSize.width
@@ -53,16 +60,20 @@ class GdipTooltip
 
 		; optional inner border - default = false
 		If (this.innerBorder) {
-			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(this.borderSize.width, this.borderSize.height), new this.gdip.Size(this.borderSize.width, textAreaHeight - this.borderSize.height))
-			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(textAreaWidth - this.borderSize.width - this.borderSize.width, 0), new this.gdip.Size(this.borderSize.width, textAreaHeight - this.borderSize.height))
-			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(this.borderSize.width, this.borderSize.height), new gdip.Size(textAreaWidth - this.borderSize.width, this.borderSize.height))
-			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(0, textAreaHeight - this.borderSize.height - this.borderSize.height), new gdip.Size(textAreaWidth - this.borderSize.width, this.borderSize.height))
+			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(this.borderSize.width + renderingOffset, this.borderSize.height + renderingOffset), new this.gdip.Size(this.borderSize.width, textAreaHeight - this.borderSize.height - renderingOffset))
+			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(textAreaWidth - this.borderSize.width - this.borderSize.width, 0 + renderingOffset), new this.gdip.Size(this.borderSize.width, textAreaHeight - this.borderSize.height - renderingOffset))
+			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(this.borderSize.width + renderingOffset, this.borderSize.height + renderingOffset), new gdip.Size(textAreaWidth - this.borderSize.width - renderingOffset, this.borderSize.height))
+			this.window.FillRectangle(this.borderBrushInner, new this.gdip.Point(0 + renderingOffset, textAreaHeight - this.borderSize.height - this.borderSize.height), new gdip.Size(textAreaWidth - this.borderSize.width - renderingOffset, this.borderSize.height))
 		}
 		
-		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0, 0), new this.gdip.Size(this.borderSize.width, textAreaHeight))
-		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(textAreaWidth-this.borderSize.width, 0), new this.gdip.Size(this.borderSize.width, textAreaHeight))
-		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0, 0), new gdip.Size(textAreaWidth, this.borderSize.height))
-		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0, textAreaHeight-this.borderSize.height), new gdip.Size(textAreaWidth, this.borderSize.height))
+		; left border
+		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0 + renderingOffset, 0 + renderingOffset), new this.gdip.Size(this.borderSize.width, textAreaHeight - renderingOffset))
+		; right border
+		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(textAreaWidth - this.borderSize.width, 0 + renderingOffset), new this.gdip.Size(this.borderSize.width, textAreaHeight - renderingOffset))
+		; top border
+		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0 + renderingOffset, 0 + renderingOffset), new gdip.Size(textAreaWidth - renderingOffset, this.borderSize.height))
+		; bottom border
+		this.window.FillRectangle(this.borderBrush, new this.gdip.Point(0 + renderingOffset, textAreaHeight - this.borderSize.height), new gdip.Size(textAreaWidth - renderingOffset, this.borderSize.height))
 		
 		options := {}
 		options.font	:= "Consolas"
@@ -70,12 +81,11 @@ class GdipTooltip
 		options.width	:= ttWidth
 		options.height	:= ttHeight
 		options.size	:= fontSize
-		options.left	:= this.padding.width
-		options.top	:= this.padding.height
+		options.left	:= this.padding.width  + renderingOffset
+		options.top	:= this.padding.height + renderingOffset
 
 		this.window.WriteText(String, options)
 		this.window.Update({ x: XCoord, y: YCoord})
-		;this.window.Update({ x: 0, y: 0})
 	}
 	
 	SetInnerBorder(state = true, luminosityFactor = 0, argbColorHex = "") {
@@ -129,7 +139,8 @@ class GdipTooltip
 			ttHeight += hi
 			ttLineHeight := hi
 		}
-		ttWidth := Ceil(ttWidth)
+		
+		ttWidth  := Ceil(ttWidth)
 		ttHeight := Ceil(ttHeight)
 	}
 

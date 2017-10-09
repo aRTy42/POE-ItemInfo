@@ -1704,11 +1704,11 @@ TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = ""){
 		
 		length := (StrLen(average) > StrLen(median)) ? StrLen(average) : StrLen(median)
 		Title .= "Average price in chaos: " StrPad(average, length, "left") " (" prices.MaxIndex() " results"
-		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed by Account Filter" : ""		
+		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed by Acc. Filter" : ""		
 		Title .= ") `n"
 		
 		Title .= "Median  price in chaos: " StrPad(median, length, "left") " (" prices.MaxIndex() " results"
-		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed by Account Filter" : ""		
+		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed by Acc. Filter" : ""		
 		Title .= ") `n`n"
 	}  
 	Return Title
@@ -1741,8 +1741,12 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
 	
+	seperatorBig := "`n---------------------------------------------------------------------`n"	
+	
 	; Target HTML Looks like the ff:
-     ; <tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">	
+     ; <tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008" 
+	; data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe" 
+	; data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">	
 	If (not Item.IsGem and not Item.IsDivinationCard and not Item.IsJewel and not Item.IsCurrency and not Item.IsMap) {
 		showItemLevel := true
 	}
@@ -1784,7 +1788,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	}
 	
 	Title .= ", (" LeagueName ")"
-	Title .= "`n---------------------------------------------------------------------`n"	
+	Title .= seperatorBig	
 	
 	; add notes what parameters where used in the search
 	ShowFullNameNote := false 
@@ -1820,7 +1824,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 			
 			Title .= (Item.UsedInSearch.SearchType = "Default") ? "`n" . "!! Mod rolls are being ignored !!" : ""
 		}
-		Title .= "`n---------------------------------------------------------------------`n"	
+		Title .= seperatorBig	
 	}
 	
 	; add average and median prices to title	
