@@ -19,7 +19,7 @@
 
 class GdipTooltip
 {
-	__New(boSize = 2, padding = 5, w = 800, h = 600, wColor = "0xE5000000", bColor = "0xE57A7A7A", fColor = "0xFFFFFFFF", innerBorder = false, renderingHack = true) 
+	__New(boSize = 2, padding = 5, w = 800, h = 600, wColor = "0xE5000000", bColor = "0xE57A7A7A", fColor = "0xFFFFFFFF", innerBorder = false, renderingHack = true, luminosityFactor = 0) 
 	{
 		; Initialize Gdip
 		this.gdip				:= new Gdip()
@@ -29,7 +29,8 @@ class GdipTooltip
 		this.borderBrushInner	:= new gdip.Brush(0xE50000FF)
 		this.fontBrush			:= new gdip.Brush(fColor)
 		
-		this.innerBorder	:= innerBorder	
+		this.innerBorder	:= innerBorder
+		this.luminosityFactor := luminosityFactor
 		this.borderSize	:= new this.gdip.Size(boSize, boSize)
 		this.padding		:= new this.gdip.Size(padding, padding)
 		this.renderingHack	:= renderingHack
@@ -43,7 +44,7 @@ class GdipTooltip
 		; Ignore empty strings
 		If (String == "")
 			return
-
+		
 		position := new this.gdip.Point(XCoord, YCoord)
 		fontSize := fontSize + 3	
 
@@ -90,6 +91,7 @@ class GdipTooltip
 	
 	SetInnerBorder(state = true, luminosityFactor = 0, argbColorHex = "") {
 		this.innerBorder := state
+		luminosityFactor := luminosityFactor == 0 ? this.luminosityFactor : luminosityFactor
 		
 		; use passed color 
 		argbColorHex := RegExReplace(Trim(argbColorHex), "i)^0x")
@@ -107,6 +109,9 @@ class GdipTooltip
 		}
 	}	
 	
+	SetRenderingFix(state) {
+		this.renderingHack := state
+	}
 	SetBorderSize(w, h) {
 		this.borderSize := new this.gdip.Size(w, h)
 	}
@@ -171,6 +176,7 @@ class GdipTooltip
 		this.fillBrush		:= new gdip.Brush(wColor)
 		this.borderBrush	:= new gdip.Brush(bColor)
 		this.fontBrush		:= new gdip.Brush(tColor)
+		this.SetInnerBorder(this.innerBorder, this.luminosityFactor)
 	}
 	
 	AssembleHexARGBColors(Opts, ByRef wColor, ByRef bColor, ByRef tColor) {
