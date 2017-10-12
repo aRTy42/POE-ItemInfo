@@ -5104,7 +5104,6 @@ ParseAffixes(ItemDataAffixes, Item)
 		Itemdata.UncAffTmpAffixLines[A_Index] := AffixLines[A_Index]
 	}
 	
-	;DebugFile := FileOpen(";DebugFile.txt", "w")
 
 	If(Itemdata.Rarity = "Magic"){
 		PrefixLimit := 1
@@ -5136,14 +5135,6 @@ ParseAffixes(ItemDataAffixes, Item)
 	CheckAgainForGoodMeasure := False
 	While ReloopAll
 	{
-		;DebugFile.Write("ReloopAll:" ReloopAll "`n")
-		;DebugFile.Write("ConsiderAllRemainingAffixes:" ConsiderAllRemainingAffixes "`n")
-		;DebugFile.Write("CheckAgainForGoodMeasure:" CheckAgainForGoodMeasure "`n")
-		
-		
-		;DebugFile.Write("Uncertain:`n" ExploreObj(Itemdata.UncertainAffixes) "`n`n---`n`n")
-		;DebugFile.Write("Tmp:`n" ExploreObj(Itemdata.UncAffTmpAffixLines) "`n`n---`n`n")
-		
 		; No infinite looping. We re-enable ReloopAll below when it is warranted.
 		ReloopAll := False
 		
@@ -5162,13 +5153,8 @@ ParseAffixes(ItemDataAffixes, Item)
 			GrpSuffixMinCount := {"Total":0}		
 		}
 		
-		;DebugFile.Write("GrpPrefixMinCount:`n" ExploreObj(GrpPrefixMinCount) "`n`n")
-		;DebugFile.Write("GrpSuffixMinCount:`n" ExploreObj(GrpSuffixMinCount) "`n`n")
-		
 		For key_grp, grp in Itemdata.UncertainAffixes
 		{
-			;DebugFile.Write("Outer loop, key_grp:" key_grp "`n")
-			
 			PrefixMinCount := 10	; Start arbitrary high enough and then lower them with comparisons.
 			SuffixMinCount := 10
 			
@@ -5186,8 +5172,6 @@ ParseAffixes(ItemDataAffixes, Item)
 				
 				For key_entry, entry in grp
 				{
-					;DebugFile.Write("Inner loop, key_entry:" key_entry "`n")
-					;DebugFile.Write("Pre:" entry[1] ", Suf:" entry[2] "`n")
 					++grp_len
 					
 					; Phase 1:
@@ -5210,10 +5194,6 @@ ParseAffixes(ItemDataAffixes, Item)
 						; No fancy affix assumptions yet, just the certain count due to what we have added to AffixLines already.
 						AssumePrefixCount := AffixTotals.NumPrefixes
 						AssumeSuffixCount := AffixTotals.NumSuffixes
-						
-						;DebugFile.Write("Consider False`n")
-						;DebugFile.Write("Checking:" AffixTotals.NumPrefixes " global +" entry[1] " own = " AssumePrefixCount + entry[1] ">" PrefixLimit "`n")
-						;DebugFile.Write("Checking:" AffixTotals.NumSuffixes " global +" entry[2] " own = " AssumeSuffixCount + entry[2] ">" SuffixLimit "`n`n")
 					}
 					Else
 					{
@@ -5222,15 +5202,10 @@ ParseAffixes(ItemDataAffixes, Item)
 						; Since a group's entry is not supposed to be discarded because of the groups own min portion (that is in the total), we subtract the respective group's share.
 						AssumePrefixCount := AffixTotals.NumPrefixes + GrpPrefixMinCount["total"] - GrpPrefixMinCount[key_grp]
 						AssumeSuffixCount := AffixTotals.NumSuffixes + GrpSuffixMinCount["total"] - GrpSuffixMinCount[key_grp]
-						
-						;DebugFile.Write("Consider True`n")
-						;DebugFile.Write("Checking:" AffixTotals.NumPrefixes " global +" GrpPrefixMinCount["total"] " total -" GrpPrefixMinCount[key_grp] " grp +" entry[1] " own = " AssumePrefixCount + entry[1] ">" PrefixLimit "`n")
-						;DebugFile.Write("Checking:" AffixTotals.NumSuffixes " global +" GrpSuffixMinCount["total"] " total -" GrpSuffixMinCount[key_grp] " grp +" entry[2] " own = " AssumeSuffixCount + entry[2] ">" SuffixLimit "`n`n")
 					}
 					
 					If( (AssumePrefixCount + entry[1] > PrefixLimit) or (AssumeSuffixCount + entry[2] > SuffixLimit) )
 					{
-						;DebugFile.Write("Too much`n")
 						; Mod does not work because of affix number limit
 						; Remove mod entry from "grp"
 						grp.Delete(key_entry)
@@ -5255,11 +5230,6 @@ ParseAffixes(ItemDataAffixes, Item)
 				GrpPrefixMinCount["total"] += PrefixMinCount
 				GrpSuffixMinCount["total"] += SuffixMinCount
 			}
-			
-			;DebugFile.Write("Finished grp:" key_grp "`n`n")
-			;DebugFile.Write("GrpPrefixMinCount:`n" ExploreObj(GrpPrefixMinCount) "`n`n")
-			;DebugFile.Write("GrpSuffixMinCount:`n" ExploreObj(GrpSuffixMinCount) "`n`n")
-			
 			
 			If(grp_len=1)
 			{
@@ -5291,7 +5261,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		If(ReloopAll = False)
 		{
 			; Phase 1:
-			; Don't stop yet. We can check if a group is not solved yet but is guaranteed to bring a certain affix type
+			; Basic checks are done. Now we can check if a group is not solved yet but is guaranteed to bring a certain affix type
 			;   which we can count against the limit and then rule out entries from other groups.
 			
 			If(ConsiderAllRemainingAffixes = False)
@@ -5300,7 +5270,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				
 				ConsiderAllRemainingAffixes = True
 				ReloopAll = True
-				; ...and ReloopAll obviously.
+				; ...and ReloopAll obviously. (Continue reading Phase 2 from the top again)
 			}
 			Else If(CheckAgainForGoodMeasure = False)
 			{
@@ -5324,10 +5294,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		FinalizeUncertainAffixGroup(grp)
 	}
 	
-	;DebugFile.Write(ExploreObj(Itemdata.UncAffTmpAffixLines) . "`n`n---`n`n")
-	
 	AffixLines.Reset()
-	
 	
 	; Go through Itemdata.UncAffTmpAffixLines and write lines that have multiple possibilities stored in an array
 	;   as several single lines into AffixLines. So for example:
@@ -5362,9 +5329,6 @@ ParseAffixes(ItemDataAffixes, Item)
 			++i
 		}
 	}
-	
-	;DebugFile.Write(ExploreObj(AffixLines) . "`n`n---`n`n")
-	;DebugFile.Close()
 	return
 }
 
