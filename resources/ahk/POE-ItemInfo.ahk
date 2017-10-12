@@ -223,6 +223,8 @@ class ItemData_ {
 		This.AffixTextLines		:= []
 		This.UncertainAffixes	:= {}
 		This.UncAffTmpAffixLines := []
+		This.LastAffixLineNumber := 0
+		This.HasMultipleCrafted	:= 0
 		This.FullText	:= ""
 		This.IndexAffixes := -1
 		This.IndexLast	:= -1
@@ -549,6 +551,7 @@ CheckRarityLevel(RarityString)
 ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, ByRef GripType, IsMapFragment, RarityLevel)
 {
 	; Grip type only matters for weapons at this point. For all others it will be 'None'.
+	; Note that shields are armour and not weapons, they are not 1H.
 	GripType = None
 
 	; Check stats section first as weapons usually have their sub type as first line
@@ -2731,6 +2734,34 @@ SolveTiers_Mod1Mod2Hyb(Value1, Value2, Mod1DataArray, Mod2DataArray, Hyb1DataArr
 	return {"Mod1Top":Mod1TopTier,"Mod1Btm":Mod1BtmTier,"Mod2Top":Mod2TopTier,"Mod2Btm":Mod2BtmTier,"HybTop":HybTopTier,"HybBtm":HybBtmTier}
 }
 
+SolveTiers_Hyb1Hyb2(HybOverlapValue, Hyb1OnlyValue, Hyb2OnlyValue, Hyb1OnlyDataArray, Hyb2OnlyDataArray, Hyb1OverlapDataArray, Hyb2OverlapDataArray, ItemLevel)
+{
+	If((Hyb1OverlapDataArray = False) or (Hyb2OverlapDataArray = False) or (Hyb1OnlyDataArray = False) or (Hyb2OnlyDataArray = False))
+	{
+		return False
+	}
+	
+	Hyb1Tiers := LookupTierByValue(Hyb1OnlyValue, Hyb1OnlyDataArray, ItemLevel)
+	Hyb2Tiers := LookupTierByValue(Hyb2OnlyValue, Hyb2OnlyDataArray, ItemLevel)
+	
+	If(not(Hyb1Tiers.Tier) or not(Hyb2Tiers.Tier))
+	{
+		; Value can't be found as a bare hybrid mod.
+		return
+	}
+	
+	OverlapValueMin := Hyb1OverlapDataArray[Hyb1Tiers.Tier].min + Hyb2OverlapDataArray[Hyb2Tiers.Tier].min
+	OverlapValueMax := Hyb1OverlapDataArray[Hyb1Tiers.Tier].max + Hyb2OverlapDataArray[Hyb2Tiers.Tier].max
+	
+	If(not( (OverlapValueMin < HybOverlapValue) and (HybOverlapValue < OverlapValueMax) ))
+	{
+		; Combined Value can't be explained.
+		return
+	}
+	
+	return {"Hyb1":Hyb1Tiers.Tier,"Hyb2":Hyb2Tiers.Tier}
+}
+
 FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier="")
 {
 	result := []
@@ -2927,6 +2958,97 @@ FormatValueRangesAndIlvl_MultiTiers(Value, Mod1DataArray, Mod2DataArray, Mod1Top
 	return result
 }
 
+SolveAffixes_HybBase_FlatDefLife(Keyname, LineNumDef1, LineNumDef2, LineNumLife, ValueDef1, ValueDef2, ValueLife, Filename_HybDualDef_Def1, Filename_HybDualDef_Def2, Filename_Life, Filename_HybDefLife_Def1, Filename_HybDefLife_Def2, Filename_HybDefLife_Life, ItemLevel)
+{
+	Global Itemdata
+	Itemdata.UncertainAffixes[Keyname] := {}
+	
+	
+	DualDef_D1_DataArray := ArrayFromDatafile(Filename_HybDualDef_Def1)
+	DualDef_D2_DataArray := ArrayFromDatafile(Filename_HybDualDef_Def2)
+	DefLife_D1_DataArray := ArrayFromDatafile(Filename_HybDefLife_Def1)
+	DefLife_D2_DataArray := ArrayFromDatafile(Filename_HybDefLife_Def2)
+	Life_DataArray		 := ArrayFromDatafile(Filename_Life)
+	DefLife_Li_DataArray := ArrayFromDatafile(Filename_HybDefLife_Life)
+	
+	DualDef_D1_Tiers	:= LookupTierByValue(ValueDef1, DualDef_D1_DataArray, ItemLevel)
+	DualDef_D2_Tiers	:= LookupTierByValue(ValueDef2, DualDef_D2_DataArray, ItemLevel)
+	DefLife_D1_Tiers	:= LookupTierByValue(ValueDef1, DefLife_D1_DataArray, ItemLevel)
+	DefLife_D2_Tiers	:= LookupTierByValue(ValueDef2, DefLife_D2_DataArray, ItemLevel)
+	LifeTiers			:= LookupTierByValue(ValueLife, Life_DataArray, ItemLevel)
+	DefLife_Li_Tiers	:= LookupTierByValue(ValueLife, DefLife_Li_DataArray, ItemLevel)
+	
+	Def1LifeTiers := SolveTiers_Hyb1Hyb2(ValueDef1, ValueDef2, ValueLife, DualDef_D1_DataArray, Life_DataArray, DefLife_D1_DataArray, DefLife_Li_DataArray, ItemLevel)
+	Def2LifeTiers := SolveTiers_Hyb1Hyb2(ValueDef2, ValueDef1, ValueLife, DualDef_D2_DataArray, Life_DataArray, DefLife_D2_DataArray, DefLife_Li_DataArray, ItemLevel)
+	
+	
+	/*           --------- Overlap1Case ---------    --------- Overlap2Case ---------
+	ValueDef1 =          DefLife_D1 + DualDef_D1                         (DualDef_D1)
+	ValueDef2 =                      (DualDef_D2)            DefLife_D2 + DualDef_D2
+	ValueLife =   Life + DefLife_Li                   Life + DefLife_Li                  
+	*/
+	Overlap1Tiers := SolveTiers_Mod1Mod2Hyb(ValueDef1, ValueLife, DualDef_D1_DataArray, Life_DataArray, DefLife_D1_DataArray, DefLife_Li_DataArray, ItemLevel)
+	Overlap2Tiers := SolveTiers_Mod1Mod2Hyb(ValueDef2, ValueLife, DualDef_D2_DataArray, Life_DataArray, DefLife_D2_DataArray, DefLife_Li_DataArray, ItemLevel)
+	
+	
+	If(IsObject(Overlap1Tiers) and IsObject(Overlap2Tiers))
+	{
+		ValueRange1 := FormatValueRangesAndIlvl_MultiTiers(ValueDef1, DualDef_D1_DataArray, DefLife_D1_DataArray, Overlap1Tiers.Mod1Top, Overlap1Tiers.Mod1Btm, Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm)
+		LineTxt1    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Prefix", "Hybrid Prefix"], ValueRange1, [[Overlap1Tiers.Mod1Top, Overlap1Tiers.Mod1Btm], [Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm]], False)
+		
+		ValueRange2 := FormatValueRangesAndIlvl(DualDef_D2_DataArray, DualDef_D2_Tiers.Tier)
+		LineTxt2    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef2].Text, "Hybrid Prefix", ValueRange2, DualDef_D2_Tiers.Tier, False)
+		
+		ValueRange3 := FormatValueRangesAndIlvl_MultiTiers(ValueLife, Life_DataArray, DefLife_Li_DataArray, Overlap1Tiers.Mod2Top, Overlap1Tiers.Mod2Btm, Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm)
+		LineTxt3    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumLife].Text, ["Prefix", "Hybrid Prefix"], ValueRange3, [[Overlap1Tiers.Mod2Top, Overlap1Tiers.Mod2Btm], [Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm]], False)
+		
+		ValueRange4 := FormatValueRangesAndIlvl(DualDef_D1_DataArray, DualDef_D1_Tiers.Tier)
+		LineTxt4    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, "Hybrid Prefix", ValueRange4, DualDef_D1_Tiers.Tier, False)
+		
+		ValueRange5 := FormatValueRangesAndIlvl_MultiTiers(ValueDef2, DualDef_D2_DataArray, DefLife_D2_DataArray, Overlap2Tiers.Mod1Top, Overlap2Tiers.Mod1Btm, Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm)
+		LineTxt5    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Prefix", "Hybrid Prefix"], ValueRange5, [[Overlap2Tiers.Mod1Top, Overlap2Tiers.Mod1Btm], [Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm]], False)
+		
+		ValueRange6 := FormatValueRangesAndIlvl_MultiTiers(ValueLife, Life_DataArray, DefLife_Li_DataArray, Overlap2Tiers.Mod2Top, Overlap2Tiers.Mod2Btm, Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm)
+		LineTxt6    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumLife].Text, ["Prefix", "Hybrid Prefix"], ValueRange6, [[Overlap2Tiers.Mod2Top, Overlap2Tiers.Mod2Btm], [Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm]], False)
+		
+		Itemdata.UncertainAffixes[Keyname]["5_Mod1Mod2Hyb"] := [3, 0, LineNum1, LineTxt1, LineNum2, LineTxt2, LineNum3, LineTxt3, LineNum4, LineTxt4, LineNum5, LineTxt5, LineNum6, LineTxt6]
+	}
+	
+	Else If(IsObject(Overlap1Tiers))
+	{
+		ValueRange1 := FormatValueRangesAndIlvl_MultiTiers(ValueDef1, DualDef_D1_DataArray, DefLife_D1_DataArray, Overlap1Tiers.Mod1Top, Overlap1Tiers.Mod1Btm, Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm)
+		LineTxt1    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Prefix", "Hybrid Prefix"], ValueRange1, [[Overlap1Tiers.Mod1Top, Overlap1Tiers.Mod1Btm], [Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm]], False)
+		
+		ValueRange2 := FormatValueRangesAndIlvl(DualDef_D2_DataArray, DualDef_D2_Tiers.Tier)
+		LineTxt2    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef2].Text, "Hybrid Prefix", ValueRange2, DualDef_D2_Tiers.Tier, False)
+		
+		ValueRange3 := FormatValueRangesAndIlvl_MultiTiers(ValueLife, Life_DataArray, DefLife_Li_DataArray, Overlap1Tiers.Mod2Top, Overlap1Tiers.Mod2Btm, Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm)
+		LineTxt3    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumLife].Text, ["Prefix", "Hybrid Prefix"], ValueRange3, [[Overlap1Tiers.Mod2Top, Overlap1Tiers.Mod2Btm], [Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm]], False)
+		
+		Itemdata.UncertainAffixes[Keyname]["5_Mod1Mod2Hyb"] := [3, 0, LineNum1, LineTxt1, LineNum2, LineTxt2, LineNum3, LineTxt3]
+	}
+	
+	Else If(IsObject(Overlap2Tiers))
+	{
+		ValueRange4 := FormatValueRangesAndIlvl(DualDef_D1_DataArray, DualDef_D1_Tiers.Tier)
+		LineTxt4    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, "Hybrid Prefix", ValueRange4, DualDef_D1_Tiers.Tier, False)
+		
+		ValueRange5 := FormatValueRangesAndIlvl_MultiTiers(ValueDef2, DualDef_D2_DataArray, DefLife_D2_DataArray, Overlap2Tiers.Mod1Top, Overlap2Tiers.Mod1Btm, Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm)
+		LineTxt5    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Prefix", "Hybrid Prefix"], ValueRange5, [[Overlap2Tiers.Mod1Top, Overlap2Tiers.Mod1Btm], [Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm]], False)
+		
+		ValueRange6 := FormatValueRangesAndIlvl_MultiTiers(ValueLife, Life_DataArray, DefLife_Li_DataArray, Overlap2Tiers.Mod2Top, Overlap2Tiers.Mod2Btm, Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm)
+		LineTxt6    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumLife].Text, ["Prefix", "Hybrid Prefix"], ValueRange6, [[Overlap2Tiers.Mod2Top, Overlap2Tiers.Mod2Btm], [Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm]], False)
+		
+		Itemdata.UncertainAffixes[Keyname]["5_Mod1Mod2Hyb"] := [3, 0, LineNum4, LineTxt4, LineNum5, LineTxt5, LineNum6, LineTxt6]
+	}
+	
+	Else
+	{
+		; Neither variant works.
+		return
+	}
+}
+
 SolveAffixes_Mod1Mod2Hyb(Keyname, LineNum1, LineNum2, Value1, Value2, Mod1Type, Mod2Type, HybType, Filename1, Filename2, FilenameHyb1, FilenameHyb2, ItemLevel)
 {
 	Global Itemdata
@@ -3089,6 +3211,7 @@ ParseAffixes(ItemDataAffixes, Item)
 	ItemLevel			:= Item.Level
 	ItemQuality		:= Item.Quality
 	ItemIsHybridBase	:= Item.IsHybridBase
+	ItemNamePlate		:= Itemdata.NamePlate
 	
 	; Reset the AffixLines "array" and other vars
 	ResetAffixDetailVars()
@@ -3114,6 +3237,16 @@ ParseAffixes(ItemDataAffixes, Item)
 		HasIncrDefencesCraft 	:= 0
 		HasIncrDefencesCraftType := ""
 		HasStunBlockRecovery	:= 0
+		HasChanceToBlockStrShield := 0
+		; pure str shields can have a hybrid prefix "#% increased Armour / +#% Chance to Block"
+		; This means those fuckers can have 5 mods that combine:
+		; Prefix:
+		;   #% increased Armour
+		;   #% increased Armour / #% increased Stun and Block Recovery
+		;   #% increased Armour / +#% Chance to Block
+		; Suffix:
+		;   #% increased Stun and Block Recovery
+		;   +#% Chance to Block
 		
 		HasToAccuracyRating		:= 0
 		HasIncrPhysDmg			:= 0
@@ -3137,7 +3270,6 @@ ParseAffixes(ItemDataAffixes, Item)
 		
 		HasIncrSpellDamagePrefix	:= 0
 		HasIncrSpellOrElePrefix	:= 0
-		
 		
 		HasMultipleCrafted		:= 0
 		HasLastLineNumber		:= 0
@@ -3265,6 +3397,14 @@ ParseAffixes(ItemDataAffixes, Item)
 				HasStunBlockRecovery := A_Index
 				Continue
 			}
+			IfInString, A_LoopField, Chance to Block
+			{
+				IfInString, ItemNamePlate, Tower Shield
+				{
+					HasChanceToBlockStrShield := A_Index
+				}
+				Continue
+			}
 			IfInString, A_LoopField, to Accuracy Rating
 			{
 				If(HasToAccuracyRating){
@@ -3373,12 +3513,10 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			
-			; GetActualValue(A_LoopField)
-			
 			IfInString, A_Loopfield, Can have multiple Crafted Mods
 			{
 				HasMultipleCrafted := A_Index
+				Itemdata.HasMultipleCrafted := A_Index
 				Continue
 			}
 		}
@@ -3394,13 +3532,12 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				Continue ; Not interested in blank lines
 			}
-			
 			Itemdata.AffixTextLines.Push( {"Text":A_LoopField, "Value":GetActualValue(A_LoopField)} )
-			
 			++HasLastLineNumber
 		}
-		
 	}
+	
+	Itemdata.LastAffixLineNumber := HasLastLineNumber
 	
 	; Prepare AffixLines. If a line isn't matched, it will later be recognized as unmatched because the entry is empty instead of undefined.
 	Loop, %HasLastLineNumber%
@@ -4029,7 +4166,9 @@ ParseAffixes(ItemDataAffixes, Item)
 		}
 		IfInString, A_LoopField, Chance to Block
 		{
-			LookupAffixAndSetInfoLine("data\BlockChance.txt", "Suffix", ItemLevel, CurrValue)
+			If (not HasChanceToBlockStrShield){
+				LookupAffixAndSetInfoLine("data\BlockChance.txt", "Suffix", ItemLevel, CurrValue)
+			}
 			Continue
 		}
 		; Flask affixes (on belts)
@@ -4713,41 +4852,102 @@ ParseAffixes(ItemDataAffixes, Item)
 			FileToMaxES		:= (ItemSubType = "Ring") ? "data\ToMaxES_Ring.txt" : "data\ToMaxES_AmuletBelt.txt"
 		}
 		
+		If (ItemSubType = "BodyArmour")
+		{
+			FileToArmourMaxLife		:= "data\ToArmour_MaxLife_BodyArmour.txt"
+			FileToEvasionMaxLife	:= "data\ToEvasion_MaxLife_BodyArmour.txt"
+			FileToMaxESMaxLife		:= "data\ToMaxES_MaxLife_BodyArmour.txt"
+			FileMaxLifeToDef		:= "data\MaxLife_ToDef_BodyArmour.txt"
+		}
+		Else If (ItemSubType = "Shield" or ItemSubType = "Helmet")
+		{
+			FileToArmourMaxLife		:= "data\ToArmour_MaxLife_ShieldHelmet.txt"
+			FileToEvasionMaxLife	:= "data\ToEvasion_MaxLife_ShieldHelmet.txt"
+			FileToMaxESMaxLife		:= "data\ToMaxES_MaxLife_ShieldHelmet.txt"
+			FileMaxLifeToDef		:= "data\MaxLife_ToDef_ShieldHelmet.txt"
+		}
+		Else If (ItemSubType = "Gloves" or ItemSubType = "Boots")
+		{
+			FileToArmourMaxLife		:= "data\ToArmour_MaxLife_GlovesBoots.txt"
+			FileToEvasionMaxLife	:= "data\ToEvasion_MaxLife_GlovesBoots.txt"
+			FileToMaxESMaxLife		:= "data\ToMaxES_MaxLife_GlovesBoots.txt"
+			FileMaxLifeToDef		:= "data\MaxLife_ToDef_GlovesBoots.txt"
+		}
+		
+		If (ItemSubType = "Amulet" or ItemSubType = "Boots" or ItemSubType = "Gloves"){
+			FileMaxLife := "data\MaxLife_AmuletBootsGloves.txt"
+		}
+		Else If (ItemSubType = "Belt" or ItemSubType = "Helmet" or ItemSubType = "Quiver"){
+			FileMaxLife := "data\MaxLife_BeltHelmetQuiver.txt"
+		}
+		Else If (ItemSubType = "BodyArmour"){
+			FileMaxLife := "data\MaxLife_BodyArmour.txt"
+		}
+		Else If (ItemSubType = "Shield"){
+			FileMaxLife := "data\MaxLife_Shield.txt"
+		}
+		Else If (ItemSubType = "Ring"){
+			FileMaxLife := "data\MaxLife_Ring.txt"
+		}
+		Else{
+			FileMaxLife := "data\MaxLife.txt"
+		}
+		
 		
 		If (HasToMaxLife and (HasToArmour or HasToEvasion or HasToMaxES) and (ItemBaseType = "Armour"))
 		{
-			
+			If (HasToArmour and HasToEvasion and HasToMaxES)
+			{
+				
+			}
+			Else If (HasToArmour and HasToEvasion)
+			{
+				
+			}
+			Else If (HasToArmour and HasToMaxES)
+			{
+				
+			}
+			Else If (HasToEvasion and HasToMaxES)
+			{
+				
+			}
+			Else If (HasToArmour)
+			{
+				LineNum1 := HasToArmour
+				LineNum2 := HasToMaxLife
+				Value1   := Itemdata.AffixTextLines[LineNum1].Value
+				Value2   := Itemdata.AffixTextLines[LineNum2].Value
+				SolveAffixes_Mod1Mod2Hyb("FlatDefMaxLife", LineNum1, LineNum2, Value1, Value2, "Prefix", "Prefix", "Hybrid Prefix", FileToArmour, FileMaxLife, FileToArmourMaxLife, FileMaxLifeToDef, ItemLevel)
+			}
+			Else If (HasToEvasion)
+			{
+				LineNum1 := HasToEvasion
+				LineNum2 := HasToMaxLife
+				Value1   := Itemdata.AffixTextLines[LineNum1].Value
+				Value2   := Itemdata.AffixTextLines[LineNum2].Value
+				SolveAffixes_Mod1Mod2Hyb("FlatDefMaxLife", LineNum1, LineNum2, Value1, Value2, "Prefix", "Prefix", "Hybrid Prefix", FileToEvasion, FileMaxLife, FileToEvasionMaxLife, FileMaxLifeToDef, ItemLevel)
+			}
+			Else If (HasToMaxES)
+			{
+				LineNum1 := HasToMaxES
+				LineNum2 := HasToMaxLife
+				Value1   := Itemdata.AffixTextLines[LineNum1].Value
+				Value2   := Itemdata.AffixTextLines[LineNum2].Value
+				SolveAffixes_Mod1Mod2Hyb("FlatDefMaxLife", LineNum1, LineNum2, Value1, Value2, "Prefix", "Prefix", "Hybrid Prefix", FileToMaxES, FileMaxLife, FileToMaxESMaxLife, FileMaxLifeToDef, ItemLevel)
+			}
 		}
 		Else
 		{
 			If (HasToMaxLife)
 			{
-				If (ItemSubType = "Amulet" or ItemSubType = "Boots" or ItemSubType = "Gloves"){
-					File := "data\MaxLife_AmuletBootsGloves.txt"
-				}
-				Else If (ItemSubType = "Belt" or ItemSubType = "Helmet" or ItemSubType = "Quiver"){
-					File := "data\MaxLife_BeltHelmetQuiver.txt"
-				}
-				Else If (ItemSubType = "BodyArmour"){
-					File := "data\MaxLife_BodyArmour.txt"
-				}
-				Else If (ItemSubType = "Shield"){
-					File := "data\MaxLife_Shield.txt"
-				}
-				Else If (ItemSubType = "Ring"){
-					File := "data\MaxLife_Ring.txt"
-				}
-				Else{
-					File := "data\MaxLife.txt"
-				}
-				
 				LineNum := HasToMaxLife
 				LineTxt := Itemdata.AffixTextLines[LineNum].Text
 				Value   := Itemdata.AffixTextLines[LineNum].Value
-				LookupAffixAndSetInfoLine(File, "Prefix", ItemLevel, Value, LineTxt, LineNum)
+				LookupAffixAndSetInfoLine(FileMaxLife, "Prefix", ItemLevel, Value, LineTxt, LineNum)
 			}
 			
-			If (HasToArmour or HasToEvasion or HasToMaxES)
+			If (HasToArmour or HasToEvasion or HasToMaxES and (ItemBaseType = "Armour"))
 			{
 				If (HasToArmour and HasToEvasion)
 				{
@@ -4807,18 +5007,48 @@ ParseAffixes(ItemDataAffixes, Item)
 					LookupAffixAndSetInfoLine(FileToMaxES, "Prefix", ItemLevel, Value, LineTxt, LineNum)
 				}
 			}
+			Else If (HasToArmour or HasToEvasion or HasToMaxES)	; Is not Armour, case for Belt/Ring/Amulet. Belts can have multiple single flat mods while Armours can't.
+			{
+				If (HasToArmour)
+				{
+					LineNum := HasToArmour
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToArmour, "Prefix", ItemLevel, Value, LineTxt, LineNum)
+				}
+				
+				If (HasToEvasion)
+				{
+					LineNum := HasToEvasion
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToEvasion, "Prefix", ItemLevel, Value, LineTxt, LineNum)
+				}
+				
+				If (HasToMaxES)
+				{
+					LineNum := HasToMaxES
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToMaxES, "Prefix", ItemLevel, Value, LineTxt, LineNum)
+				}
+			}
 		}
 		
 	}
 	
 	
-	If (HasStunBlockRecovery or HasIncrDefences )
+	If (HasStunBlockRecovery or HasIncrDefences)
 	{
 		If (HasStunBlockRecovery and HasIncrDefences and (ItemBaseType = "Armour") )
 		{
-			If (HasIncrDefencesCraft)
+			If (HasChanceToBlockStrShield)
 			{
-				; If there are two seperate %def mods, then the first pre-pass match has to be the part from the hybrid mod
+				; Special case: 5 mods can combine into 3 lines here. Implementing this later, because it is so rare.
+			}
+			Else If (HasIncrDefencesCraft)
+			{
+				; If there are two seperate %def mod lines visible, then the first pre-pass match has to be the part from the hybrid mod
 				;   and the second match has to be the pure mod in crafted form.
 				
 				If ( HasIncrDefencesType = "Armour" or HasIncrDefencesType = "Evasion" or HasIncrDefencesType = "EnergyShield"){
