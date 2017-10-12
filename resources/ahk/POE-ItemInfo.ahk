@@ -5258,25 +5258,25 @@ ParseAffixes(ItemDataAffixes, Item)
 	{
 		If (ItemGripType = "2H"){
 			FilePrefix := "data\IncrEleTypeDamage_Prefix_2H.txt"
-			FileSuffix := "_Weapon.txt"
+			FileSuffixEnd := "_Weapon.txt"
 		}
 		Else If (ItemGripType = "1H"){
 			FilePrefix := "data\IncrEleTypeDamage_Prefix_1H.txt"
-			FileSuffix := "_Weapon.txt"
+			FileSuffixEnd := "_Weapon.txt"
 		}
 		Else If (ItemSubType = "Amulet"){
 			FilePrefix := False
-			FileSuffix := "_Amulet.txt"
+			FileSuffixEnd := "_Amulet.txt"
 		}
 		Else If (ItemSubType = "Ring"){
 			FilePrefix := False
-			FileSuffix := "_Ring.txt"
+			FileSuffixEnd := "_Ring.txt"
 		}
 		
 		
 		If (HasIncrFireDamage)
 		{
-			FileSuffix := "data\IncrFireDamage_Suffix" . FileSuffix
+			FileSuffix := "data\IncrFireDamage_Suffix" . FileSuffixEnd
 			LineNum := HasIncrFireDamage
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value
@@ -5292,7 +5292,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		}
 		If (HasIncrColdDamage)
 		{
-			FileSuffix := "data\IncrColdDamage_Suffix" . FileSuffix
+			FileSuffix := "data\IncrColdDamage_Suffix" . FileSuffixEnd
 			LineNum := HasIncrColdDamage
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value
@@ -5308,7 +5308,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		}
 		If (HasIncrLightningDamage)
 		{
-			FileSuffix := "data\IncrLightningDamage_Suffix" . FileSuffix
+			FileSuffix := "data\IncrLightningDamage_Suffix" . FileSuffixEnd
 			LineNum := HasIncrLightningDamage
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value
