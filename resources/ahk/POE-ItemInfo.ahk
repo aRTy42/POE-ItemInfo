@@ -81,7 +81,7 @@ class UserOptions {
 
 	AffixDetailDelimiter := "  "
 	; Field delimiter for affix detail lines. This is put in at three places. Example with // instead of spaces:
-	; 50% increased Spell…//50-59 (46)//75-79 (84)//T4 P
+	; 50% increased Spell?//50-59 (46)//75-79 (84)//T4 P
 
 	AffixDetailEllipsis := "…"
 	; If the mirrored affix text is longer than the field length the affix line will be cut off and
@@ -91,7 +91,7 @@ class UserOptions {
 	;   the AHK version used. For best results, save this file as ANSI encoding which can be read and
 	;   displayed correctly by either ANSI based AutoHotkey or Unicode based AutoHotkey.
 	; Example: Assume the affix line to be mirrored is '50% increased Spell Damage'.
-	;   The field width is hardcoded (assume 20), this text would be shown as '50% increased Spell…'
+	;   The field width is hardcoded (assume 20), this text would be shown as '50% increased Spell?'
 
 
 	; Pixels mouse must move to auto-dismiss tooltip
@@ -222,6 +222,7 @@ class ItemData_ {
 		This.Affixes	:= ""
 		This.AffixTextLines		:= []
 		This.UncertainAffixes	:= {}
+		This.UncAffTmpAffixLines := []
 		This.FullText	:= ""
 		This.IndexAffixes := -1
 		This.IndexLast	:= -1
@@ -261,25 +262,25 @@ class Item_ {
 		This.IsHybridBase	:= False
 		This.IsQuiver 		:= False
 		This.IsFlask 		:= False
-		This.IsGem			:= False
+		This.IsGem		:= False
 		This.IsCurrency 	:= False
 		This.IsUnidentified := False
 		This.IsBelt 		:= False
 		This.IsRing 		:= False
 		This.IsUnsetRing 	:= False
-		This.IsBow			:= False
+		This.IsBow		:= False
 		This.IsAmulet 		:= False
 		This.IsSingleSocket := False
 		This.IsFourSocket 	:= False
 		This.IsThreeSocket 	:= False
-		This.IsMap			:= False
+		This.IsMap		:= False
 		This.IsTalisman 	:= False
 		This.IsJewel 		:= False
 		This.IsLeaguestone	:= False
 		This.IsDivinationCard := False
-		This.IsProphecy		:= False
+		This.IsProphecy	:= False
 		This.IsUnique 		:= False
-		This.IsRare			:= False
+		This.IsRare		:= False
 		This.IsCorrupted	:= False
 		This.IsMirrored	:= False
 		This.IsMapFragment	:= False
@@ -294,13 +295,30 @@ class AffixTotals_ {
 
 	NumPrefixes := 0
 	NumSuffixes := 0
-	NumTotals := 0
+	NumPrefixesMax := 0
+	NumSuffixesMax := 0
+	
+	NumTotal := 0
+	NumTotalMax := 0
 
 	Reset()
 	{
 		this.NumPrefixes := 0
 		this.NumSuffixes := 0
-		this.NumTotals := 0
+		this.NumPrefixesMax := 0
+		this.NumSuffixesMax := 0
+		this.NumTotal := 0
+		this.NumTotalMax := 0
+	}
+	
+	RoundAll()
+	{
+		this.NumPrefixes := NumFormatPointFiveOrInt(this.NumPrefixes)
+		this.NumSuffixes := NumFormatPointFiveOrInt(this.NumSuffixes)
+		this.NumPrefixesMax := NumFormatPointFiveOrInt(this.NumPrefixesMax)
+		this.NumSuffixesMax := NumFormatPointFiveOrInt(this.NumSuffixesMax)
+		this.NumTotal := NumFormatPointFiveOrInt(this.NumTotal)
+		this.NumTotalMax := NumFormatPointFiveOrInt(this.NumTotalMax)
 	}
 }
 AffixTotals := new AffixTotals_()
@@ -1054,95 +1072,26 @@ LookupTierByValue(Value, ModDataArray, ItemLevel=100)
 }
 
 
-
-
-; Look up complete data for an affix. Depending on settings flags
-; this may include many things, and will return a string used for
-; end user display rather than further calculations.
-; Use LookupAffixBracket if you need a range format to do calculations with.
 LookupAffixData(Filename, ItemLevel, Value, ByRef Tier=0)
 {
 	
 	ModDataArray := ArrayFromDatafile(Filename)
 	ModTiers := LookupTierByValue(Value, ModDataArray, ItemLevel)
 	
-	; Testing for DoubleRange
-	IfInString, Value, -
+	If(ModTiers.Tier)
 	{
-		; Formatting BracketRange and BracketItemLevel depending on single tier or tier range
-		If(ModTiers.Tier)
-		{
-			Tier := ModTiers.Tier
-			
-			BtmMin := ModDataArray[Tier].minLo
-			BtmMax := ModDataArray[Tier].minHi
-			TopMin := ModDataArray[Tier].maxLo
-			TopMax := ModDataArray[Tier].maxHi
-			
-			BracketRange := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax)
-			BracketItemLevel := ModDataArray[Tier].ilvl
-		}
-		Else If(ModTiers.Top and ModTiers.Btm)
-		{
-			Tier := [ModTiers.Top,ModTiers.Btm]
-			
-			BtmMin := ModDataArray[ModTiers.Btm].minLo
-			BtmMax := ModDataArray[ModTiers.Btm].minHi
-			TopMin := ModDataArray[ModTiers.Top].maxLo
-			TopMax := ModDataArray[ModTiers.Top].maxHi
-			
-			BracketRange := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax)
-			BracketItemLevel := ""
-		}
-		Else
-		{
-			BracketRange := "n/a"
-			BracketItemLevel := ""
-		}
-		
-		; MaxRange and MaxItemLevel is always the same.
-		BtmMin := ModDataArray[ModDataArray.MaxIndex()].minLo
-		BtmMax := ModDataArray[ModDataArray.MaxIndex()].minHi
-		TopMin := ModDataArray[1].maxLo
-		TopMax := ModDataArray[1].maxHi
-		
-		MaxRange := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax)
-		MaxItemLevel := ModDataArray[1].ilvl
+		Tier := ModTiers.Tier
+	}
+	Else If(ModTiers.Top and ModTiers.Btm)
+	{
+		Tier := [ModTiers.Top, ModTiers.Btm]
 	}
 	Else
 	{
-		; Formatting BracketRange and BracketItemLevel depending on single tier or tier range
-		If(ModTiers.Tier)
-		{
-			Tier := ModTiers.Tier
-			
-			BracketRange := ModDataArray[Tier].values
-			BracketItemLevel := ModDataArray[Tier].ilvl
-		}
-		Else If(ModTiers.Top and ModTiers.Btm)
-		{
-			Tier := [ModTiers.Top,ModTiers.Btm]
-			
-			BtmMin := ModDataArray[ModTiers.Btm].minLo
-			BtmMax := ModDataArray[ModTiers.Btm].minHi
-			TopMin := ModDataArray[ModTiers.Top].maxLo
-			TopMax := ModDataArray[ModTiers.Top].maxHi
-			
-			BracketRange := ModDataArray[ModTiers.Btm].Values . "|" . ModDataArray[ModTiers.Top].Values
-			BracketItemLevel := ""
-		}
-		Else
-		{
-			BracketRange := "n/a"
-			BracketItemLevel := ""
-		}
-		
-		; MaxRange and MaxItemLevel is always the same.
-		MaxRange := ModDataArray[ModDataArray.MaxIndex()].min . "-" . TopMin := ModDataArray[1].max
-		MaxItemLevel := ModDataArray[1].ilvl
+		Tier := 0
 	}
 	
-	return [BracketRange, BracketItemLevel, MaxRange, MaxItemLevel]
+	return FormatValueRangesAndIlvl(ModDataArray, Tier)
 }
 
 ParseRarity(ItemData_NamePlate)
@@ -1301,20 +1250,31 @@ FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax, StyleOverwrite="")
 	
 	If(StyleOverwrite = "compact" or (Opts.CompactDoubleRanges and StyleOverwrite = "") )
 	{
-		ValueRange := BtmMin . "-" . TopMax
+		ValueRange := BtmMin "-" TopMax
 	}
 	Else
 	{
 		; Other Variant: Simplify ranges like 1-1 to 1
-		; LowerRange := (BtmMin = BtmMax) ? BtmMin : BtmMin . "-" . BtmMax
-		; UpperRange := (TopMin = TopMax) ? TopMax : TopMin . "-" . TopMax
-		; ValueRange := LowerRange . "|" . UpperRange
+		; LowerRange := (BtmMin = BtmMax) ? BtmMin : BtmMin "-" BtmMax
+		; UpperRange := (TopMin = TopMax) ? TopMax : TopMin "-" TopMax
+		; ValueRange := LowerRange "|" UpperRange
 		
 		
-		ValueRange := BtmMin . "-" . BtmMax . "|" . TopMin . "-" . TopMax
+		ValueRange := BtmMin "-" BtmMax "|" TopMin "-" TopMax
 	}
 	
 	return ValueRange
+}
+
+FormatRangeOfRanges(BtmMin, BtmMax, TopMin, TopMax)
+{
+	Global Opts
+	
+	If(BtmMin = TopMin and BtmMax = TopMax)
+	{
+		return BtmMin "-" TopMax
+	}
+	Else return BtmMin "-" BtmMax "…" TopMin "-" TopMax
 }
 
 ParseItemLevel(ItemDataText)
@@ -1521,7 +1481,7 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 			AffixTotals.NumSuffixes += 1
 		}
 		Else If(AffixType =="Hybrid Prefix"){
-			AffixTotals.NumSuffixes += 0.5
+			AffixTotals.NumPrefixes += 0.5
 		}
 		Else If(AffixType =="Hybrid Suffix"){
 			AffixTotals.NumSuffixes += 0.5
@@ -1551,7 +1511,7 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 				}
 				Else
 				{
-					Ti := Tier[A_Index][1] . "-" Tier[A_Index][2]
+					Ti := Tier[A_Index][1] "-" Tier[A_Index][2]
 				}
 			}
 			Else
@@ -1559,7 +1519,7 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 				Ti := Tier[A_Index]
 			}
 			
-			TierAndType .= "T" . Ti . " " . AffixTypeShort(AfTy) . " + "
+			TierAndType .= "T" Ti " " AffixTypeShort(AfTy) " + "
 		}
 		
 		TierAndType := SubStr(TierAndType, 1, -3)	; Remove trailing " + " at line end
@@ -1573,17 +1533,17 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 		}
 		Else
 		{
-			Ti := Tier[1] . "-" Tier[2]
+			Ti := Tier[1] "-" Tier[2]
 		}
 		
-		TierAndType := "T" . Ti . " " . AffixTypeShort(AffixType)
+		TierAndType := "T" Ti " " AffixTypeShort(AffixType)
 	}
 	Else
 	{
 		If Tier is number
 		{
 			; Just one mod and a single numeric tier
-			TierAndType := "T" . Tier . " " . AffixTypeShort(AffixType)
+			TierAndType := "T" Tier " " AffixTypeShort(AffixType)
 		}
 		Else
 		{
@@ -1630,21 +1590,21 @@ AssembleAffixDetails()
 		Loop, %NumAffixLines%
 		{
 			CurLine := AffixLines[A_Index]
-			AffixLine := CurLine[1]
+			AffixText := CurLine[1]
 			ValueRange := CurLine[2]
 			
-			If(StrLen(AffixLine) > TextLineWidthUnique)
+			If(StrLen(AffixText) > TextLineWidthUnique)
 			{
-				AffixLine := SubStr(AffixLine, 1, TextLineWidthUnique - 1) . Ellipsis
+				AffixText := SubStr(AffixText, 1, TextLineWidthUnique - 1) . Ellipsis
 			}
 			Else
 			{
-				AffixLine := StrPad(AffixLine, TextLineWidthUnique)
+				AffixText := StrPad(AffixText, TextLineWidthUnique)
 			}
 			
-			ProcessedLine := AffixLine . Delim . ValueRange
+			ProcessedLine := AffixText . Delim . ValueRange
 			
-			Result .= "`n" . ProcessedLine
+			Result .= "`n" ProcessedLine
 		}
 		
 		return Result
@@ -1668,9 +1628,9 @@ AssembleAffixDetails()
 				{
 					ValueRange1Width := StrLen(ValueRange[1])
 				}
-				Else If( StrLen(ValueRange[1]) > ValueRange1Width + 5 )
+				Else If( StrLen(ValueRange[1]) > ValueRange1Width + 3 )
 				{
-					ValueRange1Width := StrLen(ValueRange[1]) - 5
+					ValueRange1Width := StrLen(ValueRange[1]) - 3
 				}
 			}
 			
@@ -1681,70 +1641,82 @@ AssembleAffixDetails()
 			
 		}
 		
+		If( ! Item.IsJewel)
+		{
+			; Turn the seperator line above the infos into a header
+			
+			ProcessedLine := "`n"
+			ProcessedLine .= StrPad("--------", TextLineWidth)
+			ProcessedLine .= StrPad("roll", ValueRange1Width + StrLen(Delim), "left")
+			ProcessedLine .= " ilvl"
+			ProcessedLine .= StrPad("total", ValueRange2Width + StrLen(Delim), "left")
+			ProcessedLine .= " ilvl"
+			ProcessedLine .= "  tier"
+			
+			Result .= ProcessedLine
+		}
+		
 		Loop, %NumAffixLines%
 		{
 			CurLine := AffixLines[A_Index]
 			; Any empty line is considered as an Unprocessed Mod
 			If(IsObject(CurLine))
 			{
-				AffixLine := CurLine[1]
+				AffixText := CurLine[1]
 				ValueRange := CurLine[2]
 				TierAndType := CurLine[3]
 				
+				If(AffixText = "or")
+				{
+					AffixText := "--or--"
+					AffixText := StrPad(AffixText, round( (TextLineWidth + StrLen(AffixText))/2 ), "left")	; align mid
+				}
+				
 				If(Item.IsJewel)
 				{
-					If(StrLen(AffixLine) > TextLineWidthJewel)
+					If(StrLen(AffixText) > TextLineWidthJewel)
 					{
-						ProcessedLine := SubStr(AffixLine, 1, TextLineWidthJewel - 1) . Ellipsis
+						ProcessedLine := SubStr(AffixText, 1, TextLineWidthJewel - 1)  Ellipsis
 					}
 					Else
 					{
-						ProcessedLine := StrPad(AffixLine, TextLineWidthJewel)
+						ProcessedLine := StrPad(AffixText, TextLineWidthJewel)
 					}
 					
 					; Jewel mods don't have tiers. Display only the ValueRange and the AffixType. TierAndType already holds only the Type here, due to a check in MakeAffixDetailLine().
-					ProcessedLine .= Delim . " " . StrPad(ValueRange[1], ValueRange1Width, "left")
-					ProcessedLine .= Delim . TierAndType
+					ProcessedLine .= Delim " " StrPad(ValueRange[1], ValueRange1Width, "left")
+					ProcessedLine .= Delim  TierAndType
 				}
 				Else
 				{
-					If( ! IsObject(ValueRange) )
+					If(StrLen(AffixText) > TextLineWidth)
 					{
-						; Text as ValueRange
-						If(StrLen(AffixLine) > TextLineWidth + StrLen(Delim) + ValueRange1Width + 5)
-						{
-							ProcessedLine := SubStr(AffixLine, 1, TextLineWidth + StrLen(Delim) + ValueRange1Width + 5 - 1) . Ellipsis
-						}
-						Else
-						{
-							ProcessedLine := StrPad(AffixLine, TextLineWidth + StrLen(Delim) + ValueRange1Width + 5)
-						}
-						
-						ProcessedLine .= Delim . StrPad(StrPad(ValueRange, ValueRange2Width + 5, "left"), ValueRange2Width + 5 + 4, "right")
-						ProcessedLine .= " " . TierAndType
+						ProcessedLine := SubStr(AffixText, 1, TextLineWidth - 1)  Ellipsis
 					}
 					Else
 					{
-						If(StrLen(AffixLine) > TextLineWidth)
-						{
-							ProcessedLine := SubStr(AffixLine, 1, TextLineWidth - 1) . Ellipsis
-						}
-						Else
-						{
-							ProcessedLine := StrPad(AffixLine, TextLineWidth)
-						}
-						
+						ProcessedLine := StrPad(AffixText, TextLineWidth)
+					}
+					
+					If( ! IsObject(ValueRange) )
+					{
+						; Text as ValueRange. Right-aligned to first range column if it fits.
+						ProcessedLine .= Delim  StrPad(StrPad(ValueRange, ValueRange1Width + 5, "left"), ValueRange1Width + 5 + StrLen(Delim) + ValueRange2Width + 5, "right")
+						ProcessedLine .= Delim  TierAndType
+					}
+					Else
+					{
 						If(ValueRange[2])
-						{
-							ProcessedLine .= Delim . StrPad(ValueRange[1], ValueRange1Width, "left") . " " . StrPad("(" . ValueRange[2] . ")", 4, "left")
+						{	; Has ilvl entry for first range
+							ProcessedLine .= Delim  StrPad(ValueRange[1], ValueRange1Width, "left") " " StrPad("(" ValueRange[2] ")", 4, "left")
 						}
 						Else
-						{
-							ProcessedLine .= Delim . StrPad(StrPad(ValueRange[1], ValueRange1Width, "left"), ValueRange1Width + 5, "right")
+						{	; Has no ilvl entry for first range, can expand a bit.
+							ProcessedLine .= Delim  StrPad(StrPad(ValueRange[1], ValueRange1Width, "left"), ValueRange1Width + 3, "right") "  "
 						}
 						
-						ProcessedLine .= Delim . StrPad(ValueRange[3], ValueRange2Width, "left") . " " . StrPad("(" . ValueRange[4] . ")", 4, "left")
-						ProcessedLine .= Delim . TierAndType
+						ProcessedLine .= Delim  StrPad(ValueRange[3], ValueRange2Width, "left") " " StrPad("(" ValueRange[4] ")", 4, "left")
+						ProcessedLine .= Delim  TierAndType
 					}
 				}
 			}
@@ -1753,7 +1725,7 @@ AssembleAffixDetails()
 				ProcessedLine := "   Unprocessed Essence Mod or unknown Mod"
 			}
 			
-			Result := Result . "`n" . ProcessedLine
+			Result .= "`n" ProcessedLine
 		}
 	}
 	
@@ -2759,7 +2731,7 @@ SolveTiers_Mod1Mod2Hyb(Value1, Value2, Mod1DataArray, Mod2DataArray, Hyb1DataArr
 	return {"Mod1Top":Mod1TopTier,"Mod1Btm":Mod1BtmTier,"Mod2Top":Mod2TopTier,"Mod2Btm":Mod2BtmTier,"HybTop":HybTopTier,"HybBtm":HybBtmTier}
 }
 
-GetValueRangeIlvlFormat(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier="")
+FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier="")
 {
 	result := []
 	
@@ -2772,65 +2744,82 @@ GetValueRangeIlvlFormat(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier="")
 			TopMin := Mod1DataArray[Mod1Tiers[1]].min + Mod2DataArray[Mod2Tier].min
 			TopMax := Mod1DataArray[Mod1Tiers[1]].max + Mod2DataArray[Mod2Tier].max
 			
-			result[1] := BtmMin . "-" . BtmMax . "|" . TopMin . "-" . TopMax
+			result[1] := FormatRangeOfRanges(BtmMin, BtmMax, TopMin, TopMax)
 			result[2] := 0
 		}
 		Else
 		{
-			result[1] := Mod1DataArray[Mod1Tiers].min + Mod2DataArray[Mod2Tier].min . "-" . Mod1DataArray[Mod1Tiers].max + Mod2DataArray[Mod2Tier].max
+			result[1] := Mod1DataArray[Mod1Tiers].min + Mod2DataArray[Mod2Tier].min "-" Mod1DataArray[Mod1Tiers].max + Mod2DataArray[Mod2Tier].max
 			result[2] := Mod1DataArray[Mod1Tiers].ilvl
 		}
 		
-		result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min + Mod2DataArray[Mod2DataArray.MaxIndex()].min . "-" . Mod1DataArray[1].max + Mod2DataArray[1].max
+		result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min + Mod2DataArray[Mod2DataArray.MaxIndex()].min "-" Mod1DataArray[1].max + Mod2DataArray[1].max
 		result[4] := (Mod1DataArray[1].ilvl > Mod2DataArray[1].ilvl) ? Mod1DataArray[1].ilvl : Mod2DataArray[1].ilvl
 	}
 	Else
 	{
-		If(IsObject(Mod1Tiers))
+		If( (Mod1DataArray[Mod1Tiers].minLo and Mod1DataArray[Mod1Tiers].maxHi) or (Mod1DataArray[Mod1Tiers[2]].minLo and Mod1DataArray[Mod1Tiers[1]].maxHi))
 		{
-			If(Mod1DataArray[Mod1Tiers[2]].minLo and Mod1DataArray[Mod1Tiers[1]].maxHi)
+			If(IsObject(Mod1Tiers))
 			{
 				BtmMin := Mod1DataArray[Mod1Tiers[2]].minLo
-				BtmMax := Mod1DataArray[Mod1Tiers[2]].maxHi
-				TopMin := Mod1DataArray[Mod1Tiers[1]].minLo
+				BtmMax := Mod1DataArray[Mod1Tiers[2]].minHi
+				TopMin := Mod1DataArray[Mod1Tiers[1]].maxLo
 				TopMax := Mod1DataArray[Mod1Tiers[1]].maxHi
 				
-				result[1] := BtmMin . "-" . BtmMax . "|" . TopMin . "-" . TopMax
-				result[2] := 0
-				result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].minLo . "-" . Mod1DataArray[1].maxHi
-				result[4] := Mod1DataArray[1].ilvl
+				result[1] := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax)
+				result[2] := ""
+			}
+			Else If(Mod1Tiers)
+			{
+				BtmMin := Mod1DataArray[Mod1Tiers].minLo
+				BtmMax := Mod1DataArray[Mod1Tiers].minHi
+				TopMin := Mod1DataArray[Mod1Tiers].maxLo
+				TopMax := Mod1DataArray[Mod1Tiers].maxHi
+				
+				result[1] := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax)
+				result[2] := Mod1DataArray[Mod1Tiers].ilvl
 			}
 			Else
+			{
+				result[1] :=  := "n/a"
+				result[2] :=  := ""
+			}
+			
+			BtmMin := Mod1DataArray[Mod1DataArray.MaxIndex()].minLo
+			BtmMax := Mod1DataArray[Mod1DataArray.MaxIndex()].minHi
+			TopMin := Mod1DataArray[1].maxLo
+			TopMax := Mod1DataArray[1].maxHi
+			
+			result[3] := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax)
+			result[4] := Mod1DataArray[1].ilvl
+		}
+		Else
+		{
+			If(IsObject(Mod1Tiers))
 			{
 				BtmMin := Mod1DataArray[Mod1Tiers[2]].min
 				BtmMax := Mod1DataArray[Mod1Tiers[2]].max
 				TopMin := Mod1DataArray[Mod1Tiers[1]].min
 				TopMax := Mod1DataArray[Mod1Tiers[1]].max
 				
-				result[1] := BtmMin . "-" . BtmMax . "|" . TopMin . "-" . TopMax
-				result[2] := 0
-				result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min . "-" . Mod1DataArray[1].max
-				result[4] := Mod1DataArray[1].ilvl
+				result[1] := FormatRangeOfRanges(BtmMin, BtmMax, TopMin, TopMax)
+				result[2] := ""
+				
 			}
-			
-			
-		}
-		Else
-		{
-			If(Mod1DataArray[Mod1Tiers].minLo and Mod1DataArray[Mod1Tiers].maxHi)
-			{
-				result[1] := Mod1DataArray[Mod1Tiers].minLo . "-" . Mod1DataArray[Mod1Tiers].maxHi
-				result[2] := Mod1DataArray[Mod1Tiers].ilvl
-				result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].minLo . "-" . Mod1DataArray[1].maxHi
-				result[4] := Mod1DataArray[1].ilvl
-			}
-			Else
+			Else If(Mod1Tiers)
 			{
 				result[1] := Mod1DataArray[Mod1Tiers].values
 				result[2] := Mod1DataArray[Mod1Tiers].ilvl
-				result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min . "-" . Mod1DataArray[1].max
-				result[4] := Mod1DataArray[1].ilvl
 			}
+			Else
+			{
+				result[1] :=  := "n/a"
+				result[2] :=  := ""
+			}
+			
+			result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min "-" Mod1DataArray[1].max
+			result[4] := Mod1DataArray[1].ilvl
 		}
 	}
 	
@@ -2838,14 +2827,14 @@ GetValueRangeIlvlFormat(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier="")
 }
 
 
-GetValueRangesWithinTiers(Value, Mod1DataArray, Mod2DataArray, Mod1TopTier, Mod1BtmTier, Mod2TopTier, Mod2BtmTier)
+FormatValueRangesAndIlvl_MultiTiers(Value, Mod1DataArray, Mod2DataArray, Mod1TopTier, Mod1BtmTier, Mod2TopTier, Mod2BtmTier)
 {
 	If( (Mod1TopTier = Mod1BtmTier) and (Mod2TopTier = Mod2BtmTier) )
 	{
 		result := []
-		result[1] := (Mod1DataArray[Mod1TopTier].min + Mod2DataArray[Mod2BtmTier].min) . "-" . (Mod1DataArray[Mod1TopTier].max + Mod2DataArray[Mod2BtmTier].max)
+		result[1] := (Mod1DataArray[Mod1TopTier].min + Mod2DataArray[Mod2BtmTier].min) "-" (Mod1DataArray[Mod1TopTier].max + Mod2DataArray[Mod2BtmTier].max)
 		result[2] := 0
-		result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min + Mod2DataArray[Mod2DataArray.MaxIndex()].min . "-" . Mod1DataArray[1].max + Mod2DataArray[1].max
+		result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min + Mod2DataArray[Mod2DataArray.MaxIndex()].min "-" Mod1DataArray[1].max + Mod2DataArray[1].max
 		result[4] := (Mod1DataArray[1].ilvl > Mod2DataArray[1].ilvl) ? Mod1DataArray[1].ilvl : Mod2DataArray[1].ilvl
 		
 		return result
@@ -2930,9 +2919,9 @@ GetValueRangesWithinTiers(Value, Mod1DataArray, Mod2DataArray, Mod1TopTier, Mod1
 	}
 	
 	result := []
-	result[1] := RangeBtmMin . "-" . RangeBtmMax . "|" . RangeTopMin . "-" . RangeTopMax
+	result[1] := FormatRangeOfRanges(RangeBtmMin, RangeBtmMax, RangeTopMin, RangeTopMax)
 	result[2] := 0
-	result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min + Mod2DataArray[Mod2DataArray.MaxIndex()].min . "-" . Mod1DataArray[1].max + Mod2DataArray[1].max
+	result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min + Mod2DataArray[Mod2DataArray.MaxIndex()].min "-" Mod1DataArray[1].max + Mod2DataArray[1].max
 	result[4] := (Mod1DataArray[1].ilvl > Mod2DataArray[1].ilvl) ? Mod1DataArray[1].ilvl : Mod2DataArray[1].ilvl
 	
 	return result
@@ -2967,10 +2956,10 @@ SolveAffixes_Mod1Mod2Hyb(Keyname, LineNum1, LineNum2, Value1, Value2, Mod1Type, 
 		SuffixCount += (Mod1Type ~= "Suffix") ? 1 : 0
 		SuffixCount += (Mod2Type ~= "Suffix") ? 1 : 0
 		
-		ValueRange1 := GetValueRangeIlvlFormat(Mod1DataArray, Mod1Tiers.Tier)
+		ValueRange1 := FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers.Tier)
 		LineTxt1 := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum1].Text, Mod1Type, ValueRange1, Mod1Tiers.Tier, False)
 		
-		ValueRange2 := GetValueRangeIlvlFormat(Mod2DataArray, Mod2Tiers.Tier)
+		ValueRange2 := FormatValueRangesAndIlvl(Mod2DataArray, Mod2Tiers.Tier)
 		LineTxt2 := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum2].Text, Mod2Type, ValueRange2, Mod2Tiers.Tier, False)
 		
 		Itemdata.UncertainAffixes[Keyname]["1_Mod1Mod2"] := [PrefixCount, SuffixCount, LineNum1, LineTxt1, LineNum2, LineTxt2]
@@ -2981,12 +2970,12 @@ SolveAffixes_Mod1Mod2Hyb(Keyname, LineNum1, LineNum2, Value1, Value2, Mod1Type, 
 		PrefixCount := 0
 		SuffixCount := 0
 		PrefixCount += (HybType ~= "Hybrid Prefix") ? 1 : 0
-		SuffixCount += (HybType ~= "Hybrid Prefix") ? 1 : 0
+		SuffixCount += (HybType ~= "Hybrid Suffix") ? 1 : 0
 		
-		ValueRange1 := GetValueRangeIlvlFormat(Hyb1DataArray, Hyb1Tiers.Tier)
+		ValueRange1 := FormatValueRangesAndIlvl(Hyb1DataArray, Hyb1Tiers.Tier)
 		LineTxt1 := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum1].Text, HybType, ValueRange1, Hyb1Tiers.Tier, False)
 		
-		ValueRange2 := GetValueRangeIlvlFormat(Hyb2DataArray, Hyb2Tiers.Tier)
+		ValueRange2 := FormatValueRangesAndIlvl(Hyb2DataArray, Hyb2Tiers.Tier)
 		LineTxt2 := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum2].Text, HybType, ValueRange2, Hyb2Tiers.Tier, False)
 		
 		Itemdata.UncertainAffixes[Keyname]["2_OnlyHyb"] := [PrefixCount, SuffixCount, LineNum1, LineTxt1, LineNum2, LineTxt2]
@@ -3001,10 +2990,10 @@ SolveAffixes_Mod1Mod2Hyb(Keyname, LineNum1, LineNum2, Value1, Value2, Mod1Type, 
 		SuffixCount += (Mod1Type ~= "Suffix") ? 1 : 0
 		SuffixCount += (HybType ~= "Hybrid Suffix") ? 1 : 0
 		
-		ValueRange1 := GetValueRangeIlvlFormat(Mod1DataArray, [Mod1HybTiers.ModTop, Mod1HybTiers.ModBtm], Hyb1DataArray, Mod1HybTiers.Hyb)
+		ValueRange1 := FormatValueRangesAndIlvl(Mod1DataArray, [Mod1HybTiers.ModTop, Mod1HybTiers.ModBtm], Hyb1DataArray, Mod1HybTiers.Hyb)
 		LineTxt1 := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum1].Text, [Mod1Type, HybType], ValueRange1, [[Mod1HybTiers.ModTop, Mod1HybTiers.ModBtm], Mod1HybTiers.Hyb], False)
 		
-		ValueRange2 := GetValueRangeIlvlFormat(Hyb2DataArray, Hyb2Tiers.Tier)
+		ValueRange2 := FormatValueRangesAndIlvl(Hyb2DataArray, Hyb2Tiers.Tier)
 		LineTxt2 := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum2].Text, HybType, ValueRange2, Mod1HybTiers.Hyb, False)
 		
 		Itemdata.UncertainAffixes[Keyname]["3_Mod1Hyb"] := [PrefixCount, SuffixCount, LineNum1, LineTxt1, LineNum2, LineTxt2]
@@ -3019,10 +3008,10 @@ SolveAffixes_Mod1Mod2Hyb(Keyname, LineNum1, LineNum2, Value1, Value2, Mod1Type, 
 		SuffixCount += (Mod2Type ~= "Suffix") ? 1 : 0
 		SuffixCount += (HybType ~= "Hybrid Suffix") ? 1 : 0
 		
-		ValueRange1 := GetValueRangeIlvlFormat(Hyb1DataArray, Hyb1Tiers.Tier)
+		ValueRange1 := FormatValueRangesAndIlvl(Hyb1DataArray, Hyb1Tiers.Tier)
 		LineTxt1 := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum1].Text, HybType, ValueRange1, Mod2HybTiers.Hyb, False)
 		
-		ValueRange2 := GetValueRangeIlvlFormat(Mod2DataArray, [Mod2HybTiers.ModTop, Mod2HybTiers.ModBtm], Hyb2DataArray, Mod2HybTiers.Hyb)
+		ValueRange2 := FormatValueRangesAndIlvl(Mod2DataArray, [Mod2HybTiers.ModTop, Mod2HybTiers.ModBtm], Hyb2DataArray, Mod2HybTiers.Hyb)
 		LineTxt2 := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum2].Text, [Mod2Type, HybType], ValueRange2, [[Mod2HybTiers.ModTop, Mod2HybTiers.ModBtm], Mod2HybTiers.Hyb], False)
 		
 		Itemdata.UncertainAffixes[Keyname]["4_Mod2Hyb"] := [PrefixCount, SuffixCount, LineNum1, LineTxt1, LineNum2, LineTxt2]
@@ -3039,10 +3028,10 @@ SolveAffixes_Mod1Mod2Hyb(Keyname, LineNum1, LineNum2, Value1, Value2, Mod1Type, 
 		SuffixCount += (Mod2Type ~= "Suffix") ? 1 : 0
 		SuffixCount += (HybType ~= "Hybrid Suffix") ? 1 : 0
 		
-		ValueRange1 := GetValueRangesWithinTiers(Value1, Mod1DataArray, Hyb1DataArray, Mod1Mod2HybTiers.Mod1Top, Mod1Mod2HybTiers.Mod1Btm, Mod1Mod2HybTiers.HybTop, Mod1Mod2HybTiers.HybBtm)
+		ValueRange1 := FormatValueRangesAndIlvl_MultiTiers(Value1, Mod1DataArray, Hyb1DataArray, Mod1Mod2HybTiers.Mod1Top, Mod1Mod2HybTiers.Mod1Btm, Mod1Mod2HybTiers.HybTop, Mod1Mod2HybTiers.HybBtm)
 		LineTxt1 := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum1].Text, [Mod1Type, HybType], ValueRange1, [[Mod1Mod2HybTiers.Mod1Top, Mod1Mod2HybTiers.Mod1Btm], [Mod1Mod2HybTiers.HybTop, Mod1Mod2HybTiers.HybBtm]], False)
 		
-		ValueRange2 := GetValueRangesWithinTiers(Value2, Mod2DataArray, Hyb2DataArray, Mod1Mod2HybTiers.Mod2Top, Mod1Mod2HybTiers.Mod2Btm, Mod1Mod2HybTiers.HybTop, Mod1Mod2HybTiers.HybBtm)
+		ValueRange2 := FormatValueRangesAndIlvl_MultiTiers(Value2, Mod2DataArray, Hyb2DataArray, Mod1Mod2HybTiers.Mod2Top, Mod1Mod2HybTiers.Mod2Btm, Mod1Mod2HybTiers.HybTop, Mod1Mod2HybTiers.HybBtm)
 		LineTxt2 := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum2].Text, [Mod2Type, HybType], ValueRange2, [[Mod1Mod2HybTiers.Mod2Top, Mod1Mod2HybTiers.Mod2Btm], [Mod1Mod2HybTiers.HybTop, Mod1Mod2HybTiers.HybBtm]], False)
 		
 		Itemdata.UncertainAffixes[Keyname]["5_Mod1Mod2Hyb"] := [PrefixCount, SuffixCount, LineNum1, LineTxt1, LineNum2, LineTxt2]
@@ -3051,7 +3040,7 @@ SolveAffixes_Mod1Mod2Hyb(Keyname, LineNum1, LineNum2, Value1, Value2, Mod1Type, 
 
 SolveAffixes_PreSuf(Keyname, LineNum, Value, Filename1, Filename2, ItemLevel)
 {
-	Global Itemdata, AffixTotals
+	Global Itemdata
 	Itemdata.UncertainAffixes[Keyname] := {}
 	
 	Mod1DataArray := ArrayFromDatafile(Filename1)
@@ -3063,21 +3052,21 @@ SolveAffixes_PreSuf(Keyname, LineNum, Value, Filename1, Filename2, ItemLevel)
 	
 	If(Mod1Tiers.Tier)
 	{
-		ValueRange := GetValueRangeIlvlFormat(Mod1DataArray, Mod1Tiers.Tier)
+		ValueRange := FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers.Tier)
 		LineTxt := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum].Text, "Prefix", ValueRange, Mod1Tiers.Tier, False)
 		Itemdata.UncertainAffixes[Keyname]["1_Pre"] := [1, 0, LineNum, LineTxt]
 	}
 	
 	If(Mod2Tiers.Tier)
 	{
-		ValueRange := GetValueRangeIlvlFormat(Mod2DataArray, Mod2Tiers.Tier)
+		ValueRange := FormatValueRangesAndIlvl(Mod2DataArray, Mod2Tiers.Tier)
 		LineTxt := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum].Text, "Suffix", ValueRange, Mod2Tiers.Tier, False)
 		Itemdata.UncertainAffixes[Keyname]["2_Suf"] := [0, 1, LineNum, LineTxt]
 	}
 	
 	If(IsObject(Mod1Mod2Tiers))
 	{
-		ValueRange := GetValueRangesWithinTiers(Value, Mod1DataArray, Mod2DataArray, Mod1Mod2Tiers.Mod1Top, Mod1Mod2Tiers.Mod1Btm, Mod1Mod2Tiers.Mod2Top, Mod1Mod2Tiers.Mod2Btm)
+		ValueRange := FormatValueRangesAndIlvl_MultiTiers(Value, Mod1DataArray, Mod2DataArray, Mod1Mod2Tiers.Mod1Top, Mod1Mod2Tiers.Mod1Btm, Mod1Mod2Tiers.Mod2Top, Mod1Mod2Tiers.Mod2Btm)
 		LineTxt := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum].Text, ["Prefix", "Suffix"], ValueRange, [[Mod1Mod2Tiers.Mod1Top, Mod1Mod2Tiers.Mod1Btm] , [Mod1Mod2Tiers.Mod2Top, Mod1Mod2Tiers.Mod2Btm]], False)
 		Itemdata.UncertainAffixes[Keyname]["3_PreSuf"] := [1, 1, LineNum, LineTxt]
 	}
@@ -3113,27 +3102,18 @@ ParseAffixes(ItemDataAffixes, Item)
 	{
 		HasToArmour			:= 0
 		HasToEvasion			:= 0
-		HasToEnergyShield		:= 0
+		HasToMaxES			:= 0
 		HasToMaxLife			:= 0
 		HasToArmourCraft		:= 0
 		HasToEvasionCraft		:= 0
-		HasToEnergyShieldCraft	:= 0
+		HasToMaxESCraft		:= 0
 		HasToMaxLifeCraft		:= 0
 		
-		HasIncrArmour			:= 0
-		HasIncrEvasion			:= 0
-		HasIncrEnergyShield		:= 0
+		HasIncrDefences 		:= 0
+		HasIncrDefencesType 	:= ""
+		HasIncrDefencesCraft 	:= 0
+		HasIncrDefencesCraftType := ""
 		HasStunBlockRecovery	:= 0
-		HasIncrArmourCraft		:= 0
-		HasIncrEvasionCraft		:= 0
-		HasIncrEnergyShieldCraft	:= 0
-		
-		HasIncrArmourAndES			:= 0
-		HasIncrArmourAndEvasion		:= 0
-		HasIncrEvasionAndES			:= 0
-		HasIncrArmourAndESCraft		:= 0
-		HasIncrArmourAndEvasionCraft	:= 0
-		HasIncrEvasionAndESCraft		:= 0
 		
 		HasToAccuracyRating		:= 0
 		HasIncrPhysDmg			:= 0
@@ -3196,12 +3176,12 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, to Energy Shield
+			IfInString, A_LoopField, to maximum Energy Shield
 			{
-				If(HasToEnergyShield){
-					HasToEnergyShieldCraft := A_Index
+				If(HasToMaxES){
+					HasToMaxESCraft := A_Index
 				}Else{
-					HasToEnergyShield := A_Index
+					HasToMaxES := A_Index
 				}
 				Continue
 			}
@@ -3216,55 +3196,67 @@ ParseAffixes(ItemDataAffixes, Item)
 			}
 			IfInString, A_LoopField, increased Armour and Evasion	; it's indeed "Evasion" and not "Evasion Rating" here
 			{
-				If(HasIncrArmourAndEvasion){
-					HasIncrArmourAndEvasionCraft := A_Index
+				If(HasIncrDefences){
+					HasIncrDefencesCraftType := "ArmourAndEvasion"
+					HasIncrDefencesCraft := A_Index
 				}Else{
-					HasIncrArmourAndEvasion := A_Index
+					HasIncrDefencesType := "ArmourAndEvasion"
+					HasIncrDefences := A_Index
 				}
 				Continue
 			}
 			IfInString, A_LoopField, increased Armour and Energy Shield
 			{
-				If(HasIncrArmourAndES){
-					HasIncrArmourAndESCraft := A_Index
+				If(HasIncrDefences){
+					HasIncrDefencesCraftType := "ArmourAndEnergyShield"
+					HasIncrDefencesCraft := A_Index
 				}Else{
-					HasIncrArmourAndES := A_Index
+					HasIncrDefencesType := "ArmourAndEnergyShield"
+					HasIncrDefences := A_Index
 				}
 				Continue
 			}
 			IfInString, A_LoopField, increased Evasion and Energy Shield	; again "Evasion" and not "Evasion Rating"
 			{
-				If(HasIncrEvasionAndES){
-					HasIncrEvasionAndESCraft := A_Index
+				If(HasIncrDefences){
+					HasIncrDefencesCraftType := "EvasionAndEnergyShield"
+					HasIncrDefencesCraft := A_Index
 				}Else{
-					HasIncrEvasionAndES := A_Index
+					HasIncrDefencesType := "EvasionAndEnergyShield"
+					HasIncrDefences := A_Index
 				}
 				Continue
 			}
 			IfInString, A_LoopField, increased Armour
 			{
-				If(HasIncrArmour){
-					HasIncrArmourCraft := A_Index
+				If(HasIncrDefences){
+					HasIncrDefencesCraftType := "Armour"
+					HasIncrDefencesCraft := A_Index
 				}Else{
-					HasIncrArmour := A_Index
+					HasIncrDefencesType := "Armour"
+					HasIncrDefences := A_Index
 				}
 				Continue
 			}
 			IfInString, A_LoopField, increased Evasion Rating
 			{
-				If(HasIncrEvasion){
-					HasIncrEvasionCraft := A_Index
+				If(HasIncrDefences){
+					HasIncrDefencesCraftType := "Evasion"
+					HasIncrDefencesCraft := A_Index
 				}Else{
-					HasIncrEvasion := A_Index
+					HasIncrDefencesType := "Evasion"
+					HasIncrDefences := A_Index
 				}
 				Continue
 			}
 			IfInString, A_LoopField, increased Energy Shield
 			{
-				If(HasIncrEnergyShield){
-					HasIncrEnergyShieldCraft := A_Index
+				If(HasIncrDefences){
+					HasIncrDefencesCraftType := "EnergyShield"
+					HasIncrDefencesCraft := A_Index
 				}Else{
-					HasIncrEnergyShield := A_Index
+					HasIncrDefencesType := "EnergyShield"
+					HasIncrDefences := A_Index
 				}
 				Continue
 			}
@@ -3313,14 +3305,23 @@ ParseAffixes(ItemDataAffixes, Item)
 			{
 				If(HasIncrSpellDamage){
 					HasIncrSpellDamageCraft := A_Index
-					HasIncrSpellDamagePrefix := HasIncrSpellDamageCraft
-					HasIncrSpellOrElePrefix := HasIncrSpellDamagePrefix
+					HasIncrSpellDamagePrefix := A_Index
+					HasIncrSpellOrElePrefix := A_Index
 				}Else{
 					HasIncrSpellDamage := A_Index
 				}
+				
+				If ((ItemGripType = "1H") or (ItemSubType = "Shield")){
+					Found := LookupTierByValue(GetActualValue(A_LoopField), ArrayFromDatafile("data\SpellDamage_MaxMana_1H.txt"), ItemLevel).Tier
+				}Else{
+					Found := LookupTierByValue(GetActualValue(A_LoopField), ArrayFromDatafile("data\SpellDamage_MaxMana_Staff.txt"), ItemLevel).Tier
+				}
+				If( ! Found){
+					HasIncrSpellDamagePrefix := A_Index
+					HasIncrSpellOrElePrefix := A_Index
+				}
 				Continue
 			}
-			/*
 			IfInString, A_LoopField, increased Fire Damage
 			{
 				If(HasIncrFireDamage){
@@ -3329,6 +3330,12 @@ ParseAffixes(ItemDataAffixes, Item)
 					HasIncrSpellOrElePrefix := HasIncrFireDamagePrefix
 				}Else{
 					HasIncrFireDamage := A_Index
+				}
+				
+				If( ! LookupTierByValue(GetActualValue(A_LoopField), ArrayFromDatafile("data\IncrFireDamage_Suffix_Weapon.txt"), ItemLevel).Tier )
+				{
+					HasIncrFireDamagePrefix := A_Index
+					HasIncrSpellOrElePrefix := A_Index
 				}
 				Continue
 			}
@@ -3341,6 +3348,12 @@ ParseAffixes(ItemDataAffixes, Item)
 				}Else{
 					HasIncrColdDamage := A_Index
 				}
+				
+				If( ! LookupTierByValue(GetActualValue(A_LoopField), ArrayFromDatafile("data\IncrColdDamage_Suffix_Weapon.txt"), ItemLevel).Tier )
+				{
+					HasIncrColdDamagePrefix := A_Index
+					HasIncrSpellOrElePrefix := A_Index
+				}
 				Continue
 			}
 			IfInString, A_LoopField, increased Lightning Damage
@@ -3352,11 +3365,14 @@ ParseAffixes(ItemDataAffixes, Item)
 				}Else{
 					HasIncrLightningDamage := A_Index
 				}
+				
+				If( ! LookupTierByValue(GetActualValue(A_LoopField), ArrayFromDatafile("data\IncrLightningDamage_Suffix_Weapon.txt"), ItemLevel).Tier )
+				{
+					HasIncrLightningDamagePrefix := A_Index
+					HasIncrSpellOrElePrefix := A_Index
+				}
 				Continue
 			}
-			*/
-			
-			
 			
 			; GetActualValue(A_LoopField)
 			
@@ -3992,14 +4008,23 @@ ParseAffixes(ItemDataAffixes, Item)
 			; T1 comes with "#% increased Accuracy Rating", T2-3 with "+# to Accuracy Rating"
 			; This part can always be assigned now. The Accuracy will be solved later in case it's T2-3 and it forms a complex affix.
 			HasIncrLightRadius := A_Index
-			;LookupAffixAndSetInfoLine("data\LightRadius_AccuracyRating.txt", "Hybrid Suffix", ItemLevel, CurrValue)
+			
+			; Taking the complicated function call here to use MakeAffixDetailLine with "CountAffixTotals=False".
+			; This way the mod is already written in case it's T1 and gets overwritten in case it's T2-3.
+			; We don't want to overcount the affixes by 0.5 when overwriting though,
+			;   so we don't count them here (see also "increased Accuracy" right below).
+			ValueRanges := LookupAffixData("data\LightRadius_AccuracyRating.txt", ItemLevel, CurrValue, CurrTier)
+			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Hybrid Suffix", ValueRanges, CurrTier, False), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, increased Accuracy Rating
 		{
-			; This variant comes always with Light Radius, see above.
+			; This variant comes always with Light Radius, see right above.
 			HasIncrLightRadius := False	; Second part is accounted for, no need to involve "+# to Accuracy Rating" or complex affixes.
 			LookupAffixAndSetInfoLine("data\IncrAccuracyRating_LightRadius.txt", "Hybrid Suffix", ItemLevel, CurrValue)
+			; Now that we know that it's certainly T1 for "Light Radius" and complex affixes won't be involved,
+			;   we count the 0.5 that we skipped at "Light Radius".
+			AffixTotals.NumSuffixes += 0.5
 			Continue
 		}
 		IfInString, A_LoopField, Chance to Block
@@ -4039,8 +4064,11 @@ ParseAffixes(ItemDataAffixes, Item)
 			If (ItemBaseType = "Weapon") {
 				File := "data\LifeOnHit_Weapon.txt"
 			}
+			Else If (ItemSubType = "Amulet"){
+				File := "data\LifeOnHit_Amulet.txt"
+			}
 			Else {
-				File := "data\LifeOnHit_Gloves.txt"
+				File := "data\LifeOnHit_GlovesRing.txt"
 			}
 			LookupAffixAndSetInfoLine(File, "Suffix", ItemLevel, CurrValue)
 			Continue
@@ -4195,7 +4223,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				If(CurrValue = 25)
 				{
 					; Vagan/Tora prefix
-					AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Vgn7|Buy:Tora4", ""), A_Index)
+					AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Vagan 7 or Buy:Tora 4", ""), A_Index)
 					Continue
 				}
 				
@@ -4273,10 +4301,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			If RegExMatch(A_LoopField, "Adds \d+? to \d+? Cold Damage to Spells")
 			{
 				If (ItemGripType = "1H"){
-					File := "data\SpellAddedCold1H.txt"
+					File := "data\SpellAddedCold_1H.txt"
 				}
 				Else{
-					File := "data\SpellAddedCold2H.txt"
+					File := "data\SpellAddedCold_2H.txt"
 				}
 			}
 			Else If (ItemSubType = "Amulet" or ItemSubType = "Ring"){
@@ -4304,10 +4332,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			If RegExMatch(A_LoopField, "Adds \d+? to \d+? Fire Damage to Spells")
 			{
 				If (ItemGripType = "1H"){
-					File := "data\SpellAddedFire1H.txt"
+					File := "data\SpellAddedFire_1H.txt"
 				}
 				Else{
-					File := "data\SpellAddedFire2H.txt"
+					File := "data\SpellAddedFire_2H.txt"
 				}	
 			}
 			Else If (ItemSubType = "Amulet" or ItemSubType = "Ring"){
@@ -4335,10 +4363,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			If RegExMatch(A_LoopField, "Adds \d+? to \d+? Lightning Damage to Spells")
 			{
 				If (ItemGripType = "1H"){
-					File := "data\SpellAddedLightning1H.txt"
+					File := "data\SpellAddedLightning_1H.txt"
 				}
 				Else{
-					File := "data\SpellAddedLightning2H.txt"
+					File := "data\SpellAddedLightning_2H.txt"
 				}
 			}
 			Else If (ItemSubType = "Amulet" or ItemSubType = "Ring"){
@@ -4591,27 +4619,26 @@ ParseAffixes(ItemDataAffixes, Item)
 	
 	; --- COMPLEX AFFIXES ---
 	
-	
 	If (HasIncrRarity)
 	{
 		If (ItemSubType = "Amulet" or ItemSubType = "Ring")
 		{
-			PrefixFile := "data\IncrRarity_Prefix_AmuletRing.txt"
-			SuffixFile := "data\IncrRarity_Suffix_AmuletRingHelmet.txt"
+			FilePrefix := "data\IncrRarity_Prefix_AmuletRing.txt"
+			FileSuffix := "data\IncrRarity_Suffix_AmuletRingHelmet.txt"
 			
 			If (HasIncrRarityCraft)
 			{
-				SuffixFile := "data\IncrRarity_Suffix_Craft.txt"
+				FileSuffix := "data\IncrRarity_Suffix_Craft.txt"
 				
 				LineNum := HasIncrRarityCraft
 				LineTxt := Itemdata.AffixTextLines[LineNum].Text
 				Value   := Itemdata.AffixTextLines[LineNum].Value
-				LookupAffixAndSetInfoLine(SuffixFile, "Suffix", ItemLevel, Value, LineTxt, LineNum)
+				LookupAffixAndSetInfoLine(FileSuffix, "Suffix", ItemLevel, Value, LineTxt, LineNum)
 				
 				LineNum := HasIncrRarity
 				LineTxt := Itemdata.AffixTextLines[LineNum].Text
 				Value   := Itemdata.AffixTextLines[LineNum].Value
-				LookupAffixAndSetInfoLine(PrefixFile, "Prefix", ItemLevel, Value, LineTxt, LineNum)
+				LookupAffixAndSetInfoLine(FilePrefix, "Prefix", ItemLevel, Value, LineTxt, LineNum)
 			}
 			
 			Else
@@ -4620,40 +4647,74 @@ ParseAffixes(ItemDataAffixes, Item)
 				LineTxt := Itemdata.AffixTextLines[LineNum].Text
 				Value   := Itemdata.AffixTextLines[LineNum].Value
 				
-				SolveAffixes_PreSuf("Rarity", LineNum, Value, PrefixFile, SuffixFile, ItemLevel)
+				SolveAffixes_PreSuf("Rarity", LineNum, Value, FilePrefix, FileSuffix, ItemLevel)
 			}
 		}
 		
 		Else If (ItemSubType = "Helmet")
 		{
-			PrefixFile := "data\IncrRarity_Prefix_Helmet.txt"
-			SuffixFile := "data\IncrRarity_Suffix_AmuletRingHelmet.txt"
+			FilePrefix := "data\IncrRarity_Prefix_Helmet.txt"
+			FileSuffix := "data\IncrRarity_Suffix_AmuletRingHelmet.txt"
 			
 			LineNum := HasIncrRarity
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value
 			
-			SolveAffixes_PreSuf("Rarity", LineNum, Value, PrefixFile, SuffixFile, ItemLevel)
+			SolveAffixes_PreSuf("Rarity", LineNum, Value, FilePrefix, FileSuffix, ItemLevel)
 		}
 		
 		Else If (ItemSubType = "Gloves" or ItemSubType = "Boots")
 		{
-			PrefixFile := "data\IncrRarity_Prefix_GlovesBoots.txt"
-			SuffixFile := "data\IncrRarity_Suffix_GlovesBoots.txt"
+			FilePrefix := "data\IncrRarity_Prefix_GlovesBoots.txt"
+			FileSuffix := "data\IncrRarity_Suffix_GlovesBoots.txt"
 			
 			LineNum := HasIncrRarity
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value
 			
-			SolveAffixes_PreSuf("Rarity", LineNum, Value, PrefixFile, SuffixFile, ItemLevel)
+			SolveAffixes_PreSuf("Rarity", LineNum, Value, FilePrefix, FileSuffix, ItemLevel)
 		}
 	}
 	
 	
-	
-	If (HasToMaxLife or (HasToArmour or HasToEvasion or HasToEnergyShield) )
+	If (HasToMaxLife or (HasToArmour or HasToEvasion or HasToMaxES) )
 	{
-		If (HasToMaxLife and (HasToArmour or HasToEvasion or HasToEnergyShield) and (ItemBaseType = "Armour"))
+		If (ItemSubType = "BodyArmour" or ItemSubType = "Shield")
+		{
+			FileToArmour		:= "data\ToArmour_BodyArmourShield.txt"
+			FileToArmourHyb	:= "data\ToArmour_BodyArmourShield_HybridBase.txt"
+			FileToEvasion		:= "data\ToEvasion_BodyArmourShield.txt"
+			FileToEvasionHyb	:= "data\ToEvasion_BodyArmourShield_HybridBase.txt"
+			FileToMaxES		:= (ItemSubType = "BodyArmour") ? "data\ToMaxES_BodyArmour.txt" : "data\ToMaxES_Shield.txt"
+			FileToMaxESHyb		:= "data\ToMaxES_BodyArmourShield_HybridBase.txt"
+		}
+		Else If (ItemSubType = "Helmet")
+		{
+			FileToArmour		:= "data\ToArmour_Helmet.txt"
+			FileToArmourHyb	:= "data\ToArmour_Helmet_HybridBase.txt"
+			FileToEvasion		:= "data\ToEvasion_Helmet.txt"
+			FileToEvasionHyb	:= "data\ToEvasion_Helmet_HybridBase.txt"
+			FileToMaxES		:= "data\ToMaxES_Helmet.txt"
+			FileToMaxESHyb		:= "data\ToMaxES_Helmet_HybridBase.txt"
+		}
+		Else If (ItemSubType = "Gloves" or ItemSubType = "Boots")
+		{
+			FileToArmour		:= "data\ToArmour_GlovesBoots.txt"
+			FileToArmourHyb	:= "data\ToArmour_GlovesBoots_HybridBase.txt"
+			FileToEvasion		:= "data\ToEvasion_GlovesBoots.txt"
+			FileToEvasionHyb	:= "data\ToEvasion_GlovesBoots_HybridBase.txt"
+			FileToMaxES		:= "data\ToMaxES_GlovesBoots.txt"
+			FileToMaxESHyb		:= "data\ToMaxES_GlovesBoots_HybridBase.txt"
+		}
+		Else
+		{
+			FileToArmour		:= "data\ToArmour_Belt.txt"
+			FileToEvasion		:= "data\ToEvasion_Ring.txt"
+			FileToMaxES		:= (ItemSubType = "Ring") ? "data\ToMaxES_Ring.txt" : "data\ToMaxES_AmuletBelt.txt"
+		}
+		
+		
+		If (HasToMaxLife and (HasToArmour or HasToEvasion or HasToMaxES) and (ItemBaseType = "Armour"))
 		{
 			
 		}
@@ -4686,42 +4747,155 @@ ParseAffixes(ItemDataAffixes, Item)
 				LookupAffixAndSetInfoLine(File, "Prefix", ItemLevel, Value, LineTxt, LineNum)
 			}
 			
-			If (HasToArmour or HasToEvasion or HasToEnergyShield)
+			If (HasToArmour or HasToEvasion or HasToMaxES)
 			{
-				
+				If (HasToArmour and HasToEvasion)
+				{
+					LineNum := HasToArmour
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToArmourHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+					
+					LineNum := HasToEvasion
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToEvasionHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+				}
+				Else If (HasToArmour and HasToMaxES)
+				{
+					LineNum := HasToArmour
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToArmourHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+					
+					LineNum := HasToMaxES
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToMaxESHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+				}
+				Else If (HasToEvasion and HasToMaxES)
+				{
+					LineNum := HasToEvasion
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToEvasionHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+					
+					LineNum := HasToMaxES
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToMaxESHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+				}
+				Else If (HasToArmour)
+				{
+					LineNum := HasToArmour
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToArmour, "Prefix", ItemLevel, Value, LineTxt, LineNum)
+				}
+				Else If (HasToEvasion)
+				{
+					LineNum := HasToEvasion
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToEvasion, "Prefix", ItemLevel, Value, LineTxt, LineNum)
+				}
+				Else If (HasToMaxES)
+				{
+					LineNum := HasToMaxES
+					LineTxt := Itemdata.AffixTextLines[LineNum].Text
+					Value   := Itemdata.AffixTextLines[LineNum].Value
+					LookupAffixAndSetInfoLine(FileToMaxES, "Prefix", ItemLevel, Value, LineTxt, LineNum)
+				}
 			}
 		}
 		
 	}
 	
 	
-	
-	If (HasStunBlockRecovery or ((HasIncrArmour or HasIncrEvasion or HasIncrEnergyShield) or (HasIncrArmourAndEvasion or HasIncrArmourAndES or HasIncrEvasionAndES)) )		; have mercy
+	If (HasStunBlockRecovery or HasIncrDefences )
 	{
-		
-		
-		FileStunBlock := "data\StunBlockRecovery_Suffix.txt"
-		
-		
-		If (HasStunBlockRecovery and ((HasIncrArmour or HasIncrEvasion or HasIncrEnergyShield) or (HasIncrArmourAndEvasion or HasIncrArmourAndES or HasIncrEvasionAndES)) )
+		If (HasStunBlockRecovery and HasIncrDefences and (ItemBaseType = "Armour") )
 		{
+			If (HasIncrDefencesCraft)
+			{
+				; If there are two seperate %def mods, then the first pre-pass match has to be the part from the hybrid mod
+				;   and the second match has to be the pure mod in crafted form.
+				
+				If ( HasIncrDefencesType = "Armour" or HasIncrDefencesType = "Evasion" or HasIncrDefencesType = "EnergyShield"){
+					FileHybDef  := "data\Incr" . HasIncrDefencesType . "_StunRecovery.txt"
+					FileHybStun := "data\StunBlockRecovery_" . HasIncrDefencesType . ".txt"
+				}
+				Else{
+					FileHybDef  := "data\IncrDefences_HybridBase_StunRecovery.txt"
+					FileHybStun := "data\StunBlockRecovery_HybridBase.txt"
+				}
+				
+				FileCraft := "data\Incr" . HasIncrDefencesCraftType . ".txt"
+				
+				LineNum := HasIncrDefencesCraft
+				LineTxt := Itemdata.AffixTextLines[LineNum].Text
+				Value   := Itemdata.AffixTextLines[LineNum].Value
+				LookupAffixAndSetInfoLine(FileCraft, "Prefix", ItemLevel, Value, LineTxt, LineNum)
+				
+				
+				LineNum1 := HasIncrDefences
+				LineNum2 := HasStunBlockRecovery
+				Value1   := Itemdata.AffixTextLines[LineNum1].Value
+				Value2   := Itemdata.AffixTextLines[LineNum2].Value
+				SolveAffixes_Mod1Mod2Hyb("IncrDefStunBlock", LineNum1, LineNum2, Value1, Value2, "Prefix", "Suffix", "Hybrid Prefix", False, False, FileHybDef, FileHybStun, ItemLevel)
+			}
+			
+			Else
+			{
+				If ( HasIncrDefencesType = "Armour" or HasIncrDefencesType = "Evasion" or HasIncrDefencesType = "EnergyShield"){
+					FileHybDef  := "data\Incr" . HasIncrDefencesType . "_StunRecovery.txt"
+					FileHybStun := "data\StunBlockRecovery_" . HasIncrDefencesType . ".txt"
+				}
+				Else{
+					FileHybDef  := "data\IncrDefences_HybridBase_StunRecovery.txt"
+					FileHybStun := "data\StunBlockRecovery_HybridBase.txt"
+				}
+				
+				FileDef  := "data\Incr" . HasIncrDefencesType . ".txt"
+				FileStun := "data\StunBlockRecovery_Suffix.txt"
+				
+				LineNum1 := HasIncrDefences
+				LineNum2 := HasStunBlockRecovery
+				Value1   := Itemdata.AffixTextLines[LineNum1].Value
+				Value2   := Itemdata.AffixTextLines[LineNum2].Value
+				SolveAffixes_Mod1Mod2Hyb("IncrDefStunBlock", LineNum1, LineNum2, Value1, Value2, "Prefix", "Suffix", "Hybrid Prefix", FileDef, FileStun, FileHybDef, FileHybStun, ItemLevel)
+			}
 			
 		}
-		
-		Else If (HasStunBlockRecovery)
+		Else
 		{
-			LineNum := HasStunBlockRecovery
-			LineTxt := Itemdata.AffixTextLines[LineNum].Text
-			Value   := Itemdata.AffixTextLines[LineNum].Value
-			LookupAffixAndSetInfoLine(FileStunBlock, "Suffix", ItemLevel, Value, LineTxt, LineNum)
-		}
-		
-		Else ; ((HasIncrArmour or HasIncrEvasion or HasIncrEnergyShield) or (HasIncrArmourAndEvasion or HasIncrArmourAndES or HasIncrEvasionAndES))
-		{
+			If (HasStunBlockRecovery)
+			{
+				FileStun := "data\StunBlockRecovery_Suffix.txt"
+				LineNum := HasStunBlockRecovery
+				LineTxt := Itemdata.AffixTextLines[LineNum].Text
+				Value   := Itemdata.AffixTextLines[LineNum].Value
+				LookupAffixAndSetInfoLine(FileStun, "Suffix", ItemLevel, Value, LineTxt, LineNum)
+			}
 			
+			If (HasIncrDefences)
+			{
+				If (ItemSubType = "Amulet")
+				{
+					File := "data\Incr" . HasIncrDefencesType . "_Amulet.txt"	; "Armour" or "Evasion". ES has a "maximum" in the Amulet wording and was already checked in simple affixes.
+				}
+				Else
+				{
+					File := "data\Incr" . HasIncrDefencesType . ".txt"
+				}
+				
+				LineNum := HasIncrDefences
+				LineTxt := Itemdata.AffixTextLines[LineNum].Text
+				Value   := Itemdata.AffixTextLines[LineNum].Value
+				LookupAffixAndSetInfoLine(File, "Prefix", ItemLevel, Value, LineTxt, LineNum)
+			}
 		}
 	}
-	
 	
 	; Note: The "HasIncrPhysDmg" can either come from a shield or weapon. The shield case has already been dealt with in the simple affix section though and
 	;   "HasIncrPhysDmg" gets disabled in that case. Consequently this flag is certainly from a weapon.
@@ -4796,7 +4970,6 @@ ParseAffixes(ItemDataAffixes, Item)
 	}
 	
 	
-	
 	If (HasIncrSpellDamage or HasMaxMana)
 	{
 		If ((ItemGripType = "1H") or (ItemSubType = "Shield")){
@@ -4818,6 +4991,11 @@ ParseAffixes(ItemDataAffixes, Item)
 		; Shields and Amulets can't have the hybrid mod.
 		If (HasIncrSpellDamage and HasMaxMana and not((ItemSubType = "Shield") or (ItemSubType = "Amulet")) )
 		{
+			If (HasIncrSpellOrElePrefix and (HasIncrSpellOrElePrefix != HasIncrSpellDamage))
+			{
+				FileSpell := False	; There is an increased Fire, Cold or Lightning prefix, so SpellDamage can't have the pure mod.
+			}
+			
 			LineNum1 := HasIncrSpellDamage
 			LineNum2 := HasMaxMana
 			Value1   := Itemdata.AffixTextLines[LineNum1].Value
@@ -4846,72 +5024,340 @@ ParseAffixes(ItemDataAffixes, Item)
 		}
 	}
 	
-	
-	
-	
-	
-	; TODO: more fancy stuff with uncertain affixes.
-	
-	TmpAffixLines := []
-	i := AffixLines.MaxIndex()
-	
-	Loop, %i%
+	If (HasIncrFireDamage or HasIncrColdDamage or HasIncrLightningDamage)
 	{
-		TmpAffixLines[A_Index] := AffixLines[A_Index]
-	}
-	
-	;DebugFile := FileOpen("DebugFile.txt", "w")
-	;DebugFile.Write(ExploreObj(TmpAffixLines) . "`n`n---`n`n")
-	;DebugFile.Write(ExploreObj(Itemdata.UncertainAffixes) . "`n`n---`n`n")
-	
-	For junk1, grp in Itemdata.UncertainAffixes
-	{
-		For junk2, entry in grp
+		If (ItemGripType = "2H"){
+			FilePrefix := "data\IncrEleTypeDamage_Prefix_2H.txt"
+			FileSuffix := "_Weapon.txt"
+		}
+		Else If (ItemGripType = "1H"){
+			FilePrefix := "data\IncrEleTypeDamage_Prefix_1H.txt"
+			FileSuffix := "_Weapon.txt"
+		}
+		Else If (ItemSubType = "Amulet"){
+			FilePrefix := False
+			FileSuffix := "_Amulet.txt"
+		}
+		Else If (ItemSubType = "Ring"){
+			FilePrefix := False
+			FileSuffix := "_Ring.txt"
+		}
+		
+		
+		If (HasIncrFireDamage)
 		{
-			For key, val in [3,5]
+			FileSuffix := "data\IncrFireDamage_Suffix" . FileSuffix
+			LineNum := HasIncrFireDamage
+			LineTxt := Itemdata.AffixTextLines[LineNum].Text
+			Value   := Itemdata.AffixTextLines[LineNum].Value
+			
+			If (HasIncrSpellOrElePrefix and (HasIncrSpellOrElePrefix != HasIncrFireDamage))
 			{
-				If(entry[val])
-				{
-					If(IsObject(TmpAffixLines[entry[val]]))
-					{
-						TmpAffixLines[entry[val]].Push(entry[val+1])
-					}
-					Else
-					{
-						TmpAffixLines[entry[val]] := [entry[val+1]]
-					}
-					
-				}
+				LookupAffixAndSetInfoLine(FileSuffix, "Suffix", ItemLevel, Value, LineTxt, LineNum)
+			}
+			Else
+			{
+				SolveAffixes_PreSuf("IncrFire", LineNum, Value, FilePrefix, FileSuffix, ItemLevel)
+			}
+		}
+		If (HasIncrColdDamage)
+		{
+			FileSuffix := "data\IncrColdDamage_Suffix" . FileSuffix
+			LineNum := HasIncrColdDamage
+			LineTxt := Itemdata.AffixTextLines[LineNum].Text
+			Value   := Itemdata.AffixTextLines[LineNum].Value
+			
+			If (HasIncrSpellOrElePrefix and (HasIncrSpellOrElePrefix != HasIncrColdDamage))
+			{
+				LookupAffixAndSetInfoLine(FileSuffix, "Suffix", ItemLevel, Value, LineTxt, LineNum)
+			}
+			Else
+			{
+				SolveAffixes_PreSuf("IncrCold", LineNum, Value, FilePrefix, FileSuffix, ItemLevel)
+			}
+		}
+		If (HasIncrLightningDamage)
+		{
+			FileSuffix := "data\IncrLightningDamage_Suffix" . FileSuffix
+			LineNum := HasIncrLightningDamage
+			LineTxt := Itemdata.AffixTextLines[LineNum].Text
+			Value   := Itemdata.AffixTextLines[LineNum].Value
+			
+			If (HasIncrSpellOrElePrefix and (HasIncrSpellOrElePrefix != HasIncrLightningDamage))
+			{
+				LookupAffixAndSetInfoLine(FileSuffix, "Suffix", ItemLevel, Value, LineTxt, LineNum)
+			}
+			Else
+			{
+				SolveAffixes_PreSuf("IncrLightning", LineNum, Value, FilePrefix, FileSuffix, ItemLevel)
 			}
 		}
 	}
 	
-	;DebugFile.Write(ExploreObj(TmpAffixLines) . "`n`n---`n`n")
+	
+	
+	i := AffixLines.MaxIndex()
+	
+	; Just using := is not enough for a full copy, so we do all entries per loop.
+	Loop, %i%
+	{
+		Itemdata.UncAffTmpAffixLines[A_Index] := AffixLines[A_Index]
+	}
+	
+	;DebugFile := FileOpen(";DebugFile.txt", "w")
+
+	If(Itemdata.Rarity = "Magic"){
+		PrefixLimit := 1
+		SuffixLimit := 1
+	}Else{
+		PrefixLimit := 3
+		SuffixLimit := 3
+	}
+	
+	; Set max estimated number to current number. From now on we possibly deal with affix count ranges.
+	AffixTotals.NumPrefixesMax := AffixTotals.NumPrefixes
+	AffixTotals.NumSuffixesMax := AffixTotals.NumSuffixes
+	AffixTotals.NumTotal := AffixTotals.NumPrefixes + AffixTotals.NumSuffixes
+	
+	
+	
+	; THIS FUNCTION IS QUITE COMPLICATED. IT INVOLVES FOUR LOOPS THAT FULFILL DIFFERENT JOBS AT DIFFERENT TIMES.
+	;   CONSEQUENTLY THE CODE CAN'T BE SIMPLY READ FROM TOP TO BOTTOM. IT IS HEAVILY COMMENTED THOUGH.
+	; READ THE REST OF THE INTRODUCTION HERE. IN THE FUNCTION ITSELF SKIP ALL "PHASE2" UNTIL YOU'VE READ ALL "PHASE1"
+	;
+	; Phase 1:
+	; Check each possible mod if it alone breaks the affix count limit. Discard these from Itemdata.UncertainAffixes.
+	; Loop through these checks until nothing changes for one complete pass.
+	; Phase 2:
+	; Check whether a group will certainly bring an affix type but is not finalized yet. We can use that info to
+	;   potentially discard mods from other groups.
+	ReloopAll := True
+	ConsiderAllRemainingAffixes := False
+	CheckAgainForGoodMeasure := False
+	While ReloopAll
+	{
+		;DebugFile.Write("ReloopAll:" ReloopAll "`n")
+		;DebugFile.Write("ConsiderAllRemainingAffixes:" ConsiderAllRemainingAffixes "`n")
+		;DebugFile.Write("CheckAgainForGoodMeasure:" CheckAgainForGoodMeasure "`n")
+		
+		
+		;DebugFile.Write("Uncertain:`n" ExploreObj(Itemdata.UncertainAffixes) "`n`n---`n`n")
+		;DebugFile.Write("Tmp:`n" ExploreObj(Itemdata.UncAffTmpAffixLines) "`n`n---`n`n")
+		
+		; No infinite looping. We re-enable ReloopAll below when it is warranted.
+		ReloopAll := False
+		
+		If(ConsiderAllRemainingAffixes = False)
+		{
+			; Phase 1:
+			; Store each grp's affix min count for a later check.
+			; When the outer loop would not repeat due to ReloopAll False,
+			;   we have completed a full loopthrough without changes and these numbers are current.
+			;
+			; Phase 2:
+			; ConsiderAllRemainingAffixes is now activated and we start using these values,
+			;   so we don't want to reset them once ConsiderAllRemainingAffixes is True.
+			
+			GrpPrefixMinCount := {"Total":0}		
+			GrpSuffixMinCount := {"Total":0}		
+		}
+		
+		;DebugFile.Write("GrpPrefixMinCount:`n" ExploreObj(GrpPrefixMinCount) "`n`n")
+		;DebugFile.Write("GrpSuffixMinCount:`n" ExploreObj(GrpSuffixMinCount) "`n`n")
+		
+		For key_grp, grp in Itemdata.UncertainAffixes
+		{
+			;DebugFile.Write("Outer loop, key_grp:" key_grp "`n")
+			
+			PrefixMinCount := 10	; Start arbitrary high enough and then lower them with comparisons.
+			SuffixMinCount := 10
+			
+			; We enable ReloopGrp here because when we are at this point, we want to enter the loop. The only time we don't want to
+			;  loop here is when we went through the whole "For key_entry..." loop (below) without any events/changes. 
+			ReloopGrp := True
+			
+			While ReloopGrp
+			{
+				; Again, no infinite looping.
+				ReloopGrp := False
+				
+				; Counting the entries in grp for checks further below. Since the keys are named .MaxIndex() won't work.
+				grp_len := 0
+				
+				For key_entry, entry in grp
+				{
+					;DebugFile.Write("Inner loop, key_entry:" key_entry "`n")
+					;DebugFile.Write("Pre:" entry[1] ", Suf:" entry[2] "`n")
+					++grp_len
+					
+					; Phase 1:
+					; Figure out whether all entries of a group have at least a certain prefix or suffix amount.
+					; If no entry lowers the respective min to 0, we have that many prefixes or suffixes regardless which entry is correct.
+					; Phase 2:
+					; Even though we might not be able to finalize the group itself yet, we can now use 
+					;   that information to make decisions about the entries of other groups.
+					
+					If(entry[1] < PrefixMinCount){
+						PrefixMinCount := entry[1]
+					}
+					If(entry[2] < SuffixMinCount){
+						SuffixMinCount := entry[2]
+					}
+					
+					If(ConsiderAllRemainingAffixes = False)
+					{
+						; Phase 1:
+						; No fancy affix assumptions yet, just the certain count due to what we have added to AffixLines already.
+						AssumePrefixCount := AffixTotals.NumPrefixes
+						AssumeSuffixCount := AffixTotals.NumSuffixes
+						
+						;DebugFile.Write("Consider False`n")
+						;DebugFile.Write("Checking:" AffixTotals.NumPrefixes " global +" entry[1] " own = " AssumePrefixCount + entry[1] ">" PrefixLimit "`n")
+						;DebugFile.Write("Checking:" AffixTotals.NumSuffixes " global +" entry[2] " own = " AssumeSuffixCount + entry[2] ">" SuffixLimit "`n`n")
+					}
+					Else
+					{
+						; Phase 2:
+						; Now we add the summed up mins of all groups into the comparison.
+						; Since a group's entry is not supposed to be discarded because of the groups own min portion (that is in the total), we subtract the respective group's share.
+						AssumePrefixCount := AffixTotals.NumPrefixes + GrpPrefixMinCount["total"] - GrpPrefixMinCount[key_grp]
+						AssumeSuffixCount := AffixTotals.NumSuffixes + GrpSuffixMinCount["total"] - GrpSuffixMinCount[key_grp]
+						
+						;DebugFile.Write("Consider True`n")
+						;DebugFile.Write("Checking:" AffixTotals.NumPrefixes " global +" GrpPrefixMinCount["total"] " total -" GrpPrefixMinCount[key_grp] " grp +" entry[1] " own = " AssumePrefixCount + entry[1] ">" PrefixLimit "`n")
+						;DebugFile.Write("Checking:" AffixTotals.NumSuffixes " global +" GrpSuffixMinCount["total"] " total -" GrpSuffixMinCount[key_grp] " grp +" entry[2] " own = " AssumeSuffixCount + entry[2] ">" SuffixLimit "`n`n")
+					}
+					
+					If( (AssumePrefixCount + entry[1] > PrefixLimit) or (AssumeSuffixCount + entry[2] > SuffixLimit) )
+					{
+						;DebugFile.Write("Too much`n")
+						; Mod does not work because of affix number limit
+						; Remove mod entry from "grp"
+						grp.Delete(key_entry)
+						
+						; Use ReloopGrp and break to restart the "For key_entry..." loop, because the indexes changed with the deletion.
+						ReloopGrp := True
+						break
+					}
+				}
+			}
+			
+			If(ConsiderAllRemainingAffixes = False)
+			{
+				; Phase 1:
+				; We've finished the whole "For key_entry..." loop for a grp, so the PrefixMinCount/SuffixMinCount actually represents that grp.
+				; Record that value (by "key_grp") and also add it to a total.
+				; Phase 2:
+				; While ConsiderAllRemainingAffixes is True and we are consequently actively using these values, we don't touch them.
+				; Otherwise we would add a group's portion a second time to the total, since the total was not reset to 0 at the start.
+				GrpPrefixMinCount[key_grp] := PrefixMinCount
+				GrpSuffixMinCount[key_grp] := SuffixMinCount
+				GrpPrefixMinCount["total"] += PrefixMinCount
+				GrpSuffixMinCount["total"] += SuffixMinCount
+			}
+			
+			;DebugFile.Write("Finished grp:" key_grp "`n`n")
+			;DebugFile.Write("GrpPrefixMinCount:`n" ExploreObj(GrpPrefixMinCount) "`n`n")
+			;DebugFile.Write("GrpSuffixMinCount:`n" ExploreObj(GrpSuffixMinCount) "`n`n")
+			
+			
+			If(grp_len=1)
+			{
+				; Only one mod in this grp, so there is no ambiguity. Put the mod in and remove grp.
+				FinalizeUncertainAffixGroup(grp)
+				Itemdata.UncertainAffixes.Delete(key_grp)
+				
+				; Phase 2:
+				; By finalizing a group their affixes are now included in AffixTotals.NumPrefixes/Suffixes, which adds into AssumePrefixCount/AssumeSuffixCount.
+				; Consequently we don't want that min value to remain in the total, because it would effectively get added twice.
+				GrpPrefixMinCount["total"] -= GrpPrefixMinCount[key_grp]
+				GrpSuffixMinCount["total"] -= GrpSuffixMinCount[key_grp]
+				
+				; Restart at outer "for" loop because grp is gone and outer indexes are shifted due to deletion.
+				ReloopAll := True
+				break
+			}
+			Else If(grp_len=0)
+			{
+				Itemdata.UncertainAffixes.Delete(key_grp)
+				
+				; Restart at outer "for" loop because grp is gone and outer indexes are shifted due to deletion.
+				ReloopAll := True
+				break
+			}
+		}
+		
+		
+		If(ReloopAll = False)
+		{
+			; Phase 1:
+			; Don't stop yet. We can check if a group is not solved yet but is guaranteed to bring a certain affix type
+			;   which we can count against the limit and then rule out entries from other groups.
+			
+			If(ConsiderAllRemainingAffixes = False)
+			{
+				; We enable Phase 2 of affix count comparison here.
+				
+				ConsiderAllRemainingAffixes = True
+				ReloopAll = True
+				; ...and ReloopAll obviously.
+			}
+			Else If(CheckAgainForGoodMeasure = False)
+			{
+				; Phase 2:
+				; If we arrive here we've checked everything with the Phase 2 comparison.
+				; Reset flags to run through a whole Phase1+Phase2 iteration again, just to be sure that we
+				;   can't figure anything more out. When that is done we finally get out of the loops because:
+				;     ConsiderAllRemainingAffixes is True and
+				;     CheckAgainForGoodMeasure is True
+				
+				CheckAgainForGoodMeasure = True
+				ConsiderAllRemainingAffixes = False
+				ReloopAll = True
+			}
+		}
+	}
+	
+	; Now also accept whatever is still remaining.
+	For idx1, grp in Itemdata.UncertainAffixes
+	{
+		FinalizeUncertainAffixGroup(grp)
+	}
+	
+	;DebugFile.Write(ExploreObj(Itemdata.UncAffTmpAffixLines) . "`n`n---`n`n")
 	
 	AffixLines.Reset()
 	
+	
+	; Go through Itemdata.UncAffTmpAffixLines and write lines that have multiple possibilities stored in an array
+	;   as several single lines into AffixLines. So for example:
+	;	[
+	;	  [Line1Data],
+	;	  [ [Line2Data_#1], [Line2Data_#2] ],
+	;	  [Line3Data]
+	;	]
+	;	becomes
+	;	[
+	;	  [Line1Data],
+	;	  [Line2Data_#1],
+	;	  [Line2Data_#2],
+	;	  [Line3Data]
+	;	]
 	i := 1
-	For junk1, line in TmpAffixLines
-	{
-		If(IsObject(line))
-		{
-			For junk2, subline in line
-			{
-				If(IsObject(subline))
-				{
+	For key1, line in Itemdata.UncAffTmpAffixLines{
+		If(IsObject(line)){
+			For key2, subline in line{
+				If(IsObject(subline)){
 					AffixLines.Set(i, subline)
 					++i
-				}
-				Else
-				{
+				}Else{
 					AffixLines.Set(i, line)
 					++i
 					break
 				}
 			}
 		}
-		Else
-		{
+		Else{
 			AffixLines.Set(i, line)
 			++i
 		}
@@ -4920,6 +5366,80 @@ ParseAffixes(ItemDataAffixes, Item)
 	;DebugFile.Write(ExploreObj(AffixLines) . "`n`n---`n`n")
 	;DebugFile.Close()
 	return
+}
+
+FinalizeUncertainAffixGroup(grp)
+{
+	Global Itemdata, AffixTotals
+
+	PrefixMin := 10
+	PrefixMax := 0
+	SuffixMin := 10
+	SuffixMax := 0
+	TotalMin	:= 10
+
+	For key_entry, entry in grp
+	{
+		; entry[1] is PrefixCount and entry[2] is SuffixCount for that entry.
+		
+		If(entry[1] < PrefixMin){
+			PrefixMin := entry[1]
+		}
+		If(entry[1] > PrefixMax){
+			PrefixMax := entry[1]
+		}
+		If(entry[2] < SuffixMin){
+			SuffixMin := entry[2]
+		}
+		If(entry[2] > SuffixMax){
+			SuffixMax := entry[2]
+		}
+		If(entry[1] + entry[2] < TotalMin){
+			TotalMin := entry[1] + entry[2]
+		}
+		
+		For junk, val in [3,5]	; entry[3] and entry[5] are potential line number entries, entry[4] and entry[6] are the line texts.
+		{
+			If(entry[val])
+			{
+				If(IsObject(Itemdata.UncAffTmpAffixLines[entry[val]]))
+				{
+					; There already is a mod for that line. Append this alternative to the array of the line.
+					; Overwrite the line text with "or"
+					entry[val+1][1] := "or"
+					Itemdata.UncAffTmpAffixLines[entry[val]].Push(entry[val+1])
+				}
+				Else
+				{
+					; First entry for that line, start array and put the whole line as entry 1.
+					Itemdata.UncAffTmpAffixLines[entry[val]] := [entry[val+1]]
+				}
+			}
+		}
+		
+		If(key_entry = "2_OnlyHyb" or key_entry = "3_Mod1Hyb")
+		{
+			; There are two mods that bring a single Hyb2 part: "Hyb1, Hyb2" and "Mod1+Hyb1, Hyb2"
+			; We just added one of them and we don't want to have the exact visual entry twice if both
+			;   mods get included (even though the rest of the mod is fine). So we just delete that spot.
+			; The single Hyb2 part is always on the second lineposition, so entry[5].
+			grp["2_OnlyHyb"][5] := ""
+			grp["3_Mod1Hyb"][5] := ""
+		}
+		
+		If(key_entry = "2_OnlyHyb" or key_entry = "4_Mod2Hyb")
+		{
+			; Same here for a single Hyb1 part at entry[3].
+			grp["2_OnlyHyb"][3] := ""
+			grp["4_Mod2Hyb"][3] := ""
+		}
+	}
+	
+	AffixTotals.NumPrefixes += PrefixMin
+	AffixTotals.NumPrefixesMax += PrefixMax
+	AffixTotals.NumSuffixes += SuffixMin
+	AffixTotals.NumSuffixesMax += SuffixMax
+	AffixTotals.NumTotal += TotalMin
 }
 
 ResetAffixDetailVars()
@@ -5908,7 +6428,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 	Else
 	{
-		If (Item.IsCurrency and Opts.ShowCurrencyValueInChaos == 1)
+		If (Item.IsCurrency)
 		{
 			dataSource	:= ""
 			ValueInChaos	:= ConvertCurrency(Item.Name, ItemData.Stats, dataSource)
@@ -6049,13 +6569,17 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		ParseLeagueStoneAffixes(ItemData.Affixes, Item)
 	}
 	
-	NumPrefixes	:= NumFormatPointFiveOrInt(AffixTotals.NumPrefixes)
-	NumSuffixes	:= NumFormatPointFiveOrInt(AffixTotals.NumSuffixes)
-	TotalAffixes	:= NumFormatPointFiveOrInt(AffixTotals.NumPrefixes + AffixTotals.NumSuffixes)
-	AffixTotals.NumTotals := TotalAffixes
+	AffixTotals.RoundAll()
 	
+	NumPrefixes	:= AffixTotals.NumPrefixes
+	NumPrefixesMax	:= AffixTotals.NumPrefixesMax
+	NumSuffixes	:= AffixTotals.NumSuffixes
+	NumSuffixesMax	:= AffixTotals.NumSuffixesMax
+	NumTotalAffixes	:= (AffixTotals.NumTotal > NumPrefixes + NumSuffixes) ? AffixTotals.NumTotal : NumPrefixes + NumSuffixes 
+	NumTotalAffixesMax	:= NumPrefixesMax + NumSuffixesMax
+	AffixTotals.NumTotalMax := NumTotalAffixesMax
 	; We need to call this function a second time because now we know the AffixCount.
-	ParseItemName(ItemData.NamePlate, ItemName, ItemTypeName, TotalAffixes)
+	ParseItemName(ItemData.NamePlate, ItemName, ItemTypeName, NumTotalAffixes)
 	Item.TypeName := ItemTypeName
 	
 	pseudoMods := PreparePseudoModCreation(ItemData.Affixes, Item.Implicit, RarityLevel, Item.isMap)
@@ -6234,40 +6758,27 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		; Append affix info if rarity is greater than normal (white)
 		; Affix total statistic		
-		If (NumPrefixes = 1)
-		{
-			WordPrefixes = Prefix
-		}
-		Else
-		{
-			WordPrefixes = Prefixes
-		}
-		If (NumSuffixes = 1)
-		{
-			WordSuffixes = Suffix
-		}
-		Else
-		{
-			WordSuffixes = Suffixes
+		If(Itemdata.Rarity = "Magic"){
+			PrefixLimit := 1
+			SuffixLimit := 1
+		}Else{
+			PrefixLimit := 3
+			SuffixLimit := 3
 		}
 		
-		PrefixLine =
-		If (NumPrefixes > 0)
-		{
-			PrefixLine = `n   %NumPrefixes% %WordPrefixes%
-		}
+		WordPrefixes := NumPrefixesMax > PrefixLimit ? "? " : " "		; Turn "2-4 Prefixes" into "2-4? Prefixes"
+		WordSuffixes := NumSuffixesMax > SuffixLimit ? "? " : " "
 		
-		SuffixLine =
-		If (NumSuffixes > 0)
-		{
-			SuffixLine = `n   %NumSuffixes% %WordSuffixes%
-		}
+		WordPrefixes .= NumPrefixesMax = 1 ? "Prefix" : "Prefixes"
+		WordSuffixes .= NumSuffixesMax = 1 ? "Suffix" : "Suffixes"
 		
-		AffixStats =
-		If (TotalAffixes > 0 and Not Item.IsUnidentified and Not Item.IsMap)
+		PrefixText := NumPrefixes = NumPrefixesMax ? NumPrefixes . WordPrefixes : NumPrefixes "-" NumPrefixesMax . WordPrefixes
+		SuffixText := NumSuffixes = NumSuffixesMax ? NumSuffixes . WordSuffixes : NumSuffixes "-" NumSuffixesMax . WordSuffixes
+		TotalsText := NumTotalAffixes = NumTotalAffixesMax ? NumTotalAffixes : NumTotalAffixes "-" NumTotalAffixesMax
+		
+		If (NumTotalAffixes > 0 and Not Item.IsUnidentified and Not Item.IsMap)
 		{
-			AffixStats = Affixes (%TotalAffixes%):%PrefixLine%%SuffixLine%
-			TT = %TT%`n--------`n%AffixStats%
+			TT = %TT%`n--------`nAffixes (%TotalsText%): %PrefixText%, %SuffixText%
 		}
 		
 		If (Item.hasImplicit and not Item.IsUnique) {
@@ -6279,12 +6790,20 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			TT = %TT%`n--------`n%Implicit%
 		}
 		
-		If (Not Item.IsFlask and Not Item.IsUnidentified and Not Item.IsMap)
+		If (Not (Item.IsFlask or Item.IsUnidentified or Item.IsMap))
 		{
 			AffixDetails := AssembleAffixDetails()
-			TT = %TT%`n--------%AffixDetails%
+			
+			If (Item.IsJewel or Item.IsUnique)
+			{
+				TT = %TT%`n--------%AffixDetails%
+			}
+			Else
+			{
+				TT = %TT%%AffixDetails%		; No line for typical magic/rare items, those get a line with a header.
+			}
+			
 		}
-		
 		
 	}
 	Else If (ItemData.Rarity == "Unique")
@@ -7454,7 +7973,7 @@ CreateSettingsUI()
 	
 	GuiAddText("Affix detail delimiter:", "xs10 ys137 w120 h20", "LblAffixDetailDelimiter")
 	GuiAddEdit(Opts.AffixDetailDelimiter, "xs130 ys135 w40 h20", "AffixDetailDelimiter", "AffixDetailDelimiterH")
-	AddToolTip(AffixDetailDelimiterH, "Select delimiter (default 2 spaces) for the // spots:`n50% increased Spell…//50-59 (46)//75-79 (84)//T4 P")
+	AddToolTip(AffixDetailDelimiterH, "Select delimiter (default 2 spaces) for the // spots:`n50% increased Spell?//50-59 (46)//75-79 (84)//T4 P")
 	GuiAddText("Affix detail ellipsis:", "xs10 ys162 w120 h20", "LblAffixDetailEllipsis")
 	GuiAddEdit(Opts.AffixDetailEllipsis, "xs130 ys160 w40 h20", "AffixDetailEllipsis")
 
