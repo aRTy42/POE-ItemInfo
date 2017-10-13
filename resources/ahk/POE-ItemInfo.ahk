@@ -188,23 +188,18 @@ class UserOptions {
 
 	; Format: RRGGBB
 	GDIWindowColor			:= "000000"
-	GDIWindowColorDefault	:= "000000"
 	GDIBorderColor			:= "513101"
-	GDIBorderColorDefault	:= "513101"
 	GDITextColor			:= "FEFEFE"
-	GDITextColorDefault		:= "FEFEFE"
 	GDIWindowOpacity		:= 90
-	GDIWindowOpacityDefault	:= 90
 	GDIBorderOpacity		:= 90
-	GDIBorderOpacityDefault	:= 90
 	GDITextOpacity			:= 100
-	GDITextOpacityDefault	:= 100
 	GDIRenderingFix		:= 1
-
+	
 	ScanUI()
 	{
 		For key, val in this {
-			this[key] := GuiGet(key)
+			_get := GuiGet(key, "", Error)
+			this[key] := not Error ? _get : this[key]
 		}
 	}
 }
@@ -439,7 +434,6 @@ Menu, Tray, Icon, %A_ScriptDir%\resources\images\poe-bw.ico
 
 ReadConfig()
 Sleep, 100
-global gdipTooltip = new GdipTooltip(2, 8,,,[Opts.GDIWindowOpacity, Opts.GDIWindowColor, 10],[Opts.GDIBorderOpacity, Opts.GDIBorderColor, 10],[Opts.GDITextOpacity, Opts.GDITextColor, 10],true, Opts.RenderingFix, -0.3)
 
 ; Use some variables to skip the update check or enable/disable update check feedback.
 ; The first call on script start shouldn't have any feedback and including ItemInfo in other scripts should call the update once from that other script.
@@ -458,6 +452,7 @@ If (StrLen(overwrittenUserFiles)) {
 }
 GoSub, AM_AssignHotkeys
 GoSub, FetchCurrencyData
+global gdipTooltip = new GdipTooltip(2, 8,,,[Opts.GDIWindowOpacity, Opts.GDIWindowColor, 10],[Opts.GDIBorderOpacity, Opts.GDIBorderColor, 10],[Opts.GDITextOpacity, Opts.GDITextColor, 10],true, Opts.RenderingFix, -0.3)
 
 Menu, TextFiles, Add, Additional Macros Settings, EditAdditionalMacrosSettings
 Menu, TextFiles, Add, Map Mod Warnings, EditMapModWarningsConfig
@@ -9108,10 +9103,12 @@ GuiSet(ControlID, Param3="", SubCmd="")
 	}
 }
 
-GuiGet(ControlID, DefaultValue="")
+GuiGet(ControlID, DefaultValue="", ByRef Error = false)
 {
 	curVal =
-	GuiControlGet, curVal,, %ControlID%, %DefaultValue%
+	ErrorLevel := 0
+	GuiControlGet, curVal,, %ControlID%, %DefaultValue%	
+	Error := ErrorLevel	
 	return curVal
 }
 
@@ -9472,7 +9469,7 @@ CreateSettingsUI()
 
 UpdateSettingsUI()
 {
-	Global
+	Global Opts
 
 	GuiControl,, OnlyActiveIfPOEIsFront, % Opts.OnlyActiveIfPOEIsFront
 	GuiControl,, PutResultsOnClipboard, % Opts.PutResultsOnClipboard
@@ -9590,13 +9587,6 @@ UpdateSettingsUI()
 	GuiControl,, GDIRenderingFix, % Opts.GDIRenderingFix
 	gdipTooltip.SetRenderingFix(Opts.GDIRenderingFix)
 
-	; TODO remove this again when these varables getting emptied is fixed
-	Opts.GDIWindowColorDefault	:= IniRead(ConfigPath, "GDI", "WindowColorDefault", Opts.GDIWindowColorDefault)	
-	Opts.GDIWindowOpacityDefault	:= IniRead(ConfigPath, "GDI", "WindowOpacityDefault", Opts.GDIWindowOpacityDefault)	
-	Opts.GDIBorderColorDefault	:= IniRead(ConfigPath, "GDI", "BorderColorDefault", Opts.GDIBorderColorDefault)	
-	Opts.GDIBorderOpacityDefault	:= IniRead(ConfigPath, "GDI", "BorderOpacityDefault", Opts.GDIBorderOpacityDefault)	
-	Opts.GDITextColorDefault		:= IniRead(ConfigPath, "GDI", "TextColorDefault", Opts.GDITextColorDefault)	
-	Opts.GDITextOpacityDefault	:= IniRead(ConfigPath, "GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault)
 	console.log("Update Settings: " Opts["GDIWindowOpacityDefault"] " , " Opts["GDIBorderOpacityDefault"] " , " Opts["GDITextOpacityDefault"])
 	
 	GuiControl,, GDIWindowColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, Opts.GDIWindowColorDefault)
