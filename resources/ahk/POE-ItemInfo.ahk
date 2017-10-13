@@ -6669,15 +6669,12 @@ ParseUnique(ItemName)
 							ValueRange .= "`n--------"
 							AppendImplicitSep := False
 						}
-						
 						ProcessedLine := [AffixLine, ValueRange]
-						
-						AffixLines.Set(Idx, ProcessedLine)
 					}
-					Else
-					{
-						AffixLines.Set(Idx, CurLinePart)
+					Else{
+						ProcessedLine := [CurLinePart, ""]
 					}
+					AffixLines.Set(Idx, ProcessedLine)
 					Idx += 1
 				}
 			}
