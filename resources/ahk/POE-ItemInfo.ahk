@@ -216,19 +216,19 @@ class ItemData_ {
 	Init() 
 	{
 		This.Links		:= ""
-		This.Sockets	:= ""
+		This.Sockets		:= ""
 		This.Stats		:= ""
-		This.NamePlate	:= ""
-		This.Affixes	:= ""
+		This.NamePlate		:= ""
+		This.Affixes		:= ""
 		This.AffixTextLines		:= []
 		This.UncertainAffixes	:= {}
 		This.UncAffTmpAffixLines := []
 		This.LastAffixLineNumber := 0
 		This.HasMultipleCrafted	:= 0
-		This.FullText	:= ""
-		This.IndexAffixes := -1
-		This.IndexLast	:= -1
-		This.PartsLast	:= ""
+		This.FullText		:= ""
+		This.IndexAffixes 	:= -1
+		This.IndexLast		:= -1
+		This.PartsLast		:= ""
 		This.Rarity		:= ""
 		This.Parts		:= []
 	}
@@ -247,10 +247,10 @@ class Item_ {
 		This.RarityLevel	:= ""
 		This.BaseType		:= ""
 		This.GripType		:= ""
-		This.Level			:= ""
+		This.Level		:= ""
 		This.MapLevel		:= ""
 		This.MapTier		:= ""
-		This.MaxSockets		:= ""
+		This.MaxSockets	:= ""
 		This.SubType		:= ""		
 		This.DifficultyRestriction := ""
 		This.Implicit		:= []
@@ -1089,9 +1089,13 @@ LookupAffixData(Filename, ItemLevel, Value, ByRef Tier=0)
 	{
 		Tier := [ModTiers.Top, ModTiers.Btm]
 	}
-	Else
+	Else If(Value > ModDataArray[1].max)
 	{
 		Tier := 0
+	}
+	Else
+	{
+		Tier := "?"
 	}
 	
 	return FormatValueRangesAndIlvl(ModDataArray, Tier)
@@ -1262,7 +1266,6 @@ FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax, StyleOverwrite="")
 		; UpperRange := (TopMin = TopMax) ? TopMax : TopMin "-" TopMax
 		; ValueRange := LowerRange "|" UpperRange
 		
-		
 		ValueRange := BtmMin "-" BtmMax "|" TopMin "-" TopMax
 	}
 	
@@ -1277,7 +1280,10 @@ FormatRangeOfRanges(BtmMin, BtmMax, TopMin, TopMax)
 	{
 		return BtmMin "-" TopMax
 	}
-	Else return BtmMin "-" BtmMax "…" TopMin "-" TopMax
+	Else 
+	{
+		return BtmMin "-" BtmMax "…" TopMin "-" TopMax
+	}
 }
 
 ParseItemLevel(ItemDataText)
@@ -1362,11 +1368,16 @@ ExploreObj(Obj, NewRow="`n", Equal="  =  ", Indent="`t", Depth=12, CurIndent="")
 	return RTrim(ToReturn, NewRow)
 }
 
+
 DebugMode := False
 
 DebugFile(Content, LineEnd="`n", StartNewFile=False)
 {
 	Global DebugMode
+	
+	If( not isDevVersion){
+	DebugMode := False 
+	}
 	
 	If(DebugMode = False)
 		return
@@ -1494,12 +1505,12 @@ NumPad(Num, TotalWidth, DecimalPlaces=0)
 
 AffixTypeShort(AffixType)
 {
-	result := RegExReplace(AffixType, "Hybrid Base Prefix", "HBP")
-	result := RegExReplace(result, "Crafted ", "Cr")
+	result := RegExReplace(AffixType, "Hybrid Defence Prefix", "HDP")
+	result := RegExReplace(result, "Crafted ", "")		; not properly supported yet, so remove completely
 	result := RegExReplace(result, "Hybrid ", "Hyb")
-	result := RegExReplace(result, "Base ", "Base")
 	result := RegExReplace(result, "Prefix", "P")
 	result := RegExReplace(result, "Suffix", "S")
+	
 	return result
 }
 
@@ -1509,7 +1520,7 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 	
 	If(CountAffixTotals)
 	{
-		If(AffixType = "Hybrid Prefix" or AffixType = "Hybrid Base Prefix"){
+		If(AffixType = "Hybrid Prefix" or AffixType = "Hybrid Defence Prefix"){
 			AffixTotals.NumPrefixes += 0.5
 		}
 		Else If(AffixType = "Hybrid Suffix"){
@@ -1694,15 +1705,14 @@ AssembleAffixDetails()
 		
 		If( ! Item.IsJewel)
 		{
-			; Turn the seperator line above the infos into a header
+			; Add a header line above the affix infos.
 			
 			ProcessedLine := "`n"
-			ProcessedLine .= StrPad("--------", TextLineWidth)
-			ProcessedLine .= StrPad("roll", ValueRange1Width + StrLen(Delim), "left")
+			ProcessedLine .= StrPad("TierRange", TextLineWidth + ValueRange1Width + StrLen(Delim), "left")
 			ProcessedLine .= " ilvl"
-			ProcessedLine .= StrPad("total", ValueRange2Width + StrLen(Delim), "left")
+			ProcessedLine .= StrPad("Total", ValueRange2Width + StrLen(Delim), "left")
 			ProcessedLine .= " ilvl"
-			ProcessedLine .= "  tier"
+			ProcessedLine .= "  Tier"
 			
 			Result .= ProcessedLine
 		}
@@ -1751,18 +1761,27 @@ AssembleAffixDetails()
 					
 					If( ! IsObject(ValueRange) )
 					{
-						; Text as ValueRange. Right-aligned to first range column if it fits.
+						; Text as ValueRange. Right-aligned to tier range column if it fits.
 						ProcessedLine .= Delim  StrPad(StrPad(ValueRange, ValueRange1Width + 5, "left"), ValueRange1Width + 5 + StrLen(Delim) + ValueRange2Width + 5, "right")
-						ProcessedLine .= Delim  TierAndType
+						
+						If(RegExMatch(TierAndType, "^T\d.*"))
+						{
+							ProcessedLine .= Delim  TierAndType
+						}
+						Else
+						{
+							; If TierAndType does not start with T and a number, then there is just the affix type (or other text) stored. Add 3 spaces to align affix type with the others.
+							ProcessedLine .= Delim  "   " TierAndType
+						}
 					}
 					Else
 					{
 						If(ValueRange[2])
-						{	; Has ilvl entry for first range
+						{	; Has ilvl entry for tier range
 							ProcessedLine .= Delim  StrPad(ValueRange[1], ValueRange1Width, "left") " " StrPad("(" ValueRange[2] ")", 4, "left")
 						}
 						Else
-						{	; Has no ilvl entry for first range, can expand a bit.
+						{	; Has no ilvl entry for tier range, can expand a bit.
 							; The "extra" calculation and reasoning has an explanation about 100 code lines above.
 							extra := StrLen(ValueRange[1]) <= 7 ? 0 : (StrLen(ValueRange[1]) <= 9 ? 2 : ( StrLen(ValueRange[1]) <= 11 ? 3 : ( StrLen(ValueRange[1]) <= 13 ? 4 : 5)))
 							
@@ -2705,6 +2724,12 @@ SolveTiers_ModHyb(ModHybValue, HybOnlyValue, ModDataArray, HybWithModDataArray, 
 		ModTopTier := RemainLoTiers.Tier
 		ModBtmTier := RemainLoTiers.Tier
 	}
+	Else If(RemainHi > ModDataArray[1].max)
+	{
+		; Legacy cases
+		ModTopTier := 0
+		ModBtmTier := 0
+	}
 	Else
 	{
 		; No matching tier found for both RemainLo/Hi values.
@@ -2851,6 +2876,7 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 				
 				result[1] := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax)
 				result[2] := ""
+
 			}
 			Else If(Mod1Tiers)
 			{
@@ -2864,8 +2890,8 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 			}
 			Else
 			{
-				result[1] :=  := "n/a"
-				result[2] :=  := ""
+				result[1] := "n/a"
+				result[2] := ""
 			}
 			
 			BtmMin := Mod1DataArray[Mod1DataArray.MaxIndex()].minLo
@@ -2887,7 +2913,6 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 				
 				result[1] := FormatRangeOfRanges(BtmMin, BtmMax, TopMin, TopMax)
 				result[2] := ""
-				
 			}
 			Else If(Mod1Tiers)
 			{
@@ -2896,13 +2921,17 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 			}
 			Else
 			{
-				result[1] :=  := "n/a"
-				result[2] :=  := ""
+				result[1] := "n/a"
+				result[2] := ""
 			}
 			
 			result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min "-" Mod1DataArray[1].max
 			result[4] := Mod1DataArray[1].ilvl
 		}
+	}
+	
+	If(Mod1Tiers = 0 or Mod1Tiers[1] = 0 or Mod1Tiers[2] = 0 or Mod2Tier = 0){
+		result[1] := "Legacy?"
 	}
 	
 	return result
@@ -3045,10 +3074,10 @@ SolveAffixes_HybBase_FlatDefLife(Keyname, LineNumDef1, LineNumDef2, LineNumLife,
 	If(DualDef_D1_Tiers.Tier and DualDef_D2_Tiers.Tier and (DualDef_D1_Tiers.Tier = DualDef_D2_Tiers.Tier) and LifeTiers.Tier)
 	{
 		ValueRange1 := FormatValueRangesAndIlvl(DualDef_D1_DataArray, DualDef_D1_Tiers.Tier)
-		LineTxt1    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, "Hybrid Base Prefix", ValueRange1, DualDef_D1_Tiers.Tier, False)
+		LineTxt1    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, "Hybrid Defence Prefix", ValueRange1, DualDef_D1_Tiers.Tier, False)
 		
 		ValueRange2 := FormatValueRangesAndIlvl(DualDef_D2_DataArray, DualDef_D2_Tiers.Tier)
-		LineTxt2    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef2].Text, "Hybrid Base Prefix", ValueRange2, DualDef_D2_Tiers.Tier, False)
+		LineTxt2    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef2].Text, "Hybrid Defence Prefix", ValueRange2, DualDef_D2_Tiers.Tier, False)
 		
 		ValueRange3 := FormatValueRangesAndIlvl(Life_DataArray, LifeTiers.Tier)
 		LineTxt3    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumLife].Text, "Prefix", ValueRange3, LifeTiers.Tier, False)
@@ -3062,10 +3091,10 @@ SolveAffixes_HybBase_FlatDefLife(Keyname, LineNumDef1, LineNumDef2, LineNumLife,
 		If(IsObject(Def1LifeTiers))
 		{
 			ValueRange1 := FormatValueRangesAndIlvl(DualDef_D1_DataArray, Def1LifeTiers.Hyb1, DefLife_D1_DataArray, Def1LifeTiers.Hyb2)
-			LineTxt1    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Base Prefix", "Hybrid Prefix"], ValueRange1, [Def1LifeTiers.Hyb1, Def1LifeTiers.Hyb2], False)
+			LineTxt1    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Defence Prefix", "Hybrid Prefix"], ValueRange1, [Def1LifeTiers.Hyb1, Def1LifeTiers.Hyb2], False)
 			
 			ValueRange2 := FormatValueRangesAndIlvl(DualDef_D2_DataArray, Def1LifeTiers.Hyb1)
-			LineTxt2    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef2].Text, "Hybrid Base Prefix", ValueRange2, Def1LifeTiers.Hyb1, False)
+			LineTxt2    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef2].Text, "Hybrid Defence Prefix", ValueRange2, Def1LifeTiers.Hyb1, False)
 			
 			ValueRange3 := FormatValueRangesAndIlvl(DefLife_Li_DataArray, Def1LifeTiers.Hyb2)
 			LineTxt3    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumLife].Text, "Hybrid Prefix", ValueRange3, Def1LifeTiers.Hyb2, False)
@@ -3074,10 +3103,10 @@ SolveAffixes_HybBase_FlatDefLife(Keyname, LineNumDef1, LineNumDef2, LineNumLife,
 		If(IsObject(Def2LifeTiers))
 		{
 			ValueRange4 := FormatValueRangesAndIlvl(DualDef_D1_DataArray, Def2LifeTiers.Hyb1)
-			LineTxt4    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef2].Text, "Hybrid Base Prefix", ValueRange4, Def2LifeTiers.Hyb1, False)
+			LineTxt4    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef2].Text, "Hybrid Defence Prefix", ValueRange4, Def2LifeTiers.Hyb1, False)
 			
 			ValueRange5 := FormatValueRangesAndIlvl(DualDef_D2_DataArray, Def2LifeTiers.Hyb1, DefLife_D2_DataArray, Def2LifeTiers.Hyb2)
-			LineTxt5    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Base Prefix", "Hybrid Prefix"], ValueRange5, [Def2LifeTiers.Hyb1, Def2LifeTiers.Hyb2], False)
+			LineTxt5    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Defence Prefix", "Hybrid Prefix"], ValueRange5, [Def2LifeTiers.Hyb1, Def2LifeTiers.Hyb2], False)
 			
 			ValueRange6 := FormatValueRangesAndIlvl(DefLife_Li_DataArray, Def2LifeTiers.Hyb2)
 			LineTxt6    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumLife].Text, "Hybrid Prefix", ValueRange6, Def2LifeTiers.Hyb2, False)
@@ -3097,20 +3126,15 @@ SolveAffixes_HybBase_FlatDefLife(Keyname, LineNumDef1, LineNumDef2, LineNumLife,
 		}	
 	}
 	
-	DebugFile("Overlap1Tiers")
-	DebugFile(Overlap1Tiers)
-	DebugFile("Overlap2Tiers")
-	DebugFile(Overlap2Tiers)
-	
 	If(IsObject(Overlap1Tiers) or IsObject(Overlap2Tiers))
 	{
 		If(IsObject(Overlap1Tiers))
 		{
 			ValueRange1 := FormatValueRangesAndIlvl_MultiTiers(ValueDef1, DualDef_D1_DataArray, DefLife_D1_DataArray, Overlap1Tiers.Mod1Top, Overlap1Tiers.Mod1Btm, Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm)
-			LineTxt1    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Base Prefix", "Hybrid Prefix"], ValueRange1, [[Overlap1Tiers.Mod1Top, Overlap1Tiers.Mod1Btm], [Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm]], False)
+			LineTxt1    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Defence Prefix", "Hybrid Prefix"], ValueRange1, [[Overlap1Tiers.Mod1Top, Overlap1Tiers.Mod1Btm], [Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm]], False)
 			
 			ValueRange2 := FormatValueRangesAndIlvl(DualDef_D2_DataArray, DualDef_D2_Tiers.Tier)
-			LineTxt2    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef2].Text, "Hybrid Base Prefix", ValueRange2, DualDef_D2_Tiers.Tier, False)
+			LineTxt2    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef2].Text, "Hybrid Defence Prefix", ValueRange2, DualDef_D2_Tiers.Tier, False)
 			
 			ValueRange3 := FormatValueRangesAndIlvl_MultiTiers(ValueLife, Life_DataArray, DefLife_Li_DataArray, Overlap1Tiers.Mod2Top, Overlap1Tiers.Mod2Btm, Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm)
 			LineTxt3    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumLife].Text, ["Prefix", "Hybrid Prefix"], ValueRange3, [[Overlap1Tiers.Mod2Top, Overlap1Tiers.Mod2Btm], [Overlap1Tiers.HybTop, Overlap1Tiers.HybBtm]], False)
@@ -3119,10 +3143,10 @@ SolveAffixes_HybBase_FlatDefLife(Keyname, LineNumDef1, LineNumDef2, LineNumLife,
 		If(IsObject(Overlap2Tiers))
 		{
 			ValueRange4 := FormatValueRangesAndIlvl(DualDef_D1_DataArray, DualDef_D1_Tiers.Tier)
-			LineTxt4    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, "Hybrid Base Prefix", ValueRange4, DualDef_D1_Tiers.Tier, False)
+			LineTxt4    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, "Hybrid Defence Prefix", ValueRange4, DualDef_D1_Tiers.Tier, False)
 			
 			ValueRange5 := FormatValueRangesAndIlvl_MultiTiers(ValueDef2, DualDef_D2_DataArray, DefLife_D2_DataArray, Overlap2Tiers.Mod1Top, Overlap2Tiers.Mod1Btm, Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm)
-			LineTxt5    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Base Prefix", "Hybrid Prefix"], ValueRange5, [[Overlap2Tiers.Mod1Top, Overlap2Tiers.Mod1Btm], [Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm]], False)
+			LineTxt5    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumDef1].Text, ["Hybrid Defence Prefix", "Hybrid Prefix"], ValueRange5, [[Overlap2Tiers.Mod1Top, Overlap2Tiers.Mod1Btm], [Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm]], False)
 			
 			ValueRange6 := FormatValueRangesAndIlvl_MultiTiers(ValueLife, Life_DataArray, DefLife_Li_DataArray, Overlap2Tiers.Mod2Top, Overlap2Tiers.Mod2Btm, Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm)
 			LineTxt6    := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNumLife].Text, ["Prefix", "Hybrid Prefix"], ValueRange6, [[Overlap2Tiers.Mod2Top, Overlap2Tiers.Mod2Btm], [Overlap2Tiers.HybTop, Overlap2Tiers.HybBtm]], False)
@@ -3162,6 +3186,7 @@ SolveAffixes_Mod1Mod2Hyb(Keyname, LineNum1, LineNum2, Value1, Value2, Mod1Type, 
 	Mod2HybTiers := SolveTiers_ModHyb(Value2, Value1, Mod2DataArray, Hyb2DataArray, Hyb1DataArray, ItemLevel)
 	
 	Mod1Mod2HybTiers := SolveTiers_Mod1Mod2Hyb(Value1, Value2, Mod1DataArray, Mod2DataArray, Hyb1DataArray, Hyb2DataArray, ItemLevel)
+	
 	
 	If(Mod1Tiers.Tier and Mod2Tiers.Tier)
 	{
@@ -5906,6 +5931,7 @@ PostProcessData(ParsedData)
 		{
 			Continue
 		}
+		/*
 		If (InStr(CurrChunk, "Hybrid ") and Not InStr(CurrChunk, "Affixes"))
 		{
 			CurrChunk := RegExReplace(CurrChunk, "Hybrid", "Hyb")
@@ -5918,6 +5944,7 @@ PostProcessData(ParsedData)
 		{
 			CurrChunk := RegExReplace(CurrChunk, "Prefix", "P")
 		}
+		*/
 		If (A_Index < ParsedDataChunks0)
 		{
 			Result := Result . CurrChunk . "--------`r`n"
@@ -6674,15 +6701,15 @@ ItemIsMirrored(ItemDataText)
 
 ItemIsHybridBase(ItemDataText)
 {
-	DefenseStatCount := 0
+	DefenceStatCount := 0
 	Loop, Parse, ItemDataText, `n, `r
 	{
 		If RegExMatch(Trim(A_LoopField), "^(Armour|Evasion Rating|Energy Shield): \d+( \(augmented\))?$")
 		{
-			DefenseStatCount += 1
+			DefenceStatCount += 1
 		}
 	}
-	return (DefenseStatCount > 1) ? True : False
+	return (DefenceStatCount > 1) ? True : False
 }
 
 
@@ -7012,7 +7039,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	If (Item.IsCurrency)
 	{
 		TT := TT . "`n" . CurrencyDetails
-		Goto, ParseItemDataEnd
+		return TT		; Skip everything else.
 	}
 	
 	If (not (Item.IsMap or Item.IsCurrency or Item.IsDivinationCard))
@@ -7237,6 +7264,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		{
 			AffixDetails := AssembleAffixDetails()
 			
+			TT = %TT%`n--------%AffixDetails%
+			
+			/*
 			If (Item.IsJewel or Item.IsUnique)
 			{
 				TT = %TT%`n--------%AffixDetails%
@@ -7245,10 +7275,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			{
 				TT = %TT%%AffixDetails%		; No line for typical magic/rare items, those get a line with a header.
 			}
-			
+			*/
 		}
-		
 	}
+	
 	Else If (ItemData.Rarity == "Unique")
 	{
 		If (FindUnique(Item.Name) == False and Not Item.IsUnidentified)
@@ -7288,9 +7318,32 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		TT = %TT%`n--------`nMirrored
 	}
 	
-	return TT
+	If (1)	; user option for notations here
+	{
+		Notation := ""
+		
+		If(RegExMatch(AffixDetails, "(HybP|HybS)")){
+			Notation .= "`n Hyb: Hybrid. One mod with two parts in two lines."
+		}
+		If(RegExMatch(AffixDetails, "HDP")){
+			Notation .= "`n HDP: Hybrid Defence Prefix. FlatDef on Hybrid Base Armour."
+		}
+		If(RegExMatch(AffixDetails, "(CrP|CrS)")){
+			Notation .= "`n Cr: Craft`n"
+		}
+		If(RegExMatch(AffixDetails, "\d\|\d")){
+			Notation .= "`n a-b|c-d: For added damage mods. (a-b) to (c-d)"
+		}
+		If(RegExMatch(AffixDetails, "\d…\d")){
+			Notation .= "`n a-b…c-d: Multi tier uncertainty. WorstCaseRange…BestCaseRange"
+		}
+		
+		If (Notation)
+		{
+			TT .= "`n--------`nNotation:" Notation
+		}
+	}
 	
-	ParseItemDataEnd:
 	return TT
 }
 
@@ -7406,7 +7459,7 @@ ModStringToObject(string, isImplicit) {
 	
 	; Vanguard Belt implicit for example (flat AR + EV)
 	If (RegExMatch(val, "i)([.0-9]+) to (Armour|Evasion Rating|Energy Shield) and (Armour|Evasion Rating|Energy Shield)")) {
-		type := "Defense"
+		type := "Defence"
 		If (RegExMatch(val, "i)Armour")) {
 			Matches.push("Armour")
 		}
@@ -9027,7 +9080,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 						terms.push(prefix . term)	
 					}
 					; armour pieces are a bit special, the ingame information doesn't include "armour/body armour" or something alike. 
-					; we can use the item defenses though to match armour pieces with the same defense types (can't differentiate between "Body Armour" and "Helmet").
+					; we can use the item defences though to match armour pieces with the same defence types (can't differentiate between "Body Armour" and "Helmet").
 					Else If (InStr(Item.BaseType, "Armour")) {
 						For key, val in ItemData.Parts {
 							If (RegExMatch(val, "i)(Energy Shield:)|(Armour:)|(Evasion Rating:)", match)) {
