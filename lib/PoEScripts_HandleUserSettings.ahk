@@ -68,7 +68,7 @@ PoEScripts_ConvertOldFiles(sourceDir, destDir, ByRef overwrittenFiles) {
 	Return
 }
 
-PoeScripts_ConvertOldConfig(sourceDir, destDir, fileFullName, ByRef overwrittenFiles) {
+PoEScripts_ConvertOldConfig(sourceDir, destDir, fileFullName, ByRef overwrittenFiles) {
 	OldConfigObj := PoEScripts_TrimEndingSpacesInKeys(class_EasyIni(destDir "\" fileFullName))
 	if (InStr(fileFullName, "config_trade.ini")) {
 		OldConfigObj := PoEScripts_RenameKeysTradeConfig(OldConfigObj)
@@ -76,15 +76,16 @@ PoeScripts_ConvertOldConfig(sourceDir, destDir, fileFullName, ByRef overwrittenF
 	NewConfigObj := class_EasyIni(sourceDir "\" fileFullName)
 	if (!InStr(OldConfigObj.GetTopComments(), "Converted")) {
 		PoEScripts_BackupUserFileOnDate(destDir, fileFullName)
-		for sectionName, sectionKeys in OldConfigObj {
-			if (NewConfigObj.HasKey(sectionName)) {
-				for sectionKeyName, sectionKeyVal in sectionKeys {
-					if NewConfigObj[sectionName].HasKey(sectionKeyName) {
-						RegExMatch(sectionKeyVal, """(.*?)""", foundQuotes)
+		for sectionName, sectionKeys in NewConfigObj {
+			if OldConfigObj.HasKey(sectionName) {
+				for keyName, keyVal in NewConfigObj[sectionName] {
+					if OldConfigObj[sectionName].HasKey(keyName) {
+						keyValNew := OldConfigObj[sectionName, keyName]
+						RegExMatch(keyValNew, """(.*?)""", foundQuotes)
 						if (foundQuotes1 and InStr(fileFullName, "config_trade.ini")) {
-							sectionKeyVal := foundQuotes1
+							keyValNew := foundQuotes1
 						}
-						NewConfigObj.SetKeyVal(sectionName, sectionKeyName, sectionKeyVal)
+						NewConfigObj.SetKeyVal(sectionName, keyName, keyValNew)
 					}
 				}
 			}
@@ -194,34 +195,36 @@ PoEScripts_CleanFileName(fileName, removeStr="") {
 }
 
 PoEScripts_TrimEndingSpacesInKeys(ConfigObject) {
-	NewConfigObject := ConfigObject
 	for sectionName, sectionKeys in ConfigObject {
-		for keyName, keyVal in sectionKeys {
-			if (SubStr(keyName, 0) == A_Space) {
-				StringTrimRight, keyNameNew, keyName, 1
-				NewConfigObject.RenameKey(sectionName, keyName, keyNameNew)
-			}
+    keyNamesList := StrSplit(ConfigObject.GetKeys(sectionName, "|", "C"), "|")
+		for keyIndex, keyName in keyNamesList {
+      RegExMatch(keyName, "^(.*?)\s*$", keyNameNew)
+      ConfigObject.RenameKey(sectionName, keyName, keyNameNew1)
 		}
 	}
-	Return NewConfigObject
+	Return ConfigObject
 }
 
 PoEScripts_RenameKeysTradeConfig(ConfigObject) {
-	NewConfigObject := ConfigObject
 	for sectionName, sectionKeys in ConfigObject {
 		for keyName, keyVal in sectionKeys {
-			if (sectionName == "Hotkeys") {
-				RegExMatch(keyName, "i)^(.*?)Hotkey", keyNameNew)
-			}
-			if (sectionName == "HotkeyStates") {
-				RegExMatch(keyName, "i)^(.*?)Enabled", keyNameNew)
-			}
-			if (keyNameNew1) {
-				NewConfigObject.RenameKey(sectionName, keyName, keyNameNew1)
-			}
+      keyNamesList := StrSplit(ConfigObject.GetKeys(sectionName, "|", "C"), "|")
+      if (sectionName == "Hotkeys" or sectionName == "HotkeyStates") {
+        for keyIndex, keyName in keyNamesList {
+          if (sectionName == "Hotkeys") {
+            RegExMatch(keyName, "i)^(.*?)Hotkey", keyNameNew)
+          }
+          if (sectionName == "HotkeyStates") {
+            RegExMatch(keyName, "i)^(.*?)Enabled", keyNameNew)
+          }
+          if (keyNameNew1) {
+            ConfigObject.RenameKey(sectionName, keyName, keyNameNew1)
+          }
+        }
+      }
 		}
 	}
-	Return NewConfigObject
+	Return ConfigObject
 }
 
 PoEScripts_GetActionForFile(filePath, destDir) {

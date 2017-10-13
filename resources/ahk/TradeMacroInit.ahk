@@ -167,9 +167,11 @@ ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 	if (!TradeFunc_CheckBrowserPath(TradeOpts_New.General.BrowserPath, false)) {
 		TradeOpts_New.General.BrowserPath := ""
 	}
-
 	if (!TradeFunc_CheckLeague(TradeOpts_New.Search.SearchLeague)) {
 		TradeOpts_New.Search.SearchLeague := "tmpstandard"
+	}
+	else {
+		TradeOpts_New.Search.SearchLeague := Format("{:L}", TradeOpts_New.Search.SearchLeague)
 	}
 
 	TradeOpts_New.Search.Corrupted := Format("{:T}", TradeOpts_New.Search.Corrupted)
