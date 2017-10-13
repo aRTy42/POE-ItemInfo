@@ -182,7 +182,7 @@ class UserOptions {
 	; Only used if DisplayToolTipAtFixedCoords is 1.
 	ScreenOffsetX := 0
 	ScreenOffsetY := 0
-
+	
 	; Set this to 1 to enable GDI+ rendering
 	UseGDI := 0
 
@@ -439,6 +439,7 @@ Menu, Tray, Icon, %A_ScriptDir%\resources\images\poe-bw.ico
 
 ReadConfig()
 Sleep, 100
+global gdipTooltip = new GdipTooltip(2, 8,,,[Opts.GDIWindowOpacity, Opts.GDIWindowColor, 10],[Opts.GDIBorderOpacity, Opts.GDIBorderColor, 10],[Opts.GDITextOpacity, Opts.GDITextColor, 10],true, Opts.RenderingFix, -0.3)
 
 ; Use some variables to skip the update check or enable/disable update check feedback.
 ; The first call on script start shouldn't have any feedback and including ItemInfo in other scripts should call the update once from that other script.
@@ -457,9 +458,6 @@ If (StrLen(overwrittenUserFiles)) {
 }
 GoSub, AM_AssignHotkeys
 GoSub, FetchCurrencyData
-
-; moved down to prevent issues with lib\ConvertKeyToKeyCode.ahk
-global gdipTooltip = new GdipTooltip(2, 5,,,,,,true, Opts.RenderingFix, -0.3)
 
 Menu, TextFiles, Add, Additional Macros Settings, EditAdditionalMacrosSettings
 Menu, TextFiles, Add, Map Mod Warnings, EditMapModWarningsConfig
@@ -9049,8 +9047,8 @@ ShowToolTip(String, Centered = false)
 		{
 			XCoord := (X - 135 >= 0) ? X - 135 : 0
 			YCoord := (Y +  35 >= 0) ? Y +  35 : 0
-
-			If (Opts.UseGDI)
+			
+			If (Opts.UseGDI) 
 			{
 				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
 			}
@@ -9390,17 +9388,17 @@ CreateSettingsUI()
 	; GDI+
 	GuiAddGroupBox("GDI+", "x7 y+20 w260 h270 Section")
 	GuiAddCheckBox("Enable GDI+", "xs10 ys20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
-	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")
+	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")	
 	GuiAddButton("Edit Window", "xs9 ys40 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
 	GuiAddText("Color (hex RGB):", "x+5 yp+5 w150", "LblGDIWindowColor")
 	GuiAddEdit(Opts.GDIWindowColor, "xs190 ys41 w60", "GDIWindowColor", "GDIWindowColorH")
 	GuiAddText("Opactiy (0-100):", "xs95 ys75 w150", "LblGDIWindowOpacity")
-	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys71 w60", "GDIWindowOpacity", "GDIWindowOpacityH")
+	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys71 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
 	GuiAddButton("Edit Border", "xs9 ys100 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
 	GuiAddText("Color (hex RGB):", "x+5 yp+5 w150", "LblGDIBorderColor")
-	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys101 w60", "GDIBorderColor", "GDIBorderColorH")
+	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys101 w60", "GDIBorderColor", "GDIBorderColorH")	
 	GuiAddText("Opacity (0-100):", "xs95 ys135 w150", "LblGDIBorderOpacity")
-	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys131 w60", "GDIBorderOpacity", "GDIBorderOpacityH")
+	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys131 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
 	GuiAddButton("Edit Text", "xs9 ys160 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
 	GuiAddText("Color (hex RGB):", "x+5 ys165 w150", "LblGDITextColor")
 	GuiAddEdit(Opts.GDITextColor, "xs190 ys161 w60", "GDITextColor", "GDITextColorH")
@@ -9408,11 +9406,11 @@ CreateSettingsUI()
 	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys191 w60", "GDITextOpacity", "GDITextOpacityH")
 	GuiAddCheckBox("Rendering Fix", "xs10 ys216 w110", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
-
-	GuiAddButton("Defaults", "xs9 ys240 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults")
-	GuiAddButton("Preview", "xs170 ys240 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip")
-
-
+	
+	GuiAddButton("Defaults", "xs9 ys240 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
+	GuiAddButton("Preview", "xs170 ys240 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
+	
+	
 	; Display - Affixes
 
 	; This groupbox is positioned relative to the last control (first column), this is not optimal but makes it possible to wrap these groupboxes in Tabs without further repositing.
@@ -9592,14 +9590,23 @@ UpdateSettingsUI()
 	GuiControl,, GDIRenderingFix, % Opts.GDIRenderingFix
 	gdipTooltip.SetRenderingFix(Opts.GDIRenderingFix)
 
+	; TODO remove this again when these varables getting emptied is fixed
+	Opts.GDIWindowColorDefault	:= IniRead(ConfigPath, "GDI", "WindowColorDefault", Opts.GDIWindowColorDefault)	
+	Opts.GDIWindowOpacityDefault	:= IniRead(ConfigPath, "GDI", "WindowOpacityDefault", Opts.GDIWindowOpacityDefault)	
+	Opts.GDIBorderColorDefault	:= IniRead(ConfigPath, "GDI", "BorderColorDefault", Opts.GDIBorderColorDefault)	
+	Opts.GDIBorderOpacityDefault	:= IniRead(ConfigPath, "GDI", "BorderOpacityDefault", Opts.GDIBorderOpacityDefault)	
+	Opts.GDITextColorDefault		:= IniRead(ConfigPath, "GDI", "TextColorDefault", Opts.GDITextColorDefault)	
+	Opts.GDITextOpacityDefault	:= IniRead(ConfigPath, "GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault)
+	console.log("Update Settings: " Opts["GDIWindowOpacityDefault"] " , " Opts["GDIBorderOpacityDefault"] " , " Opts["GDITextOpacityDefault"])
+	
 	GuiControl,, GDIWindowColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, Opts.GDIWindowColorDefault)
 	GuiControl,, GDIWindowOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIWindowOpacity, Opts.GDIWindowOpacityDefault, "10", "10")
 	GuiControl,, GDIBorderColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIBorderColor, Opts.GDIBorderColorDefault)
 	GuiControl,, GDIBorderOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIBorderOpacity, Opts.GDIBorderOpacityDefault, "10", "10")
 	GuiControl,, GDITextColor	, % gdipTooltip.ValidateRGBColor(Opts.GDITextColor, Opts.GDITextColorDefault)
-	GuiControl,, GDITextOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDITextOpacity, Opts.GDITextOpacityDefault)
-	gdipTooltip.UpdateFromOptions(Opts)
-
+	GuiControl,, GDITextOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDITextOpacity, Opts.GDITextOpacityDefault, "10", "10")
+	gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)
+	
 	If (Opts.UseGDI == False)
 	{
 		GuiControl, Disable, GDIWindowColor
@@ -9607,25 +9614,33 @@ UpdateSettingsUI()
 		GuiControl, Disable, GDIBorderColor
 		GuiControl, Disable, GDIBorderOpacity
 		GuiControl, Disable, GDITextColor
-		GuiControl, Disable, GDITextOpacity
-
+		GuiControl, Disable, GDITextOpacity	
+		
 		GuiControl, Disable, BtnGDIWindowColor
 		GuiControl, Disable, BtnGDIBorderColor
 		GuiControl, Disable, BtnGDITextColor
+		
+		GuiControl, Disable, BtnGDIDefaults	
+		GuiControl, Disable, BtnGDIPreviewTooltip
+		GuiControl, Disable, GDIRenderingFix
 	}
-	Else
+	Else 
 	{
 		GuiControl, Enable, GDIWindowColor
 		GuiControl, Enable, GDIWindowOpacity
 		GuiControl, Enable, GDIBorderColor
 		GuiControl, Enable, GDIBorderOpacity
 		GuiControl, Enable, GDITextColor
-		GuiControl, Enable, GDITextOpacity
-
+		GuiControl, Enable, GDITextOpacity	
+		
 		GuiControl, Enable, BtnGDIWindowColor
 		GuiControl, Enable, BtnGDIBorderColor
 		GuiControl, Enable, BtnGDITextColor
-	}
+		
+		GuiControl, Enable, BtnGDIDefaults	
+		GuiControl, Enable, BtnGDIPreviewTooltip
+		GuiControl, Enable, GDIRenderingFix
+	}		
 }
 
 ShowSettingsUI()
@@ -9765,7 +9780,7 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 		Opts.ToolTipTimeoutTicks	:= IniRead(ConfigPath, "Tooltip", "ToolTipTimeoutTicks", Opts.ToolTipTimeoutTicks)
 		Opts.FontSize			:= IniRead(ConfigPath, "Tooltip", "FontSize", Opts.FontSize)
 
-		; GDI+
+		; GDI+		
 		Opts.UseGDI				:= IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
 		Opts.GDIRenderingFix		:= IniRead(ConfigPath, "GDI", "RenderingFix", Opts.GDIRenderingFix)
 		Opts.GDIWindowColor			:= IniRead(ConfigPath, "GDI", "WindowColor", Opts.GDIWindowColor)
@@ -10464,7 +10479,7 @@ ToolTipTimer:
 	If (MouseMoved or ((UseTooltipTimeout == 1) and (ToolTipTimeout >= Opts.ToolTipTimeoutTicks)))
 	{
 		SetTimer, ToolTipTimer, Off
-		If (Opts.UseGDI)
+		If (Opts.UseGDI or gdipTooltip.GetVisibility()) 
 		{
 			gdipTooltip.HideGdiTooltip(true)
 		}
@@ -10548,36 +10563,36 @@ OpenGDIColorPicker(type, rgb, opacity, title, image) {
 	_defaultColor		:= Opts["GDI" type "Color"]
 	_defaultOpacity	:= Opts["GDI" type "Opacity"]
 	_rgb				:= gdipTooltip.ValidateRGBColor(rgb, _defaultColor)
-	_opacity			:= gdipTooltip.ValidateOpacity(opacity, _defaultOpacity)
+	_opacity			:= gdipTooltip.ValidateOpacity(opacity, _defaultOpacity, 10, 10)
 	_ColorHandle		:= GDI%_type%ColorH
 	_OpacityHandle		:= GDI%_type%OpacityH
 	;msgbox % type "`n" rgb " -> " _defaultColor " -> " _rgb "`n" opacity " -> " _defaultOpacity " -> " _opacity
-
+	
 	ColorPickerResults	:= new ColorPicker(_rgb, _opacity, title, image)
-	If (StrLen(ColorPickerResults[2])) {
+	If (StrLen(ColorPickerResults[2])) {		
 		GuiControl, , % _ColorHandle, % ColorPickerResults[2]
-		GuiControl, , % _OpacityHandle, % ColorPickerResults[3]
+		GuiControl, , % _OpacityHandle, % ColorPickerResults[3]	
 	}
 }
 
 SettingsUI_BtnGDIWindowColor:
-	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"
+	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"	
 	_type	:= "Window"
 	GuiControlGet, _cGDIColor  , , % GDIWindowColorH
 	GuiControlGet, _cGDIOpacity, , % GDIWindowOpacityH
 	OpenGDIColorPicker(_type, _cGDIColor, _cGDIOpacity, "GDI+ Tooltip " _type " Color Picker", _image)
 	return
-
+	
 SettingsUI_BtnGDIBorderColor:
-	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"
+	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"	
 	_type	:= "Border"
 	GuiControlGet, _cGDIColor  , , % GDIBorderColorH
-	GuiControlGet, _cGDIOpacity, , % GDIBorderOpacityH
+	GuiControlGet, _cGDIOpacity, , % GDIBorderOpacityH	
 	OpenGDIColorPicker(_type, _cGDIColor, _cGDIOpacity, "GDI+ Tooltip " _type " Color Picker", _image)
 	return
-
+	
 SettingsUI_BtnGDITextColor:
-	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"
+	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"	
 	_type	:= "Text"
 	GuiControlGet, _cGDIColor  , , % GDITextColorH
 	GuiControlGet, _cGDIOpacity, , % GDITextOpacityH
@@ -10590,8 +10605,7 @@ SettingsUI_BtnGDIPreviewTooltip:
 	_tempGDIRenderingFixState := Opts.GDIRenderingFix
 	GuiControlGet, _tempUseGDI, , % UseGDIH
 	Opts.UseGDI := _tempUseGDI
-
-	_tempGDIOpts := {}
+	
 	GuiControlGet, _tempGDIWindowColor   , , % GDIWindowColorH
 	GuiControlGet, _tempGDIWindowOpacity , , % GDIWindowOpacityH
 	GuiControlGet, _tempGDIBorderColor   , , % GDIBorderColorH
@@ -10599,33 +10613,25 @@ SettingsUI_BtnGDIPreviewTooltip:
 	GuiControlGet, _tempGDITextColor   , , % GDITextColorH
 	GuiControlGet, _tempGDITextOpacity , , % GDITextOpacityH
 	GuiControlGet, _tempGDIRenderingFix , , % GDIRenderingFixH
-	_tempGDIOpts.GDIWindowColor	:= _tempGDIWindowColor
-	_tempGDIOpts.GDIWindowOpacity	:= _tempGDIWindowOpacity
-	_tempGDIOpts.GDIBorderColor	:= _tempGDIBorderColor
-	_tempGDIOpts.GDIBorderOpacity	:= _tempGDIBorderOpacity
-	_tempGDIOpts.GDITextColor	:= _tempGDITextColor
-	_tempGDIOpts.GDITextOpacity	:= _tempGDITextOpacity
 	gdipTooltip.SetRenderingFix(_tempGDIRenderingFix)
-	gdipTooltip.UpdateFromOptions(_tempGDIOpts)
-
+	gdipTooltip.UpdateColors(_tempGDIWindowColor, _tempGDIWindowOpacity, _tempGDIBorderColor, _tempGDIBorderOpacity, _tempGDITextColor, _tempGDITextOpacity, "10", "16")
 	_testString =
 	(
 		TOOLIP Preview Window
-
+		
 		Voidbringer
 		Conjurer Gloves
 		Item Level:    70
 		Base Level:    55
 		Max Sockets:    4
 		--------
-		+1 to Level of Socketed Elem…
-		Increased Critical Strike Ch… 125-150
-		Increased Energy Shield       180-250
-		Increased Mana Cost of Skill…   80-40
+		+1 to Level of Socketed Elem…          
+		Increased Critical Strike Ch… 125-150  
+		Increased Energy Shield       180-250  
+		Increased Mana Cost of Skill…   80-40  
 		Energy Shield gained on Kill    15-20
 	)
 	ShowToolTip(_testString)
-
 	; reset options
 	Opts.UseGDI := _tempGDIState
 	Opts.GDIRenderingFix := _tempGDIRenderingFixState
@@ -10634,10 +10640,10 @@ SettingsUI_BtnGDIPreviewTooltip:
 	return
 
 SettingsUI_BtnGDIDefaults:
-	GuiControl, , % GDIWindowColorH  , % Opts.GDIWindowColorDefault
+	GuiControl, , % GDIWindowColorH  , % Opts.GDIWindowColorDefault 
 	GuiControl, , % GDIWindowOpacityH, % Opts.GDIWindowOpacityDefault
 	GuiControl, , % GDIBorderColorH  , % Opts.GDIBorderColorDefault
-	GuiControl, , % GDIBorderOpacityH, % Opts.GDIBorderOpacityDefault
+	GuiControl, , % GDIBorderOpacityH, % Opts.GDIBorderOpacityDefault 
 	GuiControl, , % GDITextColorH    , % Opts.GDITextColorDefault
 	GuiControl, , % GDITextOpacityH  , % Opts.GDITextOpacityDefault
 	return
@@ -10698,14 +10704,14 @@ SettingsUI_ChkUseGDI:
 	; GDI+
 	GuiControlGet, IsChecked,, UseGDI
 	If (Not IsChecked)
-	{
+	{		
 		GuiControl, Disable, GDIWindowColor
 		GuiControl, Disable, GDIWindowOpacity
 		GuiControl, Disable, GDIBorderColor
 		GuiControl, Disable, GDIBorderOpacity
 		GuiControl, Disable, GDITextColor
 		GuiControl, Disable, GDITextOpacity
-
+		
 		GuiControl, Disable, BtnGDIWindowColor
 		GuiControl, Disable, BtnGDIBorderColor
 		GuiControl, Disable, BtnGDITextColor		
@@ -10722,7 +10728,7 @@ SettingsUI_ChkUseGDI:
 		GuiControl, Enable, GDIBorderOpacity
 		GuiControl, Enable, GDITextColor
 		GuiControl, Enable, GDITextOpacity
-
+		
 		GuiControl, Enable, BtnGDIWindowColor
 		GuiControl, Enable, BtnGDIBorderColor
 		GuiControl, Enable, BtnGDITextColor
