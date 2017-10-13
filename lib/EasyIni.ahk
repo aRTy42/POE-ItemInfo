@@ -236,9 +236,13 @@ class EasyIni
 
 		ValCopy := this[sec][OldKey]
 		; --- MODIFICATION START (dein0s) ---
+		CommentCopy := this.GetKeyComments(sec, OldKey)
 		this.RemoveKey(sec, OldKey)
-		; --- MODIFICATION END (dein0s) ---
 		this.AddKey(sec, NewKey)
+		if (!IsStringEmpty(CommentCopy)) {
+			this.AddKeyComment(sec, NewKey, CommentCopy)
+		}
+		; --- MODIFICATION END (dein0s) ---
 		this[sec][NewKey] := ValCopy
 		return true
 	}
@@ -512,6 +516,9 @@ class EasyIni
 	{
 		if (!IsObject(SourceIni)) {
 			SourceIni := class_EasyIni(SourceIni)
+		}
+		if (SourceIni.IsEmpty()) {
+			return
 		}
 		; Add new items from SourceIni object
 		if (top_comments) {
@@ -805,39 +812,54 @@ class EasyIni
 		bIsFirstLine := true
 		for k, v in this.EasyIni_ReservedFor_TopComments
 		{
-			FileAppend, % (A_Index == 1 ? "" : "`n") (v == Chr(14) ? "" : v), %sFile%
+			; --- MODIFICATION START (dein0s) ---
+			sLastAddedLine := (A_Index == 1 ? "" : "`n") (v == Chr(14) ? "" : v)
+			FileAppend, %sLastAddedLine%, %sFile%
 			bIsFirstLine := false
 		}
 
 		for section, aKeysToVals in this
 		{
-			FileAppend, % (bIsFirstLine ? "[" : "`n[") section "]", %sFile%
+			sLastAddedLine := (bIsFirstLine ? "[" : "`n[") section "]"
+			FileAppend, %sLastAddedLine%, %sFile%
 			bIsFirstLine := false
-			; --- MODIFICATION START (dein0s) ---
 			; Add the comment(s) for this section
 			sComments := this[section].EasyIni_ReservedFor_Comments["SectionComment"]
 			Loop, Parse, sComments, `n
-				FileAppend, % "`n" (A_LoopField == Chr(14) ? "" : A_LoopField), %sFile%
-			; --- MODIFICATION END (dein0s) ---
+			{
+				sLastAddedLine := "`n" (A_LoopField == Chr(14) ? "" : A_LoopField)
+				FileAppend, %sLastAddedLine%, %sFile%
+			}
 
 			bEmptySection := true
 			for key, val in aKeysToVals
 			{
 				bEmptySection := false
-				FileAppend, `n%key%=%val%, %sFile%
+				sLastAddedLine := "`n" key "=" val
+				FileAppend, %sLastAddedLine%, %sFile%
 
 				; Add the comment(s) for this key
 				sComments := this[section].EasyIni_ReservedFor_Comments[key]
 				Loop, Parse, sComments, `n
-					FileAppend, % "`n" (A_LoopField == Chr(14) ? "" : A_LoopField), %sFile%
+				{
+					sLastAddedLine := "`n" (A_LoopField == Chr(14) ? "" : A_LoopField)
+					FileAppend, %sLastAddedLine%, %sFile%
+				}
 			}
 			if (bEmptySection)
 			{
 				; An empy section may contain comments...
 				sComments := this[section].EasyIni_ReservedFor_Comments["SectionComment"]
 				Loop, Parse, sComments, `n
-					FileAppend, % "`n" (A_LoopField == Chr(14) ? "" : A_LoopField), %sFile%
+				{
+					sLastAddedLine := "`n" (A_LoopField == Chr(14) ? "" : A_LoopField)
+					FileAppend, %sLastAddedLine%, %sFile%
+				}
 			}
+			if (!IsStringEmpty(sLastAddedLine)) {
+				FileAppend, % "`n", %sFile% ; NB: add new line at the end of the section
+			}
+			; --- MODIFICATION END (dein0s) ---
 		}
 		return true
 	}

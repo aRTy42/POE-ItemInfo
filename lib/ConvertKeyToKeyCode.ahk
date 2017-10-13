@@ -73,7 +73,15 @@ CustomGetKeyCode(Key, SC:=true) {
   If (_KeyCode = 0 and _Defaultlayout != ENG_US) {
     ; Retrieving key code can fail (0 returned from GetKeySC()/GetKeyVK()) if the Key couldn't be found
     ; in a current keyboard layout (ie. "d" key in a russian layout)  or if it's MouseKey or some MediaKey
-    SwitchLayout(ENG_US)
+
+    ; NB: workaround for the issues caused by https://github.com/PoE-TradeMacro/POE-TradeMacro/pull/540
+    SwitchLayoutStart := A_TickCount
+    SwitchLayoutElapsed := 0
+    while (GetCurrentLayout() != ENG_US and SwitchLayoutElapsed < 120) {
+      SwitchLayout(ENG_US)
+      Sleep, 50
+      SwitchLayoutElapsed := (A_TickCount - SwitchLayoutStart) / 1000
+    }
     _KeyCode := (SC=true) ? GetKeySC(Key) : GetKeyVK(Key)
     SwitchLayout(_Defaultlayout)
   }

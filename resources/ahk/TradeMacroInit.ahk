@@ -52,85 +52,21 @@ class TradeGlobals {
 global SettingsWindowWidth := 845
 global SavedTradeSettings := false
 
-class TradeUserOptions {
-	ShowItemResults := 15		    	; Number of Items shown as search result; defaults to 15 If not set.
-	ShowUpdateNotifications := 1		; 1 = show, 0 = don't show
-	OpenWithDefaultWin10Fix := 0    	; If your PC asks you what programm to use to open the wiki-link, set this to 1
-	ShowAccountName := 1            	; Show also sellers account name in the results window
-	BrowserPath :=                  	; Show also sellers account name in the results window
-	OpenUrlsOnEmptyItem := 0			; Open wiki/poe.trade also when no item was checked
-	DownloadDataFiles := 0			;
-	DeleteCookies := 0				; Delete Internet Explorer cookies on startup (only poe.trade)
-	CookieSelect := "All"
-	KeyToSCState := 0 			; 1 = scan codes, 0 = virtual key codes
-	UseGZip := 1
-	UpdateSkipSelection := 0
-	UpdateSkipBackup := 0
+; TODO: enable this after refactoring of ReadTradeConfig()/WriteTradeConfig()
+; if (FileExist(userDirectory "\config_trade.ini")) {
+; 	TradeOpts_New := class_EasyIni(userDirectory "\config_trade.ini")
+; 	TradeOpts_New.Update(A_ScriptDir "\resources\default_UserFiles\config_trade.ini")
+; }
+; else {
+; 	TradeOpts_New := class_EasyIni(A_ScriptDir "\resources\default_UserFiles\config_trade.ini")
+; }
 
-	Debug := 0      				;
+TradeOpts_New := class_EasyIni(A_ScriptDir "\resources\default_UserFiles\config_trade.ini")
 
-	PriceCheckHotKey := "^d"
-	AdvancedPriceCheckHotKey := "^!s"
-	OpenWikiHotKey := "^w"
-	CustomInputSearch := "^i"
-	OpenSearchOnPoeTrade := "^q"
-	ShowItemAge := "^e"
-	ChangeLeagueHotKey := "^l"
-
-	PriceCheckEnabled :=1
-	AdvancedPriceCheckEnabled :=1
-	OpenWikiEnabled :=1
-	CustomInputSearchEnabled :=1
-	OpenSearchOnPoeTradeEnabled :=1
-	ShowItemAgeEnabled :=1
-	ChangeLeagueEnabled :=1
-
-	AccountName := ""               	;
-	SearchLeague := "TmpStandard"   	; Defaults to "standard" or "tmpstandard" If there is an active Temp-League at the time of script execution.
-									; Possible values:
-									; 	"tmpstandard" (current SC Temp-League)
-									;	"tmphardcore" (current HC Temp-League)
-									;	"standard",
-									;    "hardcore"
-	GemLevel := 16                  	; Gem level is ignored in the search unless it's equal or higher than this value
-	GemLevelRange := 0              	; Gem level is ignored in the search unless it's equal or higher than this value
-	GemQualityRange := 0            	; Use this to set a range to quality gems searches
-	OnlineOnly := 1                 	; 1 = search online only; 0 = search offline, too.
-	Corrupted := "Either"           	; 1 = yes; 0 = no; 2 = either, This setting gets ignored when you use the search on corrupted items.
-	CorruptedOverride := 0          	;
-	AdvancedSearchModValueRangeMin := 20 	;
-	AdvancedSearchModValueRangeMax := 20 	;
-	RemoveMultipleListingsFromSameAccount := 0 ;
-	PrefillMinValue := 1            	;
-	PrefillMaxValue := 1            	;
-	CurrencySearchHave := "Chaos Orb" 	;
-	BuyoutOnly := 1				;
-	ForceMaxLinks := 1				;
-	AlternativeCurrencySearch := 0	;
-	ShowPricesAsChaosEquiv := 0
-
-	AdvancedSearchCheckMods := 0
-	AdvancedSearchCheckTotalEleRes :=0
-	AdvancedSearchCheckTotalLife :=0
-	AdvancedSearchCheckPDPS :=0
-	AdvancedSearchCheckEDPS :=0
-	AdvancedSearchCheckTotalES :=0
-	AdvancedSearchCheckES :=0
-	AdvancedSearchCheckILVL :=0
-	AdvancedSearchCheckBase :=0
-
-	Expire := 3					; cache expire min
-
-	UseManualCookies := 0
-	UserAgent := ""
-	CfdUid := ""
-	CfClearance := ""
-}
-TradeOpts := new TradeUserOptions()
 
 ; Check If Temp-Leagues are active and set defaultLeague accordingly
 TradeGlobals.Set("TempLeagueIsRunning", TradeFunc_CheckIfTempLeagueIsRunning())
-TradeGlobals.Set("DefaultLeague", (tempLeagueIsRunning > 0) ? "TmpStandard" : "Standard")
+TradeGlobals.Set("DefaultLeague", (TradeFunc_CheckIfTempLeagueIsRunning() > 0) ? "tmpstandard" : "standard")
 TradeGlobals.Set("GithubUser", "POE-TradeMacro")
 TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
 TradeGlobals.Set("ReleaseVersion", TradeReleaseVersion)
@@ -168,15 +104,15 @@ global userDirectory		:= argumentUserDirectory
 global isDevVersion			:= argumentIsDevVersion
 global overwrittenUserFiles	:= argumentOverwrittenFiles
 
-; Create config file if neccessary and read it
-IfNotExist, %userDirectory%\config_trade.ini
-{
-	IfNotExist, %A_ScriptDir%\resources\default_UserFiles\config_trade.ini
-	{
-		CreateDefaultTradeConfig()
-	}
-	CopyDefaultTradeConfig()
-}
+; ; Create config file if neccessary and read it
+; IfNotExist, %userDirectory%\config_trade.ini
+; {
+; 	IfNotExist, %A_ScriptDir%\resources\default_UserFiles\config_trade.ini
+; 	{
+; 		CreateDefaultTradeConfig()
+; 	}
+; 	CopyDefaultTradeConfig()
+; }
 ReadTradeConfig()
 Sleep, 100
 TradeFunc_CheckIfCloudFlareBypassNeeded()
@@ -216,6 +152,7 @@ TradeFunc_StopSplashScreen()
 
 ; ----------------------------------------------------------- Functions ----------------------------------------------------------------
 
+; TODO: rewrite/remove after refactoring UI
 ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 {
 	Global
@@ -223,168 +160,42 @@ ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 		TradeConfigDir := userDirectory
 	}
 	TradeConfigPath := StrLen(TradeConfigDir) > 0 ? TradeConfigDir . "\" . TradeConfigFile : TradeConfigFile
-
-	IfExist, %TradeConfigPath%
-	{
-		; General
-		TradeOpts.ShowItemResults := TradeFunc_ReadIniValue(TradeConfigPath, "General", "ShowItemResults", TradeOpts.ShowItemResults)
-		TradeOpts.ShowUpdateNotifications := TradeFunc_ReadIniValue(TradeConfigPath, "General", "ShowUpdateNotifications", TradeOpts.ShowUpdateNotifications)
-		TradeOpts.OpenWithDefaultWin10Fix := TradeFunc_ReadIniValue(TradeConfigPath, "General", "OpenWithDefaultWin10Fix", TradeOpts.OpenWithDefaultWin10Fix)
-		TradeOpts.ShowAccountName := TradeFunc_ReadIniValue(TradeConfigPath, "General", "ShowAccountName", TradeOpts.ShowAccountName)
-		TradeOpts.OpenUrlsOnEmptyItem := TradeFunc_ReadIniValue(TradeConfigPath, "General", "OpenUrlsOnEmptyItem", TradeOpts.OpenUrlsOnEmptyItem)
-		TradeOpts.DownloadDataFiles := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DownloadDataFiles", TradeOpts.DownloadDataFiles)
-		TradeOpts.DeleteCookies := TradeFunc_ReadIniValue(TradeConfigPath, "General", "DeleteCookies", TradeOpts.DeleteCookies)
-		TradeOpts.CookieSelect := TradeFunc_ReadIniValue(TradeConfigPath, "General", "CookieSelect", TradeOpts.CookieSelect)
-		TradeOpts.UpdateSkipSelection := TradeFunc_ReadIniValue(TradeConfigPath, "General", "UpdateSkipSelection", TradeOpts.UpdateSkipSelection)
-		TradeOpts.UpdateSkipBackup := TradeFunc_ReadIniValue(TradeConfigPath, "General", "UpdateSkipBackup", TradeOpts.UpdateSkipBackup)
-		TradeFunc_SyncUpdateSettings()
-
-		; Check If browser path is valid, delete ini-entry If not
-		BrowserPath := TradeFunc_ReadIniValue(TradeConfigPath, "General", "BrowserPath", TradeOpts.BrowserPath)
-		If (TradeFunc_CheckBrowserPath(BrowserPath, false)) {
-			TradeOpts.BrowserPath := BrowserPath
-		}
-		Else {
-			TradeFunc_WriteIniValue("", TradeConfigPath, "General", "BrowserPath")
-		}
-
-		; Debug
-		TradeOpts.Debug := TradeFunc_ReadIniValue(TradeConfigPath, "Debug", "Debug", 0)
-
-		; Hotkeys
-		TradeOpts.PriceCheckHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "PriceCheckHotKey", TradeOpts.PriceCheckHotKey), TradeOpts.KeyToSCState)
-		TradeOpts.AdvancedPriceCheckHotKey := (TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "AdvancedPriceCheckHotKey", TradeOpts.AdvancedPriceCheckHotKey), TradeOpts.KeyToSCState)
-		TradeOpts.OpenWikiHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "OpenWiki", TradeOpts.OpenWikiHotKey), TradeOpts.KeyToSCState)
-		TradeOpts.CustomInputSearchHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey", TradeOpts.CustomInputSearchHotKey), TradeOpts.KeyToSCState)
-		TradeOpts.OpenSearchOnPoeTradeHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "OpenSearchOnPoeTradeHotKey", TradeOpts.OpenSearchOnPoeTradeHotKey), TradeOpts.KeyToSCState)
-		TradeOpts.ShowItemAgeHotKey := KeyNameToKeyCode(TradeFunc_ReadIniValue(TradeConfigPath, "Hotkeys", "ShowItemAgeHotKey", TradeOpts.ShowItemAgeHotKey), TradeOpts.KeyToSCState)
-
-		TradeOpts.PriceCheckEnabled := TradeFunc_ReadIniValue(TradeConfigPath, "HotkeyStates", "PriceCheckEnabled", TradeOpts.PriceCheckEnabled)
-		TradeOpts.AdvancedPriceCheckEnabled := TradeFunc_ReadIniValue(TradeConfigPath, "HotkeyStates", "AdvancedPriceCheckEnabled", TradeOpts.AdvancedPriceCheckEnabled)
-		TradeOpts.OpenWikiEnabled := TradeFunc_ReadIniValue(TradeConfigPath, "HotkeyStates", "OpenWikiEnabled", TradeOpts.OpenWikiEnabled)
-		TradeOpts.CustomInputSearchEnabled := TradeFunc_ReadIniValue(TradeConfigPath, "HotkeyStates", "CustomInputSearchEnabled", TradeOpts.CustomInputSearchEnabled)
-		TradeOpts.OpenSearchOnPoeTradeEnabled := TradeFunc_ReadIniValue(TradeConfigPath, "HotkeyStates", "OpenSearchOnPoeTradeEnabled", TradeOpts.OpenSearchOnPoeTradeEnabled)
-		TradeOpts.ShowItemAgeEnabled := TradeFunc_ReadIniValue(TradeConfigPath, "HotkeyStates", "ShowItemAgeEnabled", TradeOpts.ShowItemAgeEnabled)
-
-		TradeFunc_AssignAllHotkeys()
-
-		; Search
-		TradeOpts.AccountName := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AccountName", TradeOpts.AccountName)
-		TradeOpts.SearchLeague := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "SearchLeague", TradeGlobals.Get("DefaultLeague"))
-		temp		:= TradeOpts.SearchLeague
-		found	:= false
-		For key, val in TradeGlobals.Get("AvailableLeagues") {
-			trimmedLeague := RegExReplace(val, "i)\s", "")
-			If (trimmedLeague = temp) {
-				temp	:= trimmedLeague
-				TradeFunc_WriteIniValue(temp, TradeConfigPath, "Search", "SearchLeague")
-				found := true
-			} Else If (trimmedLeague == temp) {
-				found:= true
-			}
-		}
-		If (not found and not RegExMatch(temp, "Standard|Hardcore|TmpStandard|TmpHardcore")) {
-			temp := "TmpStandard"
-			TradeFunc_WriteIniValue(temp, TradeConfigPath, "Search", "SearchLeague")
-		}
-		TradeFunc_SetLeagueIfSelectedIsInactive()
-		TradeOpts.SearchLeague := temp
-
-		TradeOpts.GemLevel := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "GemLevel", TradeOpts.GemLevel)
-		TradeOpts.GemLevelRange := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "GemLevelRange", TradeOpts.GemLevelRange)
-		TradeOpts.GemQualityRange := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "GemQualityRange", TradeOpts.GemQualityRange)
-		TradeOpts.OnlineOnly := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "OnlineOnly", TradeOpts.OnlineOnly)
-
-		TradeOpts.CorruptedOverride := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "CorruptedOverride", TradeOpts.CorruptedOverride)
-		TradeOpts.Corrupted := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "Corrupted", TradeOpts.Corrupted)
-		temp := TradeOpts.Corrupted
-		StringUpper, temp, temp, T
-		TradeOpts.Corrupted := temp
-
-		TradeOpts.AdvancedSearchModValueRangeMin := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchModValueRangeMin", TradeOpts.AdvancedSearchModValueRangeMin)
-		TradeOpts.AdvancedSearchModValueRangeMax := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchModValueRangeMax", TradeOpts.AdvancedSearchModValueRangeMax)
-		TradeOpts.RemoveMultipleListingsFromSameAccount := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount", TradeOpts.RemoveMultipleListingsFromSameAccount)
-		TradeOpts.PrefillMinValue := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "PrefillMinValue", TradeOpts.PrefillMinValue)
-		TradeOpts.PrefillMaxValue := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "PrefillMaxValue", TradeOpts.PrefillMaxValue)
-		TradeOpts.CurrencySearchHave := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "CurrencySearchHave", TradeOpts.CurrencySearchHave)
-		TradeOpts.BuyoutOnly := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "BuyoutOnly", TradeOpts.BuyoutOnly)
-		TradeOpts.ForceMaxLinks := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "ForceMaxLinks", TradeOpts.ForceMaxLinks)
-		TradeOpts.AlternativeCurrencySearch := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AlternativeCurrencySearch", TradeOpts.AlternativeCurrencySearch)
-		TradeOpts.ShowPricesAsChaosEquiv := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "ShowPricesAsChaosEquiv", TradeOpts.ShowPricesAsChaosEquiv)
-
-		TradeOpts.AdvancedSearchCheckMods := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckMods", TradeOpts.AdvancedSearchCheckMods)
-		TradeOpts.AdvancedSearchCheckTotalEleRes := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckTotalEleRes", TradeOpts.AdvancedSearchCheckTotalEleRes)
-		TradeOpts.AdvancedSearchCheckTotalLife := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckTotalLife", TradeOpts.AdvancedSearchCheckTotalLife)
-		TradeOpts.AdvancedSearchCheckPDPS := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckPDPS", TradeOpts.AdvancedSearchCheckPDPS)
-		TradeOpts.AdvancedSearchCheckEDPS := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckEDPS", TradeOpts.AdvancedSearchCheckEDPS)
-		TradeOpts.AdvancedSearchCheckTotalES := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckTotalES", TradeOpts.AdvancedSearchCheckTotalES)
-		TradeOpts.AdvancedSearchCheckES := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckES", TradeOpts.AdvancedSearchCheckES)
-		TradeOpts.AdvancedSearchCheckILVL := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckILVL", TradeOpts.AdvancedSearchCheckILVL)
-		TradeOpts.AdvancedSearchCheckBase := TradeFunc_ReadIniValue(TradeConfigPath, "Search", "AdvancedSearchCheckBase", TradeOpts.AdvancedSearchCheckBase)
-
-		; Cache
-		TradeOpts.Expire := TradeFunc_ReadIniValue(TradeConfigPath, "Cache", "Expire", TradeOpts.Expire)
-
-		; Cookies
-		TradeOpts.UseManualCookies := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "UseManualCookies", TradeOpts.UseManualCookies)
-		TradeOpts.UserAgent := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "UserAgent", TradeOpts.UserAgent)
-		TradeOpts.CfdUid := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "CfdUid", TradeOpts.CfdUid)
-		TradeOpts.CfClearance := TradeFunc_ReadIniValue(TradeConfigPath, "Cookies", "CfClearance", TradeOpts.CfClearance)
+	if (FileExist(TradeConfigPath)) {
+		TradeOpts_New := class_EasyIni(TradeConfigPath)
+		TradeOpts_New.Update(A_ScriptDir "\resources\default_UserFiles\config_trade.ini")
 	}
+	if (!TradeFunc_CheckBrowserPath(TradeOpts_New.General.BrowserPath, false)) {
+		TradeOpts_New.General.BrowserPath := ""
+	}
+
+	if (!TradeFunc_CheckLeague(TradeOpts_New.Search.SearchLeague)) {
+		TradeOpts_New.Search.SearchLeague := "tmpstandard"
+	}
+
+	TradeOpts_New.Search.Corrupted := Format("{:T}", TradeOpts_New.Search.Corrupted)
+
+	MakeOldTradeOptsAndVars(TradeOpts_New)
+	TradeFunc_SyncUpdateSettings()
+	TradeFunc_SetLeagueIfSelectedIsInactive()
+	TradeFunc_AssignAllHotkeys()
+	return
 }
 
-TradeFunc_AssignAllHotkeys() {
-	If (TradeOpts.PriceCheckEnabled) {
-		TradeFunc_AssignHotkey(TradeOpts.PriceCheckHotKey, "PriceCheck")
+TradeFunc_AssignAllHotkeys()
+{
+	Global
+	for keyName, keyVal in TradeOpts_New.Hotkeys {
+		if (TradeOpts_New.HotkeyStates[keyName]) {
+			TradeFunc_AssignHotkey(keyVal, keyName)
+		}
+		else {
+			Hotkey, %keyVal%, off, UseErrorLevel
+		}
 	}
-	Else {
-		key := TradeOpts.PriceCheckEnabled
-		Hotkey, %key% , off, UseErrorLevel
-	}
-	If (TradeOpts.AdvancedPriceCheckEnabled) {
-		TradeFunc_AssignHotkey(TradeOpts.AdvancedPriceCheckHotKey, "AdvancedPriceCheck")
-	}
-	Else {
-		key := TradeOpts.AdvancedPriceCheckEnabled
-		Hotkey, %key% , off, UseErrorLevel
-	}
-	If (TradeOpts.OpenWikiEnabled) {
-		TradeFunc_AssignHotkey(TradeOpts.OpenWikiHotKey, "OpenWiki")
-	}
-	Else {
-		key := TradeOpts.OpenWikiEnabled
-		Hotkey, %key% , off, UseErrorLevel
-	}
-	If (TradeOpts.CustomInputSearchEnabled) {
-		TradeFunc_AssignHotkey(TradeOpts.CustomInputSearchHotKey, "CustomInputSearch")
-	}
-	Else {
-		key := TradeOpts.CustomInputSearchEnabled
-		Hotkey, %key% , off, UseErrorLevel
-	}
-	If (TradeOpts.OpenSearchOnPoeTradeEnabled) {
-		TradeFunc_AssignHotkey(TradeOpts.OpenSearchOnPoeTradeHotKey, "OpenSearchOnPoeTrade")
-	}
-	Else {
-		key := TradeOpts.OpenSearchOnPoeTradeEnabled
-		Hotkey, %key% , off, UseErrorLevel
-	}
-	If (TradeOpts.ShowItemAgeEnabled) {
-		TradeFunc_AssignHotkey(TradeOpts.ShowItemAgeHotKey, "ShowItemAge")
-	}
-	Else {
-		key := TradeOpts.ShowItemAgeHotKey
-		Hotkey, %key% , off, UseErrorLevel
-	}
-	If (TradeOpts.ChangeLeagueEnabled) {
-		TradeFunc_AssignHotkey(TradeOpts.ChangeLeagueHotKey, "ChangeLeague")
-	}
-	Else {
-		key := TradeOpts.ChangeLeagueHotKey
-		Hotkey, %key% , off, UseErrorLevel
-	}
+	return
 }
 
+; TODO: rewrite/remove after refactoring UI
 WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 	Global
 	If (StrLen(TradeConfigDir) < 1) {
@@ -392,180 +203,103 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 	}
 	TradeConfigPath := StrLen(TradeConfigDir) > 0 ? TradeConfigDir . "\" . TradeConfigFile : TradeConfigFile
 
-	ValidBrowserPath := TradeFunc_CheckBrowserPath(BrowserPath, true)
 
-     ; workaround for settings options not being assigned to TradeOpts
-	If (SavedTradeSettings) {
-		TradeOpts.ShowItemResults		:= ShowItemResults
-		TradeOpts.ShowUpdateNotifications	:= ShowUpdateNotifications
-		TradeOpts.OpenWithDefaultWin10Fix	:= OpenWithDefaultWin10Fix
-		TradeOpts.ShowAccountName		:= ShowAccountName
-		TradeOpts.OpenUrlsOnEmptyItem		:= OpenUrlsOnEmptyItem
-		TradeOpts.DownloadDataFiles		:= DownloadDataFiles
-		TradeOpts.DeleteCookies			:= DeleteCookies
-		TradeOpts.CookieSelect			:= CookieSelect
-		TradeOpts.UpdateSkipSelection 	:= UpdateSkipSelection
-		TradeOpts.UpdateSkipBackup		:= UpdateSkipBackup
-
-		TradeOpts.Debug := Debug
-
-		If (ValidBrowserPath) {
-			TradeOpts.BrowserPath := BrowserPath
-		}
-		Else {
-			TradeOpts.BrowserPath := ""
-		}
-
-		TradeOpts.PriceCheckHotKey 		:= KeyNameToKeyCode(PriceCheckHotKey, TradeOpts.KeyToSCState)
-		TradeOpts.AdvancedPriceCheckHotKey := KeyNameToKeyCode(AdvancedPriceCheckHotKey, TradeOpts.KeyToSCState)
-		TradeOpts.OpenWikiHotKey 		:= KeyNameToKeyCode(OpenWikiHotKey, TradeOpts.KeyToSCState)
-		TradeOpts.CustomInputSearchHotKey 	:= KeyNameToKeyCode(CustomInputSearchHotKey, TradeOpts.KeyToSCState)
-		TradeOpts.OpenSearchOnPoeTradeHotKey := KeyNameToKeyCode(OpenSearchOnPoeTradeHotKey, TradeOpts.KeyToSCState)
-		TradeOpts.ShowItemAgeHotKey		:= KeyNameToKeyCode(ShowItemAgeHotKey, TradeOpts.KeyToSCState)
-		TradeOpts.ChangeLeagueHotKey		:= KeyNameToKeyCode(ChangeLeagueHotKey,TradeOpts.KeyToSCState)
-
-		TradeOpts.PriceCheckEnabled		:= PriceCheckEnabled
-		TradeOpts.AdvancedPriceCheckEnabled:= AdvancedPriceCheckEnabled
-		TradeOpts.OpenWikiEnabled		:= OpenWikiEnabled
-		TradeOpts.CustomInputSearchEnabled	:= CustomInputSearchEnabled
-		TradeOpts.OpenSearchOnPoeTradeEnabled := OpenSearchOnPoeTradeEnabled
-		TradeOpts.ShowItemAgeEnabled		:= ShowItemAgeEnabled
-		TradeOpts.ChangeLeagueEnabled		:= ChangeLeagueEnabled
-
-		TradeFunc_AssignAllHotkeys()
-
-		TradeOpts.AccountName			:= AccountName
-		tempOldLeague					:= TradeOpts.SearchLeague
-		TradeOpts.SearchLeague			:= SearchLeague
-
-		TradeFunc_SetLeagueIfSelectedIsInactive()
-		oldLeague := TradeGlobals.Get("LeagueName")
-		newLeague := TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague]
-		TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
-		If (oldLeague != newLeague) {
-			TempChangingLeagueInProgress := True
-			GoSub, ReadPoeNinjaCurrencyData
-		}
-
-		tempOldAltCurrencySearch			:= TradeOpts.AlternativeCurrencySearch
-		TradeOpts.AlternativeCurrencySearch:= AlternativeCurrencySearch
-
-		; Get currency data only if league was changed while alternate search is active or alternate search was changed from disabled to enabled
-		If ((TradeOpts.SearchLeague != tempOldLeague and AlternativeCurrencySearch) or (AlternativeCurrencySearch and tempOldAltCurrencySearch != AlternativeCurrencySearch)) {
-			GoSub, ReadPoeNinjaCurrencyData
-		}
-
-		TradeOpts.GemLevel				:= GemLevel
-		TradeOpts.GemLevelRange			:= GemLevelRange
-		TradeOpts.GemQualityRange		:= GemQualityRange
-		TradeOpts.OnlineOnly			:= OnlineOnly
-		TradeOpts.Corrupted				:= Corrupted
-		TradeOpts.CorruptedOverride		:= CorruptedOverride
-		TradeOpts.AdvancedSearchModValueRangeMin		:= AdvancedSearchModValueRangeMin
-		TradeOpts.AdvancedSearchModValueRangeMax		:= AdvancedSearchModValueRangeMax
-		TradeOpts.RemoveMultipleListingsFromSameAccount	:= RemoveMultipleListingsFromSameAccount
-		TradeOpts.PrefillMinValue		:= PrefillMinValue
-		TradeOpts.PrefillMaxValue		:= PrefillMaxValue
-		TradeOpts.CurrencySearchHave		:= CurrencySearchHave
-		TradeOpts.BuyoutOnly			:= BuyoutOnly
-		TradeOpts.ForceMaxLinks			:= ForceMaxLinks
-		TradeOpts.AlternativeCurrencySearch:= AlternativeCurrencySearch
-		TradeOpts.ShowPricesAsChaosEquiv	:= ShowPricesAsChaosEquiv
-
-		TradeOpts.AdvancedSearchCheckMods		:= AdvancedSearchCheckMods
-		TradeOpts.AdvancedSearchCheckTotalEleRes:= AdvancedSearchCheckTotalEleRes
-		TradeOpts.AdvancedSearchCheckTotalLife	:= AdvancedSearchCheckTotalLife
-		TradeOpts.AdvancedSearchCheckPDPS		:= AdvancedSearchCheckPDPS
-		TradeOpts.AdvancedSearchCheckEDPS		:= AdvancedSearchCheckEDPS
-		TradeOpts.AdvancedSearchCheckTotalES	:= AdvancedSearchCheckTotalES
-		TradeOpts.AdvancedSearchCheckES		:= AdvancedSearchCheckES
-		TradeOpts.AdvancedSearchCheckILVL		:= AdvancedSearchCheckILVL
-		TradeOpts.AdvancedSearchCheckBase		:= AdvancedSearchCheckBase
-
-		TradeOpts.UseManualCookies		:= UseManualCookies
-		TradeOpts.UserAgent				:= UserAgent
-		TradeOpts.CfdUid				:= CfdUid
-		TradeOpts.CfClearance			:= CfClearance
+	if (!TradeFunc_CheckBrowserPath(BrowserPath, true)) {
+		BrowserPath := ""
 	}
-	SavedTradeSettings := false
+	tempOldLeague := TradeOpts.SearchLeague
+	tempOldAltCurrencySearch := TradeOpts.AlternativeCurrencySearch
 
-    ; General
-	TradeFunc_WriteIniValue(TradeOpts.ShowItemResults, TradeConfigPath, "General", "ShowItemResults")
-	TradeFunc_WriteIniValue(TradeOpts.ShowUpdateNotifications, TradeConfigPath, "General", "ShowUpdateNotifications")
-	TradeFunc_WriteIniValue(TradeOpts.OpenWithDefaultWin10Fix, TradeConfigPath, "General", "OpenWithDefaultWin10Fix")
-	TradeFunc_WriteIniValue(TradeOpts.ShowAccountName, TradeConfigPath, "General", "ShowAccountName")
-	TradeFunc_WriteIniValue(TradeOpts.OpenUrlsOnEmptyItem, TradeConfigPath, "General", "OpenUrlsOnEmptyItem")
-	TradeFunc_WriteIniValue(TradeOpts.DownloadDataFiles, TradeConfigPath, "General", "DownloadDataFiles")
-	TradeFunc_WriteIniValue(TradeOpts.DeleteCookies, TradeConfigPath, "General", "DeleteCookies")
-	TradeFunc_WriteIniValue(TradeOpts.CookieSelect, TradeConfigPath, "General", "CookieSelect")
-	TradeFunc_WriteIniValue(TradeOpts.UpdateSkipSelection, TradeConfigPath, "General", "UpdateSkipSelection")
-	TradeFunc_WriteIniValue(TradeOpts.UpdateSkipBackup, TradeConfigPath, "General", "UpdateSkipBackup")
+	UpdateOldTradeOptsFromVars()
+
+	TradeFunc_SetLeagueIfSelectedIsInactive()
+	oldLeague := TradeGlobals.Get("LeagueName")
+	newLeague := TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague]
+	TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
+	If (oldLeague != newLeague) {
+		TempChangingLeagueInProgress := True
+		GoSub, ReadPoeNinjaCurrencyData
+	}
+
+	; Get currency data only if league was changed while alternate search is active or alternate search was changed from disabled to enabled
+	If ((TradeOpts.SearchLeague != tempOldLeague and AlternativeCurrencySearch) or (AlternativeCurrencySearch and tempOldAltCurrencySearch != AlternativeCurrencySearch)) {
+		GoSub, ReadPoeNinjaCurrencyData
+	}
+	TradeOpts_New := UpdateNewTradeOptsFromOld(TradeOpts_New)
 	TradeFunc_SyncUpdateSettings()
+	TradeFunc_AssignAllHotkeys()
+	TradeOpts_New.Save(TradeConfigPath)
+	return
+}
 
-	If (ValidBrowserPath) {
-		TradeFunc_WriteIniValue(TradeOpts.BrowserPath, TradeConfigPath, "General", "BrowserPath")
+; NB: this is temporary hack
+MakeOldTradeOptsAndVars(ConfigObject)
+{
+	Global
+	TradeOpts := {}
+	for sectionName, sectionKeys in ConfigObject {
+		for keyName, keyVal in sectionKeys {
+			if (sectionName == "Hotkeys") {
+				keyName := keyName "HotKey"
+				keyVal := KeyNameToKeyCode(keyVal, ConfigObject.General.KeyToSCState)
+			}
+			if (sectionName == "HotkeyStates") {
+				keyName := keyName "Enabled"
+			}
+			%keyName% := keyVal
+			TradeOpts.Insert(keyName, keyVal)
+		}
 	}
-	Else {
-		TradeFunc_WriteIniValue("", TradeConfigPath, "General", "BrowserPath")
+	return
+}
+
+; NB: this is temporary hack
+UpdateNewTradeOptsFromOld(ConfigObject)
+{
+	Global
+	for sectionName, sectionKeys in ConfigObject {
+		for keyName, keyVal in sectionKeys {
+			keyNameTemp := keyName
+			if (sectionName == "Hotkeys") {
+				keyNameTemp := keyName "HotKey"
+				keyValTemp := KeyNameToKeyCode(TradeOpts[keyNameTemp], TradeOpts.KeyToSCState)
+			}
+			else if (sectionName == "HotkeyStates") {
+				keyNameTemp := keyName "Enabled"
+				keyValTemp := TradeOpts[keyNameTemp]
+			}
+			else {
+				keyValTemp := TradeOpts[keyNameTemp]
+			}
+			ConfigObject[sectionName, keyName] := keyValTemp
+		}
 	}
+	return ConfigObject
+}
 
-	; Debug
-	TradeFunc_WriteIniValue(TradeOpts.Debug, TradeConfigPath, "Debug", "Debug")
+; NB: this is temporary hack
+UpdateOldTradeOptsFromVars()
+{
+	Global
+	for key, val in TradeOpts {
+		TradeOpts[key] := %key%
+	}
+	return
+}
 
-	; Hotkeys
-	TradeFunc_WriteIniValue(TradeOpts.PriceCheckHotKey, TradeConfigPath, "Hotkeys", "PriceCheckHotKey")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedPriceCheckHotKey, TradeConfigPath, "Hotkeys", "AdvancedPriceCheckHotKey")
-	TradeFunc_WriteIniValue(TradeOpts.OpenWikiHotKey, TradeConfigPath, "Hotkeys", "OpenWikiHotKey")
-	TradeFunc_WriteIniValue(TradeOpts.CustomInputSearchHotKey, TradeConfigPath, "Hotkeys", "CustomInputSearchHotKey")
-	TradeFunc_WriteIniValue(TradeOpts.OpenSearchOnPoeTradeHotKey, TradeConfigPath, "Hotkeys", "OpenSearchOnPoeTradeHotKey")
-	TradeFunc_WriteIniValue(TradeOpts.ShowItemAgeHotKey, TradeConfigPath, "Hotkeys", "ShowItemAgeHotKey")
-	TradeFunc_WriteIniValue(TradeOpts.ChangeLeagueHotKey, TradeConfigPath, "Hotkeys", "ChangeLeagueHotKey")
-
-	TradeFunc_WriteIniValue(TradeOpts.PriceCheckEnabled, TradeConfigPath, "HotkeyStates", "PriceCheckEnabled")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedPriceCheckEnabled, TradeConfigPath, "HotkeyStates", "AdvancedPriceCheckEnabled")
-	TradeFunc_WriteIniValue(TradeOpts.OpenWikiEnabled, TradeConfigPath, "HotkeyStates", "OpenWikiEnabled")
-	TradeFunc_WriteIniValue(TradeOpts.CustomInputSearchEnabled, TradeConfigPath, "HotkeyStates", "CustomInputSearchEnabled")
-	TradeFunc_WriteIniValue(TradeOpts.OpenSearchOnPoeTradeEnabled, TradeConfigPath, "HotkeyStates", "OpenSearchOnPoeTradeEnabled")
-	TradeFunc_WriteIniValue(TradeOpts.ShowItemAgeEnabled, TradeConfigPath, "HotkeyStates", "ShowItemAgeEnabled")
-
-	; Search
-	TradeFunc_WriteIniValue(TradeOpts.AccountName, TradeConfigPath, "Search", "AccountName")
-	TradeFunc_WriteIniValue(TradeOpts.SearchLeague, TradeConfigPath, "Search", "SearchLeague")
-	TradeFunc_WriteIniValue(TradeOpts.GemLevel, TradeConfigPath, "Search", "GemLevel")
-	TradeFunc_WriteIniValue(TradeOpts.GemLevelRange, TradeConfigPath, "Search", "GemLevelRange")
-	TradeFunc_WriteIniValue(TradeOpts.GemQualityRange, TradeConfigPath, "Search", "GemQualityRange")
-	TradeFunc_WriteIniValue(TradeOpts.OnlineOnly, TradeConfigPath, "Search", "OnlineOnly")
-	TradeFunc_WriteIniValue(TradeOpts.CorruptedOverride, TradeConfigPath, "Search", "CorruptedOverride")
-	TradeFunc_WriteIniValue(TradeOpts.Corrupted, TradeConfigPath, "Search", "Corrupted")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchModValueRangeMin, TradeConfigPath, "Search", "AdvancedSearchModValueRangeMin")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchModValueRangeMax, TradeConfigPath, "Search", "AdvancedSearchModValueRangeMax")
-	TradeFunc_WriteIniValue(TradeOpts.RemoveMultipleListingsFromSameAccount, TradeConfigPath, "Search", "RemoveMultipleListingsFromSameAccount")
-	TradeFunc_WriteIniValue(TradeOpts.PrefillMinValue, TradeConfigPath, "Search", "PrefillMinValue")
-	TradeFunc_WriteIniValue(TradeOpts.PrefillMaxValue, TradeConfigPath, "Search", "PrefillMaxValue")
-	TradeFunc_WriteIniValue(TradeOpts.CurrencySearchHave, TradeConfigPath, "Search", "CurrencySearchHave")
-	TradeFunc_WriteIniValue(TradeOpts.BuyoutOnly, TradeConfigPath, "Search", "BuyoutOnly")
-	TradeFunc_WriteIniValue(TradeOpts.ForceMaxLinks, TradeConfigPath, "Search", "ForceMaxLinks")
-	TradeFunc_WriteIniValue(TradeOpts.AlternativeCurrencySearch, TradeConfigPath, "Search", "AlternativeCurrencySearch")
-	TradeFunc_WriteIniValue(TradeOpts.ShowPricesAsChaosEquiv, TradeConfigPath, "Search", "ShowPricesAsChaosEquiv")
-
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckMods, TradeConfigPath, "Search", "AdvancedSearchCheckMods")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckTotalEleRes, TradeConfigPath, "Search", "AdvancedSearchCheckTotalEleRes")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckTotalLife, TradeConfigPath, "Search", "AdvancedSearchCheckTotalLife")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckPDPS, TradeConfigPath, "Search", "AdvancedSearchCheckPDPS")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckEDPS, TradeConfigPath, "Search", "AdvancedSearchCheckEDPS")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckTotalES, TradeConfigPath, "Search", "AdvancedSearchCheckTotalES")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckES, TradeConfigPath, "Search", "AdvancedSearchCheckES")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckILVL, TradeConfigPath, "Search", "AdvancedSearchCheckILVL")
-	TradeFunc_WriteIniValue(TradeOpts.AdvancedSearchCheckBase, TradeConfigPath, "Search", "AdvancedSearchCheckBase")
-
-	; Cache
-	TradeFunc_WriteIniValue(TradeOpts.Expire, TradeConfigPath, "Cache", "Expire")
-
-	; Cookies
-	TradeFunc_WriteIniValue(TradeOpts.UseManualCookies, TradeConfigPath, "Cookies", "UseManualCookies")
-	TradeFunc_WriteIniValue(TradeOpts.UserAgent, TradeConfigPath, "Cookies", "UserAgent")
-	TradeFunc_WriteIniValue(TradeOpts.CfdUid, TradeConfigPath, "Cookies", "CfdUid")
-	TradeFunc_WriteIniValue(TradeOpts.CfClearance, TradeConfigPath, "Cookies", "CfClearance")
+TradeFunc_CheckLeague(LeagueName)
+{
+	LeagueName := Format("{:L}", LeagueName)
+	for key, val in TradeGlobals.Get("AvailableLeagues") {
+		temp_LeagueName := Format("{:L}",  RegExReplace(val, "i)\s", ""))
+		if (LeagueName == temp_LeagueName) {
+			return true
+		}
+	}
+	if (RegExMatch(LeagueName, "i)Standard|Hardcore|TmpStandard|TmpHardcore")) {
+		return true
+	}
+	return false
 }
 
 CopyDefaultTradeConfig() {
@@ -587,48 +321,8 @@ TradeFunc_SetLeagueIfSelectedIsInactive() {
 	; Check if league from Ini is set to an inactive league and change it to the corresponding active one, for example tmpstandard to standard
 	; Leagues not supported with any API (beta leagues) and events (week races) are being removed while reading the config when they are not supported by poe.trade anymore
 	If (RegExMatch(TradeOpts.SearchLeague, "i)Tmp(Standard)|Tmp(Hardcore)", match) and not TradeGlobals.Get("TempLeagueIsRunning")) {
-		TradeOpts.SearchLeague := match1 ? "Standard" : "Hardcore"
+		TradeOpts.SearchLeague := match1 ? "standard" : "hardcore"
 	}
-}
-
-; ------------------ READ INI AND CHECK IF VARIABLES ARE SET ------------------
-TradeFunc_ReadIniValue(iniFilePath, Section = "General", IniKey="", DefaultValue = "") {
-	IniRead, OutputVar, %iniFilePath%, %Section%, %IniKey%
-	If (!OutputVar | RegExMatch(OutputVar, "^ERROR$")) {
-		OutputVar := DefaultValue
-		; Somehow reading some ini-values is not working with IniRead
-		; Fallback for these cases via FileReadLine
-		lastSection := ""
-		Loop {
-			FileReadLine, line, %iniFilePath%, %A_Index%
-			If ErrorLevel
-				break
-
-			l := StrLen(IniKey)
-			NewStr := SubStr(Trim(line), 1 , l)
-			RegExMatch(line, "i)\[(.*)\]", match)
-			If (not InStr(line, ";") and match) {
-				lastSection := match1
-			}
-
-			If (NewStr = IniKey and lastSection = Section) {
-				RegExMatch(line, "= *(.*)", value)
-				If (StrLen(value1) = 0) {
-					OutputVar := DefaultValue
-				}
-				Else {
-					OutputVar := value1
-				}
-			}
-		}
-	}
-	Return OutputVar
-}
-
-TradeFunc_WriteIniValue(Val, TradeConfigPath, Section_, Key) {
-	IniWrite, %Val%, %TradeConfigPath%, %Section_%, %Key%
-	if errorlevel
-		msgbox error
 }
 
 ; ------------------ ASSIGN HOTKEY AND HANDLE ERRORS ------------------
@@ -859,10 +553,10 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.AdvancedPriceCheckEnabled, "AdvancedPriceCheckEnabled", "AdvancedPriceCheckEnabledH")
 	AddToolTip(AdvancedPriceCheckEnabledH, "Enable Hotkey.")
 
-	GuiAddText("Custom Search:", "x17 yp+38 w100 h20 0x0100", "LblCustomInputSearchHotkey", "LblCustomInputSearchHotkeyH")
-	AddToolTip(LblCustomInputSearchHotkeyH, "Custom text input search.")
-	GuiAddHotkey(TradeOpts.CustomInputSearchHotkey, "x+1 yp-2 w120 h20", "CustomInputSearchHotkey", "CustomInputSearchHotkeyH")
-	AddToolTip(CustomInputSearchHotkeyH, "Press key/key combination.`nDefault: ctrl + i")
+	GuiAddText("Custom Search:", "x17 yp+38 w100 h20 0x0100", "LblCustomInputSearchHotKey", "LblCustomInputSearchHotKeyH")
+	AddToolTip(LblCustomInputSearchHotKeyH, "Custom text input search.")
+	GuiAddHotkey(TradeOpts.CustomInputSearchHotKey, "x+1 yp-2 w120 h20", "CustomInputSearchHotKey", "CustomInputSearchHotKeyH")
+	AddToolTip(CustomInputSearchHotKeyH, "Press key/key combination.`nDefault: ctrl + i")
 	GuiAddCheckbox("", "x+5 yp-6 w30 h30", TradeOpts.CustomInputSearchEnabled, "CustomInputSearchEnabled", "CustomInputSearchEnabledH")
 	AddToolTip(CustomInputSearchEnabledH, "Enable Hotkey.")
 
@@ -1056,7 +750,7 @@ TradeFunc_GetDelimitedLeagueList() {
 		i--
 		LeagueList .= (i = 0) ? TempLeagueList[i] : TempLeagueList[i] "|"
 	}
-	Return LeagueList
+	Return Format("{:L}", LeagueList)
 }
 
 TradeFunc_GetDelimitedCurrencyListString() {
@@ -1075,64 +769,25 @@ TradeFunc_GetDelimitedCurrencyListString() {
 	Return CurrencyList
 }
 
+; NB: temporary hack
 UpdateTradeSettingsUI()
 {
 	Global
-
-	GuiControl,, ShowItemResults, % TradeOpts.ShowItemResults
-	GuiControl,, ShowAccountName, % TradeOpts.ShowAccountName
-	GuiControl,, BrowserPath, % TradeOpts.BrowserPath
-	GuiControl,, ShowUpdateNotifications, % TradeOpts.ShowUpdateNotifications
-	GuiControl,, OpenWithDefaultWin10Fix, % TradeOpts.OpenWithDefaultWin10Fix
-	GuiControl,, BrowserPath, % TradeOpts.BrowserPath
-	GuiControl,, OpenUrlsOnEmptyItem, % TradeOpts.OpenUrlsOnEmptyItem
-	GuiControl,, DownloadDataFiles, % TradeOpts.DownloadDataFiles
-	GuiControl,, DeleteCookies, % TradeOpts.DeleteCookies
-	GuiControl,, CookieSelect, % TradeOpts.CookieSelect
-	GuiUpdateDropdownList("All|poe.trade", TradeOpts.CookieSelect, CookieSelect)
-	GuiControl,, UpdateSkipSelection, % TradeOpts.UpdateSkipSelection
-	GuiControl,, UpdateSkipBackup, % TradeOpts.UpdateSkipBackup
-
-	GuiControl,, Debug, % TradeOpts.Debug
-
-	GuiControl,, PriceCheckHotKey, % TradeOpts.PriceCheckHotKey
-	GuiControl,, AdvancedPriceCheckHotKey, % TradeOpts.AdvancedPriceCheckHotKey
-	GuiControl,, CustomInputSearchHotkey, % TradeOpts.CustomInputSearchHotkey
-	GuiControl,, OpenSearchOnPoeTradeHotKey, % TradeOpts.OpenSearchOnPoeTradeHotKey
-	GuiControl,, OpenWikiHotKey, % TradeOpts.OpenWikiHotKey
-	GuiControl,, ShowItemAgeHotKey, % TradeOpts.ShowItemAgeHotKey
-	GuiControl,, ChangeLeagueHotKey, % TradeOpts.ChangeLeagueHotKey
-
-	GuiControl,, PriceCheckEnabled, % TradeOpts.PriceCheckEnabled
-	GuiControl,, AdvancedPriceCheckEnabled, % TradeOpts.AdvancedPriceCheckEnabled
-	GuiControl,, OpenWikiEnabled, % TradeOpts.OpenWikiEnabled
-	GuiControl,, CustomInputSearchEnabled, % TradeOpts.CustomInputSearchEnabled
-	GuiControl,, OpenSearchOnPoeTradeEnabled, % TradeOpts.OpenSearchOnPoeTradeEnabled
-	GuiControl,, ShowItemAgeEnabled, % TradeOpts.ShowItemAgeEnabled
-	GuiControl,, ChangeLeagueEnabled, % TradeOpts.ChangeLeagueEnabled
-
-	GuiUpdateDropdownList(TradeFunc_GetDelimitedLeagueList(), TradeOpts.SearchLeague, SearchLeague)
-	GuiControl,, AccountName, % TradeOpts.AccountName
-	GuiControl,, GemLevel, % TradeOpts.GemLevel
-	GuiControl,, GemQualityRange, % TradeOpts.GemQualityRange
-	GuiControl,, AdvancedSearchModValueRangeMin, % TradeOpts.AdvancedSearchModValueRangeMin
-	GuiControl,, AdvancedSearchModValueRangeMax, % TradeOpts.AdvancedSearchModValueRangeMax
-	CurrencyList := TradeFunc_GetDelimitedCurrencyListString()
-	GuiUpdateDropdownList(CurrencyList, TradeOpts.CurrencySearchHave, CurrencySearchHave)
-	GuiControl,, Corrupted, % TradeOpts.Corrupted
-	GuiControl,, OnlineOnly, % TradeOpts.OnlineOnly
-	GuiControl,, PrefillMinValue, % TradeOpts.PrefillMinValue
-	GuiControl,, PrefillMaxValue, % TradeOpts.PrefillMaxValue
-	GuiControl,, RemoveMultipleListingsFromSameAccount, % TradeOpts.RemoveMultipleListingsFromSameAccount
-	GuiControl,, ForceMaxLinks, % TradeOpts.ForceMaxLinks
-	GuiControl,, BuyoutOnly, % TradeOpts.BuyoutOnly
-	GuiControl,, AlternativeCurrencySearch, % TradeOpts.AlternativeCurrencySearch
-	GuiControl,, AdvancedSearchCheckMods, % TradeOpts.AdvancedSearchCheckMods
-
-	GuiControl,, UseManualCookies, % TradeOpts.UseManualCookies
-	GuiControl,, UserAgent, % TradeOpts.UserAgent
-	GuiControl,, CfdUid, % TradeOpts.CfdUid
-	GuiControl,, CfClearance, % TradeOpts.CfClearance
+	for keyName, keyVal in TradeOpts {
+		if (keyName == "CookieSelect") {
+			GuiUpdateDropdownList("All|poe.trade", keyVal, %keyName%)
+		}
+		else if (keyName == "SearchLeague") {
+			GuiUpdateDropdownList(TradeFunc_GetDelimitedLeagueList(), keyVal, %keyName%)
+		}
+		else if (keyName == "CurrencySearchHave") {
+			GuiUpdateDropdownList(TradeFunc_GetDelimitedCurrencyListString(), keyVal, %keyName%)
+		}
+		else {
+			GuiControl,, %keyName%, %keyVal%
+		}
+	}
+	return
 }
 
 TradeFunc_SyncUpdateSettings(){
