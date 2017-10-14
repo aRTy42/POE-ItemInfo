@@ -18,8 +18,18 @@ GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExi
 
 #Include, %A_ScriptDir%\resources\Version.txt
 #Include, %A_ScriptDir%\lib\JSON.ahk
+#Include, %A_ScriptDir%\lib\EasyIni.ahk
 #Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
+#Include, %A_ScriptDir%\lib\ConvertKeyToKeyCode.ahk
+#Include, %A_ScriptDir%\lib\Class_GdipTooltip.ahk
+#Include, %A_ScriptDir%\lib\Class_ColorPicker.ahk
 
+MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
+If (A_AhkVersion < AHKVersionRequired)
+{
+	MsgBox, 16, Wrong AutoHotkey Version, % MsgWrongAHKVersion
+	ExitApp
+}
 
 #Include %A_ScriptDir%\resources\Messages.txt
 IfNotExist, %A_ScriptDir%\temp
@@ -45,7 +55,7 @@ Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
-Globals.Set("SettingsUIHeight", 710)
+Globals.Set("SettingsUIHeight", 706)
 Globals.Set("AboutWindowHeight", 340)
 Globals.Set("AboutWindowWidth", 435)
 Globals.Set("SettingsUITitle", "PoE Item Info Settings")
@@ -116,10 +126,23 @@ class UserOptions {
 	ScreenOffsetX := 0
 	ScreenOffsetY := 0
 	
+	; Set this to 1 to enable GDI+ rendering
+	UseGDI := 0
+
+	; Format: RRGGBB
+	GDIWindowColor			:= "000000"
+	GDIBorderColor			:= "513101"
+	GDITextColor			:= "FEFEFE"
+	GDIWindowOpacity		:= 90
+	GDIBorderOpacity		:= 90
+	GDITextOpacity			:= 100
+	GDIRenderingFix		:= 1
+	
 	ScanUI()
-	{		
+	{
 		For key, val in this {
-			this[key] := GuiGet(key)
+			_get := GuiGet(key, "", Error)
+			this[key] := not Error ? _get : this[key]
 		}
 	}
 }
@@ -213,11 +236,11 @@ class Fonts {
 }
 
 class ItemData_ {
-	Init() 
+	Init()
 	{
-		This.Links		:= ""
+		This.Links	:= ""
 		This.Sockets		:= ""
-		This.Stats		:= ""
+		This.Stats	:= ""
 		This.NamePlate		:= ""
 		This.Affixes		:= ""
 		This.AffixTextLines		:= []
@@ -229,8 +252,8 @@ class ItemData_ {
 		This.IndexAffixes 	:= -1
 		This.IndexLast		:= -1
 		This.PartsLast		:= ""
-		This.Rarity		:= ""
-		This.Parts		:= []
+		This.Rarity	:= ""
+		This.Parts	:= []
 	}
 }
 Global ItemData := new ItemData_
@@ -256,7 +279,7 @@ class Item_ {
 		This.Implicit		:= []
 		This.Charges		:= []
 		This.AreaMonsterLevelReq := []
-		
+
 		This.HasImplicit	:= False
 		This.HasEffect		:= False
 		This.IsWeapon		:= False
@@ -394,10 +417,12 @@ If (StrLen(overwrittenUserFiles)) {
 }
 GoSub, AM_AssignHotkeys
 GoSub, FetchCurrencyData
+global gdipTooltip = new GdipTooltip(2, 8,,,[Opts.GDIWindowOpacity, Opts.GDIWindowColor, 10],[Opts.GDIBorderOpacity, Opts.GDIBorderColor, 10],[Opts.GDITextOpacity, Opts.GDITextColor, 10],true, Opts.RenderingFix, -0.3)
 
-Menu, TextFiles, Add, Additional Macros, EditAdditionalMacros
-Menu, TextFiles, Add, Map Mod Warnings, EditMapModWarnings
+Menu, TextFiles, Add, Additional Macros Settings, EditAdditionalMacrosSettings
+Menu, TextFiles, Add, Map Mod Warnings, EditMapModWarningsConfig
 Menu, TextFiles, Add, Custom Macros Example, EditCustomMacrosExample
+Menu, PreviewTextFiles, Add, Additional Macros, PreviewAdditionalMacros
 
 ; Menu tooltip
 RelVer := Globals.Get("ReleaseVersion")
@@ -413,6 +438,7 @@ Menu, Tray, Add, Check for updates, CheckForUpdates
 Menu, Tray, Add, Update Notes, ShowUpdateNotes
 Menu, Tray, Add ; Separator
 Menu, Tray, Add, Edit Files, :TextFiles
+Menu, Tray, Add, Preview Files, :PreviewTextFiles
 Menu, Tray, Add, Open User Folder, EditOpenUserSettings
 Menu, Tray, Add ; Separator
 Menu, Tray, Standard
@@ -471,6 +497,35 @@ OpenCreateDataTextFile(Filename)
 
 }
 
+OpenTextFileReadOnly(FilePath)
+{
+	ExecuteString := FilePath
+	if (FileExist(FilePath)) {
+		openWith := AssociatedProgram("txt")
+		if (openWith) {
+			if (InStr(openWith, "system32\NOTEPAD.exe")) {
+				if (InStr(openWith, "SystemRoot")) {
+					; because `Run` cannot expand environment variable for some reason
+					EnvGet, SystemRoot, SystemRoot
+					StringReplace, openWith, openWith, `%SystemRoot`%, %SystemRoot%
+				}
+			}
+			if (InStr(openWith, " %1")) {
+				; trim `%1`
+				StringTrimRight, openWith, openWith, 2
+			}
+			ExecuteString := openWith " " FilePath
+		}
+		FileSetAttrib, +R, %FilePath%
+		RunWait, %ExecuteString%
+		FileSetAttrib, -R, %FilePath%
+	}
+	else {
+		MsgBox, 16, Error, File not found.
+	}
+	return
+}
+
 OpenUserDirFile(Filename)
 {
 	Filepath := userDirectory . "\" . Filename
@@ -488,13 +543,13 @@ OpenUserDirFile(Filename)
 }
 
 OpenUserSettingsFolder(ProjectName, Dir = "")
-{	
+{
     If (!StrLen(Dir)) {
         Dir := userDirectory
     }
 
     If (!InStr(FileExist(Dir), "D")) {
-        FileCreateDir, %Dir%        
+        FileCreateDir, %Dir%
     }
     Run, Explorer %Dir%
     return
@@ -712,7 +767,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 					}
 				}
 			}
-			
+
 			Global mapMatchList
 			BaseType = Map
 			Loop % mapMatchList.MaxIndex()
@@ -754,7 +809,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			SubType = Prismatic Jewel
 			return
 		}
-		
+
 		; Leaguestones
 		IfInString, LoopField, Leaguestone
 		{
@@ -884,10 +939,10 @@ GetClipboardContents(DropNewlines=False)
 			Result := Result . A_LoopField
 		}
 	}
-		
+
 	RegExMatch(Trim(Note), "i)^Note: (.*)", match)
 	Globals.Set("ItemNote", match1)
-	
+
 	return Result
 }
 
@@ -1112,7 +1167,7 @@ ParseRarity(ItemData_NamePlate)
 			Break
 		}
 	}
-	
+
 	return RarityParts%RarityParts%2
 }
 
@@ -1491,7 +1546,7 @@ NumFormatPointFiveOrInt(Value){
 	}
 	Else
 	{
-		return NumFormat(Value, 0.1)	
+		return NumFormat(Value, 0.1)
 	}
 }
 
@@ -1547,6 +1602,17 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 		TierAndType := ""
 		
 		For n, AfTy in AffixType
+
+	AffixNameHeader	:= ""
+	ValueRangeHeader	:= ""
+	TierStringHeader	:= ""
+	AffixTypeHeader	:= ""
+
+	AffixNameWidth		:=
+	ValueRangeWidth	:=
+	TierStringWidth	:=
+	AffixTypeWidth		:=
+
 		{
 			If(IsObject(Tier[A_Index]))
 			{
@@ -1673,6 +1739,7 @@ AssembleAffixDetails()
 				If(ValueRange[2])
 				{
 					ValueRange1Width := StrLen(ValueRange[1])
+			AffixTypeWidth := StrLen(AffixType) ? StrLen(AffixType . Delim) : StrLen(Delim)
 				}
 				Else
 				{	; Has no ilvl entry for first range, can expand a bit.
@@ -1701,6 +1768,10 @@ AssembleAffixDetails()
 				ValueRange2Width := StrLen(ValueRange[3])
 			}
 			
+	Header := ""
+
+	Result := Header . Result
+
 		}
 		
 		If( ! Item.IsJewel)
@@ -1898,7 +1969,7 @@ AddRange(Range1, Range2)
 }
 
 /*
-ParseProphecy(ItemData, ByRef Difficulty = "", ByRef SealingCost = "") 
+ParseProphecy(ItemData, ByRef Difficulty = "", ByRef SealingCost = "")
 {
 	; Will have to be reworked for 3.0
 	For key, part in ItemData.Parts {
@@ -1942,8 +2013,8 @@ ParseFlaskAffixes(ItemDataAffixes)
 				Continue
 			}
 		}
-		
-		; Prefixes		
+
+		; Prefixes
 		prefixes := ["Recovery Speed", "Amount Recovered", "Charges", "Instant", "Charge when", "Recovery when", "Mana Recovered", "increased Duration", "increased Charge Recovery", "reduced Charges used"]
 		For key, prefix in prefixes {
 			If (RegExMatch(A_LoopField, "i)" prefix, match)) {
@@ -1981,9 +2052,10 @@ ParseMapAffixes(ItemDataAffixes)
 {
 	Global Globals, Opts, AffixTotals, AffixLines
 
-	FileRead, File_MapModWarn, %userDirectory%\MapModWarnings.txt
-	MapModWarn := JSON.Load(File_MapModWarn)
-	
+	MapModWarn := class_EasyIni(userDirectory "\MapModWarnings.ini")
+	; FileRead, File_MapModWarn, %userDirectory%\MapModWarnings.txt
+	; MapModWarn := JSON.Load(File_MapModWarn)
+
 	ItemDataChunk	:= ItemDataAffixes
 
 	ItemBaseType	:= Item.BaseType
@@ -1997,10 +2069,10 @@ ParseMapAffixes(ItemDataAffixes)
 	{
 		return ; Not interested in unidentified items
 	}
-	
+
 	MapAffixCount := 0
 	TempAffixCount := 0
-	
+
 	Index_RareMonst :=
 	Index_MonstSlowedTaunted :=
 	Index_BossDamageAttackCastSpeed :=
@@ -2013,13 +2085,13 @@ ParseMapAffixes(ItemDataAffixes)
 	Index_PlayerBlockArmour :=
 	Index_CannotLeech :=
 	Index_MonstMoveAttCastSpeed :=
-	
+
 	Count_DmgMod := 0
 	String_DmgMod := ""
-	
+
 	Flag_TwoAdditionalProj := 0
 	Flag_SkillsChain := 0
-	
+
 	MapModWarnings := ""
 
 	Loop, Parse, ItemDataAffixes, `n, `r
@@ -2029,10 +2101,10 @@ ParseMapAffixes(ItemDataAffixes)
 			Continue ; Not interested in blank lines
 		}
 
-		
+
 		; --- ONE LINE AFFIXES ---
 
-		
+
 		If (RegExMatch(A_LoopField, "Area is inhabited by (Abominations|Humanoids|Goatmen|Demons|ranged monsters|Animals|Skeletons|Sea Witches and their Spawn|Undead|Ghosts|Solaris fanatics|Lunaris fanatics)"))
 		{
 			SetMapInfoLine("Prefix", MapAffixCount)
@@ -2042,7 +2114,7 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			MapModWarnings .= MapModWarn.MonstExtraEleDmg ? "`nExtra Ele Damage" : ""			
 			SetMapInfoLine("Prefix", MapAffixCount)
-			
+
 			Count_DmgMod += 1
 			String_DmgMod := String_DmgMod . ", Extra Ele"
 			Continue
@@ -2137,10 +2209,10 @@ ParseMapAffixes(ItemDataAffixes)
 			SetMapInfoLine("Prefix", MapAffixCount)
 			Flag_TwoAdditionalProj := 1
 			Continue
-		}		
-		
-		
-		
+		}
+
+
+
 		If (RegExMatch(A_LoopField, "Players are Cursed with Elemental Weakness"))
 		{
 			MapModWarnings .= MapModWarn.EleWeakness ? "`nEle Weakness" : ""
@@ -2163,7 +2235,7 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			MapModWarnings .= MapModWarn.Vulnerability ? "`nVulnerability" : ""
 			SetMapInfoLine("Suffix", MapAffixCount)
-			
+
 			Count_DmgMod += 0.5
 			String_DmgMod := String_DmgMod . ", Vuln"
 			Continue
@@ -2235,7 +2307,7 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			MapModWarnings .= MapModWarn.PlayerReducedMaxRes ? "`n-Max Res" : ""
 			SetMapInfoLine("Suffix", MapAffixCount)
-			
+
 			Count_DmgMod += 0.5
 			String_DmgMod := String_DmgMod . ", -Max Res"
 			Continue
@@ -2265,10 +2337,10 @@ ParseMapAffixes(ItemDataAffixes)
 			Continue
 		}
 
-		
+
 		; --- SIMPLE TWO LINE AFFIXES ---
-		
-		
+
+
 		If (RegExMatch(A_LoopField, "Rare Monsters each have a Nemesis Mod|\d+% more Rare Monsters"))
 		{
 			If (Not Index_RareMonst)
@@ -2365,7 +2437,7 @@ ParseMapAffixes(ItemDataAffixes)
 			{
 				MapModWarnings .= MapModWarn.MonstCritChanceMult ? "`nCrit Chance & Multiplier" : ""
 				SetMapInfoLine("Suffix", MapAffixCount, "a")
-				
+
 				Count_DmgMod += 1
 				String_DmgMod := String_DmgMod . ", Crit"
 				Index_MonstCritChanceMult := MapAffixCount
@@ -2426,7 +2498,7 @@ ParseMapAffixes(ItemDataAffixes)
 		If (RegExMatch(A_LoopField, "Monsters cannot be Stunned"))
 		{
 			MapModWarnings .= MapModWarn.MonstNotStunned ? "`nNot Stunned" : ""
-			
+
 			If (Not Index_MonstStunLife)
 			{
 				SetMapInfoLine("Prefix", MapAffixCount, "a")
@@ -2439,19 +2511,19 @@ ParseMapAffixes(ItemDataAffixes)
 				Continue
 			}
 		}
-		
+
 		; --- SIMPLE THREE LINE AFFIXES ---
 
-		
+
 		If (RegExMatch(A_LoopField, "\d+% increased Monster Movement Speed|\d+% increased Monster Attack Speed|\d+% increased Monster Cast Speed"))
 		{
 			If (Not Index_MonstMoveAttCastSpeed)
 			{
 				MapModWarnings .= MapModWarn.MonstMoveAtkCastSpeed ? "`nMove/Attack/Cast Speed" : ""
-				
+
 				Count_DmgMod += 0.5
 				String_DmgMod := String_DmgMod . ", Move/Attack/Cast"
-				
+
 				MapAffixCount += 1
 				Index_MonstMoveAttCastSpeed := MapAffixCount . "a"
 				AffixTotals.NumPrefixes += 1
@@ -2471,19 +2543,19 @@ ParseMapAffixes(ItemDataAffixes)
 				Continue
 			}
 		}
-		
-		
+
+
 		; --- COMPLEX AFFIXES ---
-		
+
 		; Pure life:  (20-29)/(30-39)/(40-49)% more Monster Life
 		; Hybrid mod: (15-19)/(20-24)/(25-30)% more Monster Life, Monsters cannot be Stunned
-		
+
 		If (RegExMatch(A_LoopField, "(\d+)% more Monster Life", RegExMonsterLife))
 		{
 			MapModWarnings .= MapModWarn.MonstMoreLife ? "`nMore Life" : ""
-				
+
 			RegExMatch(ItemData.FullText, "Map Tier: (\d+)", RegExMapTier)
-			
+
 			; only hybrid mod
 			If ((RegExMapTier1 >= 11 and RegExMonsterLife1 <= 30) or (RegExMapTier1 >= 6 and RegExMonsterLife1 <= 24) or RegExMonsterLife <= 19)
 			{
@@ -2501,19 +2573,19 @@ ParseMapAffixes(ItemDataAffixes)
 					Continue
 				}
 			}
-			
+
 			; pure life mod
 			Else If ((RegExMapTier1 >= 11 and RegExMonsterLife1 <= 49) or (RegExMapTier1 >= 6 and RegExMonsterLife1 <= 39) or RegExMonsterLife <= 29)
 			{
 				MapAffixCount += 1
 				AffixTotals.NumPrefixes += 1
 				AppendAffixInfo(MakeMapAffixLine(A_LoopField, MapAffixCount), A_Index)
-				Continue			
+				Continue
 			}
-			
+
 			; both mods
 			Else
-			{			
+			{
 				If (Not Index_MonstStunLife)
 				{
 					TempAffixCount := MapAffixCount + 1
@@ -2534,23 +2606,24 @@ ParseMapAffixes(ItemDataAffixes)
 			}
 		}
 	}
-	
+
 	If (Flag_TwoAdditionalProj and Flag_SkillsChain)
 	{
 		MapModWarnings := MapModWarnings . "`nAdditional Projectiles & Skills Chain"
 	}
-	
+
 	If (Count_DmgMod >= 1.5)
 	{
 		String_DmgMod := SubStr(String_DmgMod, 3)
 		MapModWarnings := MapModWarnings . "`nMulti Damage: " . String_DmgMod
 	}
-		
-	If (Not MapModWarn.enable_Warnings)
+
+	; If (Not MapModWarn["Affixes"].enable_Warnings)
+	If (Not MapModWarn["General"].enable_Warnings)
 	{
 		MapModWarnings := " disabled"
 	}
-	
+
 	return MapModWarnings
 }
 
@@ -3908,7 +3981,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				LookupAffixAndSetInfoLine("data\jewel\ChanceToPoison.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Poison Duration
+			IfInString, A_LoopField, increased Poison Duration on Enemies
 			{
 				LookupAffixAndSetInfoLine("data\jewel\PoisonDurationOnEnemies.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
@@ -4354,7 +4427,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			LookupAffixAndSetInfoLine("data\LifeRegenPercent.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
-		}		
+		}
 		IfInString, A_LoopField, Life Regenerated per second
 		{
 			LookupAffixAndSetInfoLine("data\LifeRegen.txt", "Suffix", ItemLevel, CurrValue)
@@ -4539,7 +4612,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			}
 		}
 		
-		
+
 		; Prefixes
 		
 		If RegExMatch(A_LoopField, "Adds \d+? to \d+? Physical Damage")
@@ -4857,7 +4930,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Buy:Vagan 4", ""), A_Index)
 			Continue
 		}
-		
+
 		
 		; Meta Craft Mods
 		
@@ -4934,7 +5007,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			FilePrefix := "data\IncrRarity_Prefix_AmuletRing.txt"
 			FileSuffix := "data\IncrRarity_Suffix_AmuletRingHelmet.txt"
-			
+
 			If (HasIncrRarityCraft)
 			{
 				FileSuffix := "data\IncrRarity_Suffix_Craft.txt"
@@ -4964,7 +5037,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			FilePrefix := "data\IncrRarity_Prefix_Helmet.txt"
 			FileSuffix := "data\IncrRarity_Suffix_AmuletRingHelmet.txt"
-			
+
 			LineNum := HasIncrRarity
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value
@@ -4976,7 +5049,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			FilePrefix := "data\IncrRarity_Prefix_GlovesBoots.txt"
 			FileSuffix := "data\IncrRarity_Suffix_GlovesBoots.txt"
-			
+
 			LineNum := HasIncrRarity
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value
@@ -5978,8 +6051,8 @@ ParseClipBoardChanges(debug = false)
 		SetClipboardContents(ParsedData)
 	}
 	
-	
-	If (StrLen(ParsedData) and !Opts.OnlyActiveIfPOEIsFront and debug) {	
+
+	If (StrLen(ParsedData) and !Opts.OnlyActiveIfPOEIsFront and debug) {
 		AddLogEntry(ParsedData, CBContents)
 	}
 	
@@ -5989,7 +6062,7 @@ ParseClipBoardChanges(debug = false)
 AddLogEntry(ParsedData, RawData) {
 	logFileRaw	:= userDirectory "\parsingLogRaw.txt"
 	logFileParsed	:= userDirectory "\parsingLog.txt"
-	
+
 	line		:= "----------------------------------------------------------"
 	timeStamp	:= ""
 	ID 		:= MD5(RawData)
@@ -5997,10 +6070,10 @@ AddLogEntry(ParsedData, RawData) {
 	UTCFormatStr := "yyyy-MM-dd'T'HH:mm'Z'"
 	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr%
 	
-	entry	:= line "`n" TimeStr " - ID: " ID "`n" line "`n`n"  
+	entry	:= line "`n" TimeStr " - ID: " ID "`n" line "`n`n"
 	entryRaw	:= entry . RawData "`n`n"
 	entryParsed := entry . ParsedData "`n`n"
-	
+
 	FileAppend, %entryRaw%, %logFileRaw%
 	FileAppend, %entryParsed%, %logFileParsed%
 }
@@ -6237,7 +6310,7 @@ AssembleDamageDetails(FullItemData)
 			Result	= %Result%     Q20 Total:  %Q20Dps%
 		}
 	}
-	
+
 	
 	Item.DamageDetails					:= {}
 	Item.DamageDetails.MainHEleDps		:= MainHEleDps
@@ -6404,48 +6477,48 @@ ParseSockets(ItemDataText)
 ParseCharges(stats)
 {
 	charges := {}
-	Loop, Parse, stats, `n, `r 
+	Loop, Parse, stats, `n, `r
 	{
 		LoopField := RegExReplace(A_Loopfield, "i)\s\(augmented\)", "")
 		; Flasks
-		RegExMatch(LoopField, "i)Consumes (\d+) of (\d+) Charges on use.*", max)		
+		RegExMatch(LoopField, "i)Consumes (\d+) of (\d+) Charges on use.*", max)
 		If (max) {
 			charges.usage	:= max1
 			charges.max	:= max2
-		}		
+		}
 		RegExMatch(LoopField, "i)Currently has (\d+) Charge.*", current)
 		If (current) {
 			charges.current:= current1
 		}
-		
-		; Leaguestones	
+
+		; Leaguestones
 		RegExMatch(LoopField, "i)Currently has (\d+) of (\d+) Charge.*", max)
 		If (max) {
 			charges.usage	:= 1
 			charges.max	:= max2
 			charges.current:= max1
-		}		
+		}
 	}
-	
+
 	return charges
 }
 
 ParseAreaMonsterLevelRequirement(stats)
 {
 	requirements := {}
-	Loop,  Parse, stats, `n, `r 
+	Loop,  Parse, stats, `n, `r
 	{
 		RegExMatch(A_LoopField, "i)Can only be used in Areas with Monster Level(.*)", req)
 		RegExMatch(req1, "i)(\d+).*", lvl)
 		RegExMatch(req1, "i)below|above|higher|lower", logicalOperator)
-		
+
 		If (lvl) {
 			requirements.lvl	:= Trim(lvl1)
 		}
 		If (logicalOperator) {
 			requirements.logicalOperator := Trim(logicalOperator)
 		}
-	}	
+	}
 	return requirements
 }
 
@@ -6475,7 +6548,7 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 		SetFormat, FloatFast, 5.2
 		StackSize := RegExReplace(StackSizeParts1, "i)[^0-9a-z]")
 	}
-	
+
 	; Update currency rates from poe.ninja
 	last	:= Globals.Get("LastCurrencyUpdate")
 	diff	:= A_NowUTC
@@ -6484,29 +6557,29 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 		; no data or older than 3 hours
 		GoSub, FetchCurrencyData
 	}
-	
-	; Use downloaded currency rates if they exist, otherwise use hardcoded fallback 
+
+	; Use downloaded currency rates if they exist, otherwise use hardcoded fallback
 	fallback		:= A_ScriptDir . "\data\CurrencyRates.txt"
 	ninjaRates	:= [A_ScriptDir . "\temp\CurrencyRates_tmpstandard.txt", A_ScriptDir . "\temp\CurrencyRates_tmphardcore.txt", A_ScriptDir . "\temp\CurrencyRates_Standard.txt", A_ScriptDir . "\temp\CurrencyRates_Hardcore.txt"]
 	result		:= []
-	
-	Loop, % ninjaRates.Length() 
+
+	Loop, % ninjaRates.Length()
 	{
 		dataSource := "Currency rates powered by poe.ninja`n`n"
-		If (FileExist(ninjaRates[A_Index])) 
+		If (FileExist(ninjaRates[A_Index]))
 		{
 			ValueInChaos	:= 0
 			leagueName	:= ""
 			file			:= ninjaRates[A_Index]
 			Loop, Read, %file%
-			{			
+			{
 				Line := Trim(A_LoopReadLine)
 				RegExMatch(Line, "i)^;(.*)", match)
 				If (match) {
 					leagueName := match1 . ": "
 					Continue
 				}
-				
+
 				IfInString, Line, %ItemName%
 				{
 					StringSplit, LineParts, Line, |
@@ -6516,14 +6589,14 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 					ValueInChaos	:= (ChaosMult * StackSize)
 				}
 			}
-			
+
 			If (ValueInChaos) {
 				tmp := [leagueName, ValueInChaos, ChaosRatio]
 				result.push(tmp)
 			}
 		}
 	}
-	
+
 	; fallback - condition : no results found so far
 	If (!result.Length()) {
 		ValueInChaos	:= 0
@@ -6546,13 +6619,13 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 				ValueInChaos	:= (ChaosMult * StackSize)
 			}
 		}
-		
+
 		If (ValueInChaos) {
 			tmp := [leagueName, ValueInChaos, ChaosRatio]
 			result.push(tmp)
 		}
 	}
-	
+
 	return result
 }
 
@@ -6783,7 +6856,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	ItemData.NamePlate	:= ItemDataParts1
 	ItemData.Stats		:= ItemDataParts2
-	
+
 	ItemDataIndexLast := ItemDataParts0
 	ItemDataPartsLast := ItemDataParts%ItemDataIndexLast%
 	
@@ -6821,9 +6894,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	ItemData.Links		:= ParseLinks(ItemDataText)
 	ItemData.Sockets	:= ParseSockets(ItemDataText)
-	
+
 	Item.Charges		:= ParseCharges(ItemData.Stats)
-	
+
 	Item.IsUnique := False
 	If (InStr(ItemData.Rarity, "Unique"))
 	{
@@ -6842,12 +6915,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		Item.IsDivinationCard := True
 		Item.BaseType := "Divination Card"
 	}
-	
-	; Prophecy Orb detection	
+
+	; Prophecy Orb detection
 	If (InStr(ItemData.PartsLast, "to add this prophecy to"))
 	{
 		Item.IsProphecy := True
-		Item.BaseType := "Prophecy"		
+		Item.BaseType := "Prophecy"
 		; ParseProphecy(ItemData, Difficulty)
 		; Item.DifficultyRestriction := Difficulty
 	}
@@ -6876,13 +6949,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			If (ValueInChaos.Length() and not Item.Name == "Chaos Orb")
 			{
 				CurrencyDetails := "`n" . dataSource
-				Loop, % ValueInChaos.Length() 
+				Loop, % ValueInChaos.Length()
 				{
 					CurrencyDetails .= ValueInChaos[A_Index][1] . "" . ValueInChaos[A_Index][2] . " Chaos (" . ValueInChaos[A_Index][3] . "c)`n"
 				}
 			}
 		}
-		
+
 		; Don't do this on Divination Cards or this script crashes on trying to do the ParseItemLevel
 		Else If (Not Item.IsCurrency and Not Item.IsDivinationCard and Not Item.IsProphecy)
 		{
@@ -6893,7 +6966,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 					Break
 				}
 			}
-			
+
 			RarityLevel	:= CheckRarityLevel(ItemData.Rarity)
 			Item.Level	:= ParseItemLevel(ItemDataText)
 			ItemLevelWord	:= "Item Level:"
@@ -6925,9 +6998,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsJewel		:= (Item.BaseType == "Jewel")
 	Item.IsMirrored		:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
-	Item.Note			:= Globals.Get("ItemNote")	
+	Item.Note			:= Globals.Get("ItemNote")
 	
-	If (Item.IsLeaguestone) {		
+	If (Item.IsLeaguestone) {
 		Item.AreaMonsterLevelReq	:= ParseAreaMonsterLevelRequirement(ItemData.Stats)
 	}
 	
@@ -6937,8 +7010,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		RegExMatch(Trim(A_LoopField), "i)^Has ", match)
 		If (match) {
 			Item.HasEffect := True
-		}		
-		; parse item variations like relics (variation of it's unique counterpart)		
+		}
+		; parse item variations like relics (variation of it's unique counterpart)
 		If (RegExMatch(Trim(A_LoopField), "i)Relic Unique", match)) {
 			Item.IsRelic := true
 		}
@@ -6962,7 +7035,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		; This might be because the clipboard is completely empty.
 		return
 	}
-	
+
 	If (Item.IsLeagueStone) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
@@ -6979,7 +7052,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		Else {
 			ItemDataIndexImplicit := ItemData.IndexLast - GetNegativeAffixOffset(Item)
 		}
-		
+
 		; Check that there is no ":" in the retrieved text = can only be an implicit mod
 		If (!InStr(ItemDataParts%ItemDataIndexImplicit%, ":")) {
 			tempImplicit	:= ItemDataParts%ItemDataIndexImplicit%
@@ -6987,7 +7060,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			{
 				Item.Implicit.push(A_LoopField)
 			}
-			Item.hasImplicit := True	
+			Item.hasImplicit := True
 		}
 	}
 	
@@ -7139,20 +7212,20 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		
 		TT := TT . "`n--------`n" . CardDescription
 	}
-	
+
 	/*
 	If (Item.IsProphecy)
 	{
 		Restriction := StrLen(Item.DifficultyRestriction) > 0 ? Item.DifficultyRestriction : "None"
-		TT := TT . "`n--------`nDifficulty Restriction: " Restriction 
+		TT := TT . "`n--------`nDifficulty Restriction: " Restriction
 	}
 	*/
 	
 	If (Item.IsMap)
-	{		
+	{
 		Item.MapLevel := ParseMapLevel(ItemDataText)
 		Item.MapTier  := Item.MapLevel - 67
-		
+
 		/*
 		;;hixxie fixed
 		MapLevelText := Item.MapLevel
@@ -7168,13 +7241,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			MapDescription := mapList[Item.SubType]
 		}
 		TT = %TT%`n%MapDescription%
-		
+
 		If (RarityLevel > 1 and RarityLevel < 4 and Not Item.IsUnidentified)
 		{
 			AffixDetails := AssembleMapAffixes()
 			MapAffixCount := AffixTotals.NumPrefixes + AffixTotals.NumSuffixes
 			TT = %TT%`n`n-----------`nMods (%MapAffixCount%):%AffixDetails%
-			
+
 			If (MapModWarnings)
 			{
 				TT = %TT%`n`nMod warnings:%MapModWarnings%
@@ -7203,7 +7276,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	If (RarityLevel > 1 and RarityLevel < 4)
 	{
 		; Append affix info if rarity is greater than normal (white)
-		; Affix total statistic		
+		; Affix total statistic
 		If(Itemdata.Rarity = "Magic"){
 			PrefixLimit := 1
 			SuffixLimit := 1
@@ -7289,7 +7362,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			TT = %TT%`n--------%AffixDetails%
 		}
 	}
-	
+
 	If (pseudoMods.Length())
 	{
 		TT = %TT%`n--------
@@ -7347,39 +7420,35 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 GetNegativeAffixOffset(Item)
 {
 	NegativeAffixOffset := 0
-	If (Item.IsUnique or Item.IsTalisman)
+	If (Item.IsFlask or Item.IsUnique or Item.IsTalisman)
 	{
-		; Uniques and Talismans have a flavour text, so decrement item index to account for that.
-		NegativeAffixOffset := NegativeAffixOffset + 1
-	}
-	If (Item.IsFlask)
-	{
-		; Flasks have an info text
+		; Uniques as well as flasks have descriptive text as last item,
+		; so decrement item index to get to the item before last one
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.IsMap)
 	{
-		; Maps have an info text
+		; Maps have a descriptive text as the last item
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.IsJewel)
 	{
-		; Jewels have an info text
+		; Jewels, like maps and flask, have a descriptive text as the last item
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.HasEffect)
 	{
-		; Weapon skins and other effects get a line that points them out
+		; Same with weapon skins or other effects
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.IsCorrupted)
 	{
-		; Corrupted items have "Corrupted" as a line
+		; And corrupted items
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	If (Item.IsMirrored)
 	{
-		; Mirrored items have "Mirrored" as a line
+		; And mirrored items
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
 	return NegativeAffixOffset
@@ -7393,20 +7462,26 @@ PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
 
 	mods := []
 	; ### Append Implicits if any
-	modStrings := Implicit	
+	modStrings := Implicit
 	For i, modString in modStrings {
 		tempMods := ModStringToObject(modString, true)
 		For i, tempMod in tempMods {
-			mods.push(tempMod)
+			If (tempMod.name) {
+				mods.push(tempMod)
+			}
 		}
-	}	
-	
+	}
+
 	; ### Convert affix lines to mod objects
-	modStrings := StrSplit(Affixes, "`n")	
-	For i, modString in modStrings {
-		tempMods := ModStringToObject(modString, false)
-		For i, tempMod in tempMods {
-			mods.push(tempMod)
+	If (Rarity > 1) {
+		modStrings := StrSplit(Affixes, "`n")
+		For i, modString in modStrings {
+			tempMods := ModStringToObject(modString, false)
+			For i, tempMod in tempMods {
+				If (tempMod.name) {
+					mods.push(tempMod)
+				}
+			}
 		}
 	}
 
@@ -7422,7 +7497,7 @@ ModStringToObject(string, isImplicit) {
 	StringReplace, val, string, `r,, All
 	StringReplace, val, val, `n,, All
 	values := []
-	
+
 	; Collect all numeric values in the mod-string
 	Pos        := 0
 	While Pos := RegExMatch(val, "i)(-?[.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
@@ -7431,14 +7506,14 @@ ModStringToObject(string, isImplicit) {
 
 	; Collect all resists/attributes that are combined in one mod
 	Matches := []
-	
+
 	If (RegexMatch(val, "i)to (Strength|Dexterity|Intelligence) and (Strength|Dexterity|Intelligence)$", attribute)) {
 		IF ( attribute1 AND attribute2 ) {
 			Matches.push(attribute1)
 			Matches.push(attribute2)
 		}
 	}
-	
+
 	type := ""
 	; Matching "x% fire and cold resistance" or "x% to cold resist", excluding "to maximum cold resistance" and "damage penetrates x% cold resistance"
 	If (RegExMatch(val, "i)to ((cold|fire|lightning)( and (cold|fire|lightning))?) resistance")) {
@@ -7453,7 +7528,7 @@ ModStringToObject(string, isImplicit) {
 			Matches.push("Lightning")
 		}
 	}
-	
+
 	; Vanguard Belt implicit for example (flat AR + EV)
 	If (RegExMatch(val, "i)([.0-9]+) to (Armour|Evasion Rating|Energy Shield) and (Armour|Evasion Rating|Energy Shield)")) {
 		type := "Defence"
@@ -7467,29 +7542,29 @@ ModStringToObject(string, isImplicit) {
 			Matches.push("Energy Shield")
 		}
 	}
-	
+
 	; Create single mod from every collected resist/attribute
 	Loop % Matches.Length() {
 		RegExMatch(val, "i)(Resistance)", match)
 		; differentiate between negative and positive values; flat and increased attributes
 		sign := "+"
-		type := RegExMatch(val, "i)increased", inc) ? "% increased " : " to "		
+		type := RegExMatch(val, "i)increased", inc) ? "% increased " : " to "
 		If (inc) {
 			sign := ""
-		}		
+		}
 		If (RegExMatch(val, "i)^-")) {
 			sign := "-"
-		}		
+		}
 		Matches[A_Index] := match1 ? sign . "#% to " . Matches[A_Index] . " " . match1 : sign . "#" . type . "" . Matches[A_Index]
 	}
-	
+
 	If (RegExMatch(val, "i)to all attributes|to all elemental (Resistances)", match)) {
 		resist := match1 ? true : false
 		Matches[1] := resist ? "+#% to Fire Resistance" : "+# to Strength"
 		Matches[2] := resist ? "+#% to Lightning Resistance" : "+# to Intelligence"
 		Matches[3] := resist ? "+#% to Cold Resistance" : "+# to Dexterity"
 	}
-	
+
 	; Use original mod-string if no combination is found
 	Matches[1] := Matches.Length() > 0 ? Matches[1] : val
 
@@ -7514,7 +7589,7 @@ ModStringToObject(string, isImplicit) {
 		temp.type		:= (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"
 		arr.push(temp)
 	}
-	
+
 	Return arr
 }
 
@@ -7527,9 +7602,9 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	energyShieldPercent := 0
 	energyShieldPercentGlobal := 0
 	evasionRatingPercentGlobal := 0
-	
+
 	rarityItemsFoundPercent := 0
-	
+
 	accuracyRatingFlat := 0
 	globalCritChancePercent := 0
 	globalCritMultiplierPercent := 0
@@ -7537,7 +7612,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 
 	spellDmg_Percent := 0
 	attackDmg_Percent := 0
-	
+
 	; Attributes
 	strengthFlat := 0
 	dexterityFlat := 0
@@ -7547,7 +7622,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	dexterityPercent := 0
 	intelligencePercent := 0
 	allAttributesPercent := 0
-	
+
 	; Resistances
 	coldResist := 0
 	fireResist := 0
@@ -7557,14 +7632,14 @@ CreatePseudoMods(mods, returnAllMods := False) {
 
 	; Damages
 	meleePhysDmgGlobal_Percent := 0
-	
+
 	dmgTypes := ["elemental", "fire", "cold", "lightning"]
-	For key, type in dmgTypes {		
+	For key, type in dmgTypes {
 		%type%Dmg_Percent := 0
 		%type%Dmg_AttacksPercent := 0
 		%type%Dmg_SpellsPercent := 0
 		%type%Dmg_AttacksFlatLow := 0
-		%type%Dmg_AttacksFlatHi := 0		
+		%type%Dmg_AttacksFlatHi := 0
 		%type%Dmg_SpellsFlatLow := 0
 		%type%Dmg_SpellsFlatHi := 0
 		%type%Dmg_FlatLow := 0
@@ -7573,7 +7648,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 
 	/* BREAKPOINT
 	; ########################################################################
-	; ###	Combine values from mods of same types 
+	; ###	Combine values from mods of same types
 	; ###		- also assign simplifiedName to the found mod for easier comparison later without duplicating precious regex
 	; ########################################################################
 	*/
@@ -7597,14 +7672,14 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			energyShieldPercent := energyShieldPercent + mod.values[1]
 			mod.simplifiedName := "xIncreasedMaximumEnergyShield"
 		}
-		
+
 		; ### Items found
 		; rarity
 		Else If (RegExMatch(mod.name, "i)increased Rarity of items found$")) {
 			rarityItemsFoundPercent := rarityItemsFoundPercent + mod.values[1]
 			mod.simplifiedName := "xIncreasedRarityOfItemsFound"
 		}
-		
+
 		; ### crits
 		Else If (RegExMatch(mod.name, "i)increased Global Critical Strike Chance$")) {
 			globalCritChancePercent := globalCritChancePercent + mod.values[1]
@@ -7618,7 +7693,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			critChanceForSpellsPercent := critChanceForSpellsPercent + mod.values[1]
 			mod.simplifiedName := "xIncreasedCriticalSpells"
 		}
-		
+
 		; ### Attributes
 		; all flat attributes
 		Else If (RegExMatch(mod.name, "i)to All Attributes$")) {
@@ -7647,7 +7722,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			%resistType1%Resist := %resistType1%Resist + mod.values[1]
 			mod.simplifiedName := "xTo" resistType1 "Resistance"
 		}
-		
+
 		; ### Percent damages
 		; % increased elemental damage
 		Else If (RegExMatch(mod.name, "i)increased (Cold|Fire|Lightning|Elemental) damage$", element)) {
@@ -7659,7 +7734,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			%element1%Dmg_AttacksPercent := %element1%Dmg_AttacksPercent + mod.values[1]
 			mod.simplifiedName := "xIncreased" element1 "DamageAttacks"
 		}
-		
+
 		; ### Flat Damages
 		; flat 'element' damage; source: weapons
 		Else If (RegExMatch(mod.name, "i)adds .* (Cold|Fire|Lightning|Elemental) damage$", element)) {
@@ -7671,7 +7746,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		; flat 'element' damage; source: various (wands/rings/amulets etc)
 		Else If (RegExMatch(mod.name, "i)adds .* (Cold|Fire|Lightning|Elemental) damage to (Attacks|Spells)$", element)) {
 			%element1%Dmg_%element2%FlatLow := %element1%Dmg_%element2%FlatLow + mod.values[1]
-			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi  + mod.values[2]			
+			%element1%Dmg_%element2%FlatHi  := %element1%Dmg_%element2%FlatHi  + mod.values[2]
 			ElementalDmg_%element2%FlatLow  += %element1%Dmg_%element2%FlatLow
 			ElementalDmg_%element2%FlatHi   += %element1%Dmg_%element2%FlatHi
 			mod.simplifiedName := "xFlat" element1 "Damage" element2
@@ -7679,20 +7754,20 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		; this would catch any * Spell * Damage * ( we might need to be more precise here )
 		Else If (RegExMatch(mod.name, "i)spell") and RegExMatch(mod.name, "i)damage") and not RegExMatch(mod.name, "i)chance|multiplier")) {
 			spellDmg_Percent := spellDmg_Percent + mod.values[1]
-			mod.simplifiedName := "xIncreasedSpellDamage" 
+			mod.simplifiedName := "xIncreasedSpellDamage"
 		}
-		
+
 		; ### remaining mods that can be derived from attributes (str|dex|int)
 		; flat accuracy rating
 		Else If (RegExMatch(mod.name, "i)to accuracy rating$")) {
 			accuracyRatingFlat := accuracyRatingFlat + mod.values[1]
-		}	
+		}
 	}
-	
+
 	/* BREAKPOINT
 	; ########################################################################
 	; ###	Spread global values to their sub element
-	; ### 	- like % all Elemental to the base elementals	
+	; ### 	- like % all Elemental to the base elementals
 	; ########################################################################
 	*/
 
@@ -7703,7 +7778,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		dexterityFlat		:= dexterityFlat + allAttributesFlat
 		intelligenceFlat 	:= intelligenceFlat + allAttributesFlat
 	}
-	
+
 	; spread attributes to their corresponding stats they give
 	If (strengthFlat) {
 		lifeFlat := lifeFlat + Floor(strengthFlat/2)
@@ -7722,13 +7797,13 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	fireDmg_Percent	:= fireDmg_Percent + elementalDmg_Percent
 	coldDmg_Percent	:= coldDmg_Percent + elementalDmg_Percent
 	lightningDmg_Percent:= lightningDmg_Percent + elementalDmg_Percent
-	
+
 	; ### Elemental damage - attack skills % increased
 	; ### - spreads Elemental damage with attack skills to each 'element' damage with attack skills and adds related % increased 'element' damage
 	fireDmg_AttacksPercent      	:= fireDmg_AttacksPercent + elementalDmg_AttacksPercent + fireDmg_Percent
 	coldDmg_AttacksPercent		:= coldDmg_AttacksPercent + elementalDmg_AttacksPercent + coldDmg_Percent
 	lightningDmg_AttacksPercent	:= lightningDmg_AttacksPercent + elementalDmg_AttacksPercent + lightningDmg_Percent
-	
+
 	; ### Elemental damage - Spells % increased
 	; ### - spreads % spell damage to each % 'element' spell damage and adds related % increased 'element' damage
 	fireDmg_SpellsPercent 		:= fireDmg_SpellsPercent + spellDmg_Percent + fireDmg_Percent
@@ -7737,14 +7812,14 @@ CreatePseudoMods(mods, returnAllMods := False) {
 
 	; ### Elemental Resistances
 	; ### - spreads % to all Elemental Resistances to the base resist
-	; ### - also calculates the totalElementalResistance and totalResistance	
-	totalElementalResistance := 0	
+	; ### - also calculates the totalElementalResistance and totalResistance
+	totalElementalResistance := 0
 	For i, element in ["Fire", "Cold", "Lightning"] {
-		%element%Resist := %element%Resist + toAllElementalResist		
+		%element%Resist := %element%Resist + toAllElementalResist
 		totalElementalResistance := totalElementalResistance + %element%Resist
 	}
 	totalResistance := totalElementalResistance + chaosResist
-	
+
 	/* BREAKPOINT
 	; ########################################################################
 	; ###	Generate ALL the pseudo mods from the non 0 values combined above
@@ -7800,7 +7875,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		temp.possibleParentSimplifiedNames := ["xIncreasedRarityOfItemsFound"]
 		tempMods.push(temp)
 	}
-	; ### Generate crit pseudos	
+	; ### Generate crit pseudos
 	If (globalCritChancePercent > 0) {
 		temp := {}
 		temp.values		:= [globalCritChancePercent]
@@ -7850,7 +7925,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		temp.possibleParentSimplifiedNames := ["xToAllAttributes"]
 		tempMods.push(temp)
 	}
-	
+
 	; ### Generate Resists pseudos
 	For i, element in ["Fire", "Cold", "Lightning"] {
 		If ( %element%Resist > 0) {
@@ -7895,7 +7970,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		temp.possibleParentSimplifiedNames := ["xToFireResistance", "xToColdResistance", "xToLightningResistance", "xToAllElementalResistances", "xToChaosResistance"]
 		tempMods.push(temp)
 	}
-	
+
 	; ### Generate remaining pseudos derived from attributes
 	If (meleePhysDmgGlobal_Percent > 0) {
 		temp := {}
@@ -7948,15 +8023,15 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		temp.possibleParentSimplifiedNames := ["xIncreasedSpellDamage"]
 		tempMods.push(temp)
 	}
-	
+
 	; other damages
 	percentDamageModSuffixes := [" Damage", " Damage with Attack Skills", " Spell Damage"]
 	flatDamageModSuffixes    := ["", " to Attacks", " to Spells"]
-	
+
 	For i, element in dmgTypes {
 		StringUpper, element, element, T
-		
-		For j, dmgType in ["", "Attacks",  "Spells"]	{			
+
+		For j, dmgType in ["", "Attacks",  "Spells"]	{
 			; ### Percentage damages
 			If (%element%Dmg_%dmgType%Percent > 0) {
 				modSuffix := percentDamageModSuffixes[j]
@@ -7971,7 +8046,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 				tempMods.push(temp)
 			}
 			; ### Flat damages
-			If (%element%Dmg_%dmgType%FlatLow > 0 or %element%Dmg_%dmgType%FlatHi > 0) {				
+			If (%element%Dmg_%dmgType%FlatLow > 0 or %element%Dmg_%dmgType%FlatHi > 0) {
 				modSuffix := flatDamageModSuffixes[j]
 				temp := {}
 				temp.values		:= [%element%Dmg_%dmgType%FlatLow, %element%Dmg_%dmgType%FlatHi]
@@ -8002,7 +8077,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	; ########################################################################
 	*/
 
-	; This 1st pass is for TradeMacro 
+	; This 1st pass is for TradeMacro
 	; remove pseudos that are shadowed by an original mod ONLY if they have the same name
 	; inherited values not taken into account for this 1st pass
 	; ex ( '25% increased Cold Spell Damage' is shadowed by '%25 increased Spell Damage' ) BUT don't have same name
@@ -8014,7 +8089,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			; check for mods with same name
 			; Eruyome: Is there any reason to use simplifiedName here? This can fail for pseudo mods like total ele resists
 			; Eruyome: It's possible to match empty simplified names and compare the values of different mods with each other that way
-			
+
 			;If ( tempMod.simplifiedName == mod.simplifiedName ) {
 			If ( tempMod.name == mod.name ) {
 				; check if it's a flat damage mod
@@ -8071,7 +8146,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 				}
 			}
 		}
-		; add the tempMod to pseudos if it has greater values, or no parent		
+		; add the tempMod to pseudos if it has greater values, or no parent
 		If (higher or (tempMod.exception and returnAllMods)) {
 			tempMod.isVariable:= false
 			tempMod.type := "pseudo"
@@ -8083,8 +8158,8 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	; same logic as above but compare pseudo with other pseudos
 	; remove pseudos that are shadowed by another pseudo
 	; ex ( '25% increased Cold Spell Damage' is shadowed by '%25 increased Spell Damage' )
-	; must also avoid removing itself 
-	
+	; must also avoid removing itself
+
 	pseudoMods := []
 	For i, tempPseudoA in tempPseudoMods {
 		higher := true
@@ -8129,22 +8204,29 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	If (returnAllMods) {
 		returnedMods := mods
 		For i, mod in pseudoMods {
-			returnedMods.push(mod)			
+			returnedMods.push(mod)
 		}
 		Return returnedMods
 	}
-	
+
 	Return pseudoMods
 }
 
 ; Show tooltip, with fixed width font
 ShowToolTip(String, Centered = false)
 {
-	Global X, Y, ToolTipTimeout, Opts
+	Global X, Y, ToolTipTimeout, Opts, gdipTooltip
 
 	; Get position of mouse cursor
 	MouseGetPos, X, Y
-
+	WinGet, PoEWindowHwnd, ID, ahk_group PoEexe
+	RelativeToActiveWindow := true	; default tooltip behaviour 
+	
+	If (not RelativeToActiveWindow) {
+		OldCoordMode := A_CoordModeToolTip
+		CoordMode, Tooltip, Screen
+	}
+	
 	If (Not Opts.DisplayToolTipAtFixedCoords)
 	{
 		If (Centered)
@@ -8155,17 +8237,32 @@ ShowToolTip(String, Centered = false)
 			XCoord := 0 + ScreenOffsetX
 			YCoord := 0 + ScreenOffsetY
 
-			ToolTip, %String%, XCoord, YCoord
-			Fonts.SetFixedFont()
-			ToolTip, %String%, XCoord, YCoord
+			If (Opts.UseGDI)
+			{
+				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
+			}
+			Else
+			{
+				ToolTip, %String%, XCoord, YCoord
+				Fonts.SetFixedFont()
+				ToolTip, %String%, XCoord, YCoord
+			}
 		}
 		Else
 		{
 			XCoord := (X - 135 >= 0) ? X - 135 : 0
 			YCoord := (Y +  35 >= 0) ? Y +  35 : 0
-			ToolTip, %String%, XCoord, YCoord
-			Fonts.SetFixedFont()
-			ToolTip, %String%, XCoord, YCoord
+			
+			If (Opts.UseGDI) 
+			{
+				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
+			}
+			Else
+			{
+				ToolTip, %String%, XCoord, YCoord
+				Fonts.SetFixedFont()
+				ToolTip, %String%, XCoord, YCoord
+			}
 		}
 	}
 	Else
@@ -8177,15 +8274,26 @@ ShowToolTip(String, Centered = false)
 		XCoord := 0 + ScreenOffsetX
 		YCoord := 0 + ScreenOffsetY
 
-		ToolTip, %String%, XCoord, YCoord
-		Fonts.SetFixedFont()
-		ToolTip, %String%, XCoord, YCoord
+		If (Opts.UseGDI)
+		{
+			gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd, true)
+		}
+		Else
+		{
+			ToolTip, %String%, XCoord, YCoord
+			Fonts.SetFixedFont()
+			ToolTip, %String%, XCoord, YCoord
+		}
 	}
 	;Fonts.SetFixedFont()
 
 	; Set up count variable and start timer for tooltip timeout
 	ToolTipTimeout := 0
 	SetTimer, ToolTipTimer, 100
+	
+	If (OldCoordMode) {
+		CoordMode, Tooltip, % OldCoordMode
+	}
 }
 
 ; ############ GUI #############
@@ -8199,10 +8307,12 @@ GuiSet(ControlID, Param3="", SubCmd="")
 	}
 }
 
-GuiGet(ControlID, DefaultValue="")
+GuiGet(ControlID, DefaultValue="", ByRef Error = false)
 {
 	curVal =
-	GuiControlGet, curVal,, %ControlID%, %DefaultValue%
+	ErrorLevel := 0
+	GuiControlGet, curVal,, %ControlID%, %DefaultValue%	
+	Error := ErrorLevel	
 	return curVal
 }
 
@@ -8213,15 +8323,15 @@ GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabe
 	av := StrPrefix(AssocVar, "v")
 	al := StrPrefix(AssocLabel, "g")
 	ah := StrPrefix(AssocHwnd, "hwnd")
-	
+
 	If (ControlType = "GroupBox") {
 		Gui, Font, cDA4F49
 		Options := Param4
 	}
 	Else {
 		Options := Param4 . " BackgroundTrans "
-	}		
-	
+	}
+
 	GuiName := (StrLen(GuiName) > 0) ? Trim(GuiName) . ":Add" : "Add"
 	Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Options%, %Contents%
 	Gui, Font
@@ -8276,7 +8386,7 @@ GuiAddDropDownList(Contents, PositionInfo, Selected="", AssocVar="", AssocHwnd="
 
 GuiUpdateDropdownList(Contents="", Selected="", AssocVar="", Options="", GuiName="") {
 	GuiName := (StrLen(GuiName) > 0) ? Trim(GuiName) . ":" . AssocVar : "" . AssocVar
-	
+
 	If (StrLen(Contents) > 0) {
 		; usage : add list items as a | delimited string, for example = "item1|item2|item3"
 		ListItems := StrSplit(Contents, "|")
@@ -8291,11 +8401,11 @@ GuiUpdateDropdownList(Contents="", Selected="", AssocVar="", Options="", GuiName
 		}
 		GuiControl, , %GuiName%, %Contents%
 	}
-	
+
 	If (StrLen(Selected)) > 0 {
 		; falls back to "ChooseString" if param3 is not an integer
-		GuiControl, Choose, %GuiName% , %Selected%  	
-	}	
+		GuiControl, Choose, %GuiName% , %Selected%
+	}
 }
 
 AddToolTip(con, text, Modify=0){
@@ -8410,7 +8520,7 @@ ShowUnhandledCaseDialog()
 CreateSettingsUI()
 {
 	Global
-	
+
 	; General
 	generalHeight := SkipItemInfoUpdateCall ? "120" : "210"
 	GuiAddGroupBox("General", "x7 y+15 w260 h" generalHeight " Section")
@@ -8420,17 +8530,17 @@ CreateSettingsUI()
 	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 ys20 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "If checked the script does nothing if the`nPath of Exile window isn't the frontmost")
 	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 ys50 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
-	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")	
+	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")
 	GuiAddCheckbox("Enable Additional Macros", "xs10 ys80 w210 h30", Opts.EnableAdditionalMacros, "EnableAdditionalMacros", "EnableAdditionalMacrosH")
-	AddToolTip(EnableAdditionalMacrosH, "Enables or disables the entire 'AdditionalMacros.txt' file.`nNeeds a script reload to take effect.")
+	AddToolTip(EnableAdditionalMacrosH, "Enables or disables the entire 'AdditionalMacros.ahk' file.`nNeeds a script reload to take effect.")
 	If (!SkipItemInfoUpdateCall) {
 		GuiAddCheckbox("Update: Show Notifications", "xs10 ys110 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
-		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")		
+		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")
 		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys140 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
-		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")	
+		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")
 		GuiAddCheckbox("Update: Skip backup", "xs10 ys170 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
 		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
-	}		
+	}
 	
 	; Tooltip
 
@@ -8455,34 +8565,60 @@ CreateSettingsUI()
 	GuiAddText("Font Size:", "xs10 ys157 w160 h20", "LblFontSize")
 	GuiAddEdit(Opts.FontSize, "xs180 ys155 w50 h20 Number", "FontSize")
 
+	; GDI+
+	GuiAddGroupBox("GDI+", "x7 y+20 w260 h270 Section")
+	GuiAddCheckBox("Enable GDI+", "xs10 ys20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
+	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")	
+	GuiAddButton("Edit Window", "xs9 ys40 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
+	GuiAddText("Color (hex RGB):", "x+5 yp+5 w150", "LblGDIWindowColor")
+	GuiAddEdit(Opts.GDIWindowColor, "xs190 ys41 w60", "GDIWindowColor", "GDIWindowColorH")
+	GuiAddText("Opactiy (0-100):", "xs95 ys75 w150", "LblGDIWindowOpacity")
+	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys71 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
+	GuiAddButton("Edit Border", "xs9 ys100 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
+	GuiAddText("Color (hex RGB):", "x+5 yp+5 w150", "LblGDIBorderColor")
+	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys101 w60", "GDIBorderColor", "GDIBorderColorH")	
+	GuiAddText("Opacity (0-100):", "xs95 ys135 w150", "LblGDIBorderOpacity")
+	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys131 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
+	GuiAddButton("Edit Text", "xs9 ys160 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
+	GuiAddText("Color (hex RGB):", "x+5 ys165 w150", "LblGDITextColor")
+	GuiAddEdit(Opts.GDITextColor, "xs190 ys161 w60", "GDITextColor", "GDITextColorH")
+	GuiAddText("Opacity (0-100):", "xs95 ys195 w150", "LblGDITextOpacity")
+	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys191 w60", "GDITextOpacity", "GDITextOpacityH")
+	GuiAddCheckBox("Rendering Fix", "xs10 ys216 w110", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
+	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
+	
+	GuiAddButton("Defaults", "xs9 ys240 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
+	GuiAddButton("Preview", "xs170 ys240 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
+	
+	
 	; Display - Affixes
 
 	; This groupbox is positioned relative to the last control (first column), this is not optimal but makes it possible to wrap these groupboxes in Tabs without further repositing.
-	displayAffixesPos := SkipItemInfoUpdateCall ? "265" : "355"
-	GuiAddGroupBox("Display - Results", "xs270 yp-" displayAffixesPos " w260 h360 Section")
+	displayAffixesPos := SkipItemInfoUpdateCall ? "565" : "655"
+	GuiAddGroupBox("Display - Results", "xs270 yp-" displayAffixesPos " w260 h215 Section")
 	
 	GuiAddCheckbox("Compact double ranges", "xs10 ys20 w210 h30", Opts.CompactDoubleRanges, "CompactDoubleRanges", "CompactDoubleRangesH")
 	AddToolTip(CompactDoubleRangesH, "Show double ranges as one range,`ne.g. x-y (to) z-w becomes x-w")
 	
-	GuiAddText("Affix detail delimiter:", "xs10 ys137 w120 h20", "LblAffixDetailDelimiter")
-	GuiAddEdit(Opts.AffixDetailDelimiter, "xs130 ys135 w40 h20", "AffixDetailDelimiter", "AffixDetailDelimiterH")
+	GuiAddText("Affix detail delimiter:", "xs10 ys58 w120 h20", "LblAffixDetailDelimiter")
+	GuiAddEdit(Opts.AffixDetailDelimiter, "xs130 ys56 w40 h20", "AffixDetailDelimiter", "AffixDetailDelimiterH")
 	AddToolTip(AffixDetailDelimiterH, "Select delimiter (default 2 spaces) for the // spots:`n50% increased Spell?//50-59 (46)//75-79 (84)//T4 P")
-	GuiAddText("Affix detail ellipsis:", "xs10 ys162 w120 h20", "LblAffixDetailEllipsis")
-	GuiAddEdit(Opts.AffixDetailEllipsis, "xs130 ys160 w40 h20", "AffixDetailEllipsis")
+	GuiAddText("Affix detail ellipsis:", "xs10 ys88 w120 h20", "LblAffixDetailEllipsis")
+	GuiAddEdit(Opts.AffixDetailEllipsis, "xs130 ys86 w40 h20", "AffixDetailEllipsis")
 
-	GuiAddText("Mouse over settings or see the beginning of the PoE-Item-Info.ahk script for comments on what these settings do exactly.", "x277 yp+40 w250 h60")
+	GuiAddText("Mouse over settings or see the beginning of the PoE-Item-Info.ahk script for comments on what these settings do exactly.", "x287 yp+40 w240 h60")
 
 	GuiAddButton("&Defaults", "x287 yp+55 w80 h23", "SettingsUI_BtnDefaults")
 	GuiAddButton("&OK", "Default x372 yp+0 w75 h23", "SettingsUI_BtnOK")
 	GuiAddButton("&Cancel", "x452 yp+0 w80 h23", "SettingsUI_BtnCancel")
-	
+
 	; close tabs in case some other script added some
 	Gui, Tab
 }
 
 UpdateSettingsUI()
 {
-	Global
+	Global Opts
 
 	GuiControl,, OnlyActiveIfPOEIsFront, % Opts.OnlyActiveIfPOEIsFront
 	GuiControl,, PutResultsOnClipboard, % Opts.PutResultsOnClipboard
@@ -8526,6 +8662,56 @@ UpdateSettingsUI()
 	GuiControl,, ToolTipTimeoutTicks, % Opts.ToolTipTimeoutTicks
 	GuiControl,, MouseMoveThreshold, % Opts.MouseMoveThreshold
 	GuiControl,, FontSize, % Opts.FontSize
+
+	; GDI+
+	GuiControl,, UseGDI, % Opts.UseGDI
+	GuiControl,, GDIRenderingFix, % Opts.GDIRenderingFix
+	gdipTooltip.SetRenderingFix(Opts.GDIRenderingFix)
+
+	console.log("Update Settings: " Opts["GDIWindowOpacityDefault"] " , " Opts["GDIBorderOpacityDefault"] " , " Opts["GDITextOpacityDefault"])
+	
+	GuiControl,, GDIWindowColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, Opts.GDIWindowColorDefault)
+	GuiControl,, GDIWindowOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIWindowOpacity, Opts.GDIWindowOpacityDefault, "10", "10")
+	GuiControl,, GDIBorderColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIBorderColor, Opts.GDIBorderColorDefault)
+	GuiControl,, GDIBorderOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIBorderOpacity, Opts.GDIBorderOpacityDefault, "10", "10")
+	GuiControl,, GDITextColor	, % gdipTooltip.ValidateRGBColor(Opts.GDITextColor, Opts.GDITextColorDefault)
+	GuiControl,, GDITextOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDITextOpacity, Opts.GDITextOpacityDefault, "10", "10")
+	gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)
+	
+	If (Opts.UseGDI == False)
+	{
+		GuiControl, Disable, GDIWindowColor
+		GuiControl, Disable, GDIWindowOpacity
+		GuiControl, Disable, GDIBorderColor
+		GuiControl, Disable, GDIBorderOpacity
+		GuiControl, Disable, GDITextColor
+		GuiControl, Disable, GDITextOpacity	
+		
+		GuiControl, Disable, BtnGDIWindowColor
+		GuiControl, Disable, BtnGDIBorderColor
+		GuiControl, Disable, BtnGDITextColor
+		
+		GuiControl, Disable, BtnGDIDefaults	
+		GuiControl, Disable, BtnGDIPreviewTooltip
+		GuiControl, Disable, GDIRenderingFix
+	}
+	Else 
+	{
+		GuiControl, Enable, GDIWindowColor
+		GuiControl, Enable, GDIWindowOpacity
+		GuiControl, Enable, GDIBorderColor
+		GuiControl, Enable, GDIBorderOpacity
+		GuiControl, Enable, GDITextColor
+		GuiControl, Enable, GDITextOpacity	
+		
+		GuiControl, Enable, BtnGDIWindowColor
+		GuiControl, Enable, BtnGDIBorderColor
+		GuiControl, Enable, BtnGDITextColor
+		
+		GuiControl, Enable, BtnGDIDefaults	
+		GuiControl, Enable, BtnGDIPreviewTooltip
+		GuiControl, Enable, GDIRenderingFix
+	}		
 }
 
 ShowSettingsUI()
@@ -8549,27 +8735,27 @@ ShowUpdateNotes()
 	Fonts.SetUIFont(9)
 
 	Files := Globals.Get("UpdateNoteFileList")
-	
+
 	TabNames := ""
 	Loop, % Files.Length() {
 		name := Files[A_Index][2]
 		TabNames .= name "|"
 	}
-	
+
 	StringTrimRight, TabNames, TabNames, 1
 	PreSelect := Files.Length()
 	Gui, UpdateNotes:Add, Tab3, Choose%PreSelect%, %TabNames%
-	
+
 	Loop, % Files.Length() {
 		file := Files[A_Index][1]
 		FileRead, notes, %file%
-		Gui, UpdateNotes:Add, Edit, r50 ReadOnly w700 BackgroundTrans, %notes%		
-		
+		Gui, UpdateNotes:Add, Edit, r50 ReadOnly w700 BackgroundTrans, %notes%
+
 		NextTab := A_Index + 1
 		Gui, UpdateNotes:Tab, %NextTab%
 	}
-	Gui, UpdateNotes:Tab	
-	
+	Gui, UpdateNotes:Tab
+
 	SettingsUIWidth := 745
 	SettingsUIHeight := 710
 	SettingsUITitle := "Update Notes"
@@ -8579,14 +8765,14 @@ ShowUpdateNotes()
 ShowChangedUserFiles()
 {
 	Gui, ChangedUserFiles:Destroy
-	
+
 	Gui, ChangedUserFiles:Add, Text, , Following user files were changed in the last update and `nwere overwritten (old files were backed up):
-	
+
 	Loop, Parse, overwrittenUserFiles, `n
 	{
 		If (StrLen(A_Loopfield) > 0) {
-			Gui, ChangedUserFiles:Add, Text, y+5, %A_LoopField%	
-		}		
+			Gui, ChangedUserFiles:Add, Text, y+5, %A_LoopField%
+		}
 	}
 	Gui, ChangedUserFiles:Add, Button, y+10 gChangedUserFilesWindow_Cancel, Close
 	Gui, ChangedUserFiles:Add, Button, x+10 yp+0 gChangedUserFilesWindow_OpenFolder, Open user folder
@@ -8617,26 +8803,43 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 	IfExist, %ConfigPath%
 	{
 		; General
-		Opts.OnlyActiveIfPOEIsFront := IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
-		Opts.PutResultsOnClipboard := IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
-		Opts.EnableAdditionalMacros := IniRead(ConfigPath, "General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
-		Opts.ShowUpdateNotifications := IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
-		Opts.UpdateSkipSelection := IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
-		Opts.UpdateSkipBackup := IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
+		Opts.OnlyActiveIfPOEIsFront	:= IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
+		Opts.PutResultsOnClipboard	:= IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
+		Opts.EnableAdditionalMacros	:= IniRead(ConfigPath, "General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
+		Opts.ShowUpdateNotifications	:= IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
+		Opts.UpdateSkipSelection		:= IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
+		Opts.UpdateSkipBackup		:= IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
 		
 		; Display - Results
-		Opts.CompactDoubleRanges := IniRead(ConfigPath, "DisplayResults", "CompactDoubleRanges", Opts.CompactDoubleRanges)
-		Opts.AffixDetailDelimiter := IniRead(ConfigPath, "DisplayResults", "AffixDetailDelimiter", Opts.AffixDetailDelimiter)
-		Opts.AffixDetailEllipsis := IniRead(ConfigPath, "DisplayResults", "AffixDetailEllipsis", Opts.AffixDetailEllipsis)
+		Opts.CompactDoubleRanges		:= IniRead(ConfigPath, "DisplayResults", "CompactDoubleRanges", Opts.CompactDoubleRanges)
+		Opts.AffixDetailDelimiter	:= IniRead(ConfigPath, "DisplayResults", "AffixDetailDelimiter", Opts.AffixDetailDelimiter)
+		Opts.AffixDetailEllipsis		:= IniRead(ConfigPath, "DisplayResults", "AffixDetailEllipsis", Opts.AffixDetailEllipsis)
 		
 		; Tooltip
-		Opts.MouseMoveThreshold := IniRead(ConfigPath, "Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold)
-		Opts.UseTooltipTimeout := IniRead(ConfigPath, "Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout)
+		Opts.MouseMoveThreshold	:= IniRead(ConfigPath, "Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold)
+		Opts.UseTooltipTimeout	:= IniRead(ConfigPath, "Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout)
 		Opts.DisplayToolTipAtFixedCoords := IniRead(ConfigPath, "Tooltip", "DisplayToolTipAtFixedCoords", Opts.DisplayToolTipAtFixedCoords)
-		Opts.ScreenOffsetX := IniRead(ConfigPath, "Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX)
-		Opts.ScreenOffsetY := IniRead(ConfigPath, "Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY)
-		Opts.ToolTipTimeoutTicks := IniRead(ConfigPath, "Tooltip", "ToolTipTimeoutTicks", Opts.ToolTipTimeoutTicks)
-		Opts.FontSize := IniRead(ConfigPath, "Tooltip", "FontSize", Opts.FontSize)
+		Opts.ScreenOffsetX		:= IniRead(ConfigPath, "Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX)
+		Opts.ScreenOffsetY		:= IniRead(ConfigPath, "Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY)
+		Opts.ToolTipTimeoutTicks	:= IniRead(ConfigPath, "Tooltip", "ToolTipTimeoutTicks", Opts.ToolTipTimeoutTicks)
+		Opts.FontSize			:= IniRead(ConfigPath, "Tooltip", "FontSize", Opts.FontSize)
+
+		; GDI+		
+		Opts.UseGDI				:= IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
+		Opts.GDIRenderingFix		:= IniRead(ConfigPath, "GDI", "RenderingFix", Opts.GDIRenderingFix)
+		Opts.GDIWindowColor			:= IniRead(ConfigPath, "GDI", "WindowColor", Opts.GDIWindowColor)
+		Opts.GDIWindowColorDefault	:= IniRead(ConfigPath, "GDI", "WindowColorDefault", Opts.GDIWindowColorDefault)
+		Opts.GDIWindowOpacity		:= IniRead(ConfigPath, "GDI", "WindowOpacity", Opts.GDIWindowOpacity)
+		Opts.GDIWindowOpacityDefault	:= IniRead(ConfigPath, "GDI", "WindowOpacityDefault", Opts.GDIWindowOpacityDefault)
+		Opts.GDIBorderColor			:= IniRead(ConfigPath, "GDI", "BorderColor", Opts.GDIBorderColor)
+		Opts.GDIBorderColorDefault	:= IniRead(ConfigPath, "GDI", "BorderColorDefault", Opts.GDIBorderColorDefault)
+		Opts.GDIBorderOpacity		:= IniRead(ConfigPath, "GDI", "BorderOpacity", Opts.GDIBorderOpacity)
+		Opts.GDIBorderOpacityDefault	:= IniRead(ConfigPath, "GDI", "BorderOpacityDefault", Opts.GDIBorderOpacityDefault)
+		Opts.GDITextColor			:= IniRead(ConfigPath, "GDI", "TextColor", Opts.GDITextColor)
+		Opts.GDITextColorDefault		:= IniRead(ConfigPath, "GDI", "TextColorDefault", Opts.GDITextColorDefault)
+		Opts.GDITextOpacity			:= IniRead(ConfigPath, "GDI", "TextOpacity", Opts.GDITextOpacity)
+		Opts.GDITextOpacityDefault	:= IniRead(ConfigPath, "GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault)
+		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, "10", "16")
 	}
 }
 
@@ -8678,11 +8881,21 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	IniWrite(Opts.ScreenOffsetY, ConfigPath, "Tooltip", "ScreenOffsetY")
 	IniWrite(Opts.ToolTipTimeoutTicks, ConfigPath, "Tooltip", "ToolTipTimeoutTicks")
 	IniWrite(Opts.FontSize, ConfigPath, "Tooltip", "FontSize")
+
+	; GDI+
+	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "Enabled")
+	IniWrite(Opts.GDIRenderingFix, ConfigPath, "GDI", "RenderingFix")
+	IniWrite(Opts.GDIWindowColor, ConfigPath, "GDI", "WindowColor")
+	IniWrite(Opts.GDIWindowOpacity, ConfigPath, "GDI", "WindowOpacity")
+	IniWrite(Opts.GDIBorderColor, ConfigPath, "GDI", "BorderColor")
+	IniWrite(Opts.GDIBorderOpacity, ConfigPath, "GDI", "BorderOpacity")
+	IniWrite(Opts.GDITextColor, ConfigPath, "GDI", "TextColor")
+	IniWrite(Opts.GDITextOpacity, ConfigPath, "GDI", "TextOpacity")
 }
 
 CopyDefaultConfig()
 {
-	FileCopy, %A_ScriptDir%\resources\config\default_config.ini, %userDirectory%\config.ini
+	FileCopy, %A_ScriptDir%\resources\default_UserFiles\config.ini, %userDirectory%\config.ini
 }
 
 RemoveConfig()
@@ -8695,36 +8908,36 @@ StdOutStream(sCmd, Callback = "") {
 		Runs commands in a hidden cmdlet window and returns the output.
 	*/
 							; Modified  :  Eruyome 18-June-2017
-	Static StrGet := "StrGet"	; Modified  :  SKAN 31-Aug-2013 http://goo.gl/j8XJXY                             
-							; Thanks to :  HotKeyIt         http://goo.gl/IsH1zs                                   
+	Static StrGet := "StrGet"	; Modified  :  SKAN 31-Aug-2013 http://goo.gl/j8XJXY
+							; Thanks to :  HotKeyIt         http://goo.gl/IsH1zs
 							; Original  :  Sean 20-Feb-2007 http://goo.gl/mxCdn
 	64Bit := A_PtrSize=8
-	
+
 	DllCall( "CreatePipe", UIntP,hPipeRead, UIntP,hPipeWrite, UInt,0, UInt,0 )
 	DllCall( "SetHandleInformation", UInt,hPipeWrite, UInt,1, UInt,1 )
-	
+
 	If 64Bit {
 		VarSetCapacity( STARTUPINFO, 104, 0 )		; STARTUPINFO          ;  http://goo.gl/fZf24
 		NumPut( 68,         STARTUPINFO,  0 )		; cbSize
-		NumPut( 0x100,      STARTUPINFO, 60 )		; dwFlags    =>  STARTF_USESTDHANDLES = 0x100 
+		NumPut( 0x100,      STARTUPINFO, 60 )		; dwFlags    =>  STARTF_USESTDHANDLES = 0x100
 		NumPut( hPipeWrite, STARTUPINFO, 88 )		; hStdOutput
 		NumPut( hPipeWrite, STARTUPINFO, 96 )		; hStdError
-		
-		VarSetCapacity( PROCESS_INFORMATION, 32 )	; PROCESS_INFORMATION  ;  http://goo.gl/b9BaI  
+
+		VarSetCapacity( PROCESS_INFORMATION, 32 )	; PROCESS_INFORMATION  ;  http://goo.gl/b9BaI
 	} Else {
 		VarSetCapacity( STARTUPINFO, 68,  0 )		; STARTUPINFO          ;  http://goo.gl/fZf24
 		NumPut( 68,         STARTUPINFO,  0 )		; cbSize
-		NumPut( 0x100,      STARTUPINFO, 44 )		; dwFlags    =>  STARTF_USESTDHANDLES = 0x100 
+		NumPut( 0x100,      STARTUPINFO, 44 )		; dwFlags    =>  STARTF_USESTDHANDLES = 0x100
 		NumPut( hPipeWrite, STARTUPINFO, 60 )		; hStdOutput
 		NumPut( hPipeWrite, STARTUPINFO, 64 )		; hStdError
-		
-		VarSetCapacity( PROCESS_INFORMATION, 32 )	; PROCESS_INFORMATION  ;  http://goo.gl/b9BaI  
-	}	    
+
+		VarSetCapacity( PROCESS_INFORMATION, 32 )	; PROCESS_INFORMATION  ;  http://goo.gl/b9BaI
+	}
 
 	If ! DllCall( "CreateProcess", UInt,0, UInt,&sCmd, UInt,0, UInt,0 ;  http://goo.gl/USC5a
 				, UInt,1, UInt,0x08000000, UInt,0, UInt,0
-				, UInt,&STARTUPINFO, UInt,&PROCESS_INFORMATION ) 
-	Return "" 
+				, UInt,&STARTUPINFO, UInt,&PROCESS_INFORMATION )
+	Return ""
 	, DllCall( "CloseHandle", UInt,hPipeWrite )
 	, DllCall( "CloseHandle", UInt,hPipeRead )
 	, DllCall( "SetLastError", Int,-1 )
@@ -8738,15 +8951,15 @@ StdOutStream(sCmd, Callback = "") {
 
 	DllCall( "CloseHandle", UInt,hPipeWrite )
 
-	AIC := ( SubStr( A_AhkVersion, 1, 3 ) = "1.0" )                   ;  A_IsClassic 
-	VarSetCapacity( Buffer, 4096, 0 ), nSz := 0 
+	AIC := ( SubStr( A_AhkVersion, 1, 3 ) = "1.0" )                   ;  A_IsClassic
+	VarSetCapacity( Buffer, 4096, 0 ), nSz := 0
 
 	While DllCall( "ReadFile", UInt,hPipeRead, UInt,&Buffer, UInt,4094, UIntP,nSz, Int,0 ) {
-		tOutput := ( AIC && NumPut( 0, Buffer, nSz, "Char" ) && VarSetCapacity( Buffer,-1 ) ) 
+		tOutput := ( AIC && NumPut( 0, Buffer, nSz, "Char" ) && VarSetCapacity( Buffer,-1 ) )
 				? Buffer : %StrGet%( &Buffer, nSz, "CP850" )
 
 		Isfunc( Callback ) ? %Callback%( tOutput, A_Index ) : sOutput .= tOutput
-	}                   
+	}
 
 	DllCall( "GetExitCodeProcess", UInt,hProcess, UIntP,ExitCode )
 	DllCall( "CloseHandle",  UInt,hProcess  )
@@ -8754,14 +8967,14 @@ StdOutStream(sCmd, Callback = "") {
 	DllCall( "CloseHandle",  UInt,hPipeRead )
 	DllCall( "SetLastError", UInt,ExitCode  )
 
-	Return Isfunc( Callback ) ? %Callback%( "", 0 ) : sOutput      
+	Return Isfunc( Callback ) ? %Callback%( "", 0 ) : sOutput
 }
 
 ReadConsoleOutputFromFile(command, fileName) {
 	file := "temp\" fileName ".txt"
-	RunWait %comspec% /c "chcp 1251 /f >nul 2>&1 & %command% > %file%", , Hide  
+	RunWait %comspec% /c "chcp 1251 /f >nul 2>&1 & %command% > %file%", , Hide
 	FileRead, io, %file%
-	
+
 	Return io
 }
 
@@ -8805,7 +9018,7 @@ ScriptInfo(Command) {
             bkp[i] := NumGet(pfn[i], 0, "int64")
         }
     }
- 
+
     if (A_PtrSize=8) {  ; Disable SetForegroundWindow and ShowWindow.
         NumPut(0x0000C300000001B8, pfn[1], 0, "int64")  ; return TRUE
         NumPut(0x0000C300000001B8, pfn[2], 0, "int64")  ; return TRUE
@@ -8813,13 +9026,13 @@ ScriptInfo(Command) {
         NumPut(0x0004C200000001B8, pfn[1], 0, "int64")  ; return TRUE
         NumPut(0x0008C200000001B8, pfn[2], 0, "int64")  ; return TRUE
     }
- 
+
     static cmds := {ListLines:65406, ListVars:65407, ListHotkeys:65408, KeyHistory:65409}
     cmds[Command] ? DllCall("SendMessage", "ptr", A_ScriptHwnd, "uint", 0x111, "ptr", cmds[Command], "ptr", 0) : 0
- 
+
     NumPut(bkp[1], pfn[1], 0, "int64")  ; Enable SetForegroundWindow.
     NumPut(bkp[2], pfn[2], 0, "int64")  ; Enable ShowWindow.
- 
+
     ControlGetText, text,, ahk_id %hEdit%
     return text
 }
@@ -8847,21 +9060,31 @@ GetContributors(AuthorsPerLine=0)
 ShowAssignedHotkeys() {
 	scriptInfo	:= ScriptInfo("ListHotkeys")
 	hotkeys		:= []
-	
-	Loop, Parse, scriptInfo, `n`r, 
+
+	Loop, Parse, scriptInfo, `n`r,
 	{
 		line		:= RegExReplace(A_Loopfield, "[\t]", "|")
 		line		:= RegExReplace(line, "\|(?!\s)", "| ") . "|"
 		fields	:= []
-		
+
 		If (StrLen(line)) {
 			Pos		:= 0
 			While Pos	:= RegExMatch(line, "i)(.*?\|+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
 				fields.push(Trim(RegExReplace(value1, "\|")))
 			}
-			If (StrLen(fields[1]) and not InStr(fields[1], "--------")) {				
-				hotkeys.push(fields)	
+			If (StrLen(fields[1]) and not InStr(fields[1], "--------")) {
+				hotkeys.push(fields)
 			}
+		}
+	}
+
+	; supposed that array length wouldn't change, otherwise it's better to switch to associative array
+	For key, val in hotkeys {
+		If (key = 1) {
+			val.Push("NameENG")
+		}
+		Else {
+			val.Push(KeyCodeToKeyName(val[5]))
 		}
 	}
 
@@ -8869,21 +9092,21 @@ ShowAssignedHotkeys() {
 	Gui, ShowHotkeys:Default
 	Gui, Font, , Courier New
 	Gui, Font, , Consolas
-	Gui, ShowHotkeys:Add, ListView, r25 w800 NoSortHdr Grid ReadOnly, Type | Enabled | Level | Running | Key combination	
-	For key, val in hotkeys {	
+	Gui, ShowHotkeys:Add, ListView, r25 w800 NoSortHdr Grid ReadOnly, Type | Enabled | Level | Running | Key combination (Code) | Key combination (ENG name)
+	For key, val in hotkeys {
 		If (key != 1) {
 			LV_Add("", val*)
 			LV_ModifyCol()
 		}
 	}
-	
+
 	i := 0
 	Loop % LV_GetCount("Column")
 	{
 		i++
 		LV_ModifyCol(a_index,"AutoHdr")
 	}
-	
+
 	text := "reg: The hotkey is implemented via the operating system's RegisterHotkey() function." . "`n"
 	text .= "reg(no): Same as above except that this hotkey is inactive (due to being unsupported, disabled, or suspended)." . "`n"
 	text .= "k-hook: The hotkey is implemented via the keyboard hook." . "`n"
@@ -8892,9 +9115,9 @@ ShowAssignedHotkeys() {
 	text .= "joypoll: The hotkey is implemented by polling the joystick at regular intervals." . "`n"
 	text .= "`n"
 	text .= "Enabled: Hotkey is assigned but enabled/disabled [on/off] via the Hotkey command." . "`n"
-	
+
 	Gui, ShowHotkeys:Add, Text, , % text
-	
+
 	Gui, ShowHotkeys:Show, w820 xCenter yCenter, Assigned Hotkeys
 	Gui, 1:Default
 	Gui, Font
@@ -8904,17 +9127,17 @@ CloseScripts() {
 	; Close all active scripts listed in Globals.Get("ScriptList").
 	; Can be used with scripts extending/including ItemInfo (TradeMacro for example) by adding to/altering this list.
 	; Shortcut is placed in AdditionalMacros.txt
-	
-	scripts := Globals.Get("ScriptList")	
+
+	scripts := Globals.Get("ScriptList")
 	currentScript := A_ScriptDir . "\" . A_ScriptName
 	SplitPath, currentScript, , , ext, currentscript_name_no_ext
 	currentScript :=  A_ScriptDir . "\" . currentscript_name_no_ext
-	
-	DetectHiddenWindows, On 
+
+	DetectHiddenWindows, On
 
 	Loop, % scripts.Length() {
 		scriptPath := scripts[A_Index]
-	
+
 		; close current script last (with ExitApp)
 		If (currentScript != scriptPath) {
 			WinClose, %scriptPath% ahk_class AutoHotkey
@@ -8925,25 +9148,25 @@ CloseScripts() {
 
 HighlightItems(broadTerms = false, leaveSearchField = true) {
 	; Highlights items via stash search (also in vendor search)
-	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass
 	{
 		Global Item, Opts, Globals, ItemData
-		
+
 		ClipBoardTemp := Clipboard
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		
+
 		; Parse the clipboard contents twice.
 		; If the clipboard contains valid item data before we send ctrl + c to try and parse an item via ctrl + f then don't restore that clipboard data later on.
-		; This prevents the highlighting function to fill search fields with data from previous item parsings/manual data copying since 
+		; This prevents the highlighting function to fill search fields with data from previous item parsings/manual data copying since
 		; that clipboard data would always be restored again.
 		Loop, 2 {
 			If (A_Index = 2) {
-				Clipboard := 
+				Clipboard :=
 				Send ^{sc02E}	; ^{c}
-				Sleep 100		
+				Sleep 100
 			}
 			CBContents := GetClipboardContents()
-			CBContents := PreProcessContents(CBContents)		
+			CBContents := PreProcessContents(CBContents)
 			Globals.Set("ItemText", CBContents)
 			ParsedData := ParseItemData(CBContents)
 			If (A_Index = 1 and Item.Name) {
@@ -8960,7 +9183,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 			} Else If (Item.RarityLevel = 4) {
 				rarity := "unique"
 			}
-		
+
 			terms := []
 			; uniques / gems / div cards
 			If (Item.IsUnique or Item.IsGem or Item.IsDivinationCard) {
@@ -8969,7 +9192,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 						terms.push("Rarity: Unique")
 					} Else {
 						terms.push("Rarity: " Item.BaseType)
-					}					
+					}
 				} Else {
 					If (Item.IsUnique) {
 						terms.push("Rarity: Unique")
@@ -9006,7 +9229,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 				}
 			}
 			; maps
-			Else If (Item.IsMap) {				
+			Else If (Item.IsMap) {
 				If (broadTerms) {
 					terms.push(" Map")
 				} Else {
@@ -9021,7 +9244,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 					terms.push(Item.SubType)
 				} Else {
 					terms.push(Item.TypeName)
-				}		
+				}
 			}
 			; leaguestones
 			Else If (Item.IsLeaguestone) {
@@ -9029,42 +9252,42 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 					terms.push(Item.BaseType)
 				} Else {
 					terms.push(Item.SubType)
-				}				
+				}
 			}
 			; jewels
 			Else If (Item.IsJewel) {
 				If (broadTerms) {
 					terms.push(Item.BaseType)
-				} Else {					
+				} Else {
 					terms.push(Item.TypeName)
 					terms.push(rarity)
-				}	
+				}
 			}
-			; offerings / sacrifice and mortal fragments / guardian fragments / council keys / breachstones 
-			Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone") or RegExMatch(Item.Name, "i)Reliquary Key")) {				
+			; offerings / sacrifice and mortal fragments / guardian fragments / council keys / breachstones
+			Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone") or RegExMatch(Item.Name, "i)Reliquary Key")) {
 				If (broadTerms) {
-					tmpName := RegExReplace(Item.Name, "i)(Sacrifice At).*|(Fragment of).*|(Mortal).*|.*('s Key)|.*(Breachstone)|(Reliquary Key)", "$1$2$3$4$5$6") 
+					tmpName := RegExReplace(Item.Name, "i)(Sacrifice At).*|(Fragment of).*|(Mortal).*|.*('s Key)|.*(Breachstone)|(Reliquary Key)", "$1$2$3$4$5$6")
 					terms.push(tmpName)
 				} Else {
 					terms.push(Item.Name)
 				}
 			}
 			; other items (weapons, armour pieces, jewelry etc)
-			Else {			
+			Else {
 				If (broadTerms) {
 					If (Item.IsWeapon or Item.IsAmulet or Item.IsRing or Item.IsBelt or InStr(Item.SubType, "Shield")) {
 						; add the term "Chance to Block" to remove items with "Energy Shield" from "Shield" searches
 						If (InStr(Item.SubType, "Shield")) {
 							terms.push("Chance to Block")
 						}
-						
+
 						; add grip type to differentiate 1 and 2 handed weapons
 						If (Item.GripType == "1H" and RegExMatch(Item.Subtype, "i)Sword|Mace|Axe")) {
 							prefix := "One Handed"
 						} Else If (Item.GripType == "2H") {
 							prefix := "Two Handed"
 						}
-						
+
 						; Handle Talismans, they have SubType "Amulet" but this won't be found ingame.
 						If (Item.IsTalisman) {
 							term := "Talisman Tier:"
@@ -9072,11 +9295,11 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 							; add a space since all these terms have a preceding one, this reduces the chance of accidental matches
 							; for example "Ring" found in "Voidbringers" or "during Flask effect"
 							term := " " Item.SubType
-						}						
-						
-						terms.push(prefix . term)	
+						}
+
+						terms.push(prefix . term)
 					}
-					; armour pieces are a bit special, the ingame information doesn't include "armour/body armour" or something alike. 
+					; armour pieces are a bit special, the ingame information doesn't include "armour/body armour" or something alike.
 					; we can use the item defences though to match armour pieces with the same defence types (can't differentiate between "Body Armour" and "Helmet").
 					Else If (InStr(Item.BaseType, "Armour")) {
 						For key, val in ItemData.Parts {
@@ -9098,8 +9321,8 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		If (terms.length() > 0) {
 			SendInput ^{sc021} ; sc021 = f
 			searchText =
-			For key, val in terms {		
-				searchText = %searchText% "%val%"			
+			For key, val in terms {
+				searchText = %searchText% "%val%"
 			}
 
 			; the search field has a 50 character limit, we have to close the last term with a quotation mark
@@ -9107,8 +9330,8 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 				newString := SubStr(searchText, 1, 50)
 				temp := RegExReplace(newString, "i)""", Replacement = "", QuotationMarks)
 				; make sure we have an equal amount of quotation marks (all terms properly enclosed)
-				If (QuotationMarks&1) {					
-					searchText := RegExReplace(newString, "i).$", """")				
+				If (QuotationMarks&1) {
+					searchText := RegExReplace(newString, "i).$", """")
 				}
 			}
 
@@ -9120,42 +9343,42 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 			} Else {
 				SendInput ^{sc01e}	; ctrl + a
 			}
-		} Else {			
+		} Else {
 			SendInput ^{sc021}		; send ctrl + f in case we don't have information to input
 		}
 
 		Sleep, 10
 		If (!dontRestoreClipboard) {
 			Clipboard := ClipBoardTemp
-		}		
+		}
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
 }
 
 AdvancedItemInfoExt() {
-	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass
 	{
 		Global Item, Opts, Globals, ItemData
-		
+
 		ClipBoardTemp := Clipboard
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-		
-		Clipboard := 
+
+		Clipboard :=
 		Send ^{sc02E}	; ^{c}
-		Sleep 100		
-		
+		Sleep 100
+
 		CBContents := GetClipboardContents()
-		CBContents := PreProcessContents(CBContents)		
+		CBContents := PreProcessContents(CBContents)
 		Globals.Set("ItemText", CBContents)
 		ParsedData := ParseItemData(CBContents)
-		
-		If (Item.Name) {			
+
+		If (Item.Name) {
 			itemTextBase64 := ""
 			FileDelete, %A_ScriptDir%\temp\itemText.txt
 			FileAppend, %CBContents%, %A_ScriptDir%\temp\itemText.txt, utf-8
 			command		:= "certutil -encode -f ""%cd%\temp\itemText.txt"" ""%cd%\temp\base64ItemText.txt"" & type ""%cd%\temp\base64ItemText.txt"""
 			itemTextBase64	:= ReadConsoleOutputFromFile(command, "encodeToBase64.txt")
-			itemTextBase64	:= Trim(RegExReplace(itemTextBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))				
+			itemTextBase64	:= Trim(RegExReplace(itemTextBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))
 			itemTextBase64	:= UriEncode(itemTextBase64)
 			itemTextBase64	:= RegExReplace(itemTextBase64, "i)^(%0D)?(%0A)?|((%0D)?(%0A)?)+$", "")
 			url 			:= "http://pathof.info/?item=" itemTextBase64
@@ -9163,7 +9386,7 @@ AdvancedItemInfoExt() {
 			OpenWebPageWith(openWith, Url)
 		}
 		SuspendPOEItemScript = 0
-	}	
+	}
 }
 
 OpenWebPageWith(application, url) {
@@ -9171,10 +9394,24 @@ OpenWebPageWith(application, url) {
 		ie := ComObjCreate("InternetExplorer.Application")
 		ie.Visible:=True
 		ie.Navigate(url)
+	} Else If (InStr(application, "launchwinapp")) {
+		; Microsoft Edge
+		Run, %comspec% /c "chcp 1251 & start microsoft-edge:%Url%", , Hide
 	} Else {
-		; while this should work with IE there may be cases where it doesn't
-		Run, "%application%" -new-tab "%Url%"
+		args := ""
+		If (StrLen(application)) {
+			args := "-new-tab"
+
+			Try {
+				Run, "%application%" %args% "%Url%"
+			} Catch e {
+				Run, "%application%" "%Url%"
+			}
+		} Else {
+			Run %Url%
+		}
 	}
+
 	Return
 }
 
@@ -9182,19 +9419,19 @@ LookUpAffixes() {
 	/*
 		Opens item base on poeaffix.net
 	*/
-	IfWinActive, Path of Exile ahk_class POEWindowClass 
+	IfWinActive, Path of Exile ahk_class POEWindowClass
 	{
 		Global Item, Opts, Globals, ItemData
-		
+
 		ClipBoardTemp := Clipboard
-		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event		
-		
-		Clipboard := 
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+
+		Clipboard :=
 		Send ^{sc02E}	; ^{c}
-		Sleep 100		
-		
+		Sleep 100
+
 		CBContents := GetClipboardContents()
-		CBContents := PreProcessContents(CBContents)		
+		CBContents := PreProcessContents(CBContents)
 		Globals.Set("ItemText", CBContents)
 		ParsedData := ParseItemData(CBContents)
 		If (Item.Name) {
@@ -9202,7 +9439,7 @@ LookUpAffixes() {
 		}
 
 		If (Item.Name) {
-			url := "http://poeaffix.net/" 
+			url := "http://poeaffix.net/"
 			If (RegExMatch(Item.TypeName, "i)Sacrificial Garb")) {
 				url 		.= "ch-garb" ; ".html"
 			} Else {
@@ -9212,10 +9449,10 @@ LookUpAffixes() {
 				RegExMatch(Item.SubType, "i)Axe|Sword|Mace|Sceptre|Bow|Staff|Wand|Fish|Dagger", weapon)
 				RegExMatch(Item.Subtype, "i)Amulet|Ring|Belt|Quiver|Flask", accessory)
 				RegExMatch(Item.Subtype, "i)Cobalt|Viridian|Crimson", jewel)
-				
+
 				suffix	:= ar . ev . es . weapon . accessory . jewel
 				StringLower, suffix, suffix
-				
+
 				boots	:= RegExMatch(Item.Subtype, "i)Boots") ? "bt" : ""
 				chest 	:= RegExMatch(Item.Subtype, "i)BodyArmour") ? "ch" : ""
 				gloves 	:= RegExMatch(Item.Subtype, "i)Gloves") ? "gl" : ""
@@ -9224,20 +9461,20 @@ LookUpAffixes() {
 				ac		:= StrLen(accessory) ? "ac" : ""
 				jw		:= StrLen(jewel) ? "jw" : ""
 				gripType 	:= Item.GripType != "None" ? Item.GripType : ""
-				
+
 				prefix	:= boots . chest . gloves . helmet . shield . gripType . ac . jw
 				StringLower, prefix, prefix
-				
+
 				url		.= prefix "-" suffix ; ".html"
-			}			
+			}
 			openWith := AssociatedProgram("html")
 			OpenWebPageWith(openWith, Url)
 		}
-		
+
 		Sleep, 10
 		If (!dontRestoreClipboard) {
 			Clipboard := ClipBoardTemp
-		}		
+		}
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
 	}
 }
@@ -9247,14 +9484,21 @@ LookUpAffixes() {
 ; Tick every 100 ms
 ; Remove tooltip if mouse is moved or 5 seconds pass
 ToolTipTimer:
-	Global Opts, ToolTipTimeout
+	Global Opts, ToolTipTimeout, gdipTooltip
 	ToolTipTimeout += 1
 	MouseGetPos, CurrX, CurrY
 	MouseMoved := (CurrX - X) ** 2 + (CurrY - Y) ** 2 > Opts.MouseMoveThreshold ** 2
 	If (MouseMoved or ((UseTooltipTimeout == 1) and (ToolTipTimeout >= Opts.ToolTipTimeoutTicks)))
 	{
 		SetTimer, ToolTipTimer, Off
-		ToolTip
+		If (Opts.UseGDI or gdipTooltip.GetVisibility()) 
+		{
+			gdipTooltip.HideGdiTooltip(true)
+		}
+		Else
+		{
+			ToolTip
+		}
 	}
 	return
 
@@ -9278,7 +9522,7 @@ OnClipBoardChange:
 		}
 	}
 	return
-	
+
 ShowUpdateNotes:
 	ShowUpdateNotes()
 	return
@@ -9325,6 +9569,97 @@ SettingsUI_BtnDefaults:
 	ShowSettingsUI()
 	return
 
+OpenGDIColorPicker(type, rgb, opacity, title, image) {
+	; GDI+
+	global
+	_defaultColor		:= Opts["GDI" type "Color"]
+	_defaultOpacity	:= Opts["GDI" type "Opacity"]
+	_rgb				:= gdipTooltip.ValidateRGBColor(rgb, _defaultColor)
+	_opacity			:= gdipTooltip.ValidateOpacity(opacity, _defaultOpacity, 10, 10)
+	_ColorHandle		:= GDI%_type%ColorH
+	_OpacityHandle		:= GDI%_type%OpacityH
+	;msgbox % type "`n" rgb " -> " _defaultColor " -> " _rgb "`n" opacity " -> " _defaultOpacity " -> " _opacity
+	
+	ColorPickerResults	:= new ColorPicker(_rgb, _opacity, title, image)
+	If (StrLen(ColorPickerResults[2])) {		
+		GuiControl, , % _ColorHandle, % ColorPickerResults[2]
+		GuiControl, , % _OpacityHandle, % ColorPickerResults[3]	
+	}
+}
+
+SettingsUI_BtnGDIWindowColor:
+	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"	
+	_type	:= "Window"
+	GuiControlGet, _cGDIColor  , , % GDIWindowColorH
+	GuiControlGet, _cGDIOpacity, , % GDIWindowOpacityH
+	OpenGDIColorPicker(_type, _cGDIColor, _cGDIOpacity, "GDI+ Tooltip " _type " Color Picker", _image)
+	return
+	
+SettingsUI_BtnGDIBorderColor:
+	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"	
+	_type	:= "Border"
+	GuiControlGet, _cGDIColor  , , % GDIBorderColorH
+	GuiControlGet, _cGDIOpacity, , % GDIBorderOpacityH	
+	OpenGDIColorPicker(_type, _cGDIColor, _cGDIOpacity, "GDI+ Tooltip " _type " Color Picker", _image)
+	return
+	
+SettingsUI_BtnGDITextColor:
+	_image	:= A_ScriptDir "\resources\images\colorPickerPreviewBg.png"	
+	_type	:= "Text"
+	GuiControlGet, _cGDIColor  , , % GDITextColorH
+	GuiControlGet, _cGDIOpacity, , % GDITextOpacityH
+	OpenGDIColorPicker(_type, _cGDIColor, _cGDIOpacity, "GDI+ Tooltip " _type " Color Picker", _image)
+	return
+
+SettingsUI_BtnGDIPreviewTooltip:
+	; temporarily save GDI state as true
+	_tempGDIState := Opts.UseGDI
+	_tempGDIRenderingFixState := Opts.GDIRenderingFix
+	GuiControlGet, _tempUseGDI, , % UseGDIH
+	Opts.UseGDI := _tempUseGDI
+	
+	GuiControlGet, _tempGDIWindowColor   , , % GDIWindowColorH
+	GuiControlGet, _tempGDIWindowOpacity , , % GDIWindowOpacityH
+	GuiControlGet, _tempGDIBorderColor   , , % GDIBorderColorH
+	GuiControlGet, _tempGDIBorderOpacity , , % GDIBorderOpacityH
+	GuiControlGet, _tempGDITextColor   , , % GDITextColorH
+	GuiControlGet, _tempGDITextOpacity , , % GDITextOpacityH
+	GuiControlGet, _tempGDIRenderingFix , , % GDIRenderingFixH
+	gdipTooltip.SetRenderingFix(_tempGDIRenderingFix)
+	gdipTooltip.UpdateColors(_tempGDIWindowColor, _tempGDIWindowOpacity, _tempGDIBorderColor, _tempGDIBorderOpacity, _tempGDITextColor, _tempGDITextOpacity, "10", "16")
+	_testString =
+	(
+		TOOLIP Preview Window
+		
+		Voidbringer
+		Conjurer Gloves
+		Item Level:    70
+		Base Level:    55
+		Max Sockets:    4
+		--------
+		+1 to Level of Socketed Elem…          
+		Increased Critical Strike Ch… 125-150  
+		Increased Energy Shield       180-250  
+		Increased Mana Cost of Skill…   80-40  
+		Energy Shield gained on Kill    15-20
+	)
+	ShowToolTip(_testString)
+	; reset options
+	Opts.UseGDI := _tempGDIState
+	Opts.GDIRenderingFix := _tempGDIRenderingFixState
+	gdipTooltip.SetRenderingFix(Opts.GDIRenderingFix)
+	gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, "10", "16")
+	return
+
+SettingsUI_BtnGDIDefaults:
+	GuiControl, , % GDIWindowColorH  , % Opts.GDIWindowColorDefault 
+	GuiControl, , % GDIWindowOpacityH, % Opts.GDIWindowOpacityDefault
+	GuiControl, , % GDIBorderColorH  , % Opts.GDIBorderColorDefault
+	GuiControl, , % GDIBorderOpacityH, % Opts.GDIBorderOpacityDefault 
+	GuiControl, , % GDITextColorH    , % Opts.GDITextColorDefault
+	GuiControl, , % GDITextOpacityH  , % Opts.GDITextOpacityDefault
+	return
+
 SettingsUI_ChkUseTooltipTimeout:
 	GuiControlGet, IsChecked,, UseTooltipTimeout
 	If (Not IsChecked)
@@ -9337,6 +9672,46 @@ SettingsUI_ChkUseTooltipTimeout:
 		GuiControl, Enable, LblToolTipTimeoutTicks
 		GuiControl, Enable, ToolTipTimeoutTicks
 	}
+	return
+
+SettingsUI_ChkUseGDI:
+	; GDI+
+	GuiControlGet, IsChecked,, UseGDI
+	If (Not IsChecked)
+	{		
+		GuiControl, Disable, GDIWindowColor
+		GuiControl, Disable, GDIWindowOpacity
+		GuiControl, Disable, GDIBorderColor
+		GuiControl, Disable, GDIBorderOpacity
+		GuiControl, Disable, GDITextColor
+		GuiControl, Disable, GDITextOpacity
+		
+		GuiControl, Disable, BtnGDIWindowColor
+		GuiControl, Disable, BtnGDIBorderColor
+		GuiControl, Disable, BtnGDITextColor		
+
+		GuiControl, Disable, BtnGDIDefaults	
+		GuiControl, Disable, BtnGDIPreviewTooltip
+		GuiControl, Disable, GDIRenderingFix
+	}
+	Else
+	{
+		GuiControl, Enable, GDIWindowColor
+		GuiControl, Enable, GDIWindowOpacity
+		GuiControl, Enable, GDIBorderColor
+		GuiControl, Enable, GDIBorderOpacity
+		GuiControl, Enable, GDITextColor
+		GuiControl, Enable, GDITextOpacity
+		
+		GuiControl, Enable, BtnGDIWindowColor
+		GuiControl, Enable, BtnGDIBorderColor
+		GuiControl, Enable, BtnGDITextColor
+
+		GuiControl, Enable, BtnGDIDefaults	
+		GuiControl, Enable, BtnGDIPreviewTooltip
+		GuiControl, Enable, GDIRenderingFix
+	}
+
 	return
 
 SettingsUI_ChkDisplayToolTipAtFixedCoords:
@@ -9384,7 +9759,7 @@ MenuTray_About:
 
 		FirstTimeA = No
 	}
-	
+
 	height := Globals.Get("AboutWindowHeight", 340)
 	width  := Globals.Get("AboutWindowWidth", 435)
 	Gui, About:Show, h%height% w%width%, About..
@@ -9422,14 +9797,18 @@ EditOpenUserSettings:
     OpenUserSettingsFolder(Globals.Get("ProjectName"))
     return
 
-EditAdditionalMacros:
-	OpenUserDirFile("AdditionalMacros.txt")
+EditAdditionalMacrosSettings:
+	OpenUserDirFile("AdditionalMacros.ini")
 	return
 
-EditMapModWarnings:
-	OpenUserDirFile("MapModWarnings.txt")
+PreviewAdditionalMacros:
+	OpenTextFileReadOnly(A_ScriptDir "\resources\ahk\AdditionalMacros.ahk")
 	return
-	
+
+EditMapModWarningsConfig:
+	OpenUserDirFile("MapModWarnings.ini")
+	return
+
 EditCustomMacrosExample:
 	OpenUserDirFile("CustomMacros\customMacros_example.txt")
 	return
@@ -9437,12 +9816,12 @@ EditCustomMacrosExample:
 EditCurrencyRates:
 	OpenCreateDataTextFile("CurrencyRates.txt")
 	return
-	
+
 ReloadScript:
 	scriptName := RegExReplace(Globals.Get("ProjectName"), "i)poe-", "Run_") . ".ahk"
 	Run, "%A_AhkPath%" "%A_ScriptDir%\%scriptName%"
 	return
-	
+
 ShowAssignedHotkeys:
 	ShowAssignedHotkeys()
 	return
@@ -9460,7 +9839,7 @@ UnhandledDlg_ShowItemText:
 UnhandledDlg_OK:
 	Gui, 3:Submit
 	return
-	
+
 CheckForUpdates:
 	If (not globalUpdateInfo.repo) {
 		global globalUpdateInfo := {}
@@ -9474,7 +9853,7 @@ CheckForUpdates:
 		globalUpdateInfo.skipUpdateCheck	:= Opts.ShowUpdateNotifications
 		SplashScreenTitle := "PoE-ItemInfo"
 	}
-	
+
 	hasUpdate := PoEScripts_Update(globalUpdateInfo.user, globalUpdateInfo.repo, globalUpdateInfo.releaseVersion, globalUpdateInfo.skipUpdateCheck, userDirectory, isDevVersion, globalUpdateInfo.skipSelection, globalUpdateInfo.skipBackup)
 	If (hasUpdate = "no update" and not firstUpdateCheck) {
 		SplashTextOn, , , No update available
@@ -9482,11 +9861,11 @@ CheckForUpdates:
 		SplashTextOff
 	}
 Return
-	
+
 FetchCurrencyData:
 	CurrencyDataJSON := {}
 	currencyLeagues := ["Standard", "Hardcore", "tmpstandard", "tmphardcore"]
-	
+
 	Loop, % currencyLeagues.Length() {
 		currencyLeague := currencyLeagues[A_Index]
 		url  := "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
@@ -9496,7 +9875,7 @@ FetchCurrencyData:
 		Try {
 			If (FileExist(file)) {
 				FileRead, JSONFile, %file%
-				parsedJSON := JSON.Load(JSONFile)				
+				parsedJSON := JSON.Load(JSONFile)
 				CurrencyDataJSON[currencyLeague] := parsedJSON.lines
 				ParsedAtLeastOneLeague := True
 			}
@@ -9505,22 +9884,22 @@ FetchCurrencyData:
 			}
 		} Catch error {
 			errorMsg := "Parsing the currency data (json) from poe.ninja failed for league:"
-			errorMsg .= "`n" currencyLeague 
+			errorMsg .= "`n" currencyLeague
 			;MsgBox, 16, PoE-ItemInfo - Error, %errorMsg%
 		}
 	}
-	
+
 	If (ParsedAtLeastOneLeague) {
 		Globals.Set("LastCurrencyUpdate", A_NowUTC)
 	}
-	
+
 	; parse JSON and write files to disk (like \data\CurrencyRates.txt)
 	For league, data in CurrencyDataJSON {
 		ratesFile := A_ScriptDir . "\temp\currencyRates_" . league . ".txt"
 		ratesJSONFile := A_ScriptDir . "\temp\currencyData_" . league . ".json"
-		FileDelete, %ratesFile% 
-		FileDelete, %ratesJSONFile% 
-		
+		FileDelete, %ratesFile%
+		FileDelete, %ratesJSONFile%
+
 		If (league == "tmpstandard" or league == "tmphardcore" ) {
 			comment := InStr(league, "standard") ? ";Challenge Standard`n" : ";Challenge Hardcore`n"
 		}
@@ -9528,31 +9907,31 @@ FetchCurrencyData:
 			comment := ";Permanent " . league . "`n"
 		}
 		FileAppend, %comment%, %ratesFile%
-		
+
 		Loop, % data.Length() {
 			cName       := data[A_Index].currencyTypeName
 			cChaosEquiv := data[A_Index].chaosEquivalent
-			
+
 			If (cChaosEquiv >= 1) {
 				cChaosQuantity := ZeroTrim(Round(cChaosEquiv, 2))
 				cOwnQuantity   := 1
 			}
 			Else {
-				cChaosQuantity := 1 
+				cChaosQuantity := 1
 				cOwnQuantity   := ZeroTrim(Round(1 / cChaosEquiv, 2))
-			}			
-			
+			}
+
 			result := cName . "|" . cOwnQuantity . ":" . cChaosQuantity . "`n"
 			FileAppend, %result%, %ratesFile%
 		}
 	}
-	
+
 	CurrencyDataJSON :=
 Return
 
 ZeroTrim(number) {
 	; Trim trailing zeros from numbers
-	
+
 	RegExMatch(number, "(\d+)\.?(.+)?", match)
 	If (StrLen(match2) < 1) {
 		Return number
