@@ -972,23 +972,33 @@ Each array element is an object with 8 keys:
 		maxLo: lower max value (3)
 		maxHi: upper max value (4)
 */
-ArrayFromDatafile(Filename)
+ArrayFromDatafile(Filename, AffixMode="Native")
 {
 	If(Filename = False)
 	{
 		return False
 	}
 	
-	ModDataArray := []
-	min		:= ""
-	max		:= ""
-	minLo	:= ""
-	minHi	:= ""
-	maxLo	:= ""
-	maxHi	:= ""
+	ReadType := "Native"
+	
+	ModDataArray_Native  := []
+	ModDataArray_Essence := []
 	
 	Loop, Read, %A_ScriptDir%\%Filename%
 	{
+		min		:= ""
+		max		:= ""
+		minLo	:= ""
+		minHi	:= ""
+		maxLo	:= ""
+		maxHi	:= ""
+		
+		If(A_LoopReadLine ~= "--Essence--")
+		{
+			ReadType := "Essence"
+			Continue
+		}
+		
 		StringSplit, AffixDataParts, A_LoopReadLine, |,
 		RangeItemLevel := AffixDataParts1
 		RangeValues := AffixDataParts2
@@ -1032,9 +1042,16 @@ ArrayFromDatafile(Filename)
 		}
 		
 		element := {"ilvl":RangeItemLevel, "values":RangeValues, "min":min, "max":max, "minLo":minLo, "minHi":minHi, "maxLo":maxLo, "maxHi":maxHi}
-		ModDataArray.InsertAt(1, element)
+		ModDataArray_%ReadType%.InsertAt(1, element)
 	}
-	return ModDataArray
+	
+	If(AffixMode = "essence" or AffixMode = "ess")
+	{
+		return ModDataArray_Essence
+	}
+	Else{
+		return ModDataArray_Native
+	}
 }
 
 /*
@@ -1739,7 +1756,6 @@ AssembleAffixDetails()
 				If(ValueRange[2])
 				{
 					ValueRange1Width := StrLen(ValueRange[1])
-			AffixTypeWidth := StrLen(AffixType) ? StrLen(AffixType . Delim) : StrLen(Delim)
 				}
 				Else
 				{	; Has no ilvl entry for first range, can expand a bit.
@@ -1767,11 +1783,6 @@ AssembleAffixDetails()
 			{
 				ValueRange2Width := StrLen(ValueRange[3])
 			}
-			
-	Header := ""
-
-	Result := Header . Result
-
 		}
 		
 		If( ! Item.IsJewel)
@@ -2640,6 +2651,16 @@ LookupAffixAndSetInfoLine(Filename, AffixType, ItemLevel, Value, AffixLineText:=
 		AffixLineNum := A_Index
 	}
 	
+	AffixMode := "Native"
+	If(AffixType ~= ".*Craft.*")
+	{
+		AffixMode := "Crafted"
+	}
+	Else If(AffixType ~= ".*Essence.*")
+	{
+		AffixMode := "Essence"
+	}
+	
 	CurrTier := 0
 	ValueRanges := LookupAffixData(Filename, ItemLevel, Value, CurrTier)
 	AppendAffixInfo(MakeAffixDetailLine(AffixLineText, AffixType, ValueRanges, CurrTier), AffixLineNum)
@@ -3388,7 +3409,7 @@ SolveAffixes_PreSuf(Keyname, LineNum, Value, Filename1, Filename2, ItemLevel)
 
 ParseAffixes(ItemDataAffixes, Item)
 {
-	Global Globals, Opts, AffixTotals, AffixLines, Itemdata
+	Global Globals, Opts, AffixTotals, AffixLines, Itemdata, DebugMode
 	
 	ItemDataChunk	:= ItemDataAffixes
 	
@@ -3983,7 +4004,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			}
 			IfInString, A_LoopField, increased Poison Duration on Enemies
 			{
-				LookupAffixAndSetInfoLine("data\jewel\PoisonDurationOnEnemies.txt", "Hybrid Suffix", ItemLevel, CurrValue)
+				LookupAffixAndSetInfoLine("data\jewel\PoisonDuration.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
 			IfInString, A_LoopField, chance to cause Bleeding
@@ -5278,7 +5299,7 @@ ParseAffixes(ItemDataAffixes, Item)
 					LookupAffixAndSetInfoLine(FileToMaxES, "Prefix", ItemLevel, Value, LineTxt, LineNum)
 				}
 			}
-			Else If (HasToArmour or HasToEvasion or HasToMaxES)	; Is not Armour, case for Belt/Ring/Amulet. Belts can have multiple single flat mods while Armours can't.
+			Else If (HasToArmour or HasToEvasion or HasToMaxES)	; Not an Armour, case for Belt/Ring/Amulet. Belts can have multiple single flat mods while Armours can't.
 			{
 				If (HasToArmour)
 				{
@@ -5492,7 +5513,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			If (HasIncrSpellOrElePrefix and (HasIncrSpellOrElePrefix != HasIncrSpellDamage))
 			{
-				FileSpell := False	; There is an increased Fire, Cold or Lightning prefix, so SpellDamage can't have the pure mod.
+				FileSpell := False	; There is an increased Fire, Cold or Lightning Prefix, so SpellDamage can't have the pure mod.
 			}
 			
 			LineNum1 := HasIncrSpellDamage
@@ -5623,8 +5644,8 @@ ParseAffixes(ItemDataAffixes, Item)
 	AffixTotals.NumSuffixesMax := AffixTotals.NumSuffixes
 	AffixTotals.NumTotal := AffixTotals.NumPrefixes + AffixTotals.NumSuffixes
 	
+	DebugMode := False
 	DebugFile(Itemdata.UncertainAffixes)
-	
 	
 	; THIS FUNCTION IS QUITE COMPLICATED. IT INVOLVES FOUR LOOPS THAT FULFILL DIFFERENT JOBS AT DIFFERENT TIMES.
 	;   CONSEQUENTLY THE CODE CAN'T BE SIMPLY READ FROM TOP TO BOTTOM. IT IS HEAVILY COMMENTED THOUGH.
@@ -5871,6 +5892,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			++i
 		}
 	}
+	DebugMode := True
 	return
 }
 
@@ -6004,20 +6026,6 @@ PostProcessData(ParsedData)
 		{
 			Continue
 		}
-		/*
-		If (InStr(CurrChunk, "Hybrid ") and Not InStr(CurrChunk, "Affixes"))
-		{
-			CurrChunk := RegExReplace(CurrChunk, "Hybrid", "Hyb")
-		}
-		If (InStr(CurrChunk, "Suffix") and Not InStr(CurrChunk, "Affixes"))
-		{
-			CurrChunk := RegExReplace(CurrChunk, "Suffix", "S")
-		}
-		If (InStr(CurrChunk, "Prefix") and Not InStr(CurrChunk, "Affixes"))
-		{
-			CurrChunk := RegExReplace(CurrChunk, "Prefix", "P")
-		}
-		*/
 		If (A_Index < ParsedDataChunks0)
 		{
 			Result := Result . CurrChunk . "--------`r`n"
@@ -6035,8 +6043,6 @@ ParseClipBoardChanges(debug = false)
 {
 	Global Opts, Globals
 	
-	DebugFile("", , 1)
-	
 	CBContents := GetClipboardContents()
 	CBContents := PreProcessContents(CBContents)
 	
@@ -6051,7 +6057,6 @@ ParseClipBoardChanges(debug = false)
 		SetClipboardContents(ParsedData)
 	}
 	
-
 	If (StrLen(ParsedData) and !Opts.OnlyActiveIfPOEIsFront and debug) {
 		AddLogEntry(ParsedData, CBContents)
 	}
