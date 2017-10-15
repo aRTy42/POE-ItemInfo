@@ -45,7 +45,7 @@ PoEScripts_CopyFiles(sourceDir, destDir, ByRef fileList) {
 PoEScripts_ConvertOldFiles(sourceDir, destDir, ByRef overwrittenFiles) {
 	If (FileExist(destDir "\MapModWarnings.txt")) {
 		PoEScripts_BackupUserFileOnDate(destDir, "MapModWarnings.txt")
-		PoEScripts_ConvertMapModsWarnings(destDir)
+		PoEScripts_ConvertMapModsWarnings(sourceDir, destDir)
 		FileDelete, %destDir%\MapModWarnings.txt
 		overwrittenFiles.Push("MapModWarnings.txt")
 	}
@@ -70,12 +70,13 @@ PoEScripts_ConvertOldFiles(sourceDir, destDir, ByRef overwrittenFiles) {
 
 PoEScripts_ConvertOldConfig(sourceDir, destDir, fileFullName, ByRef overwrittenFiles) {
 	OldConfigObj := PoEScripts_TrimEndingSpacesInKeys(class_EasyIni(destDir "\" fileFullName))
+	if (InStr(OldConfigObj.GetTopComments(), "Converted")) {
+		return
+	}
+	PoEScripts_BackupUserFileOnDate(destDir, fileFullName)
 	if (InStr(fileFullName, "config_trade.ini")) {
 		OldConfigObj := PoEScripts_RenameKeysTradeConfig(OldConfigObj)
-	}
-	NewConfigObj := class_EasyIni(sourceDir "\" fileFullName)
-	if (!InStr(OldConfigObj.GetTopComments(), "Converted")) {
-		PoEScripts_BackupUserFileOnDate(destDir, fileFullName)
+		NewConfigObj := class_EasyIni(sourceDir "\" fileFullName)
 		for sectionName, sectionKeys in NewConfigObj {
 			if OldConfigObj.HasKey(sectionName) {
 				for keyName, keyVal in NewConfigObj[sectionName] {
@@ -89,12 +90,16 @@ PoEScripts_ConvertOldConfig(sourceDir, destDir, fileFullName, ByRef overwrittenF
 					}
 				}
 			}
-		}
-		FormatTime, ConvertedAt, A_NowUTC, dd-MM-yyyy
-		NewConfigObj.AddTopComment("Converted with PoeScripts_ConvertOldConfig() on " ConvertedAt " / DO NOT EDIT OR REMOVE THIS COMMENT MANUALLY")
-		NewConfigObj.Save(destDir "\" fileFullName)
-		overwrittenFiles.Push(fileFullName)
+		}	
 	}
+	else{
+		NewConfigObj := class_EasyIni(sourceDir "\" fileFullName)
+	}
+	FormatTime, ConvertedAt, A_NowUTC, dd-MM-yyyy
+	NewConfigObj.AddTopComment("Converted with PoeScripts_ConvertOldConfig() on " ConvertedAt " / DO NOT EDIT OR REMOVE THIS COMMENT MANUALLY")
+	NewConfigObj.Save(destDir "\" fileFullName)
+	overwrittenFiles.Push(fileFullName)
+	
 	Return
 }
 
@@ -140,20 +145,13 @@ PoEScripts_ConvertAdditionalMacrosSettings(destDir) {
 	Return
 }
 
-PoEScripts_ConvertMapModsWarnings(destDir) {
+PoEScripts_ConvertMapModsWarnings(sourceDir, destDir) {
 	FileRead, MapModWarnings_TXT, %destDir%\MapModWarnings.txt
 	MapModWarnings_JSON := JSON.Load(MapModWarnings_TXT)
-	MapModWarnings_INI := class_EasyIni()
-	;secGeneral := "General"
-	secAffixes := "Affixes"
-	;MapModWarnings_INI.AddSection(secGeneral)
-	MapModWarnings_INI.AddSection(secAffixes)
-	;If (MapModWarnings_JSON.HasKey("enable_Warnings")) {
-	;	MapModWarnings_INI.AddKey(secGeneral, "enable_Warnings", MapModWarnings_JSON.enable_Warnings)
-	;	MapModWarnings_JSON.Delete("enable_Warnings")
-	;}
+	MapModWarnings_JSON.delete("enable_Warnings")
+	MapModWarnings_INI := class_EasyIni(sourceDir "\MapModWarnings.ini")
 	For keyName, keyVal in MapModWarnings_JSON {
-		MapModWarnings_INI.AddKey(secAffixes, keyName, keyVal)
+		MapModWarnings_INI.SetKeyVal("Affixes", keyName, keyVal)
 	}
 	FormatTime, ConvertedAt, A_NowUTC, dd-MM-yyyy
 	MapModWarnings_INI.AddTopComment("Converted with PoEScripts_ConvertMapModsWarnings() on " ConvertedAt " / DO NOT EDIT OR REMOVE THIS COMMENT MANUALLY")

@@ -125,7 +125,8 @@ class UserOptions {
 	; Font size for the tooltip.
 	FontSize := 9
 	
-	; Pixels mouse must move to auto-dismiss tooltip
+	; Hide tooltip when the mouse cursor moved x pixels away from the initial position.
+	; Effectively permanent tooltip when using a value larger than the monitor diameter.
 	MouseMoveThreshold := 40
 	
 	; Set this to 1 if you want to have the tooltip disappear after the time frame set below.
@@ -2148,11 +2149,11 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			Continue ; Not interested in blank lines
 		}
-
-
+		
+		
 		; --- ONE LINE AFFIXES ---
-
-
+		
+		
 		If (RegExMatch(A_LoopField, "Area is inhabited by (Abominations|Humanoids|Goatmen|Demons|ranged monsters|Animals|Skeletons|Sea Witches and their Spawn|Undead|Ghosts|Solaris fanatics|Lunaris fanatics)"))
 		{
 			SetMapInfoLine("Prefix", MapAffixCount)
@@ -2162,7 +2163,7 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			MapModWarnings .= MapModWarn.MonstExtraEleDmg ? "`nExtra Ele Damage" : ""			
 			SetMapInfoLine("Prefix", MapAffixCount)
-
+			
 			Count_DmgMod += 1
 			String_DmgMod := String_DmgMod . ", Extra Ele"
 			Continue
@@ -8565,7 +8566,7 @@ CreateSettingsUI()
 	Global
 	
 	ExtraHeightOfTabsWithTradeMacro := SkipItemInfoUpdateCall ? 25 : 0
-
+	
 	; General
 	generalHeight := SkipItemInfoUpdateCall ? "150" : "240"		; "180" : "270" with ParseItemHotKey
 	GuiAddGroupBox("General", "x7 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h" generalHeight " Section")
