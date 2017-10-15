@@ -58,9 +58,9 @@ PoEScripts_ConvertOldFiles(sourceDir, destDir, ByRef overwrittenFiles) {
 	If (FileExist(destDir "\config_trade.ini")) {
 		PoeScripts_ConvertOldConfig(sourceDir, destDir, "config_trade.ini", overwrittenFiles)
 	}
-	;If (FileExist(destDir "\config.ini")) {
-	;	PoeScripts_ConvertOldConfig(sourceDir, destDir, "config.ini", overwrittenFiles)
-	;}
+	If (FileExist(destDir "\config.ini")) {
+		PoeScripts_ConvertOldConfig(sourceDir, destDir, "config.ini", overwrittenFiles)
+	}
 	if (InStr(FileExist(destDir "\data"), "D")) {
 		PoEScripts_BackupUserFileOnDate(destDir, "data")
 		FileRemoveDir, %destDir%\data, 1

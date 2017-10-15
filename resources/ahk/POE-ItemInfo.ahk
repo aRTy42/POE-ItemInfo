@@ -47,10 +47,10 @@ Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
-Globals.Set("SettingsUIHeight", 600)
+Globals.Set("SettingsUIHeight", 550)
 Globals.Set("AboutWindowHeight", 340)
 Globals.Set("AboutWindowWidth", 435)
-Globals.Set("SettingsUITitle", "PoE Item Info Settings")
+Globals.Set("SettingsUITitle", "PoE ItemInfo Settings")
 Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
 Globals.Set("ScriptList", [A_ScriptDir "\POE-ItemInfo"])
@@ -146,14 +146,20 @@ class UserOptions {
 	
 	; Set this to 1 to enable GDI+ rendering
 	UseGDI := 0
-
-	; Format: RRGGBB
+	
+	; Format: RRGGBB (hex)
 	GDIWindowColor			:= "000000"
-	GDIBorderColor			:= "513101"
+	GDIWindowColorDefault	:= "000000"
+	GDIBorderColor			:= "654025"
+	GDIBorderColorDefault	:= "654025"
 	GDITextColor			:= "FEFEFE"
+	GDITextColorDefault		:= "FEFEFE"
 	GDIWindowOpacity		:= 90
+	GDIWindowOpacityDefault	:= 90
 	GDIBorderOpacity		:= 90
+	GDIBorderOpacityDefault	:= 90
 	GDITextOpacity			:= 100
+	GDITextOpacityDefault	:= 100
 	GDIRenderingFix		:= 1
 	
 	ScanUI()
@@ -452,7 +458,7 @@ Menu, Tray, Add, Reload Script (Use only this), ReloadScript
 Menu, Tray, Add ; Separator
 Menu, Tray, Add, About..., MenuTray_About
 Menu, Tray, Add, Show all assigned Hotkeys, ShowAssignedHotkeys
-Menu, Tray, Add, % Globals.Get("SettingsUITitle", "PoE Item Info Settings"), ShowSettingsUI
+Menu, Tray, Add, % Globals.Get("SettingsUITitle", "PoE ItemInfo Settings"), ShowSettingsUI
 Menu, Tray, Add, Check for updates, CheckForUpdates
 Menu, Tray, Add, Update Notes, ShowUpdateNotes
 Menu, Tray, Add ; Separator
@@ -461,7 +467,7 @@ Menu, Tray, Add, Preview Files, :PreviewTextFiles
 Menu, Tray, Add, Open User Folder, EditOpenUserSettings
 Menu, Tray, Add ; Separator
 Menu, Tray, Standard
-Menu, Tray, Default, % Globals.Get("SettingsUITitle", "PoE Item Info Settings")
+Menu, Tray, Default, % Globals.Get("SettingsUITitle", "PoE ItemInfo Settings")
 
 IfNotExist, %A_ScriptDir%\data
 {
@@ -1166,7 +1172,7 @@ LookupTierByValue(Value, ModDataArray, ItemLevel=100)
 }
 
 
-LookupAffixData(Filename, ItemLevel, Value, ByRef Tier=0)
+LookupAffixData(Filename, ItemLevel, Value, ByRef Tier="")
 {
 	
 	ModDataArray := ArrayFromDatafile(Filename)
@@ -1180,13 +1186,28 @@ LookupAffixData(Filename, ItemLevel, Value, ByRef Tier=0)
 	{
 		Tier := [ModTiers.Top, ModTiers.Btm]
 	}
-	Else If(Value > ModDataArray[1].max)
+	Else If(Value contains "-")
 	{
-		Tier := 0
+		SplitRange(Value, Lo, Hi)
+		If(Lo > ModDataArray[1].maxLo and Hi > ModDataArray[1].maxHi)
+		{
+			Tier := 0
+		}
+		Else
+		{
+			Tier := "?"
+		}
 	}
 	Else
 	{
-		Tier := "?"
+		If(Value > ModDataArray[1].max)
+		{
+			Tier := 0
+		}
+		Else
+		{
+			Tier := "?"
+		}
 	}
 	
 	return FormatValueRangesAndIlvl(ModDataArray, Tier)
@@ -1357,7 +1378,7 @@ FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax, StyleOverwrite="")
 		; UpperRange := (TopMin = TopMax) ? TopMax : TopMin "-" TopMax
 		; ValueRange := LowerRange "|" UpperRange
 		
-		ValueRange := BtmMin "-" BtmMax "|" TopMin "-" TopMax
+		ValueRange := BtmMin "-" BtmMax  Opts.DoubleRangeSeparator  TopMin "-" TopMax
 	}
 	
 	return ValueRange
@@ -1373,7 +1394,7 @@ FormatMultiTierRange(BtmMin, BtmMax, TopMin, TopMax)
 	}
 	Else 
 	{
-		return BtmMin "-" BtmMax "…" TopMin "-" TopMax
+		return BtmMin "-" BtmMax  Opts.MultiTierRangeSeparator  TopMin "-" TopMax
 	}
 }
 
@@ -1481,7 +1502,7 @@ DebugFile(Content, LineEnd="`n", StartNewFile=False)
 	{
 		Print := "`n" ExploreObj(Content) "`n`n---`n"
 	}
-	Else If(StrLen(Content) > 30)
+	Else If(StrLen(Content) > 100)
 	{
 		Print := "`n" Content "`n`n---`n"
 	}
@@ -1677,7 +1698,7 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 	}
 	Else
 	{
-		If Tier is number
+		If(IsNum(Tier) or Tier = "?")
 		{
 			; Just one mod and a single numeric tier
 			TierAndType := "T" Tier " " AffixTypeShort(AffixType)
@@ -1850,8 +1871,17 @@ AssembleAffixDetails()
 					
 					If( ! IsObject(ValueRange) )
 					{
-						; Text as ValueRange. Right-aligned to tier range column if it fits.
-						ProcessedLine .= Separator  StrPad(StrPad(ValueRange, ValueRange1Width + 5, "left"), ValueRange1Width + 5 + StrLen(Separator) + ValueRange2Width + 5, "right")
+						; Text as ValueRange. Right-aligned to tier range column and with separator if it fits.
+						If(StrLen(ValueRange) > ValueRange1Width + 5)
+						{
+							; wider than the TierRange column (with ilvl space), content is allowed to also move in the second column but we can't put the Separator in.
+							ProcessedLine .= Separator  StrPad(StrPad(ValueRange, ValueRange1Width + 5, "left"), ValueRange1Width + 5 + StrLen(Separator) + ValueRange2Width + 5, "right")
+						}
+						Else
+						{
+							; Fits into TierRange column (with ilvl space), so we set the Separator and an empty column two.
+							ProcessedLine .= Separator  StrPad(StrPad(ValueRange, ValueRange1Width + 5, "left") . Separator, ValueRange1Width + 5 + StrLen(Separator) + ValueRange2Width + 5, "right")
+						}
 						
 						If(RegExMatch(TierAndType, "^T\d.*"))
 						{
@@ -2667,7 +2697,6 @@ LookupAffixAndSetInfoLine(Filename, AffixType, ItemLevel, Value, AffixLineText:=
 		AffixMode := "Essence"
 	}
 	
-	CurrTier := 0
 	ValueRanges := LookupAffixData(Filename, ItemLevel, Value, CurrTier)
 	AppendAffixInfo(MakeAffixDetailLine(AffixLineText, AffixType, ValueRanges, CurrTier), AffixLineNum)
 }
@@ -2967,7 +2996,7 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 	}
 	Else
 	{
-		If( (Mod1DataArray[Mod1Tiers].minLo and Mod1DataArray[Mod1Tiers].maxHi) or (Mod1DataArray[Mod1Tiers[2]].minLo and Mod1DataArray[Mod1Tiers[1]].maxHi))
+		If(Mod1DataArray[1].maxHi)	; arbitrary pick to check whether mod has double ranges
 		{
 			If(IsObject(Mod1Tiers))
 			{
@@ -2986,7 +3015,7 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 				result[1] := FormatMultiTierRange(WorstBtmMin, WorstTopMin, BestBtmMax, BestTopMax)
 				result[2] := ""
 			}
-			Else If(Mod1Tiers)
+			Else If(IsNum(Mod1Tiers))
 			{
 				BtmMin := Mod1DataArray[Mod1Tiers].minLo
 				BtmMax := Mod1DataArray[Mod1Tiers].minHi
@@ -3028,7 +3057,7 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 				result[1] := FormatMultiTierRange(BtmMin, BtmMax, TopMin, TopMax)
 				result[2] := ""
 			}
-			Else If(Mod1Tiers)
+			Else If(IsNum(Mod1Tiers))
 			{
 				result[1] := Mod1DataArray[Mod1Tiers].values
 				result[2] := Mod1DataArray[Mod1Tiers].ilvl
@@ -3047,7 +3076,6 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 	If(Mod1Tiers = 0 or Mod1Tiers[1] = 0 or Mod1Tiers[2] = 0 or Mod2Tier = 0){
 		result[1] := "Legacy?"
 	}
-	
 	return result
 }
 
@@ -6015,6 +6043,12 @@ IsEmptyString(String)
 	return False
 }
 
+IsNum(Var){
+	If(++Var)
+		return true
+	return false
+}
+
 PreProcessContents(CBContents)
 {
 ; --- Place fixes for data inconsistencies here ---
@@ -8248,7 +8282,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 ShowToolTip(String, Centered = false)
 {
 	Global X, Y, ToolTipTimeout, Opts, gdipTooltip
-
+	
 	; Get position of mouse cursor
 	MouseGetPos, X, Y
 	WinGet, PoEWindowHwnd, ID, ahk_group PoEWindowGrp
@@ -8265,10 +8299,10 @@ ShowToolTip(String, Centered = false)
 		{
 			ScreenOffsetY := A_ScreenHeight / 2
 			ScreenOffsetX := A_ScreenWidth / 2
-
+			
 			XCoord := 0 + ScreenOffsetX
 			YCoord := 0 + ScreenOffsetY
-
+			
 			If (Opts.UseGDI)
 			{
 				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
@@ -8302,10 +8336,10 @@ ShowToolTip(String, Centered = false)
 		CoordMode, ToolTip, Screen
 		ScreenOffsetY := Opts.ScreenOffsetY
 		ScreenOffsetX := Opts.ScreenOffsetX
-
+		
 		XCoord := 0 + ScreenOffsetX
 		YCoord := 0 + ScreenOffsetY
-
+		
 		If (Opts.UseGDI)
 		{
 			gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd, true)
@@ -8318,7 +8352,7 @@ ShowToolTip(String, Centered = false)
 		}
 	}
 	;Fonts.SetFixedFont()
-
+	
 	; Set up count variable and start timer for tooltip timeout
 	ToolTipTimeout := 0
 	SetTimer, ToolTipTimer, 100
@@ -8597,7 +8631,7 @@ CreateSettingsUI()
 
 	GuiAddEdit(Opts.MouseMoveThreshold, "xs180 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
 	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w150 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
-	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip after the mouse has moved x amount of pixels")
+	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip when the mouse cursor moved x pixel away from the initial position.`nEffectively permanent tooltip when using a value larger than the monitor diameter.")
 	
 	
 	GuiAddEdit(Opts.ToolTipTimeoutSeconds, "xs180 yp+27 w50 Number", "ToolTipTimeoutSeconds")
@@ -8614,7 +8648,7 @@ CreateSettingsUI()
 	
 	; Display
 	
-	GuiAddGroupBox("Display", "x277 y+30 w260 h390 Section")
+	GuiAddGroupBox("Display", "x277 y+27 w260 h370 Section")
 	
 	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w210 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
 	AddToolTip(ShowHeaderForAffixOverviewH, "Include a header above the affix overview:`n   TierRange ilvl   Total ilvl  Tier")
@@ -8622,7 +8656,7 @@ CreateSettingsUI()
 	GuiAddCheckbox("Show explanation for used notation", "xs10 yp+30 w210 h30", Opts.ShowExplanationForUsedNotation, "ShowExplanationForUsedNotation", "ShowExplanationForUsedNotationH")
 	AddToolTip(ShowExplanationForUsedNotationH, "Explain abbreviations and special notation symbols at`nthe end of the tooltip when they are used")
 	
-	GuiAddEdit(Opts.AffixTextEllipsis, "xs160 y+7 w40 h20", "AffixTextEllipsis")
+	GuiAddEdit(Opts.AffixTextEllipsis, "xs160 y+5 w40 h20", "AffixTextEllipsis")
 	GuiAddText("Affix text ellipsis:", "xs10 yp+3 w120 h20 0x0100", "LblAffixTextEllipsis", "AffixTextEllipsisH")
 	AddToolTip(AffixTextEllipsisH, "Symbol used when affix text is shortened, such as:`n50% increased Spell…")
 	
@@ -8634,25 +8668,25 @@ CreateSettingsUI()
 	GuiAddText("Double range separator:", "xs10 yp+3 w120 h20 0x0100", "LblDoubleRangeSeparator", "DoubleRangeSeparatorH")
 	AddToolTip(DoubleRangeSeparatorH, "Select separator (default: | ) for double ranges from 'added damage' mods:`na-b to c-d is displayed as a-b|c-d")
 	
-	GuiAddCheckbox("Use compact double ranges", "xs10 yp+30 w210 h30", Opts.UseCompactDoubleRanges, "UseCompactDoubleRanges", "UseCompactDoubleRangesH", "SettingsUI_ChkUseCompactDoubleRanges")
+	GuiAddCheckbox("Use compact double ranges", "xs10 y+3 w210 h30", Opts.UseCompactDoubleRanges, "UseCompactDoubleRanges", "UseCompactDoubleRangesH", "SettingsUI_ChkUseCompactDoubleRanges")
 	AddToolTip(UseCompactDoubleRangesH, "Show double ranges from 'added damage' mods as one range,`ne.g. a-b to c-d becomes a-d")
 	
 	GuiAddCheckbox("Only compact for 'Total' column", "xs30 yp+30 w210 h30", Opts.OnlyCompactForTotalColumn, "OnlyCompactForTotalColumn", "OnlyCompactForTotalColumnH")
 	AddToolTip(OnlyCompactForTotalColumnH, "Only use compact double ranges for the second range column`nin the affix overview (with the header 'total')")
-		
-	GuiAddEdit(Opts.MultiTierRangeSeparator, "xs160 y+7 w40 h20", "MultiTierRangeSeparator")
+	
+	GuiAddEdit(Opts.MultiTierRangeSeparator, "xs160 y+6 w40 h20", "MultiTierRangeSeparator")
 	GuiAddText("Multi tier range separator:", "xs10 yp+3 w120 h20 0x0100", "LblMultiTierRangeSeparator", "MultiTierRangeSeparatorH")
 	AddToolTip(MultiTierRangeSeparatorH, "Select separator (default: … ) for a multi tier roll range with uncertainty:`n83% increased Light…   73-85…83-95   102-109 (84)  T1-4 P + T1-6 S`n	                     There--^")
 	
-	GuiAddEdit(Opts.FontSize, "xs160 y+7 w40 h20 Number", "FontSize")
+	GuiAddEdit(Opts.FontSize, "xs160 y+6 w40 h20 Number", "FontSize")
 	GuiAddText("Font Size:", "xs10 yp+3 w130 h20 0x0100")
 	
-	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", "xs10 yp+30 w240 h60")
-
-	GuiAddButton("&Defaults", "xs11 yp+35 w77 h23", "SettingsUI_BtnDefaults")
-	GuiAddButton("&OK", "Default xs91 yp+0 w77 h23", "SettingsUI_BtnOK")
-	GuiAddButton("&Cancel", "xs171 yp+0 w77 h23", "SettingsUI_BtnCancel")
-
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", "xs10 yp+35 w240 h30 0x0100")
+	
+	GuiAddButton("Defaults", "xs10 ys340 w75 h23", "SettingsUI_BtnDefaults")
+	GuiAddButton("OK", "Default xs91 ys340 w75 h23", "SettingsUI_BtnOK")
+	GuiAddButton("Cancel", "xs172 ys340 w75 h23", "SettingsUI_BtnCancel")
+	
 	; close tabs in case some other script added some
 	Gui, Tab
 }
@@ -8777,7 +8811,7 @@ ShowSettingsUI()
 	; Adjust user option window height depending on whether ItemInfo is used as a Standalone or included in the TradeMacro.
 	; The TradeMacro needs much more space for all the options.
 	SettingsUIHeight := Globals.Get("SettingsUIHeight", 600)
-	SettingsUITitle := Globals.Get("SettingsUITitle", "PoE Item Info Settings")
+	SettingsUITitle := Globals.Get("SettingsUITitle", "PoE ItemInfo Settings")
 	Gui, Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
 }
 
@@ -8805,7 +8839,7 @@ ShowUpdateNotes()
 		file := Files[A_Index][1]
 		FileRead, notes, %file%
 		Gui, UpdateNotes:Add, Edit, r50 ReadOnly w700 BackgroundTrans, %notes%
-
+		
 		NextTab := A_Index + 1
 		Gui, UpdateNotes:Tab, %NextTab%
 	}
@@ -8839,7 +8873,8 @@ IniRead(ConfigPath, SectionName, KeyName, DefaultVal)
 {
 	ConfigObj := class_EasyIni(ConfigPath)
 	If(ConfigObj[SectionName].HasKey(KeyName)){
-		return ConfigObj[SectionName, KeyName]
+		; return value and replace potential leading or trailing 
+		return RegExReplace(ConfigObj[SectionName, KeyName], "^""'|'""$")
 	}
 	Else{
 		return DefaultVal
@@ -8851,9 +8886,13 @@ IniRead(ConfigPath, SectionName, KeyName, DefaultVal)
 
 IniWrite(Val, ConfigPath, SectionName, KeyName)
 {
+	If(RegExMatch(Val, "^\s|\s$")){
+		Val := """'" Val "'"""
+	}
 	ConfigObj := class_EasyIni(ConfigPath)
 	ConfigObj.SetKeyVal(SectionName, KeyName, Val)
 	ConfigObj.Save(ConfigPath)
+	
 	;IniWrite, %Val%, %ConfigPath%, %SectionName%, %KeyName%
 }
 
@@ -9554,13 +9593,13 @@ LookUpAffixes() {
 ; ########### TIMERS ############
 
 ; Tick every 100 ms
-; Remove tooltip if mouse is moved or 5 seconds pass
+; Remove tooltip if mouse is moved or x seconds pass
 ToolTipTimer:
 	Global Opts, ToolTipTimeout, gdipTooltip
 	ToolTipTimeout += 1
 	MouseGetPos, CurrX, CurrY
 	MouseMoved := (CurrX - X) ** 2 + (CurrY - Y) ** 2 > Opts.MouseMoveThreshold ** 2
-	If (MouseMoved or ((UseTooltipTimeout == 1) and (ToolTipTimeout >= Opts.ToolTipTimeoutSeconds)))
+	If (MouseMoved or ((UseTooltipTimeout == 1) and (ToolTipTimeout >= Opts.ToolTipTimeoutSeconds*10)))
 	{
 		SetTimer, ToolTipTimer, Off
 		If (Opts.UseGDI or gdipTooltip.GetVisibility()) 
@@ -9940,7 +9979,7 @@ CheckForUpdates:
 		Sleep 2000
 		SplashTextOff
 	}
-Return
+	return
 
 FetchCurrencyData:
 	CurrencyDataJSON := {}
@@ -9951,7 +9990,7 @@ FetchCurrencyData:
 		url  := "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
 		file := A_ScriptDir . "\temp\currencyData_" . currencyLeague . ".json"
 		UrlDownloadToFile, %url% , %file%
-
+		
 		Try {
 			If (FileExist(file)) {
 				FileRead, JSONFile, %file%
@@ -9979,7 +10018,7 @@ FetchCurrencyData:
 		ratesJSONFile := A_ScriptDir . "\temp\currencyData_" . league . ".json"
 		FileDelete, %ratesFile%
 		FileDelete, %ratesJSONFile%
-
+		
 		If (league == "tmpstandard" or league == "tmphardcore" ) {
 			comment := InStr(league, "standard") ? ";Challenge Standard`n" : ";Challenge Hardcore`n"
 		}
@@ -9987,11 +10026,11 @@ FetchCurrencyData:
 			comment := ";Permanent " . league . "`n"
 		}
 		FileAppend, %comment%, %ratesFile%
-
+		
 		Loop, % data.Length() {
 			cName       := data[A_Index].currencyTypeName
 			cChaosEquiv := data[A_Index].chaosEquivalent
-
+			
 			If (cChaosEquiv >= 1) {
 				cChaosQuantity := ZeroTrim(Round(cChaosEquiv, 2))
 				cOwnQuantity   := 1
@@ -10000,14 +10039,14 @@ FetchCurrencyData:
 				cChaosQuantity := 1
 				cOwnQuantity   := ZeroTrim(Round(1 / cChaosEquiv, 2))
 			}
-
+			
 			result := cName . "|" . cOwnQuantity . ":" . cChaosQuantity . "`n"
 			FileAppend, %result%, %ratesFile%
 		}
 	}
 
 	CurrencyDataJSON :=
-Return
+	return
 
 ZeroTrim(number) {
 	; Trim trailing zeros from numbers
