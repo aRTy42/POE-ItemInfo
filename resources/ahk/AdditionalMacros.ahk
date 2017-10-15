@@ -84,7 +84,10 @@ AM_CloseScripts_HKey:
 Return
 
 AM_KickYourself_HKey:
-	SendInput {Enter}/kick %AM_CharacterName%{Enter}		; Quickly leave a group by kicking yourself. Only works for one specific character name.
+	; Ingame names use underscores and never spaces, but you can easily forget that when typing your name in the ini file.
+	; Consequently replacing all spaces here.
+	CharName := StrReplace(AM_CharacterName, " ", "_")
+	SendInput {Enter}/kick %CharName%{Enter}		; Quickly leave a group by kicking yourself. Only works for one specific character name.
 Return
 
 AM_Hideout_HKey:

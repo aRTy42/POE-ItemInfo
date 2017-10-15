@@ -58,9 +58,9 @@ PoEScripts_ConvertOldFiles(sourceDir, destDir, ByRef overwrittenFiles) {
 	If (FileExist(destDir "\config_trade.ini")) {
 		PoeScripts_ConvertOldConfig(sourceDir, destDir, "config_trade.ini", overwrittenFiles)
 	}
-	If (FileExist(destDir "\config.ini")) {
-		PoeScripts_ConvertOldConfig(sourceDir, destDir, "config.ini", overwrittenFiles)
-	}
+	;If (FileExist(destDir "\config.ini")) {
+	;	PoeScripts_ConvertOldConfig(sourceDir, destDir, "config.ini", overwrittenFiles)
+	;}
 	if (InStr(FileExist(destDir "\data"), "D")) {
 		PoEScripts_BackupUserFileOnDate(destDir, "data")
 		FileRemoveDir, %destDir%\data, 1
@@ -144,14 +144,14 @@ PoEScripts_ConvertMapModsWarnings(destDir) {
 	FileRead, MapModWarnings_TXT, %destDir%\MapModWarnings.txt
 	MapModWarnings_JSON := JSON.Load(MapModWarnings_TXT)
 	MapModWarnings_INI := class_EasyIni()
-	secGeneral := "General"
+	;secGeneral := "General"
 	secAffixes := "Affixes"
-	MapModWarnings_INI.AddSection(secGeneral)
+	;MapModWarnings_INI.AddSection(secGeneral)
 	MapModWarnings_INI.AddSection(secAffixes)
-	If (MapModWarnings_JSON.HasKey("enable_Warnings")) {
-		MapModWarnings_INI.AddKey(secGeneral, "enable_Warnings", MapModWarnings_JSON.enable_Warnings)
-		MapModWarnings_JSON.Delete("enable_Warnings")
-	}
+	;If (MapModWarnings_JSON.HasKey("enable_Warnings")) {
+	;	MapModWarnings_INI.AddKey(secGeneral, "enable_Warnings", MapModWarnings_JSON.enable_Warnings)
+	;	MapModWarnings_JSON.Delete("enable_Warnings")
+	;}
 	For keyName, keyVal in MapModWarnings_JSON {
 		MapModWarnings_INI.AddKey(secAffixes, keyName, keyVal)
 	}

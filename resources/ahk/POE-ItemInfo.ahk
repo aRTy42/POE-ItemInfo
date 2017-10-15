@@ -10,7 +10,7 @@
 SetWorkingDir, %A_ScriptDir%
 SendMode Input ; Recommended for new scripts due to its superior speed and reliability.
 
-;Define exe names for the regular and steam version, for later use at the very end of the script. This needs to be done early, in the "auto-execute section".
+;Define window criteria for the regular and steam version, for later use at the very end of the script. This needs to be done early, in the "auto-execute section".
 GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile.exe
 GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExileSteam.exe
 GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile_x64.exe
@@ -23,14 +23,6 @@ GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExi
 #Include, %A_ScriptDir%\lib\ConvertKeyToKeyCode.ahk
 #Include, %A_ScriptDir%\lib\Class_GdipTooltip.ahk
 #Include, %A_ScriptDir%\lib\Class_ColorPicker.ahk
-
-MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
-If (A_AhkVersion < AHKVersionRequired)
-{
-	MsgBox, 16, Wrong AutoHotkey Version, % MsgWrongAHKVersion
-	ExitApp
-}
-
 #Include %A_ScriptDir%\resources\Messages.txt
 IfNotExist, %A_ScriptDir%\temp
 FileCreateDir, %A_ScriptDir%\temp
@@ -55,7 +47,7 @@ Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
-Globals.Set("SettingsUIHeight", 706)
+Globals.Set("SettingsUIHeight", 600)
 Globals.Set("AboutWindowHeight", 340)
 Globals.Set("AboutWindowWidth", 435)
 Globals.Set("SettingsUITitle", "PoE Item Info Settings")
@@ -76,24 +68,31 @@ global overwrittenUserFiles	:= overwrittenUserFiles ? overwrittenUserFiles : arg
 global SuspendPOEItemScript = 0
 
 class UserOptions {
-	OnlyActiveIfPOEIsFront := 1     ; Set to 1 to make it so the script does nothing if Path of Exile window isn't the frontmost.
-									; If 0, the script also works if PoE isn't frontmost. This is handy for have the script parse
-									; textual item representations appearing somewhere Else, like in the forums or text files.
-
-	PutResultsOnClipboard := 0      ; Put result text on clipboard (overwriting the textual representation the game put there to begin with)
+	; Hotkey to invoke ItemInfo. Default: Ctrl+C.
+	ParseItemHotKey := "^c"
+	
+	; When checked (1) the script only activates while you are ingame (technically while the game window is the frontmost). This is handy for have the script parse
+	; textual item representations appearing somewhere Else, like in the forums or text files.
+	OnlyActiveIfPOEIsFront := 1
+	
+	; Put result text on clipboard (overwriting the textual representation the game put there to begin with)
+	PutResultsOnClipboard := 0
+	
 	ShowUpdateNotifications := 1
 	UpdateSkipSelection := 0
 	UpdateSkipBackup := 0
-
-	EnableAdditionalMacros := 1		; Enable/disable the entire AdditionalMacros.txt file
-
-	CompactDoubleRanges := 1        ; Show double ranges as "1-172" instead of "1-8 to 160-172"
-
-	AffixDetailDelimiter := "  "
-	; Field delimiter for affix detail lines. This is put in at three places. Example with // instead of spaces:
-	; 50% increased Spell?//50-59 (46)//75-79 (84)//T4 P
-
-	AffixDetailEllipsis := "…"
+	
+	; Enable/disable the entire AdditionalMacros. The individual settings are in the AdditionalMacros.ini
+	EnableAdditionalMacros := 1
+	; Enable/disable the entire MapModWarnings functionality. The individual settings are in the MapModWarnings.ini
+	EnableMapModWarnings := 1
+	
+	; Include a header above the affix overview: TierRange ilvl   Total ilvl  Tier
+	ShowHeaderForAffixOverview := 1
+	
+	; Explain abbreviations and special notation symbols at the end of the tooltip when they are used
+	ShowExplanationForUsedNotation := 1
+	
 	; If the mirrored affix text is longer than the field length the affix line will be cut off and
 	;   this text will be appended at the end to indicate that the line was truncated.
 	; Usually this is set to the ASCII or Unicode value of the three dot ellipsis (alt code: 0133).
@@ -101,22 +100,41 @@ class UserOptions {
 	;   the AHK version used. For best results, save this file as ANSI encoding which can be read and
 	;   displayed correctly by either ANSI based AutoHotkey or Unicode based AutoHotkey.
 	; Example: Assume the affix line to be mirrored is '50% increased Spell Damage'.
-	;   The field width is hardcoded (assume 20), this text would be shown as '50% increased Spell?'
-
-
+	;   The field width is hardcoded (assume 20), this text would be shown as '50% increased Spell…'
+	AffixTextEllipsis := "…"
+	
+	; Separator for affix overview columns. This is put in at three places. Example with \\ instead of spaces:
+	; 50% increased Spell…\\50-59 (46)\\75-79 (84)\\T4 P
+	; Default: 2 spaces
+	AffixColumnSeparator := "  "
+	
+	; Select separator for double ranges from 'added damage' mods: a-b to c-d is displayed as a-b|c-d
+	DoubleRangeSeparator := "|"
+	
+	; Shorten double ranges: a-b to c-d becomes a-d
+	UseCompactDoubleRanges := 0
+	
+	; Only use compact double ranges for the second range column in the affix overview (with the header 'total')
+	OnlyCompactForTotalColumn := 0
+	
+	; Separator for a multi tier roll range with uncertainty, such as:
+	;   83% increased Light…   73-85…83-95   102-109 (84)  T1-4 P + T1-6 S
+	;   	                 There--^
+	MultiTierRangeSeparator := "…"
+	
+	; Font size for the tooltip.
+	FontSize := 9
+	
 	; Pixels mouse must move to auto-dismiss tooltip
 	MouseMoveThreshold := 40
-
+	
 	; Set this to 1 if you want to have the tooltip disappear after the time frame set below.
-	; Otherwise you will have to move the mouse by 5 pixels for the tip to disappear.
+	; Otherwise you will have to move the mouse by x pixels for the tip to disappear.
 	UseTooltipTimeout := 0
 
-	;How many ticks to wait before removing tooltip. 1 tick = 100ms. Example, 50 ticks = 5secends, 75 Ticks = 7.5Secends
-	ToolTipTimeoutTicks := 150
-
-	; Font size for the tooltip, leave empty for default
-	FontSize := 9
-
+	;How many seconds to wait before removing tooltip.
+	ToolTipTimeoutSeconds := 15
+	
 	; Displays the tooltip in virtual screen space at fixed coordinates.
 	; Virtual screen space means the complete desktop frame, including any secondary monitors.
 	DisplayToolTipAtFixedCoords := 0
@@ -248,6 +266,7 @@ class ItemData_ {
 		This.UncAffTmpAffixLines := []
 		This.LastAffixLineNumber := 0
 		This.HasMultipleCrafted	:= 0
+		This.SpecialCaseNotation := ""
 		This.FullText		:= ""
 		This.IndexAffixes 	:= -1
 		This.IndexLast		:= -1
@@ -1327,7 +1346,7 @@ FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax, StyleOverwrite="")
 {
 	Global Opts
 	
-	If(StyleOverwrite = "compact" or (Opts.CompactDoubleRanges and StyleOverwrite = "") )
+	If(StyleOverwrite = "compact" or (Opts.UseCompactDoubleRanges and StyleOverwrite = "") )
 	{
 		ValueRange := BtmMin "-" TopMax
 	}
@@ -1344,7 +1363,7 @@ FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax, StyleOverwrite="")
 	return ValueRange
 }
 
-FormatRangeOfRanges(BtmMin, BtmMax, TopMin, TopMax)
+FormatMultiTierRange(BtmMin, BtmMax, TopMin, TopMax)
 {
 	Global Opts
 	
@@ -1619,17 +1638,6 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 		TierAndType := ""
 		
 		For n, AfTy in AffixType
-
-	AffixNameHeader	:= ""
-	ValueRangeHeader	:= ""
-	TierStringHeader	:= ""
-	AffixTypeHeader	:= ""
-
-	AffixNameWidth		:=
-	ValueRangeWidth	:=
-	TierStringWidth	:=
-	AffixTypeWidth		:=
-
 		{
 			If(IsObject(Tier[A_Index]))
 			{
@@ -1707,12 +1715,11 @@ AssembleAffixDetails()
 	TextLineWidthUnique := TextLineWidth + 10
 	TextLineWidthJewel  := TextLineWidth + 10
 	
-	ValueRangeMinWidth := 4
-	ValueRange1Width := ValueRangeMinWidth
-	ValueRange2Width := ValueRangeMinWidth
+	ValueRange1Width := 4
+	ValueRange2Width := 5
 	
-	Delim := "  "
-	Ellipsis := "…"
+	Separator := Opts.AffixColumnSeparator
+	Ellipsis := Opts.AffixTextEllipsis
 	
 	If(Item.IsUnique)
 	{
@@ -1724,14 +1731,14 @@ AssembleAffixDetails()
 			
 			If(StrLen(AffixText) > TextLineWidthUnique)
 			{
-				AffixText := SubStr(AffixText, 1, TextLineWidthUnique - 1) . Ellipsis
+				AffixText := SubStr(AffixText, 1, TextLineWidthUnique - StrLen(Ellipsis)) . Ellipsis
 			}
 			Else
 			{
 				AffixText := StrPad(AffixText, TextLineWidthUnique)
 			}
 			
-			ProcessedLine := AffixText . Delim . ValueRange
+			ProcessedLine := AffixText . Separator . ValueRange
 			
 			Result .= "`n" ProcessedLine
 		}
@@ -1785,16 +1792,16 @@ AssembleAffixDetails()
 			}
 		}
 		
-		If( ! Item.IsJewel)
+		If( not Item.IsJewel and Opts.ShowHeaderForAffixOverview)
 		{
 			; Add a header line above the affix infos.
 			
 			ProcessedLine := "`n"
-			ProcessedLine .= StrPad("TierRange", TextLineWidth + ValueRange1Width + StrLen(Delim), "left")
-			ProcessedLine .= " ilvl"
-			ProcessedLine .= StrPad("Total", ValueRange2Width + StrLen(Delim), "left")
-			ProcessedLine .= " ilvl"
-			ProcessedLine .= "  Tier"
+			ProcessedLine .= StrPad("TierRange", TextLineWidth + ValueRange1Width + StrLen(Separator), "left")
+			ProcessedLine .= " ilvl" Separator
+			ProcessedLine .= StrPad("Total", ValueRange2Width, "left")
+			ProcessedLine .= " ilvl" Separator
+			ProcessedLine .= "Tier"
 			
 			Result .= ProcessedLine
 		}
@@ -1819,7 +1826,7 @@ AssembleAffixDetails()
 				{
 					If(StrLen(AffixText) > TextLineWidthJewel)
 					{
-						ProcessedLine := SubStr(AffixText, 1, TextLineWidthJewel - 1)  Ellipsis
+						ProcessedLine := SubStr(AffixText, 1, TextLineWidthJewel - StrLen(Ellipsis))  Ellipsis
 					}
 					Else
 					{
@@ -1827,14 +1834,14 @@ AssembleAffixDetails()
 					}
 					
 					; Jewel mods don't have tiers. Display only the ValueRange and the AffixType. TierAndType already holds only the Type here, due to a check in MakeAffixDetailLine().
-					ProcessedLine .= Delim " " StrPad(ValueRange[1], ValueRange1Width, "left")
-					ProcessedLine .= Delim  TierAndType
+					ProcessedLine .= Separator " " StrPad(ValueRange[1], ValueRange1Width, "left")
+					ProcessedLine .= Separator  TierAndType
 				}
 				Else
 				{
 					If(StrLen(AffixText) > TextLineWidth)
 					{
-						ProcessedLine := SubStr(AffixText, 1, TextLineWidth - 1)  Ellipsis
+						ProcessedLine := SubStr(AffixText, 1, TextLineWidth - StrLen(Ellipsis))  Ellipsis
 					}
 					Else
 					{
@@ -1844,34 +1851,34 @@ AssembleAffixDetails()
 					If( ! IsObject(ValueRange) )
 					{
 						; Text as ValueRange. Right-aligned to tier range column if it fits.
-						ProcessedLine .= Delim  StrPad(StrPad(ValueRange, ValueRange1Width + 5, "left"), ValueRange1Width + 5 + StrLen(Delim) + ValueRange2Width + 5, "right")
+						ProcessedLine .= Separator  StrPad(StrPad(ValueRange, ValueRange1Width + 5, "left"), ValueRange1Width + 5 + StrLen(Separator) + ValueRange2Width + 5, "right")
 						
 						If(RegExMatch(TierAndType, "^T\d.*"))
 						{
-							ProcessedLine .= Delim  TierAndType
+							ProcessedLine .= Separator  TierAndType
 						}
 						Else
 						{
 							; If TierAndType does not start with T and a number, then there is just the affix type (or other text) stored. Add 3 spaces to align affix type with the others.
-							ProcessedLine .= Delim  "   " TierAndType
+							ProcessedLine .= Separator  "   " TierAndType
 						}
 					}
 					Else
 					{
 						If(ValueRange[2])
 						{	; Has ilvl entry for tier range
-							ProcessedLine .= Delim  StrPad(ValueRange[1], ValueRange1Width, "left") " " StrPad("(" ValueRange[2] ")", 4, "left")
+							ProcessedLine .= Separator  StrPad(ValueRange[1], ValueRange1Width, "left") " " StrPad("(" ValueRange[2] ")", 4, "left")
 						}
 						Else
 						{	; Has no ilvl entry for tier range, can expand a bit.
 							; The "extra" calculation and reasoning has an explanation about 100 code lines above.
 							extra := StrLen(ValueRange[1]) <= 7 ? 0 : (StrLen(ValueRange[1]) <= 9 ? 2 : ( StrLen(ValueRange[1]) <= 11 ? 3 : ( StrLen(ValueRange[1]) <= 13 ? 4 : 5)))
 							
-							ProcessedLine .= Delim  StrPad(ValueRange[1] . StrMult(" ", 5 - extra), ValueRange1Width + 5, "left")
+							ProcessedLine .= Separator  StrPad(ValueRange[1] . StrMult(" ", 5 - extra), ValueRange1Width + 5, "left")
 						}
 						
-						ProcessedLine .= Delim  StrPad(ValueRange[3], ValueRange2Width, "left") " " StrPad("(" ValueRange[4] ")", 4, "left")
-						ProcessedLine .= Delim  TierAndType
+						ProcessedLine .= Separator  StrPad(ValueRange[3], ValueRange2Width, "left") " " StrPad("(" ValueRange[4] ")", 4, "left")
+						ProcessedLine .= Separator  TierAndType
 					}
 				}
 			}
@@ -2617,24 +2624,23 @@ ParseMapAffixes(ItemDataAffixes)
 			}
 		}
 	}
-
+	
 	If (Flag_TwoAdditionalProj and Flag_SkillsChain)
 	{
 		MapModWarnings := MapModWarnings . "`nAdditional Projectiles & Skills Chain"
 	}
-
+	
 	If (Count_DmgMod >= 1.5)
 	{
 		String_DmgMod := SubStr(String_DmgMod, 3)
 		MapModWarnings := MapModWarnings . "`nMulti Damage: " . String_DmgMod
 	}
-
-	; If (Not MapModWarn["Affixes"].enable_Warnings)
-	If (Not MapModWarn["General"].enable_Warnings)
+	
+	If (Not Opts.EnableMapModWarnings)
 	{
 		MapModWarnings := " disabled"
 	}
-
+	
 	return MapModWarnings
 }
 
@@ -2934,6 +2940,8 @@ SolveTiers_Hyb1Hyb2(HybOverlapValue, Hyb1OnlyValue, Hyb2OnlyValue, Hyb1OnlyDataA
 
 FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier="")
 {
+	Global Opts, Itemdata
+	
 	result := []
 	
 	If(IsObject(Mod2DataArray) and Mod2Tier)
@@ -2945,7 +2953,7 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 			TopMin := Mod1DataArray[Mod1Tiers[1]].min + Mod2DataArray[Mod2Tier].min
 			TopMax := Mod1DataArray[Mod1Tiers[1]].max + Mod2DataArray[Mod2Tier].max
 			
-			result[1] := FormatRangeOfRanges(BtmMin, BtmMax, TopMin, TopMax)
+			result[1] := FormatMultiTierRange(BtmMin, BtmMax, TopMin, TopMax)
 			result[2] := 0
 		}
 		Else
@@ -2963,14 +2971,20 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 		{
 			If(IsObject(Mod1Tiers))
 			{
-				BtmMin := Mod1DataArray[Mod1Tiers[2]].minLo
-				BtmMax := Mod1DataArray[Mod1Tiers[2]].minHi
-				TopMin := Mod1DataArray[Mod1Tiers[1]].maxLo
-				TopMax := Mod1DataArray[Mod1Tiers[1]].maxHi
+				WorstBtmMin := Mod1DataArray[Mod1Tiers[2]].minLo
+				WorstBtmMax := Mod1DataArray[Mod1Tiers[2]].minHi
+				WorstTopMin := Mod1DataArray[Mod1Tiers[2]].maxLo
+				WorstTopMax := Mod1DataArray[Mod1Tiers[2]].maxHi
+				BestBtmMin := Mod1DataArray[Mod1Tiers[1]].minLo
+				BestBtmMax := Mod1DataArray[Mod1Tiers[1]].minHi
+				BestTopMin := Mod1DataArray[Mod1Tiers[1]].maxLo
+				BestTopMax := Mod1DataArray[Mod1Tiers[1]].maxHi
 				
-				result[1] := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax)
+				TmpFullrange := WorstBtmMin "-" WorstBtmMax " to " WorstTopMin "-" WorstTopMax " " Opts.MultiTierRangeSeparator " " BestBtmMin "-" BestBtmMax " to " BestTopMin "-" BestTopMax
+				Itemdata.SpecialCaseNotation .= "`nWe have a rare case of a double range mod with multi tier uncertainty here.`n The entire TierRange is: " TmpFullrange
+				
+				result[1] := FormatMultiTierRange(WorstBtmMin, WorstTopMin, BestBtmMax, BestTopMax)
 				result[2] := ""
-
 			}
 			Else If(Mod1Tiers)
 			{
@@ -2993,7 +3007,13 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 			TopMin := Mod1DataArray[1].maxLo
 			TopMax := Mod1DataArray[1].maxHi
 			
-			result[3] := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax)
+			If(Opts.OnlyCompactForTotalColumn and not Opts.UseCompactDoubleRanges){
+				result[3] := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax, "compact")
+			}
+			Else{
+				result[3] := FormatDoubleRanges(BtmMin, BtmMax, TopMin, TopMax)
+			}
+			
 			result[4] := Mod1DataArray[1].ilvl
 		}
 		Else
@@ -3005,7 +3025,7 @@ FormatValueRangesAndIlvl(Mod1DataArray, Mod1Tiers, Mod2DataArray="", Mod2Tier=""
 				TopMin := Mod1DataArray[Mod1Tiers[1]].min
 				TopMax := Mod1DataArray[Mod1Tiers[1]].max
 				
-				result[1] := FormatRangeOfRanges(BtmMin, BtmMax, TopMin, TopMax)
+				result[1] := FormatMultiTierRange(BtmMin, BtmMax, TopMin, TopMax)
 				result[2] := ""
 			}
 			Else If(Mod1Tiers)
@@ -3124,7 +3144,7 @@ FormatValueRangesAndIlvl_MultiTiers(Value, Mod1DataArray, Mod2DataArray, Mod1Top
 	}
 	
 	result := []
-	result[1] := FormatRangeOfRanges(RangeBtmMin, RangeBtmMax, RangeTopMin, RangeTopMax)
+	result[1] := FormatMultiTierRange(RangeBtmMin, RangeBtmMax, RangeTopMin, RangeTopMax)
 	result[2] := 0
 	result[3] := Mod1DataArray[Mod1DataArray.MaxIndex()].min + Mod2DataArray[Mod2DataArray.MaxIndex()].min "-" Mod1DataArray[1].max + Mod2DataArray[1].max
 	result[4] := (Mod1DataArray[1].ilvl > Mod2DataArray[1].ilvl) ? Mod1DataArray[1].ilvl : Mod2DataArray[1].ilvl
@@ -5339,7 +5359,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			}
 			Else If (HasIncrDefencesCraft)
 			{
-				; If there are two seperate %def mod lines visible, then the first pre-pass match has to be the part from the hybrid mod
+				; If there are two separate %def mod lines visible, then the first pre-pass match has to be the part from the hybrid mod
 				;   and the second match has to be the pure mod in crafted form.
 				
 				If (HasIncrDefencesType = "Armour" or HasIncrDefencesType = "Evasion" or HasIncrDefencesType = "EnergyShield"){
@@ -5525,7 +5545,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		}
 		Else
 		{
-			; Checking these in seperate ifs and not an else-if chain to cover the case where a shield or amulet has both mods (which are certainly simple mods).
+			; Checking these in separate ifs and not an else-if chain to cover the case where a shield or amulet has both mods (which are certainly simple mods).
 			If (HasIncrSpellDamage)
 			{
 				LineNum := HasIncrSpellDamage
@@ -6002,7 +6022,7 @@ PreProcessContents(CBContents)
 ; Remove the line that indicates an item cannot be used due to missing character stats
 	Needle := "You cannot use this item. Its stats will be ignored`r`n--------`r`n"
 	StringReplace, CBContents, CBContents, %Needle%,
-; Replace double seperator lines with one seperator line
+; Replace double separator lines with one separator line
 	Needle := "--------`r`n--------`r`n"
 	StringReplace, CBContents, CBContents, %Needle%, --------`r`n, All
 	
@@ -6814,7 +6834,7 @@ ParseClipBoardChanges()
 */
 ParseItemData(ItemDataText, ByRef RarityLevel="")
 {
-	Global AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList
+	Global Opts, AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList
 	
 	ItemDataPartsIndexLast =
 	ItemDataPartsIndexAffixes =
@@ -7393,7 +7413,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		TT = %TT%`n--------`nMirrored
 	}
 	
-	If (1)	; user option for notations here
+	If (Opts.ShowExplanationForUsedNotation)
 	{
 		Notation := ""
 		
@@ -7406,11 +7426,18 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		If(RegExMatch(AffixDetails, "(CrP|CrS)")){
 			Notation .= "`n Cr: Craft`n"
 		}
-		If(RegExMatch(AffixDetails, "\d\|\d")){
-			Notation .= "`n a-b|c-d: For added damage mods. (a-b) to (c-d)"
+		matchpattern := "\d\" Opts.DoubleRangeSeparator "\d"
+		If(RegExMatch(AffixDetails, matchpattern)){
+			Notation .= "`n a-b" Opts.DoubleRangeSeparator "c-d: For added damage mods. (a-b) to (c-d)"
 		}
-		If(RegExMatch(AffixDetails, "\d…\d")){
-			Notation .= "`n a-b…c-d: Multi tier uncertainty. WorstCaseRange…BestCaseRange"
+		matchpattern := "\d\" Opts.MultiTierRangeSeparator "\d"
+		If(RegExMatch(AffixDetails, matchpattern)){
+			Notation .= "`n a-b" Opts.MultiTierRangeSeparator "c-d: Multi tier uncertainty. WorstCaseRange" Opts.MultiTierRangeSeparator "BestCaseRange"
+		}
+		
+		If(Itemdata.SpecialCaseNotation is not "")
+		{
+			Notation .= "`n" Itemdata.SpecialCaseNotation
 		}
 		
 		If (Notation)
@@ -7496,7 +7523,7 @@ PreparePseudoModCreation(Affixes, Implicit, Rarity, isMap = false) {
 	Return mods
 }
 
-; Convert mod strings to objects while seperating combined mods like "+#% to Fire and Lightning Resitances"
+; Convert mod strings to objects while separating combined mods like "+#% to Fire and Lightning Resitances"
 ; Moved from TradeMacro to ItemInfo to avoid duplicate code, please be careful with any changes
 ModStringToObject(string, isImplicit) {
 	StringReplace, val, string, `r,, All
@@ -8224,7 +8251,7 @@ ShowToolTip(String, Centered = false)
 
 	; Get position of mouse cursor
 	MouseGetPos, X, Y
-	WinGet, PoEWindowHwnd, ID, ahk_group PoEexe
+	WinGet, PoEWindowHwnd, ID, ahk_group PoEWindowGrp
 	RelativeToActiveWindow := true	; default tooltip behaviour 
 	
 	If (not RelativeToActiveWindow) {
@@ -8483,29 +8510,6 @@ AddToolTip(con, text, Modify=0){
 
 }
 
-; ######### UNHANDLED CASE DIALOG ############
-
-ShowUnhandledCaseDialog()
-{
-	Global Msg, Globals
-	Static UnhDlg_EditItemText
-
-	Gui, 3:New,, Unhandled Case
-	Gui, 3:Color, FFFFFF
-	Gui, 3:Add, Picture, x25 y25 w36 h36, %A_ScriptDir%\resources\images\info.png
-	Gui, 3:Add, Text, x65 y31 w500 h100, % Msg.Unhandled
-	Gui, 3:Add, Edit, x65 y96 w400 h120 ReadOnly vUnhDlg_EditItemText, % Globals.Get("ItemText", "Error: could'nt get item text (system clipboard modified?). Please try again or report the item manually.")
-	Gui, 3:Add, Text, x-5 y230 w500 h50 -Background
-	Gui, 3:Add, Button, x195 y245 w100 h25 gUnhandledDlg_ShowItemText, Show In Notepad
-	Gui, 3:Add, Button, x300 y245 w90 h25 gVisitForumsThread, Forums Thread
-	Gui, 3:Add, Button, x395 y245 w86 h25 gUnhandledDlg_OK Default, OK
-	Gui, 3:Show, Center w490 h280,
-	Gui, Font, s10, Courier New
-	Gui, Font, s9, Consolas
-	GuiControl, Font, UnhDlg_EditItemText
-	return
-}
-
 ; ######### SETTINGS ############
 
 ; (Internal: RegExr x-forms)
@@ -8525,97 +8529,129 @@ ShowUnhandledCaseDialog()
 CreateSettingsUI()
 {
 	Global
+	
+	ExtraHeightOfTabsWithTradeMacro := SkipItemInfoUpdateCall ? 25 : 0
 
 	; General
-	generalHeight := SkipItemInfoUpdateCall ? "120" : "210"
-	GuiAddGroupBox("General", "x7 y+15 w260 h" generalHeight " Section")
-
+	generalHeight := SkipItemInfoUpdateCall ? "150" : "240"		; "180" : "270" with ParseItemHotKey
+	GuiAddGroupBox("General", "x7 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h" generalHeight " Section")
+	
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
-
-	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 ys20 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
-	AddToolTip(OnlyActiveIfPOEIsFrontH, "If checked the script does nothing if the`nPath of Exile window isn't the frontmost")
-	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 ys50 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
-	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text onto the system clipboard`n(overwriting the item info text PoE put there to begin with)")
-	GuiAddCheckbox("Enable Additional Macros", "xs10 ys80 w210 h30", Opts.EnableAdditionalMacros, "EnableAdditionalMacros", "EnableAdditionalMacrosH")
+	
+	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
+	AddToolTip(OnlyActiveIfPOEIsFrontH, "When checked the script only activates while you are ingame`n(technically while the game window is the frontmost)")
+	
+	;GuiAddHotkey(Opts.ParseItemHotKey, "xs75 yp+37 w120 h20", "ParseItemHotKey")
+	;GuiAddText("Hotkey:", "xs27 yp+2 w50 h20 0x0100", "LblParseItemHotKey")
+	; Change next from yp+30 to yp+25 when this is implemented.
+	
+	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 yp+30 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
+	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text into the system clipboard`n(overwriting the raw text PoE itself put there to begin with)")
+	
+	GuiAddCheckbox("Enable Additional Macros", "xs10 yp+30 w210 h30", Opts.EnableAdditionalMacros, "EnableAdditionalMacros", "EnableAdditionalMacrosH")
 	AddToolTip(EnableAdditionalMacrosH, "Enables or disables the entire 'AdditionalMacros.ahk' file.`nNeeds a script reload to take effect.")
+	
+	GuiAddCheckbox("Enable Map Mod Warnings", "xs10 yp+30 w210 h30", Opts.EnableMapModWarnings, "EnableMapModWarnings", "EnableMapModWarningsH")
+	AddToolTip(EnableMapModWarningsH, "Enables or disables the entire Map Mod Warnings function.")
+	
 	If (!SkipItemInfoUpdateCall) {
-		GuiAddCheckbox("Update: Show Notifications", "xs10 ys110 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
+		GuiAddCheckbox("Update: Show Notifications", "xs10 yp+30 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
 		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")
-		GuiAddCheckbox("Update: Skip folder selection", "xs10 ys140 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+		
+		GuiAddCheckbox("Update: Skip folder selection", "xs10 yp+30 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
 		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")
-		GuiAddCheckbox("Update: Skip backup", "xs10 ys170 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+		
+		GuiAddCheckbox("Update: Skip backup", "xs10 yp+30 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
 		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
 	}
 	
-	; Tooltip
-
-	GuiAddGroupBox("Tooltip", "x7 y+20 w260 h185 Section")
-
-	GuiAddCheckBox("Use tooltip timeout", "xs10 ys20 w210", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
-	AddToolTip(UseTooltipTimeoutH, "Hide tooltip automatically after x amount of ticks have passed")
-		GuiAddText("Timeout ticks (1 tick = 100ms):", "xs20 ys45 w150", "LblToolTipTimeoutTicks")
-		GuiAddEdit(Opts.ToolTipTimeoutTicks, "xs180 ys41 w50 Number", "ToolTipTimeoutTicks")
-
-	GuiAddCheckbox("Display at fixed coordinates", "xs10 ys70 w230", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
-	AddToolTip(DisplayToolTipAtFixedCoordsH, "Show tooltip in virtual screen space at the fixed`ncoordinates given below. Virtual screen space means`nthe full desktop frame, including any secondary`nmonitors. Coords are relative to the top left edge`nand increase going down and to the right.")
-		GuiAddText("X:", "xs30 ys97 w20", "LblScreenOffsetX")
-		GuiAddEdit(Opts.ScreenOffsetX, "xs48 ys93 w40", "ScreenOffsetX")
-		GuiAddText("Y:", "xs98 ys97 w20", "LblScreenOffsetY")
-		GuiAddEdit(Opts.ScreenOffsetY, "xs118 ys93 w40", "ScreenOffsetY")
-
-	GuiAddText("Mousemove threshold (px):", "xs10 ys127 w160 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
-	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip automatically after the mouse has moved x amount of pixels")
-	GuiAddEdit(Opts.MouseMoveThreshold, "xs180 ys125 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
-
-	GuiAddText("Font Size:", "xs10 ys157 w160 h20", "LblFontSize")
-	GuiAddEdit(Opts.FontSize, "xs180 ys155 w50 h20 Number", "FontSize")
-
+	
 	; GDI+
 	GuiAddGroupBox("GDI+", "x7 y+20 w260 h270 Section")
-	GuiAddCheckBox("Enable GDI+", "xs10 ys20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
+	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
 	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")	
 	GuiAddButton("Edit Window", "xs9 ys40 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
-	GuiAddText("Color (hex RGB):", "x+5 yp+5 w150", "LblGDIWindowColor")
-	GuiAddEdit(Opts.GDIWindowColor, "xs190 ys41 w60", "GDIWindowColor", "GDIWindowColorH")
-	GuiAddText("Opactiy (0-100):", "xs95 ys75 w150", "LblGDIWindowOpacity")
-	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys71 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
+	GuiAddText("Color (hex RGB):", "xs100 ys45 w150", "LblGDIWindowColor")
+	GuiAddEdit(Opts.GDIWindowColor, "xs190 ys42 w60", "GDIWindowColor", "GDIWindowColorH")
+	GuiAddText("Opactiy (0-100):", "xs100 ys75 w150", "LblGDIWindowOpacity")
+	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys72 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
 	GuiAddButton("Edit Border", "xs9 ys100 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
-	GuiAddText("Color (hex RGB):", "x+5 yp+5 w150", "LblGDIBorderColor")
-	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys101 w60", "GDIBorderColor", "GDIBorderColorH")	
-	GuiAddText("Opacity (0-100):", "xs95 ys135 w150", "LblGDIBorderOpacity")
-	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys131 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
+	GuiAddText("Color (hex RGB):", "xs100 ys105 w150", "LblGDIBorderColor")
+	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys102 w60", "GDIBorderColor", "GDIBorderColorH")	
+	GuiAddText("Opacity (0-100):", "xs100 ys135 w150", "LblGDIBorderOpacity")
+	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys132 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
 	GuiAddButton("Edit Text", "xs9 ys160 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
-	GuiAddText("Color (hex RGB):", "x+5 ys165 w150", "LblGDITextColor")
-	GuiAddEdit(Opts.GDITextColor, "xs190 ys161 w60", "GDITextColor", "GDITextColorH")
-	GuiAddText("Opacity (0-100):", "xs95 ys195 w150", "LblGDITextOpacity")
-	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys191 w60", "GDITextOpacity", "GDITextOpacityH")
+	GuiAddText("Color (hex RGB):", "xs100 ys165 w150", "LblGDITextColor")
+	GuiAddEdit(Opts.GDITextColor, "xs190 ys162 w60", "GDITextColor", "GDITextColorH")
+	GuiAddText("Opacity (0-100):", "xs100 ys195 w150", "LblGDITextOpacity")
+	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys192 w60", "GDITextOpacity", "GDITextOpacityH")
 	GuiAddCheckBox("Rendering Fix", "xs10 ys216 w110", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
 	
-	GuiAddButton("Defaults", "xs9 ys240 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
+	GuiAddButton("GDI Defaults", "xs9 ys240 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
 	GuiAddButton("Preview", "xs170 ys240 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
 	
 	
-	; Display - Affixes
+	; Tooltip
+	GuiAddGroupBox("Tooltip", "x277 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h140 Section")
 
-	; This groupbox is positioned relative to the last control (first column), this is not optimal but makes it possible to wrap these groupboxes in Tabs without further repositing.
-	displayAffixesPos := SkipItemInfoUpdateCall ? "565" : "655"
-	GuiAddGroupBox("Display - Results", "xs270 yp-" displayAffixesPos " w260 h215 Section")
+	GuiAddEdit(Opts.MouseMoveThreshold, "xs180 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
+	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w150 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
+	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip after the mouse has moved x amount of pixels")
 	
-	GuiAddCheckbox("Compact double ranges", "xs10 ys20 w210 h30", Opts.CompactDoubleRanges, "CompactDoubleRanges", "CompactDoubleRangesH")
-	AddToolTip(CompactDoubleRangesH, "Show double ranges as one range,`ne.g. x-y (to) z-w becomes x-w")
 	
-	GuiAddText("Affix detail delimiter:", "xs10 ys58 w120 h20", "LblAffixDetailDelimiter")
-	GuiAddEdit(Opts.AffixDetailDelimiter, "xs130 ys56 w40 h20", "AffixDetailDelimiter", "AffixDetailDelimiterH")
-	AddToolTip(AffixDetailDelimiterH, "Select delimiter (default 2 spaces) for the // spots:`n50% increased Spell?//50-59 (46)//75-79 (84)//T4 P")
-	GuiAddText("Affix detail ellipsis:", "xs10 ys88 w120 h20", "LblAffixDetailEllipsis")
-	GuiAddEdit(Opts.AffixDetailEllipsis, "xs130 ys86 w40 h20", "AffixDetailEllipsis")
+	GuiAddEdit(Opts.ToolTipTimeoutSeconds, "xs180 yp+27 w50 Number", "ToolTipTimeoutSeconds")
+	GuiAddCheckBox("Use tooltip timeout (seconds)", "xs10 yp+3 w160", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
+	AddToolTip(UseTooltipTimeoutH, "Hide tooltip automatically after defined time.")
+	
+	GuiAddCheckbox("Display at fixed coordinates", "xs10 yp+30 w230", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
+	AddToolTip(DisplayToolTipAtFixedCoordsH, "Show tooltip in virtual screen space at the fixed`ncoordinates given below. Virtual screen space means`nthe full desktop frame, including any secondary`nmonitors. Coords are relative to the top left edge`nand increase going down and to the right.")
+		GuiAddEdit(Opts.ScreenOffsetX, "xs50 yp+22 w50", "ScreenOffsetX")
+		GuiAddEdit(Opts.ScreenOffsetY, "xs130 yp+0 w50", "ScreenOffsetY")
+		GuiAddText("X", "xs35 yp+3 w15", "LblScreenOffsetX")
+		GuiAddText("Y", "xs115 yp+0 w15", "LblScreenOffsetY")
+	
+	
+	; Display
+	
+	GuiAddGroupBox("Display", "x277 y+30 w260 h390 Section")
+	
+	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w210 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
+	AddToolTip(ShowHeaderForAffixOverviewH, "Include a header above the affix overview:`n   TierRange ilvl   Total ilvl  Tier")
+	
+	GuiAddCheckbox("Show explanation for used notation", "xs10 yp+30 w210 h30", Opts.ShowExplanationForUsedNotation, "ShowExplanationForUsedNotation", "ShowExplanationForUsedNotationH")
+	AddToolTip(ShowExplanationForUsedNotationH, "Explain abbreviations and special notation symbols at`nthe end of the tooltip when they are used")
+	
+	GuiAddEdit(Opts.AffixTextEllipsis, "xs160 y+7 w40 h20", "AffixTextEllipsis")
+	GuiAddText("Affix text ellipsis:", "xs10 yp+3 w120 h20 0x0100", "LblAffixTextEllipsis", "AffixTextEllipsisH")
+	AddToolTip(AffixTextEllipsisH, "Symbol used when affix text is shortened, such as:`n50% increased Spell…")
+	
+	GuiAddEdit(Opts.AffixColumnSeparator, "xs160 y+7 w40 h20", "AffixColumnSeparator")
+	GuiAddText("Affix column separator:", "xs10 yp+3 w120 h20 0x0100", "LblAffixColumnSeparator", "AffixColumnSeparatorH")
+	AddToolTip(AffixColumnSeparatorH, "Select separator (default: 2 spaces) for the \\ spots:`n50% increased Spell…\\50-59 (46)\\75-79 (84)\\T4 P")
+	
+	GuiAddEdit(Opts.DoubleRangeSeparator, "xs160 y+7 w40 h20", "DoubleRangeSeparator")
+	GuiAddText("Double range separator:", "xs10 yp+3 w120 h20 0x0100", "LblDoubleRangeSeparator", "DoubleRangeSeparatorH")
+	AddToolTip(DoubleRangeSeparatorH, "Select separator (default: | ) for double ranges from 'added damage' mods:`na-b to c-d is displayed as a-b|c-d")
+	
+	GuiAddCheckbox("Use compact double ranges", "xs10 yp+30 w210 h30", Opts.UseCompactDoubleRanges, "UseCompactDoubleRanges", "UseCompactDoubleRangesH", "SettingsUI_ChkUseCompactDoubleRanges")
+	AddToolTip(UseCompactDoubleRangesH, "Show double ranges from 'added damage' mods as one range,`ne.g. a-b to c-d becomes a-d")
+	
+	GuiAddCheckbox("Only compact for 'Total' column", "xs30 yp+30 w210 h30", Opts.OnlyCompactForTotalColumn, "OnlyCompactForTotalColumn", "OnlyCompactForTotalColumnH")
+	AddToolTip(OnlyCompactForTotalColumnH, "Only use compact double ranges for the second range column`nin the affix overview (with the header 'total')")
+		
+	GuiAddEdit(Opts.MultiTierRangeSeparator, "xs160 y+7 w40 h20", "MultiTierRangeSeparator")
+	GuiAddText("Multi tier range separator:", "xs10 yp+3 w120 h20 0x0100", "LblMultiTierRangeSeparator", "MultiTierRangeSeparatorH")
+	AddToolTip(MultiTierRangeSeparatorH, "Select separator (default: … ) for a multi tier roll range with uncertainty:`n83% increased Light…   73-85…83-95   102-109 (84)  T1-4 P + T1-6 S`n	                     There--^")
+	
+	GuiAddEdit(Opts.FontSize, "xs160 y+7 w40 h20 Number", "FontSize")
+	GuiAddText("Font Size:", "xs10 yp+3 w130 h20 0x0100")
+	
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", "xs10 yp+30 w240 h60")
 
-	GuiAddText("Mouse over settings or see the beginning of the PoE-Item-Info.ahk script for comments on what these settings do exactly.", "x287 yp+40 w240 h60")
-
-	GuiAddButton("&Defaults", "x287 yp+55 w80 h23", "SettingsUI_BtnDefaults")
-	GuiAddButton("&OK", "Default x372 yp+0 w75 h23", "SettingsUI_BtnOK")
-	GuiAddButton("&Cancel", "x452 yp+0 w80 h23", "SettingsUI_BtnCancel")
+	GuiAddButton("&Defaults", "xs11 yp+35 w77 h23", "SettingsUI_BtnDefaults")
+	GuiAddButton("&OK", "Default xs91 yp+0 w77 h23", "SettingsUI_BtnOK")
+	GuiAddButton("&Cancel", "xs171 yp+0 w77 h23", "SettingsUI_BtnCancel")
 
 	; close tabs in case some other script added some
 	Gui, Tab
@@ -8624,15 +8660,30 @@ CreateSettingsUI()
 UpdateSettingsUI()
 {
 	Global Opts
-
+	
+	; General
+	;GuiControl,, ParseItemHotKey, % Opts.ParseItemHotKey
 	GuiControl,, OnlyActiveIfPOEIsFront, % Opts.OnlyActiveIfPOEIsFront
 	GuiControl,, PutResultsOnClipboard, % Opts.PutResultsOnClipboard
 	GuiControl,, EnableAdditionalMacros, % Opts.EnableAdditionalMacros
+	GuiControl,, EnableMapModWarnings, % Opts.EnableMapModWarnings
 	If (!SkipItemInfoUpdateCall) {
 		GuiControl,, ShowUpdateNotifications, % Opts.ShowUpdateNotifications
 		GuiControl,, UpdateSkipSelection, % Opts.UpdateSkipSelection
 		GuiControl,, UpdateSkipBackup, % Opts.UpdateSkipBackup
 	}
+	
+	; Tooltip
+	GuiControl,, MouseMoveThreshold, % Opts.MouseMoveThreshold
+	GuiControl,, UseTooltipTimeout, % Opts.UseTooltipTimeout
+	If (Opts.UseTooltipTimeout == False){
+		GuiControl, Disable, ToolTipTimeoutSeconds
+	}
+	Else{
+		GuiControl, Enable, ToolTipTimeoutSeconds
+	}
+	GuiControl,, ToolTipTimeoutSeconds, % Opts.ToolTipTimeoutSeconds
+		
 	GuiControl,, DisplayToolTipAtFixedCoords, % Opts.DisplayToolTipAtFixedCoords
 	If (Opts.DisplayToolTipAtFixedCoords == False)
 	{
@@ -8649,31 +8700,28 @@ UpdateSettingsUI()
 		GuiControl, Enable, ScreenOffsetY
 	}
 	
-	GuiControl,, CompactDoubleRanges, % Opts.CompactDoubleRanges
-	GuiControl,, AffixDetailDelimiter, % Opts.AffixDetailDelimiter
-	GuiControl,, AffixDetailEllipsis, % Opts.AffixDetailEllipsis
-
-	GuiControl,, UseTooltipTimeout, % Opts.UseTooltipTimeout
-	If (Opts.UseTooltipTimeout == False)
-	{
-		GuiControl, Disable, LblToolTipTimeoutTicks
-		GuiControl, Disable, ToolTipTimeoutTicks
+	; Display
+	GuiControl,, ShowHeaderForAffixOverview, % Opts.ShowHeaderForAffixOverview
+	GuiControl,, ShowExplanationForUsedNotation, % Opts.ShowExplanationForUsedNotation
+	GuiControl,, AffixTextEllipsis, % Opts.AffixTextEllipsis
+	GuiControl,, AffixColumnSeparator, % Opts.AffixColumnSeparator
+	GuiControl,, DoubleRangeSeparator, % Opts.DoubleRangeSeparator
+	GuiControl,, UseCompactDoubleRanges, % Opts.UseCompactDoubleRanges
+	If (Opts.UseCompactDoubleRanges == False){
+		GuiControl, Enable, OnlyCompactForTotalColumn
 	}
-	Else
-	{
-		GuiControl, Enable, LblToolTipTimeoutTicks
-		GuiControl, Enable, ToolTipTimeoutTicks
+	Else{
+		GuiControl, Disable, OnlyCompactForTotalColumn
 	}
-	GuiControl,, ToolTipTimeoutTicks, % Opts.ToolTipTimeoutTicks
-	GuiControl,, MouseMoveThreshold, % Opts.MouseMoveThreshold
+	GuiControl,, OnlyCompactForTotalColumn, % Opts.OnlyCompactForTotalColumn
+	GuiControl,, MultiTierRangeSeparator, % Opts.MultiTierRangeSeparator
 	GuiControl,, FontSize, % Opts.FontSize
-
+	
+	
 	; GDI+
 	GuiControl,, UseGDI, % Opts.UseGDI
 	GuiControl,, GDIRenderingFix, % Opts.GDIRenderingFix
 	gdipTooltip.SetRenderingFix(Opts.GDIRenderingFix)
-
-	console.log("Update Settings: " Opts["GDIWindowOpacityDefault"] " , " Opts["GDIBorderOpacityDefault"] " , " Opts["GDITextOpacityDefault"])
 	
 	GuiControl,, GDIWindowColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, Opts.GDIWindowColorDefault)
 	GuiControl,, GDIWindowOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIWindowOpacity, Opts.GDIWindowOpacityDefault, "10", "10")
@@ -8716,7 +8764,7 @@ UpdateSettingsUI()
 		GuiControl, Enable, BtnGDIDefaults	
 		GuiControl, Enable, BtnGDIPreviewTooltip
 		GuiControl, Enable, GDIRenderingFix
-	}		
+	}
 }
 
 ShowSettingsUI()
@@ -8726,7 +8774,9 @@ ShowSettingsUI()
 	ToolTip
 	Fonts.SetUIFont(9)
 	SettingsUIWidth := Globals.Get("SettingsUIWidth", 545)
-	SettingsUIHeight := Globals.Get("SettingsUIHeight", 710)
+	; Adjust user option window height depending on whether ItemInfo is used as a Standalone or included in the TradeMacro.
+	; The TradeMacro needs much more space for all the options.
+	SettingsUIHeight := Globals.Get("SettingsUIHeight", 600)
 	SettingsUITitle := Globals.Get("SettingsUITitle", "PoE Item Info Settings")
 	Gui, Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
 }
@@ -8785,16 +8835,26 @@ ShowChangedUserFiles()
 	ControlFocus, Close, Changed User Files
 }
 
-IniRead(ConfigPath, Section_, Key, Default_)
+IniRead(ConfigPath, SectionName, KeyName, DefaultVal)
 {
-	Result := ""
-	IniRead, Result, %ConfigPath%, %Section_%, %Key%, %Default_%
-	return Result
+	ConfigObj := class_EasyIni(ConfigPath)
+	If(ConfigObj[SectionName].HasKey(KeyName)){
+		return ConfigObj[SectionName, KeyName]
+	}
+	Else{
+		return DefaultVal
+	}
+	;Result := ""
+	;IniRead, Result, %ConfigPath%, %SectionName%, %KeyName%, %DefaultVal%
+	;return Result
 }
 
-IniWrite(Val, ConfigPath, Section_, Key)
+IniWrite(Val, ConfigPath, SectionName, KeyName)
 {
-	IniWrite, %Val%, %ConfigPath%, %Section_%, %Key%
+	ConfigObj := class_EasyIni(ConfigPath)
+	ConfigObj.SetKeyVal(SectionName, KeyName, Val)
+	ConfigObj.Save(ConfigPath)
+	;IniWrite, %Val%, %ConfigPath%, %SectionName%, %KeyName%
 }
 
 ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
@@ -8808,27 +8868,34 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 	IfExist, %ConfigPath%
 	{
 		; General
+		;Opts.ParseItemHotKey := IniRead(ConfigPath, "General", "ParseItemHotKey", Opts.ParseItemHotKey)
 		Opts.OnlyActiveIfPOEIsFront	:= IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
 		Opts.PutResultsOnClipboard	:= IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
 		Opts.EnableAdditionalMacros	:= IniRead(ConfigPath, "General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
+		Opts.EnableMapModWarnings	:= IniRead(ConfigPath, "General", "EnableMapModWarnings", Opts.EnableMapModWarnings)
 		Opts.ShowUpdateNotifications	:= IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
 		Opts.UpdateSkipSelection		:= IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
 		Opts.UpdateSkipBackup		:= IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
 		
-		; Display - Results
-		Opts.CompactDoubleRanges		:= IniRead(ConfigPath, "DisplayResults", "CompactDoubleRanges", Opts.CompactDoubleRanges)
-		Opts.AffixDetailDelimiter	:= IniRead(ConfigPath, "DisplayResults", "AffixDetailDelimiter", Opts.AffixDetailDelimiter)
-		Opts.AffixDetailEllipsis		:= IniRead(ConfigPath, "DisplayResults", "AffixDetailEllipsis", Opts.AffixDetailEllipsis)
-		
 		; Tooltip
 		Opts.MouseMoveThreshold	:= IniRead(ConfigPath, "Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold)
 		Opts.UseTooltipTimeout	:= IniRead(ConfigPath, "Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout)
+		Opts.ToolTipTimeoutSeconds	:= IniRead(ConfigPath, "Tooltip", "ToolTipTimeoutSeconds", Opts.ToolTipTimeoutSeconds)
 		Opts.DisplayToolTipAtFixedCoords := IniRead(ConfigPath, "Tooltip", "DisplayToolTipAtFixedCoords", Opts.DisplayToolTipAtFixedCoords)
 		Opts.ScreenOffsetX		:= IniRead(ConfigPath, "Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX)
 		Opts.ScreenOffsetY		:= IniRead(ConfigPath, "Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY)
-		Opts.ToolTipTimeoutTicks	:= IniRead(ConfigPath, "Tooltip", "ToolTipTimeoutTicks", Opts.ToolTipTimeoutTicks)
-		Opts.FontSize			:= IniRead(ConfigPath, "Tooltip", "FontSize", Opts.FontSize)
-
+		
+		; Display
+		Opts.ShowHeaderForAffixOverview		:= IniRead(ConfigPath, "Display", "ShowHeaderForAffixOverview", Opts.ShowHeaderForAffixOverview)
+		Opts.ShowExplanationForUsedNotation		:= IniRead(ConfigPath, "Display", "ShowExplanationForUsedNotation", Opts.ShowExplanationForUsedNotation)
+		Opts.AffixTextEllipsis		:= IniRead(ConfigPath, "Display", "AffixTextEllipsis", Opts.AffixTextEllipsis)
+		Opts.AffixColumnSeparator	:= IniRead(ConfigPath, "Display", "AffixColumnSeparator", Opts.AffixColumnSeparator)
+		Opts.DoubleRangeSeparator		:= IniRead(ConfigPath, "Display", "DoubleRangeSeparator", Opts.DoubleRangeSeparator)
+		Opts.UseCompactDoubleRanges		:= IniRead(ConfigPath, "Display", "UseCompactDoubleRanges", Opts.UseCompactDoubleRanges)
+		Opts.OnlyCompactForTotalColumn		:= IniRead(ConfigPath, "Display", "OnlyCompactForTotalColumn", Opts.OnlyCompactForTotalColumn)
+		Opts.MultiTierRangeSeparator		:= IniRead(ConfigPath, "Display", "MultiTierRangeSeparator", Opts.MultiTierRangeSeparator)
+		Opts.FontSize				:= IniRead(ConfigPath, "Display", "FontSize", Opts.FontSize)
+		
 		; GDI+		
 		Opts.UseGDI				:= IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
 		Opts.GDIRenderingFix		:= IniRead(ConfigPath, "GDI", "RenderingFix", Opts.GDIRenderingFix)
@@ -8855,38 +8922,38 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 		ConfigDir := userDirectory
 	}
 	ConfigPath := StrLen(ConfigDir) > 0 ? ConfigDir . "\" . ConfigFile : ConfigFile
-
+	
 	Opts.ScanUI()
-
+	
 	; General
+	;IniWrite(Opts.ParseItemHotKey, ConfigPath, "General", "ParseItemHotKey")
 	IniWrite(Opts.OnlyActiveIfPOEIsFront, ConfigPath, "General", "OnlyActiveIfPOEIsFront")
 	IniWrite(Opts.PutResultsOnClipboard, ConfigPath, "General", "PutResultsOnClipboard")
 	IniWrite(Opts.EnableAdditionalMacros, ConfigPath, "General", "EnableAdditionalMacros")
+	IniWrite(Opts.EnableMapModWarnings, ConfigPath, "General", "EnableMapModWarnings")
 	IniWrite(Opts.ShowUpdateNotifications, ConfigPath, "General", "ShowUpdateNotifications")
 	IniWrite(Opts.UpdateSkipSelection, ConfigPath, "General", "UpdateSkipSelection")
 	IniWrite(Opts.UpdateSkipBackup, ConfigPath, "General", "UpdateSkipBackup")
 	
-	; Display - Results
-	IniWrite(Opts.CompactDoubleRanges, ConfigPath, "DisplayResults", "CompactDoubleRanges")
-	If IsEmptyString(Opts.AffixDetailDelimiter)
-	{
-		IniWrite("""" . Opts.AffixDetailDelimiter . """", ConfigPath, "DisplayResults", "AffixDetailDelimiter")
-	}
-	Else
-	{
-		IniWrite(Opts.AffixDetailDelimiter, ConfigPath, "DisplayResults", "AffixDetailDelimiter")
-	}
-	IniWrite(Opts.AffixDetailEllipsis, ConfigPath, "DisplayResults", "AffixDetailEllipsis")
-
+	; Display
+	IniWrite(Opts.ShowHeaderForAffixOverview, ConfigPath, "Display", "ShowHeaderForAffixOverview")
+	IniWrite(Opts.ShowExplanationForUsedNotation, ConfigPath, "Display", "ShowExplanationForUsedNotation")
+	IniWrite("" . Opts.AffixTextEllipsis . "", ConfigPath, "Display", "AffixTextEllipsis")
+	IniWrite("" . Opts.AffixColumnSeparator . "", ConfigPath, "Display", "AffixColumnSeparator")
+	IniWrite("" . Opts.DoubleRangeSeparator . "", ConfigPath, "Display", "DoubleRangeSeparator")
+	IniWrite(Opts.UseCompactDoubleRanges, ConfigPath, "Display", "UseCompactDoubleRanges")
+	IniWrite(Opts.OnlyCompactForTotalColumn, ConfigPath, "Display", "OnlyCompactForTotalColumn")
+	IniWrite("" . Opts.MultiTierRangeSeparator . "", ConfigPath, "Display", "MultiTierRangeSeparator")
+	IniWrite(Opts.FontSize, ConfigPath, "Display", "FontSize")
+	
 	; Tooltip
 	IniWrite(Opts.MouseMoveThreshold, ConfigPath, "Tooltip", "MouseMoveThreshold")
 	IniWrite(Opts.UseTooltipTimeout, ConfigPath, "Tooltip", "UseTooltipTimeout")
+	IniWrite(Opts.ToolTipTimeoutSeconds, ConfigPath, "Tooltip", "ToolTipTimeoutSeconds")
 	IniWrite(Opts.DisplayToolTipAtFixedCoords, ConfigPath, "Tooltip", "DisplayToolTipAtFixedCoords")
 	IniWrite(Opts.ScreenOffsetX, ConfigPath, "Tooltip", "ScreenOffsetX")
 	IniWrite(Opts.ScreenOffsetY, ConfigPath, "Tooltip", "ScreenOffsetY")
-	IniWrite(Opts.ToolTipTimeoutTicks, ConfigPath, "Tooltip", "ToolTipTimeoutTicks")
-	IniWrite(Opts.FontSize, ConfigPath, "Tooltip", "FontSize")
-
+	
 	; GDI+
 	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "Enabled")
 	IniWrite(Opts.GDIRenderingFix, ConfigPath, "GDI", "RenderingFix")
@@ -9153,7 +9220,7 @@ CloseScripts() {
 
 HighlightItems(broadTerms = false, leaveSearchField = true) {
 	; Highlights items via stash search (also in vendor search)
-	IfWinActive, Path of Exile ahk_class POEWindowClass
+	IfWinActive, ahk_group PoEWindowGrp
 	{
 		Global Item, Opts, Globals, ItemData
 
@@ -9361,7 +9428,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 }
 
 AdvancedItemInfoExt() {
-	IfWinActive, Path of Exile ahk_class POEWindowClass
+	IfWinActive, ahk_group PoEWindowGrp
 	{
 		Global Item, Opts, Globals, ItemData
 
@@ -9424,7 +9491,7 @@ LookUpAffixes() {
 	/*
 		Opens item base on poeaffix.net
 	*/
-	IfWinActive, Path of Exile ahk_class POEWindowClass
+	IfWinActive, ahk_group PoEWindowGrp
 	{
 		Global Item, Opts, Globals, ItemData
 
@@ -9493,7 +9560,7 @@ ToolTipTimer:
 	ToolTipTimeout += 1
 	MouseGetPos, CurrX, CurrY
 	MouseMoved := (CurrX - X) ** 2 + (CurrY - Y) ** 2 > Opts.MouseMoveThreshold ** 2
-	If (MouseMoved or ((UseTooltipTimeout == 1) and (ToolTipTimeout >= Opts.ToolTipTimeoutTicks)))
+	If (MouseMoved or ((UseTooltipTimeout == 1) and (ToolTipTimeout >= Opts.ToolTipTimeoutSeconds)))
 	{
 		SetTimer, ToolTipTimer, Off
 		If (Opts.UseGDI or gdipTooltip.GetVisibility()) 
@@ -9514,7 +9581,7 @@ OnClipBoardChange:
 		If (Opts.OnlyActiveIfPOEIsFront)
 		{
 			; do nothing if Path of Exile isn't the foremost window
-			IfWinActive, Path of Exile ahk_class POEWindowClass
+			IfWinActive, ahk_group PoEWindowGrp
 			{
 				ParseClipBoardChanges()
 			}
@@ -9667,17 +9734,25 @@ SettingsUI_BtnGDIDefaults:
 
 SettingsUI_ChkUseTooltipTimeout:
 	GuiControlGet, IsChecked,, UseTooltipTimeout
-	If (Not IsChecked)
-	{
-		GuiControl, Disable, LblToolTipTimeoutTicks
-		GuiControl, Disable, ToolTipTimeoutTicks
+	If (Not IsChecked){
+		GuiControl, Disable, ToolTipTimeoutSeconds
 	}
-	Else
-	{
-		GuiControl, Enable, LblToolTipTimeoutTicks
-		GuiControl, Enable, ToolTipTimeoutTicks
+	Else{
+		GuiControl, Enable, ToolTipTimeoutSeconds
 	}
 	return
+
+
+SettingsUI_ChkUseCompactDoubleRanges:
+	GuiControlGet, IsChecked,, UseCompactDoubleRanges
+	If (Not IsChecked){
+		GuiControl, Enable, OnlyCompactForTotalColumn
+	}
+	Else{
+		GuiControl, Disable, OnlyCompactForTotalColumn
+	}
+	return
+
 
 SettingsUI_ChkUseGDI:
 	; GDI+
