@@ -2,7 +2,7 @@
 ; IGN: Eruyome
 
 PriceCheck:
-	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe
+	IfWinActive, ahk_group PoEWindowGrp
 	{
 		TradeFunc_PriceCheckHotkey()
 	}
@@ -26,7 +26,7 @@ TradeFunc_PriceCheckHotkey(priceCheckTest = false, itemData = "") {
 }
 
 AdvancedPriceCheck:
-	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe
+	IfWinActive, ahk_group PoEWindowGrp
 	{
 		TradeFunc_AdvancedPriceCheckHotkey()
 	}
@@ -50,7 +50,7 @@ TradeFunc_AdvancedPriceCheckHotkey(priceCheckTest = false, itemData = "") {
 }
 
 OpenSearchOnPoeTrade:
-	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe
+	IfWinActive, ahk_group PoEWindowGrp
 	{
 		TradeFunc_OpenSearchOnPoeTradeHotkey()
 	}
@@ -74,7 +74,7 @@ TradeFunc_OpenSearchOnPoeTradeHotkey(priceCheckTest = false, itemData = "") {
 }
 
 ShowItemAge:
-	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe
+	IfWinActive, ahk_group PoEWindowGrp
 	{
 		Global TradeOpts, Item
 		If (!TradeOpts.AccountName) {
@@ -90,7 +90,7 @@ ShowItemAge:
 Return
 
 OpenWiki:
-	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe
+	IfWinActive, ahk_group PoEWindowGrp
 	{
 		TradeFunc_OpenWikiHotkey()
 	}
@@ -137,14 +137,14 @@ TradeFunc_OpenWikiHotkey(priceCheckTest = false, itemData = "") {
 }
 
 CustomInputSearch:
-	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe
+	IfWinActive, ahk_group PoEWindowGrp
 	{
 		TradeFunc_CustomSearchGui()
 	}
 Return
 
 ChangeLeague:
-	IfWinActive, Path of Exile ahk_class POEWindowClass ahk_group PoEexe
+	IfWinActive, ahk_group PoEWindowGrp
 	{
 		Global TradeOpts
 		TradeFunc_ChangeLeague()

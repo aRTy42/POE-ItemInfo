@@ -72,7 +72,7 @@ trade	:= ReadFileToMerge(scriptDir "\resources\ahk\TradeMacro.ahk")
 addMacros := ReadFileToMerge(scriptDir "\resources\ahk\AdditionalMacros.ahk")
 
 info		:= "`n`r`n`r" . info . "`n`r`n`r"
-addMacros	:= "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros . "`n`r`n`r"
+addMacros    := "`n`r#IfWinActive ahk_group PoEWindowGrp" . "`n`r`n`r" . addMacros . "`n`r`n`r"
 addMacros	.= AppendCustomMacros(userDirectory)
 
 CloseScript("_TradeMacroMain.ahk")

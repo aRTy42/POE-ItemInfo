@@ -24,13 +24,6 @@ GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExi
 #Include, %A_ScriptDir%\lib\Class_GdipTooltip.ahk
 #Include, %A_ScriptDir%\lib\Class_ColorPicker.ahk
 
-MsgWrongAHKVersion := "AutoHotkey v" . AHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
-If (A_AhkVersion < AHKVersionRequired)
-{
-	MsgBox, 16, Wrong AutoHotkey Version, % MsgWrongAHKVersion
-	ExitApp
-}
-
 #Include %A_ScriptDir%\resources\Messages.txt
 IfNotExist, %A_ScriptDir%\temp
 FileCreateDir, %A_ScriptDir%\temp
@@ -6056,7 +6049,7 @@ ParseClipBoardChanges(debug = false)
 		AddLogEntry(ParsedData, CBContents)
 	}
 	
-	ShowToolTip(ParsedData)
+	ShowToolTip(ParsedData, false, Opts.GDIConditionalColors)
 }
 
 AddLogEntry(ParsedData, RawData) {
@@ -8212,14 +8205,78 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	Return pseudoMods
 }
 
-; Show tooltip, with fixed width font
-ShowToolTip(String, Centered = false)
-{
-	Global X, Y, ToolTipTimeout, Opts, gdipTooltip
+ChangeTooltipColorByItem(rarity, type, conditionalColors = false) {
+	Global Opts
+	
+	If (conditionalColors) {
+		If (rarity = 4) {
+			_wColor	:= "000000"
+			_wOpacity	:= 90
+			_bColor	:= "98542a"
+			_bOpacity	:= 90
+			_tColor	:= "FEFEFE"
+			_tOpacity	:= 100
+		} Else If (rarity = 3) {
+			_wColor	:= "000000"
+			_wOpacity	:= 90
+			_bColor	:= "ba9614"
+			_bOpacity	:= 90
+			_tColor	:= "FEFEFE"
+			_tOpacity	:= 100
+		} Else If (rarity = 2) {
+			_wColor	:= "000000"
+			_wOpacity	:= 90
+			_bColor	:= "586c85"
+			_bOpacity	:= 90
+			_tColor	:= "FEFEFE"
+			_tOpacity	:= 100
+		} Else If (rarity = 1) {
+			_wColor	:= "000000"
+			_wOpacity	:= 90
+			_bColor	:= "9c9285"
+			_bOpacity	:= 90
+			_tColor	:= "FEFEFE"
+			_tOpacity	:= 100
+		} Else If (type = "Gem") {
+			_wColor	:= "000000"
+			_wOpacity	:= 90
+			_bColor	:= "608376"
+			_bOpacity	:= 90
+			_tColor	:= "FEFEFE"
+			_tOpacity	:= 100
+		} Else If (type = "Map") {
+			_wColor	:= "000000"
+			_wOpacity	:= 90
+			_bColor	:= "ba9614"
+			_bOpacity	:= 90
+			_tColor	:= "FEFEFE"
+			_tOpacity	:= 100
+		} Else If (type = "Prophecy") {
+			_wColor	:= "000000"
+			_wOpacity	:= 90
+			_bColor	:= "8e1cb2"
+			_bOpacity	:= 90
+			_tColor	:= "FEFEFE"
+			_tOpacity	:= 100
+		}	
+	}
+	
+	If (not StrLen(_wColor) or not conditionalColors) {
+		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)	
+	} Else {
+		console.log(_wColor "," _wOpacity "," _bColor "," _bOpacity "," _tColor "," _tOpacity)
+		gdipTooltip.UpdateColors(_wColor, _wOpacity, _bColor, _bOpacity, _tColor, _tOpacity, 10, 16)	
+	}	
+}
 
+; Show tooltip, with fixed width font
+ShowToolTip(String, Centered = false, conditionalColors = false)
+{
+	Global X, Y, ToolTipTimeout, Opts, gdipTooltip, Item
+	;debugprintarray(item)
 	; Get position of mouse cursor
 	MouseGetPos, X, Y
-	WinGet, PoEWindowHwnd, ID, ahk_group PoEexe
+	WinGet, PoEWindowHwnd, ID, ahk_group PoEWindowGrp
 	RelativeToActiveWindow := true	; default tooltip behaviour 
 	
 	If (not RelativeToActiveWindow) {
@@ -8239,6 +8296,8 @@ ShowToolTip(String, Centered = false)
 
 			If (Opts.UseGDI)
 			{
+				
+				ChangeTooltipColorByItem(Item.RarityLevel, Item.BaseType, conditionalColors)
 				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
 			}
 			Else
@@ -8255,6 +8314,7 @@ ShowToolTip(String, Centered = false)
 			
 			If (Opts.UseGDI) 
 			{
+				ChangeTooltipColorByItem(Item.RarityLevel, Item.BaseType, conditionalColors)
 				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
 			}
 			Else
@@ -8276,6 +8336,7 @@ ShowToolTip(String, Centered = false)
 
 		If (Opts.UseGDI)
 		{
+			ChangeTooltipColorByItem(Item.RarityLevel, Item.BaseType, conditionalColors)
 			gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd, true)
 		}
 		Else
@@ -8566,7 +8627,7 @@ CreateSettingsUI()
 	GuiAddEdit(Opts.FontSize, "xs180 ys155 w50 h20 Number", "FontSize")
 
 	; GDI+
-	GuiAddGroupBox("GDI+", "x7 y+20 w260 h270 Section")
+	GuiAddGroupBox("GDI+", "x7 y+20 w260 h300 Section")
 	GuiAddCheckBox("Enable GDI+", "xs10 ys20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
 	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")	
 	GuiAddButton("Edit Window", "xs9 ys40 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
@@ -8586,9 +8647,10 @@ CreateSettingsUI()
 	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys191 w60", "GDITextOpacity", "GDITextOpacityH")
 	GuiAddCheckBox("Rendering Fix", "xs10 ys216 w110", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
+	GuiAddCheckBox("Style Tooltip depending on checked item.", "xs10 ys246 w310", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
 	
-	GuiAddButton("Defaults", "xs9 ys240 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
-	GuiAddButton("Preview", "xs170 ys240 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
+	GuiAddButton("Defaults", "xs9 ys270 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
+	GuiAddButton("Preview", "xs170 ys270 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
 	
 	
 	; Display - Affixes
@@ -8694,6 +8756,7 @@ UpdateSettingsUI()
 		GuiControl, Disable, BtnGDIDefaults	
 		GuiControl, Disable, BtnGDIPreviewTooltip
 		GuiControl, Disable, GDIRenderingFix
+		GuiControl, Disable, GDIConditionalColors
 	}
 	Else 
 	{
@@ -8711,6 +8774,7 @@ UpdateSettingsUI()
 		GuiControl, Enable, BtnGDIDefaults	
 		GuiControl, Enable, BtnGDIPreviewTooltip
 		GuiControl, Enable, GDIRenderingFix
+		GuiControl, Enable, GDIConditionalColors
 	}		
 }
 
@@ -8827,6 +8891,7 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 		; GDI+		
 		Opts.UseGDI				:= IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
 		Opts.GDIRenderingFix		:= IniRead(ConfigPath, "GDI", "RenderingFix", Opts.GDIRenderingFix)
+		Opts.GDIConditionalColors	:= IniRead(ConfigPath, "GDI", "ConditionalColors", Opts.GDIConditionalColors)
 		Opts.GDIWindowColor			:= IniRead(ConfigPath, "GDI", "WindowColor", Opts.GDIWindowColor)
 		Opts.GDIWindowColorDefault	:= IniRead(ConfigPath, "GDI", "WindowColorDefault", Opts.GDIWindowColorDefault)
 		Opts.GDIWindowOpacity		:= IniRead(ConfigPath, "GDI", "WindowOpacity", Opts.GDIWindowOpacity)
@@ -8838,7 +8903,7 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 		Opts.GDITextColor			:= IniRead(ConfigPath, "GDI", "TextColor", Opts.GDITextColor)
 		Opts.GDITextColorDefault		:= IniRead(ConfigPath, "GDI", "TextColorDefault", Opts.GDITextColorDefault)
 		Opts.GDITextOpacity			:= IniRead(ConfigPath, "GDI", "TextOpacity", Opts.GDITextOpacity)
-		Opts.GDITextOpacityDefault	:= IniRead(ConfigPath, "GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault)
+		Opts.GDITextOpacityDefault	:= IniRead(ConfigPath, "GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault)		
 		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, "10", "16")
 	}
 }
@@ -8885,6 +8950,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	; GDI+
 	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "Enabled")
 	IniWrite(Opts.GDIRenderingFix, ConfigPath, "GDI", "RenderingFix")
+	IniWrite(Opts.GDIConditionalColors, ConfigPath, "GDI", "ConditionalColors")
 	IniWrite(Opts.GDIWindowColor, ConfigPath, "GDI", "WindowColor")
 	IniWrite(Opts.GDIWindowOpacity, ConfigPath, "GDI", "WindowOpacity")
 	IniWrite(Opts.GDIBorderColor, ConfigPath, "GDI", "BorderColor")
@@ -9693,6 +9759,7 @@ SettingsUI_ChkUseGDI:
 		GuiControl, Disable, BtnGDIDefaults	
 		GuiControl, Disable, BtnGDIPreviewTooltip
 		GuiControl, Disable, GDIRenderingFix
+		GuiControl, Disable, GDIConditionalColors
 	}
 	Else
 	{
@@ -9710,6 +9777,7 @@ SettingsUI_ChkUseGDI:
 		GuiControl, Enable, BtnGDIDefaults	
 		GuiControl, Enable, BtnGDIPreviewTooltip
 		GuiControl, Enable, GDIRenderingFix
+		GuiControl, Enable, GDIConditionalColors
 	}
 
 	return
