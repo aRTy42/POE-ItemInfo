@@ -8205,67 +8205,41 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	Return pseudoMods
 }
 
-ChangeTooltipColorByItem(rarity, type, conditionalColors = false) {
-	Global Opts
+ChangeTooltipColorByItem(conditionalColors = false) {
+	Global Opts, Item
+	
+	_rarity	:= Item.RarityLevel
+	_type	:= Item.BaseType
 	
 	If (conditionalColors) {
-		If (rarity = 4) {
-			_wColor	:= "000000"
-			_wOpacity	:= 90
-			_bColor	:= "98542a"
+		If (_rarity = 4) {
+			_bColor	:= "af5f1c"
 			_bOpacity	:= 90
-			_tColor	:= "FEFEFE"
-			_tOpacity	:= 100
-		} Else If (rarity = 3) {
-			_wColor	:= "000000"
-			_wOpacity	:= 90
-			_bColor	:= "ba9614"
+		} Else If (_rarity = 3) {
+			_bColor	:= "b3931e"
 			_bOpacity	:= 90
-			_tColor	:= "FEFEFE"
-			_tOpacity	:= 100
-		} Else If (rarity = 2) {
-			_wColor	:= "000000"
-			_wOpacity	:= 90
-			_bColor	:= "586c85"
+		} Else If (_rarity = 2) {
+			_bColor	:= "8787fe"
 			_bOpacity	:= 90
-			_tColor	:= "FEFEFE"
-			_tOpacity	:= 100
-		} Else If (rarity = 1) {
-			_wColor	:= "000000"
-			_wOpacity	:= 90
+		} Else If (_rarity = 1) {
 			_bColor	:= "9c9285"
 			_bOpacity	:= 90
-			_tColor	:= "FEFEFE"
-			_tOpacity	:= 100
-		} Else If (type = "Gem") {
-			_wColor	:= "000000"
-			_wOpacity	:= 90
+		} Else If (_type = "Gem") {
 			_bColor	:= "608376"
 			_bOpacity	:= 90
-			_tColor	:= "FEFEFE"
-			_tOpacity	:= 100
-		} Else If (type = "Map") {
-			_wColor	:= "000000"
-			_wOpacity	:= 90
-			_bColor	:= "ba9614"
+		} Else If (_type = "Prophecy") {
+			_bColor	:= "b547fe"
 			_bOpacity	:= 90
-			_tColor	:= "FEFEFE"
-			_tOpacity	:= 100
-		} Else If (type = "Prophecy") {
-			_wColor	:= "000000"
-			_wOpacity	:= 90
-			_bColor	:= "8e1cb2"
+		} Else If (_type = "Currency" or Item.IsEssence) {
+			_bColor	:= "867951"
 			_bOpacity	:= 90
-			_tColor	:= "FEFEFE"
-			_tOpacity	:= 100
 		}	
 	}
 	
-	If (not StrLen(_wColor) or not conditionalColors) {
+	If (not StrLen(_bColor) or not conditionalColors) {
 		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)	
 	} Else {
-		console.log(_wColor "," _wOpacity "," _bColor "," _bOpacity "," _tColor "," _tOpacity)
-		gdipTooltip.UpdateColors(_wColor, _wOpacity, _bColor, _bOpacity, _tColor, _tOpacity, 10, 16)	
+		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, _bColor, _bOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)	
 	}	
 }
 
@@ -8273,7 +8247,7 @@ ChangeTooltipColorByItem(rarity, type, conditionalColors = false) {
 ShowToolTip(String, Centered = false, conditionalColors = false)
 {
 	Global X, Y, ToolTipTimeout, Opts, gdipTooltip, Item
-	;debugprintarray(item)
+	
 	; Get position of mouse cursor
 	MouseGetPos, X, Y
 	WinGet, PoEWindowHwnd, ID, ahk_group PoEWindowGrp
@@ -8297,7 +8271,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 			If (Opts.UseGDI)
 			{
 				
-				ChangeTooltipColorByItem(Item.RarityLevel, Item.BaseType, conditionalColors)
+				ChangeTooltipColorByItem(conditionalColors)
 				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
 			}
 			Else
@@ -8314,7 +8288,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 			
 			If (Opts.UseGDI) 
 			{
-				ChangeTooltipColorByItem(Item.RarityLevel, Item.BaseType, conditionalColors)
+				ChangeTooltipColorByItem(conditionalColors)
 				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
 			}
 			Else
@@ -8336,7 +8310,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 
 		If (Opts.UseGDI)
 		{
-			ChangeTooltipColorByItem(Item.RarityLevel, Item.BaseType, conditionalColors)
+			ChangeTooltipColorByItem(conditionalColors)
 			gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd, true)
 		}
 		Else
@@ -8647,7 +8621,7 @@ CreateSettingsUI()
 	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys191 w60", "GDITextOpacity", "GDITextOpacityH")
 	GuiAddCheckBox("Rendering Fix", "xs10 ys216 w110", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
-	GuiAddCheckBox("Style Tooltip depending on checked item.", "xs10 ys246 w310", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
+	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys246 w310", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
 	
 	GuiAddButton("Defaults", "xs9 ys270 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
 	GuiAddButton("Preview", "xs170 ys270 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
