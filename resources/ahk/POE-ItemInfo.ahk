@@ -23,7 +23,6 @@ GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExi
 #Include, %A_ScriptDir%\lib\ConvertKeyToKeyCode.ahk
 #Include, %A_ScriptDir%\lib\Class_GdipTooltip.ahk
 #Include, %A_ScriptDir%\lib\Class_ColorPicker.ahk
-#Include %A_ScriptDir%\resources\Messages.txt
 IfNotExist, %A_ScriptDir%\temp
 FileCreateDir, %A_ScriptDir%\temp
 
@@ -47,7 +46,7 @@ Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
-Globals.Set("SettingsUIHeight", 706)
+Globals.Set("SettingsUIHeight", 550)
 Globals.Set("AboutWindowHeight", 340)
 Globals.Set("AboutWindowWidth", 435)
 Globals.Set("SettingsUITitle", "PoE ItemInfo Settings")
@@ -116,7 +115,6 @@ class UserOptions {
 	
 	; Only use compact double ranges for the second range column in the affix overview (with the header 'total')
 	OnlyCompactForTotalColumn := 0
-	; 50% increased Spell?//50-59 (46)//75-79 (84)//T4 P
 	
 	; Separator for a multi tier roll range with uncertainty, such as:
 	;   83% increased Light…   73-85…83-95   102-109 (84)  T1-4 P + T1-6 S
@@ -466,11 +464,6 @@ Menu, Tray, Add ; Separator
 Menu, Tray, Standard
 Menu, Tray, Default, % Globals.Get("SettingsUITitle", "PoE ItemInfo Settings")
 
-IfNotExist, %A_ScriptDir%\data
-{
-	MsgBox, 16, % Msg.DataDirNotFound
-	exit
-}
 
 #Include %A_ScriptDir%\data\MapList.txt
 #Include %A_ScriptDir%\data\DivinationCardList.txt
@@ -5682,8 +5675,6 @@ ParseAffixes(ItemDataAffixes, Item)
 	AffixTotals.NumSuffixesMax := AffixTotals.NumSuffixes
 	AffixTotals.NumTotal := AffixTotals.NumPrefixes + AffixTotals.NumSuffixes
 	
-	DebugMode := False
-	DebugFile(Itemdata.UncertainAffixes)
 	
 	; THIS FUNCTION IS QUITE COMPLICATED. IT INVOLVES FOUR LOOPS THAT FULFILL DIFFERENT JOBS AT DIFFERENT TIMES.
 	;   CONSEQUENTLY THE CODE CAN'T BE SIMPLY READ FROM TOP TO BOTTOM. IT IS HEAVILY COMMENTED THOUGH.
@@ -5691,6 +5682,7 @@ ParseAffixes(ItemDataAffixes, Item)
 	;
 	; Phase 1:
 	; Check each possible mod if it alone breaks the affix count limit. Discard these from Itemdata.UncertainAffixes.
+	; Check if discarding possibilities leaves a mod group with a single choice. Finalize these now certain outcomes.
 	; Loop through these checks until nothing changes for one complete pass.
 	; Phase 2:
 	; Check whether a group will certainly bring an affix type but is not finalized yet. We can use that info to
@@ -5700,15 +5692,6 @@ ParseAffixes(ItemDataAffixes, Item)
 	CheckAgainForGoodMeasure := False
 	While ReloopAll
 	{
-		DebugFile("ReloopAll:" ReloopAll)
-		DebugFile("ConsiderAllRemainingAffixes:" ConsiderAllRemainingAffixes)
-		DebugFile("CheckAgainForGoodMeasure:" CheckAgainForGoodMeasure)
-		
-		DebugFile("Uncertain:")
-		DebugFile(Itemdata.UncertainAffixes) 
-		DebugFile("Tmp:")
-		DebugFile(Itemdata.UncAffTmpAffixLines)
-		
 		; No infinite looping. We re-enable ReloopAll below when it is warranted.
 		ReloopAll := False
 		
@@ -5727,15 +5710,8 @@ ParseAffixes(ItemDataAffixes, Item)
 			GrpSuffixMinCount := {"Total":0}		
 		}
 		
-		DebugFile("GrpPrefixMinCount:")
-		DebugFile(GrpPrefixMinCount)
-		DebugFile("GrpSuffixMinCount:")
-		DebugFile(GrpSuffixMinCount)
-		
 		For key_grp, grp in Itemdata.UncertainAffixes
 		{
-			DebugFile("Outer loop, key_grp:" key_grp)
-			
 			PrefixMinCount := 10	; Start arbitrary high enough and then lower them with comparisons.
 			SuffixMinCount := 10
 			
@@ -5753,8 +5729,6 @@ ParseAffixes(ItemDataAffixes, Item)
 				
 				For key_entry, entry in grp
 				{
-					DebugFile("Inner loop, key_entry:" key_entry)
-					DebugFile("Pre:" entry[1] ", Suf:" entry[2])
 					++grp_len
 					
 					; Phase 1:
@@ -5777,10 +5751,6 @@ ParseAffixes(ItemDataAffixes, Item)
 						; No fancy affix assumptions yet, just the certain count due to what we have added to AffixLines already.
 						AssumePrefixCount := AffixTotals.NumPrefixes
 						AssumeSuffixCount := AffixTotals.NumSuffixes
-						
-						DebugFile("Consider False")
-						DebugFile("Checking:" AffixTotals.NumPrefixes " global +" entry[1] " own = " AssumePrefixCount + entry[1] ">" PrefixLimit)
-						DebugFile("Checking:" AffixTotals.NumSuffixes " global +" entry[2] " own = " AssumeSuffixCount + entry[2] ">" SuffixLimit)
 					}
 					Else
 					{
@@ -5789,15 +5759,10 @@ ParseAffixes(ItemDataAffixes, Item)
 						; Since a group's entry is not supposed to be discarded because of the groups own min portion (that is in the total), we subtract the respective group's share.
 						AssumePrefixCount := AffixTotals.NumPrefixes + GrpPrefixMinCount["total"] - GrpPrefixMinCount[key_grp]
 						AssumeSuffixCount := AffixTotals.NumSuffixes + GrpSuffixMinCount["total"] - GrpSuffixMinCount[key_grp]
-						
-						DebugFile("Consider True")
-						DebugFile("Checking:" AffixTotals.NumPrefixes " global +" GrpPrefixMinCount["total"] " total -" GrpPrefixMinCount[key_grp] " grp +" entry[1] " own = " AssumePrefixCount + entry[1] ">" PrefixLimit)
-						DebugFile("Checking:" AffixTotals.NumSuffixes " global +" GrpSuffixMinCount["total"] " total -" GrpSuffixMinCount[key_grp] " grp +" entry[2] " own = " AssumeSuffixCount + entry[2] ">" SuffixLimit)
 					}
 					
 					If( (AssumePrefixCount + entry[1] > PrefixLimit) or (AssumeSuffixCount + entry[2] > SuffixLimit) )
 					{
-						DebugFile("Too much")
 						; Mod does not work because of affix number limit
 						; Remove mod entry from "grp"
 						grp.Delete(key_entry)
@@ -5822,13 +5787,6 @@ ParseAffixes(ItemDataAffixes, Item)
 				GrpPrefixMinCount["total"] += PrefixMinCount
 				GrpSuffixMinCount["total"] += SuffixMinCount
 			}
-			
-			DebugFile("Finished grp:" key_grp)
-			DebugFile("GrpPrefixMinCount:")
-			DebugFile(GrpPrefixMinCount)
-			DebugFile("GrpSuffixMinCount:")
-			DebugFile(GrpSuffixMinCount)
-			
 			
 			If(grp_len=1)
 			{
@@ -5892,8 +5850,6 @@ ParseAffixes(ItemDataAffixes, Item)
 	{
 		FinalizeUncertainAffixGroup(grp)
 	}
-	
-	DebugFile(Itemdata.UncAffTmpAffixLines)
 	
 	AffixLines.Reset()
 	
@@ -9980,15 +9936,6 @@ ShowAssignedHotkeys:
 	Gui, 3:Cancel
 	return
 
-UnhandledDlg_ShowItemText:
-	Run, Notepad.exe
-	WinActivate
-	Send, ^v
-	return
-
-UnhandledDlg_OK:
-	Gui, 3:Submit
-	return
 
 CheckForUpdates:
 	If (not globalUpdateInfo.repo) {
