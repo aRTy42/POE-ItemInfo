@@ -128,6 +128,9 @@ PoEScripts_ConvertAdditionalMacrosSettings(destDir) {
 			else if (InStr(labelName1, "KickYourself") and paramIndex == 3){
 				AdditionalMacros_INI.AddKey(labelName1, "CharacterName", paramContent)
 			}
+			else if (InStr(labelName1, "LookUpAffixes") and paramContent == "^L"){
+				labelHotkeys := "^M"
+			}
 			else {
 				if (labelHotkeys == "") {
 					labelHotkeys := paramContent
