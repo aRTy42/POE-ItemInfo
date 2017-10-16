@@ -14,78 +14,97 @@
 	*/
 	
 	; https://curl.haxx.se/download.html -> https://bintray.com/vszakats/generic/curl/
-	curl		:= """" A_ScriptDir "\lib\curl.exe"" "	
-	headers	:= ""
-	cookies	:= ""
-	For key, val in ioHdr {
-		val := Trim(RegExReplace(val, "i)(.*?)\s*:\s*(.*)", "$1:$2"))
-		headers .= "-H """ val """ "
+	Loop, 2 
+	{
+		curl		:= """" A_ScriptDir "\lib\curl.exe"" "	
+		headers	:= ""
+		cookies	:= ""
+		For key, val in ioHdr {
+			val := Trim(RegExReplace(val, "i)(.*?)\s*:\s*(.*)", "$1:$2"))
+			If (A_Index = 2 and RegExMatch(val, "i)^Host:.*")) {
+				; make sure that the host header is not included on the second try (empty first response)
+			} Else {
+				headers .= "-H """ val """ "	
+			}			
+			
+			If (RegExMatch(val, "i)^Cookie:(.*)", cookie)) {
+				cookies .= cookie1 " "		
+			}
+		}
+		cookies := StrLen(cookies) ? "-b """ Trim(cookies) """ " : ""
 		
-		If (RegExMatch(val, "i)^Cookie:(.*)", cookie)) {
-			cookies .= cookie1 " "		
+		redirect := "L"
+		PreventErrorMsg := false
+		If (StrLen(options)) {
+			If (RegExMatch(options, "i)SaveAs:[ \t]*\K[^\r\n]+", SavePath)) {
+				commandData	.= " " options " "
+				commandHdr	.= ""	
+			}
+			If (RegExMatch(options, "i)Redirect:\sFalse")) {
+				redirect := ""
+			}
+			If (RegExMatch(options, "i)PreventErrorMsg")) {
+				PreventErrorMsg := true
+			}
+		}
+		
+		e := {}
+		Try {		
+			commandData	:= ""		; console curl command to return data/content 
+			commandHdr	:= ""		; console curl command to return headers
+			If (binaryDL) {
+				commandData .= " -" redirect "Jkv "		; save as file
+				If (SavePath) {
+					commandData .= "-o """ SavePath """ "	; set target destination and name
+				}
+			} Else {
+				commandData .= " -" redirect "ks --compressed "			
+				commandHdr  .= " -I" redirect "ks "
+			}
+			If (StrLen(headers)) {
+				commandData .= headers
+				commandHdr  .= headers
+				If (StrLen(cookies)) {
+					commandData .= cookies
+					commandHdr  .= cookies
+				}
+			}
+			If (StrLen(ioData)) {
+				commandData .= "--data """ ioData """ "
+			}
+			
+			If (binaryDL) {
+				commandData	.= "--connect-timeout 30 "
+				commandData	.= "--connect-timeout 30 "
+			} Else {				
+				commandData	.= "--max-time 30 "
+				commandHdr	.= "--max-time 30 "
+			}
+
+			; get data
+			html	:= StdOutStream(curl """" url """" commandData)
+			;html := ReadConsoleOutputFromFile(commandData """" url """", "commandData") ; alternative function
+			
+			; get return headers in seperate request
+			If (not binaryDL) {
+				If (StrLen(ioData)) {
+					commandHdr := curl """" url "?" ioData """" commandHdr		; add payload to url since you can't use the -I argument with POST requests
+				} Else {
+					commandHdr := curl """" url """" commandHdr
+				}
+				ioHdr := StdOutStream(commandHdr)
+				;ioHrd := ReadConsoleOutputFromFile(commandHdr, "commandHdr") ; alternative function
+			}
+			reqHeadersCurl := commandHdr
+		} Catch e {
+			
+		}
+		
+		If (Strlen(ioHdr)) {
+			Break	; only go into the second loop if the respone is empty (possible problem with the added host header)			
 		}
 	}	
-	cookies := StrLen(cookies) ? "-b """ Trim(cookies) """ " : ""
 	
-	redirect := "L"
-	PreventErrorMsg := false
-	If (StrLen(options)) {
-		If (RegExMatch(options, "i)SaveAs:[ \t]*\K[^\r\n]+", SavePath)) {
-			commandData	.= " " options " "
-			commandHdr	.= ""	
-		}
-		If (RegExMatch(options, "i)Redirect:\sFalse")) {
-			redirect := ""
-		}
-		If (RegExMatch(options, "i)PreventErrorMsg")) {
-			PreventErrorMsg := true
-		}
-	}
-	
-	e := {}
-	Try {		
-		commandData	:= ""		; console curl command to return data/content 
-		commandHdr	:= ""		; console curl command to return headers
-		If (binaryDL) {
-			commandData .= " -" redirect "Jkv "		; save as file
-			If (SavePath) {
-				commandData .= "-o """ SavePath """ "	; set target destination and name
-			}
-		} Else {
-			commandData .= " -" redirect "ks --compressed "			
-			commandHdr  .= " -I" redirect "ks "
-		}
-		If (StrLen(headers)) {
-			commandData .= headers
-			commandHdr  .= headers
-			If (StrLen(cookies)) {
-				commandData .= cookies
-				commandHdr  .= cookies
-			}
-		}
-		If (StrLen(ioData)) {
-			commandData .= "--data """ ioData """ "
-		}
-
-		; get data
-		html	:= StdOutStream(curl """" url """" commandData)
-		;html := ReadConsoleOutputFromFile(commandData """" url """", "commandData") ; alternative function
-		
-		; get return headers in seperate request
-		If (not binaryDL) {
-			If (StrLen(ioData)) {
-				commandHdr := curl """" url "?" ioData """" commandHdr		; add payload to url since you can't use the -I argument with POST requests
-			} Else {
-				commandHdr := curl """" url """" commandHdr
-			}
-			ioHdr := StdOutStream(commandHdr)
-			;ioHrd := ReadConsoleOutputFromFile(commandHdr, "commandHdr") ; alternative function
-		}
-		reqHeadersCurl := commandHdr
-	} Catch e {
-		
-	}
-
 	goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
 	If (RegExMatch(ioHdr, "i)HTTP\/1.1 403 Forbidden") and not handleAccessForbidden) {
 		PreventErrorMsg		:= true
