@@ -8293,7 +8293,7 @@ ChangeTooltipColorByItem(conditionalColors = false) {
 		} Else If (_type = "Prophecy") {
 			_bColor	:= "b547fe"
 			_bOpacity	:= 90
-		} Else If (_type = "Currency" or Item.IsEssence) {
+		} Else If (Item.IsCurrency or Item.IsEssence) {
 			_bColor	:= "867951"
 			_bOpacity	:= 90
 		}	
@@ -8970,6 +8970,7 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 		; GDI+		
 		Opts.UseGDI				:= IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
 		Opts.GDIRenderingFix		:= IniRead(ConfigPath, "GDI", "RenderingFix", Opts.GDIRenderingFix)
+		Opts.GDIConditionalColors	:= IniRead(ConfigPath, "GDI", "ConditionalColors", Opts.GDIConditionalColors)
 		Opts.GDIWindowColor			:= IniRead(ConfigPath, "GDI", "WindowColor", Opts.GDIWindowColor)
 		Opts.GDIWindowColorDefault	:= IniRead(ConfigPath, "GDI", "WindowColorDefault", Opts.GDIWindowColorDefault)
 		Opts.GDIWindowOpacity		:= IniRead(ConfigPath, "GDI", "WindowOpacity", Opts.GDIWindowOpacity)
@@ -9028,6 +9029,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	; GDI+
 	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "Enabled")
 	IniWrite(Opts.GDIRenderingFix, ConfigPath, "GDI", "RenderingFix")
+	IniWrite(Opts.GDIConditionalColors, ConfigPath, "GDI", "ConditionalColors")
 	IniWrite(Opts.GDIWindowColor, ConfigPath, "GDI", "WindowColor")
 	IniWrite(Opts.GDIWindowOpacity, ConfigPath, "GDI", "WindowOpacity")
 	IniWrite(Opts.GDIBorderColor, ConfigPath, "GDI", "BorderColor")
