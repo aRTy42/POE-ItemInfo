@@ -116,7 +116,6 @@ class UserOptions {
 	
 	; Only use compact double ranges for the second range column in the affix overview (with the header 'total')
 	OnlyCompactForTotalColumn := 0
-	; 50% increased Spell?//50-59 (46)//75-79 (84)//T4 P
 	
 	; Separator for a multi tier roll range with uncertainty, such as:
 	;   83% increased Light…   73-85…83-95   102-109 (84)  T1-4 P + T1-6 S
