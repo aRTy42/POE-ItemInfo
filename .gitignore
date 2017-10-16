@@ -61,6 +61,7 @@ data_trade/backup/*
 backup/*
 backup/
 test.ahk
+DebugFile.txt
 
 lib/node_modules
 lib/npm-debug.log.*
