@@ -58,6 +58,9 @@ class GdipTooltip
 
 		this.innerBorder	:= innerBorder
 		this.luminosityFactor := luminosityFactor
+		If (innerBorder) {
+			boSize := StrLen(boSize) ? Floor(boSize / 2) : [Floor(boSize / 2), Floor(boSize / 2)]	
+		}		
 		this.borderSize	:= StrLen(boSize) ? new this.gdip.Size(boSize, boSize) : new this.gdip.Size(boSize)
 		this.padding		:= StrLen(padding) ? new this.gdip.Size(padding, padding) : new this.gdip.Size(padding)
 		this.renderingHack	:= renderingHack

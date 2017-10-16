@@ -47,7 +47,7 @@ Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
-Globals.Set("SettingsUIHeight", 550)
+Globals.Set("SettingsUIHeight", 706)
 Globals.Set("AboutWindowHeight", 340)
 Globals.Set("AboutWindowWidth", 435)
 Globals.Set("SettingsUITitle", "PoE ItemInfo Settings")
@@ -116,6 +116,7 @@ class UserOptions {
 	
 	; Only use compact double ranges for the second range column in the affix overview (with the header 'total')
 	OnlyCompactForTotalColumn := 0
+	; 50% increased Spell?//50-59 (46)//75-79 (84)//T4 P
 	
 	; Separator for a multi tier roll range with uncertainty, such as:
 	;   83% increased Light…   73-85…83-95   102-109 (84)  T1-4 P + T1-6 S
@@ -147,21 +148,16 @@ class UserOptions {
 	
 	; Set this to 1 to enable GDI+ rendering
 	UseGDI := 0
-	
-	; Format: RRGGBB (hex)
+
+	; Format: RRGGBB
 	GDIWindowColor			:= "000000"
-	GDIWindowColorDefault	:= "000000"
 	GDIBorderColor			:= "654025"
-	GDIBorderColorDefault	:= "654025"
 	GDITextColor			:= "FEFEFE"
-	GDITextColorDefault		:= "FEFEFE"
 	GDIWindowOpacity		:= 90
-	GDIWindowOpacityDefault	:= 90
 	GDIBorderOpacity		:= 90
-	GDIBorderOpacityDefault	:= 90
 	GDITextOpacity			:= 100
-	GDITextOpacityDefault	:= 100
 	GDIRenderingFix		:= 1
+	GDIConditionalColors	:= 0
 	
 	ScanUI()
 	{
@@ -178,9 +174,9 @@ class Fonts {
 	Init(FontSizeFixed, FontSizeUI)
 	{
 		this.FontSizeFixed	:= FontSizeFixed
-		this.FontSizeUI		:= FontSizeUI
+		this.FontSizeUI	:= FontSizeUI
 		this.FixedFont		:= this.CreateFixedFont(FontSizeFixed)
-		this.UIFont			:= this.CreateUIFont(FontSizeUI)
+		this.UIFont		:= this.CreateUIFont(FontSizeUI)
 	}
 
 	CreateFixedFont(FontSize_)
@@ -997,6 +993,7 @@ Each array element is an object with 8 keys:
 		minHi: upper min value (2)
 		maxLo: lower max value (3)
 		maxHi: upper max value (4)
+
 */
 ArrayFromDatafile(Filename, AffixMode="Native")
 {
@@ -1816,8 +1813,7 @@ AssembleAffixDetails()
 		
 		If( not Item.IsJewel and Opts.ShowHeaderForAffixOverview)
 		{
-			; Add a header line above the affix infos.
-			
+			; Add a header line above the affix infos.			
 			ProcessedLine := "`n"
 			ProcessedLine .= StrPad("TierRange", TextLineWidth + ValueRange1Width + StrLen(Separator), "left")
 			ProcessedLine .= " ilvl" Separator
@@ -2148,12 +2144,10 @@ ParseMapAffixes(ItemDataAffixes)
 		If StrLen(A_LoopField) = 0
 		{
 			Continue ; Not interested in blank lines
-		}
-		
-		
-		; --- ONE LINE AFFIXES ---
-		
-		
+		}		
+
+		; --- ONE LINE AFFIXES ---		
+
 		If (RegExMatch(A_LoopField, "Area is inhabited by (Abominations|Humanoids|Goatmen|Demons|ranged monsters|Animals|Skeletons|Sea Witches and their Spawn|Undead|Ghosts|Solaris fanatics|Lunaris fanatics)"))
 		{
 			SetMapInfoLine("Prefix", MapAffixCount)
@@ -2163,7 +2157,6 @@ ParseMapAffixes(ItemDataAffixes)
 		{
 			MapModWarnings .= MapModWarn.MonstExtraEleDmg ? "`nExtra Ele Damage" : ""			
 			SetMapInfoLine("Prefix", MapAffixCount)
-			
 			Count_DmgMod += 1
 			String_DmgMod := String_DmgMod . ", Extra Ele"
 			Continue
@@ -2259,7 +2252,6 @@ ParseMapAffixes(ItemDataAffixes)
 			Flag_TwoAdditionalProj := 1
 			Continue
 		}
-
 
 
 		If (RegExMatch(A_LoopField, "Players are Cursed with Elemental Weakness"))
@@ -2655,12 +2647,12 @@ ParseMapAffixes(ItemDataAffixes)
 			}
 		}
 	}
-	
+
 	If (Flag_TwoAdditionalProj and Flag_SkillsChain)
 	{
 		MapModWarnings := MapModWarnings . "`nAdditional Projectiles & Skills Chain"
 	}
-	
+
 	If (Count_DmgMod >= 1.5)
 	{
 		String_DmgMod := SubStr(String_DmgMod, 3)
@@ -2671,7 +2663,7 @@ ParseMapAffixes(ItemDataAffixes)
 	{
 		MapModWarnings := " disabled"
 	}
-	
+
 	return MapModWarnings
 }
 
@@ -2701,7 +2693,7 @@ LookupAffixAndSetInfoLine(Filename, AffixType, ItemLevel, Value, AffixLineText:=
 	ValueRanges := LookupAffixData(Filename, ItemLevel, Value, CurrTier)
 	AppendAffixInfo(MakeAffixDetailLine(AffixLineText, AffixType, ValueRanges, CurrTier), AffixLineNum)
 }
-
+	
 /*
 Finds possible tier combinations for a single value (thus from a single affix line) assuming that the value is a combination of two non-hybrid mods (so with no further clues).
 */
@@ -5667,8 +5659,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				SolveAffixes_PreSuf("IncrLightning", LineNum, Value, FilePrefix, FileSuffix, ItemLevel)
 			}
 		}
-	}
-	
+	}	
 	
 	
 	i := AffixLines.MaxIndex()
@@ -5678,12 +5669,10 @@ ParseAffixes(ItemDataAffixes, Item)
 	{
 		Itemdata.UncAffTmpAffixLines[A_Index] := AffixLines[A_Index]
 	}
-	
-
 	If(Itemdata.Rarity = "Magic"){
 		PrefixLimit := 1
 		SuffixLimit := 1
-	}Else{
+	} Else {
 		PrefixLimit := 3
 		SuffixLimit := 3
 	}
@@ -6116,7 +6105,7 @@ ParseClipBoardChanges(debug = false)
 		AddLogEntry(ParsedData, CBContents)
 	}
 	
-	ShowToolTip(ParsedData)
+	ShowToolTip(ParsedData, false, Opts.GDIConditionalColors)
 }
 
 AddLogEntry(ParsedData, RawData) {
@@ -8279,10 +8268,48 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	Return pseudoMods
 }
 
+ChangeTooltipColorByItem(conditionalColors = false) {
+	Global Opts, Item
+	
+	_rarity	:= Item.RarityLevel
+	_type	:= Item.BaseType
+	
+	If (conditionalColors) {
+		If (_rarity = 4) {
+			_bColor	:= "af5f1c"
+			_bOpacity	:= 90
+		} Else If (_rarity = 3) {
+			_bColor	:= "b3931e"
+			_bOpacity	:= 90
+		} Else If (_rarity = 2) {
+			_bColor	:= "8787fe"
+			_bOpacity	:= 90
+		} Else If (_rarity = 1) {
+			_bColor	:= "9c9285"
+			_bOpacity	:= 90
+		} Else If (_type = "Gem") {
+			_bColor	:= "608376"
+			_bOpacity	:= 90
+		} Else If (_type = "Prophecy") {
+			_bColor	:= "b547fe"
+			_bOpacity	:= 90
+		} Else If (Item.IsCurrency or Item.IsEssence) {
+			_bColor	:= "867951"
+			_bOpacity	:= 90
+		}	
+	}
+	
+	If (not StrLen(_bColor) or not conditionalColors) {
+		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)	
+	} Else {
+		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, _bColor, _bOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)	
+	}
+}
+
 ; Show tooltip, with fixed width font
-ShowToolTip(String, Centered = false)
+ShowToolTip(String, Centered = false, conditionalColors = false)
 {
-	Global X, Y, ToolTipTimeout, Opts, gdipTooltip
+	Global X, Y, ToolTipTimeout, Opts, gdipTooltip, Item
 	
 	; Get position of mouse cursor
 	MouseGetPos, X, Y
@@ -8305,7 +8332,8 @@ ShowToolTip(String, Centered = false)
 			YCoord := 0 + ScreenOffsetY
 			
 			If (Opts.UseGDI)
-			{
+			{				
+				ChangeTooltipColorByItem(conditionalColors)
 				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
 			}
 			Else
@@ -8322,6 +8350,7 @@ ShowToolTip(String, Centered = false)
 			
 			If (Opts.UseGDI) 
 			{
+				ChangeTooltipColorByItem(conditionalColors)
 				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
 			}
 			Else
@@ -8343,6 +8372,7 @@ ShowToolTip(String, Centered = false)
 		
 		If (Opts.UseGDI)
 		{
+			ChangeTooltipColorByItem(conditionalColors)
 			gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd, true)
 		}
 		Else
@@ -8564,7 +8594,7 @@ AddToolTip(con, text, Modify=0){
 CreateSettingsUI()
 {
 	Global
-	
+
 	ExtraHeightOfTabsWithTradeMacro := SkipItemInfoUpdateCall ? 25 : 0
 	
 	; General
@@ -8598,11 +8628,10 @@ CreateSettingsUI()
 		
 		GuiAddCheckbox("Update: Skip backup", "xs10 yp+30 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
 		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
-	}
-	
+	}	
 	
 	; GDI+
-	GuiAddGroupBox("GDI+", "x7 y+20 w260 h270 Section")
+	GuiAddGroupBox("GDI+", "x7 y+20 w260 h305 Section")
 	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
 	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")	
 	GuiAddButton("Edit Window", "xs9 ys40 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
@@ -8622,9 +8651,10 @@ CreateSettingsUI()
 	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys192 w60", "GDITextOpacity", "GDITextOpacityH")
 	GuiAddCheckBox("Rendering Fix", "xs10 ys216 w110", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
+	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys241 w210", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
 	
-	GuiAddButton("GDI Defaults", "xs9 ys240 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
-	GuiAddButton("Preview", "xs170 ys240 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
+	GuiAddButton("GDI Defaults", "xs9 ys275 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
+	GuiAddButton("Preview", "xs170 ys275 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
 	
 	
 	; Tooltip
@@ -8687,7 +8717,7 @@ CreateSettingsUI()
 	GuiAddButton("Defaults", "xs10 ys340 w75 h23", "SettingsUI_BtnDefaults")
 	GuiAddButton("OK", "Default xs91 ys340 w75 h23", "SettingsUI_BtnOK")
 	GuiAddButton("Cancel", "xs172 ys340 w75 h23", "SettingsUI_BtnCancel")
-	
+
 	; close tabs in case some other script added some
 	Gui, Tab
 }
@@ -8742,10 +8772,10 @@ UpdateSettingsUI()
 	GuiControl,, AffixColumnSeparator, % Opts.AffixColumnSeparator
 	GuiControl,, DoubleRangeSeparator, % Opts.DoubleRangeSeparator
 	GuiControl,, UseCompactDoubleRanges, % Opts.UseCompactDoubleRanges
-	If (Opts.UseCompactDoubleRanges == False){
+	If (Opts.UseCompactDoubleRanges == False) {
 		GuiControl, Enable, OnlyCompactForTotalColumn
 	}
-	Else{
+	Else {
 		GuiControl, Disable, OnlyCompactForTotalColumn
 	}
 	GuiControl,, OnlyCompactForTotalColumn, % Opts.OnlyCompactForTotalColumn
@@ -8782,6 +8812,7 @@ UpdateSettingsUI()
 		GuiControl, Disable, BtnGDIDefaults	
 		GuiControl, Disable, BtnGDIPreviewTooltip
 		GuiControl, Disable, GDIRenderingFix
+		GuiControl, Disable, GDIConditionalColors
 	}
 	Else 
 	{
@@ -8799,7 +8830,8 @@ UpdateSettingsUI()
 		GuiControl, Enable, BtnGDIDefaults	
 		GuiControl, Enable, BtnGDIPreviewTooltip
 		GuiControl, Enable, GDIRenderingFix
-	}
+		GuiControl, Enable, GDIConditionalColors
+	}		
 }
 
 ShowSettingsUI()
@@ -8840,7 +8872,6 @@ ShowUpdateNotes()
 		file := Files[A_Index][1]
 		FileRead, notes, %file%
 		Gui, UpdateNotes:Add, Edit, r50 ReadOnly w700 BackgroundTrans, %notes%
-		
 		NextTab := A_Index + 1
 		Gui, UpdateNotes:Tab, %NextTab%
 	}
@@ -8927,18 +8958,19 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 		
 		; Display
 		Opts.ShowHeaderForAffixOverview		:= IniRead(ConfigPath, "Display", "ShowHeaderForAffixOverview", Opts.ShowHeaderForAffixOverview)
-		Opts.ShowExplanationForUsedNotation		:= IniRead(ConfigPath, "Display", "ShowExplanationForUsedNotation", Opts.ShowExplanationForUsedNotation)
-		Opts.AffixTextEllipsis		:= IniRead(ConfigPath, "Display", "AffixTextEllipsis", Opts.AffixTextEllipsis)
-		Opts.AffixColumnSeparator	:= IniRead(ConfigPath, "Display", "AffixColumnSeparator", Opts.AffixColumnSeparator)
-		Opts.DoubleRangeSeparator		:= IniRead(ConfigPath, "Display", "DoubleRangeSeparator", Opts.DoubleRangeSeparator)
-		Opts.UseCompactDoubleRanges		:= IniRead(ConfigPath, "Display", "UseCompactDoubleRanges", Opts.UseCompactDoubleRanges)
+		Opts.ShowExplanationForUsedNotation	:= IniRead(ConfigPath, "Display", "ShowExplanationForUsedNotation", Opts.ShowExplanationForUsedNotation)
+		Opts.AffixTextEllipsis				:= IniRead(ConfigPath, "Display", "AffixTextEllipsis", Opts.AffixTextEllipsis)
+		Opts.AffixColumnSeparator			:= IniRead(ConfigPath, "Display", "AffixColumnSeparator", Opts.AffixColumnSeparator)
+		Opts.DoubleRangeSeparator			:= IniRead(ConfigPath, "Display", "DoubleRangeSeparator", Opts.DoubleRangeSeparator)
+		Opts.UseCompactDoubleRanges			:= IniRead(ConfigPath, "Display", "UseCompactDoubleRanges", Opts.UseCompactDoubleRanges)
 		Opts.OnlyCompactForTotalColumn		:= IniRead(ConfigPath, "Display", "OnlyCompactForTotalColumn", Opts.OnlyCompactForTotalColumn)
-		Opts.MultiTierRangeSeparator		:= IniRead(ConfigPath, "Display", "MultiTierRangeSeparator", Opts.MultiTierRangeSeparator)
-		Opts.FontSize				:= IniRead(ConfigPath, "Display", "FontSize", Opts.FontSize)
+		Opts.MultiTierRangeSeparator			:= IniRead(ConfigPath, "Display", "MultiTierRangeSeparator", Opts.MultiTierRangeSeparator)
+		Opts.FontSize						:= IniRead(ConfigPath, "Display", "FontSize", Opts.FontSize)
 		
 		; GDI+		
 		Opts.UseGDI				:= IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
 		Opts.GDIRenderingFix		:= IniRead(ConfigPath, "GDI", "RenderingFix", Opts.GDIRenderingFix)
+		Opts.GDIConditionalColors	:= IniRead(ConfigPath, "GDI", "ConditionalColors", Opts.GDIConditionalColors)
 		Opts.GDIWindowColor			:= IniRead(ConfigPath, "GDI", "WindowColor", Opts.GDIWindowColor)
 		Opts.GDIWindowColorDefault	:= IniRead(ConfigPath, "GDI", "WindowColorDefault", Opts.GDIWindowColorDefault)
 		Opts.GDIWindowOpacity		:= IniRead(ConfigPath, "GDI", "WindowOpacity", Opts.GDIWindowOpacity)
@@ -8997,6 +9029,7 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	; GDI+
 	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "Enabled")
 	IniWrite(Opts.GDIRenderingFix, ConfigPath, "GDI", "RenderingFix")
+	IniWrite(Opts.GDIConditionalColors, ConfigPath, "GDI", "ConditionalColors")
 	IniWrite(Opts.GDIWindowColor, ConfigPath, "GDI", "WindowColor")
 	IniWrite(Opts.GDIWindowOpacity, ConfigPath, "GDI", "WindowOpacity")
 	IniWrite(Opts.GDIBorderColor, ConfigPath, "GDI", "BorderColor")
@@ -9513,7 +9546,6 @@ OpenWebPageWith(application, url) {
 		args := ""
 		If (StrLen(application)) {
 			args := "-new-tab"
-
 			Try {
 				Run, "%application%" %args% "%Url%"
 			} Catch e {
@@ -9523,7 +9555,6 @@ OpenWebPageWith(application, url) {
 			Run %Url%
 		}
 	}
-
 	Return
 }
 
@@ -9772,28 +9803,6 @@ SettingsUI_BtnGDIDefaults:
 	GuiControl, , % GDITextOpacityH  , % Opts.GDITextOpacityDefault
 	return
 
-SettingsUI_ChkUseTooltipTimeout:
-	GuiControlGet, IsChecked,, UseTooltipTimeout
-	If (Not IsChecked){
-		GuiControl, Disable, ToolTipTimeoutSeconds
-	}
-	Else{
-		GuiControl, Enable, ToolTipTimeoutSeconds
-	}
-	return
-
-
-SettingsUI_ChkUseCompactDoubleRanges:
-	GuiControlGet, IsChecked,, UseCompactDoubleRanges
-	If (Not IsChecked){
-		GuiControl, Enable, OnlyCompactForTotalColumn
-	}
-	Else{
-		GuiControl, Disable, OnlyCompactForTotalColumn
-	}
-	return
-
-
 SettingsUI_ChkUseGDI:
 	; GDI+
 	GuiControlGet, IsChecked,, UseGDI
@@ -9813,6 +9822,7 @@ SettingsUI_ChkUseGDI:
 		GuiControl, Disable, BtnGDIDefaults	
 		GuiControl, Disable, BtnGDIPreviewTooltip
 		GuiControl, Disable, GDIRenderingFix
+		GuiControl, Disable, GDIConditionalColors
 	}
 	Else
 	{
@@ -9822,7 +9832,7 @@ SettingsUI_ChkUseGDI:
 		GuiControl, Enable, GDIBorderOpacity
 		GuiControl, Enable, GDITextColor
 		GuiControl, Enable, GDITextOpacity
-		
+
 		GuiControl, Enable, BtnGDIWindowColor
 		GuiControl, Enable, BtnGDIBorderColor
 		GuiControl, Enable, BtnGDITextColor
@@ -9830,8 +9840,28 @@ SettingsUI_ChkUseGDI:
 		GuiControl, Enable, BtnGDIDefaults	
 		GuiControl, Enable, BtnGDIPreviewTooltip
 		GuiControl, Enable, GDIRenderingFix
+		GuiControl, Enable, GDIConditionalColors
 	}
+	return
 
+SettingsUI_ChkUseTooltipTimeout:
+	GuiControlGet, IsChecked,, UseTooltipTimeout
+	If (Not IsChecked) {
+		GuiControl, Disable, ToolTipTimeoutSeconds
+	}
+	Else {
+		GuiControl, Enable, ToolTipTimeoutSeconds
+	}
+	return	
+
+SettingsUI_ChkUseCompactDoubleRanges:
+	GuiControlGet, IsChecked,, UseCompactDoubleRanges
+	If (Not IsChecked) {
+		GuiControl, Enable, OnlyCompactForTotalColumn
+	}
+	Else {
+		GuiControl, Disable, OnlyCompactForTotalColumn
+	}
 	return
 
 SettingsUI_ChkDisplayToolTipAtFixedCoords:
@@ -10019,7 +10049,7 @@ FetchCurrencyData:
 		ratesJSONFile := A_ScriptDir . "\temp\currencyData_" . league . ".json"
 		FileDelete, %ratesFile%
 		FileDelete, %ratesJSONFile%
-		
+
 		If (league == "tmpstandard" or league == "tmphardcore" ) {
 			comment := InStr(league, "standard") ? ";Challenge Standard`n" : ";Challenge Hardcore`n"
 		}
@@ -10027,11 +10057,11 @@ FetchCurrencyData:
 			comment := ";Permanent " . league . "`n"
 		}
 		FileAppend, %comment%, %ratesFile%
-		
+
 		Loop, % data.Length() {
 			cName       := data[A_Index].currencyTypeName
 			cChaosEquiv := data[A_Index].chaosEquivalent
-			
+
 			If (cChaosEquiv >= 1) {
 				cChaosQuantity := ZeroTrim(Round(cChaosEquiv, 2))
 				cOwnQuantity   := 1
@@ -10040,7 +10070,7 @@ FetchCurrencyData:
 				cChaosQuantity := 1
 				cOwnQuantity   := ZeroTrim(Round(1 / cChaosEquiv, 2))
 			}
-			
+
 			result := cName . "|" . cOwnQuantity . ":" . cChaosQuantity . "`n"
 			FileAppend, %result%, %ratesFile%
 		}
