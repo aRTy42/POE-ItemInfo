@@ -416,8 +416,8 @@ class EasyIni
 						MsgBox, %rsError%
 						return false
 					}
-					if (!this[sec].HasKey("EasyIni_ReservedFor_Comments")) {
-						this[sec].Insert("EasyIni_ReservedFor_Comments", {})
+					if (!IsObject(this[sec].EasyIni_ReservedFor_Comments)) {
+						this[sec].EasyIni_ReservedFor_Comments := {}
 					}
 					commentCurrent := this[sec].EasyIni_ReservedFor_Comments[key]
 					if (IsStringEmpty(commentCurrent)) {

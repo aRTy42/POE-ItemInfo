@@ -129,12 +129,12 @@ PoEScripts_ConvertAdditionalMacrosSettings(destDir) {
 				AdditionalMacros_INI.AddKey(labelName1, "CharacterName", paramContent)
 			}
 			else if (InStr(labelName1, "LookUpAffixes") and paramContent == "^L"){
-				labelHotkeys := "^M"
-			}
+ 				labelHotkeys := "^M"
+ 			}
 			else {
 				if (labelHotkeys == "") {
 					labelHotkeys := paramContent
-				}
+				}				
 				else {
 					labelHotkeys .= ", " paramContent
 				}
