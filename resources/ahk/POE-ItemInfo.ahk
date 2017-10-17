@@ -284,7 +284,7 @@ class Item_ {
 	Init()
 	{
 		This.Name			:= ""
-		This.TypeName		:= ""
+		This.BaseName		:= ""
 		This.Quality		:= ""
 		This.BaseLevel		:= ""
 		This.RarityLevel	:= ""
@@ -299,7 +299,7 @@ class Item_ {
 		This.Implicit		:= []
 		This.Charges		:= []
 		This.AreaMonsterLevelReq := []
-
+		
 		This.HasImplicit	:= False
 		This.HasEffect		:= False
 		This.IsWeapon		:= False
@@ -572,7 +572,7 @@ OpenUserSettingsFolder(ProjectName, Dir = "")
 ; Function that checks item type name against entries
 ; from ItemList.txt to get the item's base level
 ; Added by kongyuyu, changed by hazydoc, vdorie
-CheckBaseLevel(ItemTypeName)
+CheckBaseLevel(ItemBaseName)
 {
 	ItemListArray = 0
 	Loop, Read, %A_ScriptDir%\data\ItemList.txt
@@ -590,7 +590,7 @@ CheckBaseLevel(ItemTypeName)
 	Loop %ItemListArray% {
 		element := Array%A_Index%1
 
-		IF (InStr(ItemTypeName, element) != 0 && StrLen(element) > ResultLength)
+		IF (InStr(ItemBaseName, element) != 0 && StrLen(element) > ResultLength)
 		{
 			ResultIndex := A_Index
 			ResultLength := StrLen(element)
@@ -1161,6 +1161,34 @@ LookupTierByValue(Value, ModDataArray, ItemLevel=100)
 	return {"Tier":tier,"Top":tierTop,"Btm":tierBtm}
 }
 
+LookupImplicitValue(ItemBaseName)
+{
+	Global Opts
+	FileRead, FileImplicits, data\Implicits.json
+	Implicits := JSON.Load(FileImplicits)
+	ImplicitText := Implicits[ItemBaseName]["Implicit"]
+	
+	IfInString, ImplicitText, `,
+	{
+		StringSplit, Part, ImplicitText, `,
+		return [GetActualValue(Part1), GetActualValue(Part2)]
+	}
+	Else If(RegExMatch(ImplicitText, "Adds \((\d+\-\d+)\) to \((\d+\-\d+)\)", match))
+	{
+		return [match1  Opts.DoubleRangeSeparator  match2]
+	}
+	Else If(RegExMatch(ImplicitText, "Adds (\d+\) to (\d+\)", match))
+	{
+		return [match1  Opts.DoubleRangeSeparator  match2]
+	}
+	Else If(RegExMatch(ImplicitText, "\((.*?)\)", match))
+	{
+		return [match1]
+	}
+	Else{
+		return [GetActualValue(ImplicitText)]
+	}
+}
 
 LookupAffixData(Filename, ItemLevel, Value, ByRef Tier="")
 {
@@ -6650,7 +6678,7 @@ AssembleDamageDetails(FullItemData)
 }
 
 ; ParseItemName fixed by user: uldo_.  Thanks!
-ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = "")
+ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemBaseName, AffixCount = "")
 {
 	Loop, Parse, ItemDataChunk, `n, `r
 	{
@@ -6682,10 +6710,10 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = ""
 			{
 				ItemName := A_LoopField
 			}
-			; Normal items don't have a third line and the item name equals the typename if we sanitize it ("superior").
+			; Normal items don't have a third line and the item name equals the BaseName if we sanitize it ("superior").
 			If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Normal"))
 			{
-				ItemTypeName := Trim(RegExReplace(ItemName, "i)Superior", ""))
+				ItemBaseName := Trim(RegExReplace(ItemName, "i)Superior", ""))
 				Return
 			}
 			; Magic items don't have a third line.
@@ -6696,12 +6724,12 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = ""
 			Else If (AffixCount > 0) {
 				If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Magic"))
 				{
-					ItemTypeName := Trim(RegExReplace(ItemName, "i) of .*", "", matchCount))
+					ItemBaseName := Trim(RegExReplace(ItemName, "i) of .*", "", matchCount))
 					If ((matchCount and AffixCount > 1) or (not matchCount and AffixCount = 1))
 					{
 						; We replaced the suffix and have 2 affixes, therefore we must also have a prefix that we can replace.
 						; OR we didn't replace the suffix but have 1 mod, therefore we must have a prefix that we can replace.
-						ItemTypeName := Trim(RegExReplace(ItemTypeName, "iU)^.* ", ""))
+						ItemBaseName := Trim(RegExReplace(ItemBaseName, "iU)^.* ", ""))
 						Return
 					}
 				}
@@ -6709,7 +6737,7 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemTypeName, AffixCount = ""
 		}
 		If (A_Index = 3)
 		{
-			ItemTypeName := A_LoopField
+			ItemBaseName := A_LoopField
 		}
 	}
 }
@@ -7133,7 +7161,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	ItemDataRarity =
 	ItemDataLinks =
 	ItemName =
-	ItemTypeName =
+	ItemBaseName =
 	ItemQuality =
 	ItemLevel =
 	ItemMaxSockets =
@@ -7182,13 +7210,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	; ItemData.Requirements := GetItemDataChunk(ItemDataText, "Requirements:")
 	; ParseRequirements(ItemData.Requirements, RequiredLevel, RequiredAttributes, RequiredAttributeValues)
 	
-	ParseItemName(ItemData.NamePlate, ItemName, ItemTypeName)
+	ParseItemName(ItemData.NamePlate, ItemName, ItemBaseName)
 	If (Not ItemName)
 	{
 		return
 	}
 	Item.Name		:= ItemName
-	Item.TypeName	:= ItemTypeName
+	Item.BaseName	:= ItemBaseName
 	
 	IfInString, ItemDataText, Unidentified
 	{
@@ -7291,13 +7319,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	Item.RarityLevel	:= RarityLevel
 	
-	Item.IsBow			:= (Item.SubType == "Bow")
+	Item.IsBow		:= (Item.SubType == "Bow")
 	Item.IsFlask		:= (Item.SubType == "Flask")
-	Item.IsBelt			:= (Item.SubType == "Belt")
-	Item.IsRing			:= (Item.SubType == "Ring")
+	Item.IsBelt		:= (Item.SubType == "Belt")
+	Item.IsRing		:= (Item.SubType == "Ring")
 	Item.IsUnsetRing	:= (Item.IsRing and InStr(ItemData.NamePlate, "Unset Ring"))
 	Item.IsAmulet		:= (Item.SubType == "Amulet")
-	Item.IsTalisman		:= (Item.IsAmulet and InStr(ItemData.NamePlate, "Talisman") and !InStr(ItemData.NamePlate, "Amulet"))
+	Item.IsTalisman	:= (Item.IsAmulet and InStr(ItemData.NamePlate, "Talisman") and !InStr(ItemData.NamePlate, "Amulet"))
 	Item.IsSingleSocket	:= (IsUnsetRing)
 	Item.IsFourSocket	:= (Item.SubType == "Gloves" or Item.SubType == "Boots" or Item.SubType == "Helmet")
 	Item.IsThreeSocket	:= (Item.GripType == "1H" or Item.SubType == "Shield")
@@ -7305,10 +7333,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsWeapon		:= (Item.BaseType == "Weapon")
 	Item.IsArmour		:= (Item.BaseType == "Armour")
 	Item.IsHybridBase	:= (ItemIsHybridBase(ItemDataText))
-	Item.IsMap			:= (Item.BaseType == "Map")
+	Item.IsMap		:= (Item.BaseType == "Map")
 	Item.IsLeaguestone	:= (Item.BaseType == "Leaguestone")
 	Item.IsJewel		:= (Item.BaseType == "Jewel")
-	Item.IsMirrored		:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
+	Item.IsMirrored	:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
 	Item.Note			:= Globals.Get("ItemNote")
 	
@@ -7355,7 +7383,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	ItemData.IndexAffixes := ItemDataIndexAffixes
 	
 	; Retrieve items implicit mod if it has one
-	If (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet or Item.IsJewel) {
+	If (Item.IsWeapon or Item.IsQuiver or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet or Item.IsJewel) {
 		; Magic and higher rarity
 		If (RarityLevel > 1) {
 			ItemDataIndexImplicit := ItemData.IndexLast - GetNegativeAffixOffset(Item) - 1
@@ -7364,7 +7392,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		Else {
 			ItemDataIndexImplicit := ItemData.IndexLast - GetNegativeAffixOffset(Item)
 		}
-
+		
 		; Check that there is no ":" in the retrieved text = can only be an implicit mod
 		If (!InStr(ItemDataParts%ItemDataIndexImplicit%, ":")) {
 			tempImplicit	:= ItemDataParts%ItemDataIndexImplicit%
@@ -7406,17 +7434,17 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	NumTotalAffixesMax	:= NumFormatPointFiveOrInt( (AffixTotals.NumTotalMax > AffixTotals.NumTotal) ? AffixTotals.NumTotalMax : AffixTotals.NumTotal)
 	AffixTotals.NumTotalMax := NumTotalAffixesMax
 	; We need to call this function a second time because now we know the AffixCount.
-	ParseItemName(ItemData.NamePlate, ItemName, ItemTypeName, NumTotalAffixes)
-	Item.TypeName := ItemTypeName
+	ParseItemName(ItemData.NamePlate, ItemName, ItemBaseName, NumTotalAffixes)
+	Item.BaseName := ItemBaseName
 	
 	pseudoMods := PreparePseudoModCreation(ItemData.Affixes, Item.Implicit, RarityLevel, Item.isMap)
 	
 	; Start assembling the text for the tooltip
 	TT := Item.Name
 	
-	If (Item.TypeName && (Item.TypeName != Item.Name))
+	If (Item.BaseName && (Item.BaseName != Item.Name))
 	{
-		TT := TT . "`n" . Item.TypeName
+		TT := TT . "`n" . Item.BaseName
 	}
 	
 	If (Item.IsCurrency)
@@ -7435,7 +7463,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		}
 		If (Not Item.IsFlask)
 		{
-			;;Item.BaseLevel := CheckBaseLevel(Item.TypeName)
+			;;Item.BaseLevel := CheckBaseLevel(Item.BaseName)
 			
 			;;Hixxie: fixed! Shows base level for any item rarity, rings/jewelry, etc
 			If (Item.RarityLevel < 3)
@@ -7448,7 +7476,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			}
 			Else
 			{
-				Item.BaseLevel := CheckBaseLevel(Item.TypeName)
+				Item.BaseLevel := CheckBaseLevel(Item.BaseName)
 			}
 			
 			If (Item.BaseLevel)
@@ -7538,7 +7566,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		Item.MapLevel := ParseMapLevel(ItemDataText)
 		Item.MapTier  := Item.MapLevel - 67
-
+		
 		/*
 		;;hixxie fixed
 		MapLevelText := Item.MapLevel
@@ -7554,7 +7582,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			MapDescription := mapList[Item.SubType]
 		}
 		TT = %TT%`n%MapDescription%
-
+		
 		If (RarityLevel > 1 and RarityLevel < 4 and Not Item.IsUnidentified)
 		{
 			AffixDetails := AssembleMapAffixes()
@@ -7633,16 +7661,33 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		{
 			TT = %TT%`n--------`nAffixes (%TotalsText%): %PrefixText%%SuffixText%
 		}
+	}
+	
+	If (Item.hasImplicit and not Item.IsUnique) {
+		ImplicitTooltip := ""
+		ImplicitValueArray := LookupImplicitValue(Item.BaseName)
 		
-		If (Item.hasImplicit and not Item.IsUnique) {
-			Implicit	:= ""
-			maxIndex 	:= Item.Implicit.MaxIndex()
-			Loop, % maxIndex {
-				Implicit .= (A_Index < maxIndex) ? Item.Implicit[A_Index] "`n" : Item.Implicit[A_Index]
-			}
-			TT = %TT%`n--------`n%Implicit%
+		maxIndex 	:= Item.Implicit.MaxIndex()
+		TextLineWidth := 20
+		Ellipsis := Opts.AffixTextEllipsis
+		
+		Loop, % maxIndex {
+			ImplicitText := Item.Implicit[A_Index]
+			If(StrLen(ImplicitText) > TextLineWidth)
+				{
+					ImplicitText := SubStr(ImplicitText, 1, TextLineWidth - StrLen(Ellipsis))  Ellipsis
+				}
+				Else
+				{
+					ImplicitText := StrPad(ImplicitText, TextLineWidth)
+				}
+			ImplicitTooltip .= "`n" ImplicitText "  " StrPad(ImplicitValueArray[A_Index], 5, "left")
 		}
-		
+		TT = %TT%`n--------%ImplicitTooltip%
+	}
+	
+	If (RarityLevel > 1 and RarityLevel < 4)
+	{
 		If (Not (Item.IsUnidentified or Item.IsMap))
 		{
 			AffixDetails := AssembleAffixDetails()
@@ -9652,7 +9697,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 					terms.push("Consumes")
 					terms.push(Item.SubType)
 				} Else {
-					terms.push(Item.TypeName)
+					terms.push(Item.BaseName)
 				}
 			}
 			; leaguestones
@@ -9668,7 +9713,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 				If (broadTerms) {
 					terms.push(Item.BaseType)
 				} Else {
-					terms.push(Item.TypeName)
+					terms.push(Item.BaseName)
 					terms.push(rarity)
 				}
 			}
@@ -9722,7 +9767,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 						}
 					}
 				} Else {
-					terms.push(Item.TypeName)
+					terms.push(Item.BaseName)
 				}
 			}
 		}
@@ -9847,7 +9892,7 @@ LookUpAffixes() {
 
 		If (Item.Name) {
 			url := "http://poeaffix.net/"
-			If (RegExMatch(Item.TypeName, "i)Sacrificial Garb")) {
+			If (RegExMatch(Item.BaseName, "i)Sacrificial Garb")) {
 				url 		.= "ch-garb" ; ".html"
 			} Else {
 				ev		:= RegExMatch(ItemData.Stats, "i)Evasion Rating") ? "ev" : ""
@@ -10314,7 +10359,7 @@ FetchCurrencyData:
 		FileAppend, %comment%, %ratesFile%
 
 		Loop, % data.Length() {
-			cName       := data[A_Index].currencyTypeName
+			cName       := data[A_Index].currencyBaseName
 			cChaosEquiv := data[A_Index].chaosEquivalent
 
 			If (cChaosEquiv >= 1) {
