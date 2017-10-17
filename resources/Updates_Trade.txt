@@ -11,6 +11,7 @@ These changes are quite extensive and will likely bring a few bugs that were not
 
 1) ItemInfo affix parsing:
 * The script handles potentially ambiguous mods completely different now. Multiple possibilities are shown when the script considers all of them fitting. This means in particular that hybrid mods are now almost fully supported. Please report items where the scripts results seem wrong. (A few cases currently remain unhandled, these will be fixed later. See the end of section 1 for details.)
+* Flasks mods are supported now.
 * The user settings were reworked. Most "Display" settings were removed and replaced by new ones. Tell if you miss anything.
 * Ingame tooltip changes:
 ** Implicit value ranges are shown now.
