@@ -236,7 +236,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		preparedItem.maxSockets	:= Item.maxSockets
 		preparedItem.iLvl		:= Item.level
 		preparedItem.Name		:= Item.Name
-		preparedItem.TypeName	:= Item.TypeName
+		preparedItem.BaseName	:= Item.BaseName
 		preparedItem.Rarity		:= Item.RarityLevel
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)
@@ -281,7 +281,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			preparedItem.isCorrupted	:= Item.isCorrupted
 			preparedItem.isRelic	:= Item.isRelic
 			preparedItem.iLvl 		:= Item.level
-			preparedItem.typeName	:= Item.TypeName
+			preparedItem.BaseName	:= Item.BaseName
 			Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 			Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)
 
@@ -423,8 +423,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 
 		If (s.useBase) {
-			RequestParams.xbase := Item.TypeName
-			Item.UsedInSearch.ItemBase := Item.TypeName
+			RequestParams.xbase := Item.BaseName
+			Item.UsedInSearch.ItemBase := Item.BaseName
 		}
 
 		If (s.onlineOverride) {
@@ -455,19 +455,19 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Item.UsedInSearch.Rarity := "Relic"
 		} Else If (Item.IsUnique) {
 			RequestParams.rarity := "unique"
-			RequestParams.xbase  := Item.TypeName
+			RequestParams.xbase  := Item.BaseName
 		}
 		Item.UsedInSearch.FullName := true
 	} Else If (!Item.isUnique and AdvancedPriceCheckItem.mods.length() <= 0) {
-		isCraftingBase         := TradeFunc_CheckIfItemIsCraftingBase(Item.TypeName)
+		isCraftingBase         := TradeFunc_CheckIfItemIsCraftingBase(Item.BaseName)
 		hasHighestCraftingILvl := TradeFunc_CheckIfItemHasHighestCraftingLevel(Item.SubType, iLvl)
 		; xtype = Item.SubType (Helmet)
-		; xbase = Item.TypeName (Eternal Burgonet)
+		; xbase = Item.BaseName (Eternal Burgonet)
 
 		;If desired crafting base and not isAdvancedPriceCheckRedirect
 		If (isCraftingBase and not Enchantment.param and not Corruption.param and not isAdvancedPriceCheckRedirect) {
-			RequestParams.xbase := Item.TypeName
-			Item.UsedInSearch.ItemBase := Item.TypeName
+			RequestParams.xbase := Item.BaseName
+			Item.UsedInSearch.ItemBase := Item.BaseName
 			; If highest item level needed for crafting
 			If (hasHighestCraftingILvl) {
 				RequestParams.ilvl_min := hasHighestCraftingILvl
@@ -1525,7 +1525,7 @@ TradeFunc_ParseAlternativeCurrencySearch(name, payload) {
 
 	currencyData :=
 	For key, val in CurrencyHistoryData {
-		If (val.currencyTypeName = name) {
+		If (val.currencyBaseName = name) {
 			currencyData := val
 			break
 		}
@@ -1751,7 +1751,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		showItemLevel := true
 	}
 
-	Name := (Item.IsRare and not Item.IsMap) ? Item.Name " " Item.TypeName : Item.Name
+	Name := (Item.IsRare and not Item.IsMap) ? Item.Name " " Item.BaseName : Item.Name
 	Title := Trim(StrReplace(Name, "Superior", ""))
 
 	If (Item.IsMap && !Item.isUnique) {
@@ -2785,7 +2785,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	; Item "nameplate" including sockets and links
 	If (true) {
 		itemName := advItem.name
-		itemType := advItem.TypeName
+		itemType := advItem.BaseName
 		If (advItem.Rarity = 1) {
 			iPic 	:= "bg-normal.png"
 			tColor	:= "cc8c8c8"
@@ -3807,8 +3807,8 @@ ReadPoeNinjaCurrencyData:
 
 	global ChaosEquivalents	:= {}
 	For key, val in CurrencyHistoryData {
-		currencyTypeName	:= RegexReplace(val.currencyTypeName, "[^a-z A-Z]", "")
-		ChaosEquivalents[currencyTypeName] := val.chaosEquivalent
+		currencyBaseName	:= RegexReplace(val.currencyBaseName, "[^a-z A-Z]", "")
+		ChaosEquivalents[currencyBaseName] := val.chaosEquivalent
 	}
 	ChaosEquivalents["Chaos Orb"] := 1
 
