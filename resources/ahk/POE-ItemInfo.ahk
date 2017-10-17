@@ -10171,16 +10171,6 @@ SettingsUI_ChkUseCompactDoubleRanges:
 	Else {
 		GuiControl, Disable, OnlyCompactForTotalColumn
 	}
-	return	
-
-SettingsUI_ChkUseCompactDoubleRanges:
-	GuiControlGet, IsChecked,, UseCompactDoubleRanges
-	If (Not IsChecked) {
-		GuiControl, Enable, OnlyCompactForTotalColumn
-	}
-	Else {
-		GuiControl, Disable, OnlyCompactForTotalColumn
-	}
 	return
 
 SettingsUI_ChkDisplayToolTipAtFixedCoords:
