@@ -3757,11 +3757,8 @@ Return
 
 TradeSettingsUI_BtnDefaults:
 	Gui, Cancel
-	RemoveTradeConfig()
 	Sleep, 75
-	CopyDefaultTradeConfig()
-	Sleep, 75
-	ReadTradeConfig()
+	ReadTradeConfig(A_ScriptDir "\resources\default_UserFiles")
 	Sleep, 75
 	UpdateTradeSettingsUI()
 	ShowSettingsUI()
@@ -3811,7 +3808,7 @@ ReadPoeNinjaCurrencyData:
 		ChaosEquivalents[currencyBaseName] := val.chaosEquivalent
 	}
 	ChaosEquivalents["Chaos Orb"] := 1
-	
+
 	If (TempChangingLeagueInProgress) {
 		msg := "Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ") finished."
 		msg .= "`n- Requested chaos equivalents and currency history from poe.ninja."
@@ -4044,7 +4041,7 @@ TradeFunc_ChangeLeague() {
 	i	:= 0
 	For key, val in leagues {
 		i++
-		If (TradeOpts.SearchLeague == key) {
+		If (SearchLeague == key) {
 			index := i
 		}
 	}
@@ -4061,20 +4058,13 @@ TradeFunc_ChangeLeague() {
 		}
 	}
 
-	If (StrLen(next)) {
-		TradeOpts.SearchLeague := next
-	} Else {
-		TradeOpts.SearchLeague := first
-	}
-
+	NewSearchLeague := (next) ? next : first
 	; Call Submit for the settings UI, otherwise we can't set the new league if the UI was last closed via close button or "x"
 	Gui, Submit
-
-	TradeFunc_SetLeagueIfSelectedIsInactive()
-	TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
+	SearchLeague := TradeFunc_CheckIfLeagueIsActive(NewSearchLeague)
+	TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[SearchLeague])
 	WriteTradeConfig()
-	; TradeFunc_WriteIniValue(TradeOpts.SearchLeague, userDirectory . "\config_trade.ini", "Search", "SearchLeague")
-	GuiUpdateDropdownList(TradeFunc_GetDelimitedLeagueList(), TradeOpts.SearchLeague, SearchLeague)
+	UpdateTradeSettingsUI()
 
 	TempChangingLeagueInProgress := True
 	GoSub, ReadPoeNinjaCurrencyData
