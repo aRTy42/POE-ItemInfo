@@ -2262,28 +2262,28 @@ SetMapInfoLine(AffixType, ByRef MapAffixCount, EnumLabel="")
 ParseMapAffixes(ItemDataAffixes)
 {
 	Global Globals, Opts, AffixTotals, AffixLines
-
-	MapModWarn := class_EasyIni(userDirectory "\MapModWarnings.ini")
+	
+	MapModWarn := class_EasyIni(userDirectory "\MapModWarnings.ini").Affixes
 	; FileRead, File_MapModWarn, %userDirectory%\MapModWarnings.txt
 	; MapModWarn := JSON.Load(File_MapModWarn)
-
+	
 	ItemDataChunk	:= ItemDataAffixes
-
+	
 	ItemBaseType	:= Item.BaseType
-	ItemSubType		:= Item.SubType
-
-
+	ItemSubType	:= Item.SubType
+	
+	
 	; Reset the AffixLines "array" and other vars
 	ResetAffixDetailVars()
-
+	
 	IfInString, ItemDataChunk, Unidentified
 	{
 		return ; Not interested in unidentified items
 	}
-
+	
 	MapAffixCount := 0
 	TempAffixCount := 0
-
+	
 	Index_RareMonst :=
 	Index_MonstSlowedTaunted :=
 	Index_BossDamageAttackCastSpeed :=
