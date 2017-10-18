@@ -3807,11 +3807,11 @@ ReadPoeNinjaCurrencyData:
 
 	global ChaosEquivalents	:= {}
 	For key, val in CurrencyHistoryData {
-		currencyBaseName	:= RegexReplace(val.currencyBaseName, "[^a-z A-Z]", "")
+		currencyBaseName	:= RegexReplace(val.currencyTypeName, "[^a-z A-Z]", "")
 		ChaosEquivalents[currencyBaseName] := val.chaosEquivalent
 	}
 	ChaosEquivalents["Chaos Orb"] := 1
-
+	
 	If (TempChangingLeagueInProgress) {
 		msg := "Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ") finished."
 		msg .= "`n- Requested chaos equivalents and currency history from poe.ninja."
@@ -3826,7 +3826,7 @@ TradeFunc_DowloadURLtoJSON(url, sampleValue, critical = false, league = "") {
 	errorMsg := "Parsing the currency data (json) from poe.ninja failed.`n"
 	errorMsg .= "This should only happen when the servers are down / unavailable."
 	errorMsg .= "`n`n"
-	errorMsg .= "Using archived data from a fallback file. League: "" league ""."
+	errorMsg .= "Using archived data from a fallback file. League: """ league """."
 	errorMsg .= "`n`n"
 	errorMsg .= "This can fix itself when the servers are up again and the data gets updated automatically or if you restart the script at such a time."
 

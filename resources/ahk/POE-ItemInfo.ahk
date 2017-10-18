@@ -6900,40 +6900,24 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 
 	; Use downloaded currency rates if they exist, otherwise use hardcoded fallback
 	fallback		:= A_ScriptDir . "\data\CurrencyRates.txt"
-	ninjaRates	:= [A_ScriptDir . "\temp\CurrencyRates_tmpstandard.txt", A_ScriptDir . "\temp\CurrencyRates_tmphardcore.txt", A_ScriptDir . "\temp\CurrencyRates_Standard.txt", A_ScriptDir . "\temp\CurrencyRates_Hardcore.txt"]
 	result		:= []
 
-	Loop, % ninjaRates.Length()
-	{
-		dataSource := "Currency rates powered by poe.ninja`n`n"
-		If (FileExist(ninjaRates[A_Index]))
-		{
-			ValueInChaos	:= 0
-			leagueName	:= ""
-			file			:= ninjaRates[A_Index]
-			Loop, Read, %file%
-			{
-				Line := Trim(A_LoopReadLine)
-				RegExMatch(Line, "i)^;(.*)", match)
-				If (match) {
-					leagueName := match1 . ": "
-					Continue
-				}
-
-				IfInString, Line, %ItemName%
-				{
-					StringSplit, LineParts, Line, |
-					ChaosRatio	:= LineParts2
-					StringSplit, ChaosRatioParts,ChaosRatio, :
-					ChaosMult		:= ChaosRatioParts2 / ChaosRatioParts1
-					ValueInChaos	:= (ChaosMult * StackSize)
-				}
-			}
-
-			If (ValueInChaos) {
-				tmp := [leagueName, ValueInChaos, ChaosRatio]
-				result.push(tmp)
-			}
+	CurrencyDataRates := Globals.Get("CurrencyDataRates")
+	For league, ninjaRates in CurrencyDataRates {
+		ChaosRatio	:= ninjaRates[ItemName].OwnQuantity ":" ninjaRates[ItemName].ChaosQuantity
+		ChaosMult		:= ninjaRates[ItemName].OwnQuantity / ninjaRates[ItemName].ChaosQuantity
+		ValueInChaos	:= (ChaosMult * StackSize)
+		
+		If (league == "tmpstandard" or league == "tmphardcore" ) {
+			leagueName := InStr(league, "standard") ? "Challenge Standard" : "Challenge Hardcore"
+		}
+		Else {
+			leagueName := "Permanent " . league
+		}
+		
+		If (ValueInChaos) {
+			tmp := [leagueName ": ", ValueInChaos, ChaosRatio]
+			result.push(tmp)
 		}
 	}
 
@@ -7291,7 +7275,14 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 				CurrencyDetails := "`n" . dataSource
 				Loop, % ValueInChaos.Length()
 				{
-					CurrencyDetails .= ValueInChaos[A_Index][1] . "" . ValueInChaos[A_Index][2] . " Chaos (" . ValueInChaos[A_Index][3] . "c)`n"
+					CurrencyValueLength := StrLen(CurrencyValueLength) < StrLen(ValueInChaos[A_Index][2]) ? StrLen(ValueInChaos[A_Index][2]) : CurrencyValueLength
+					CurrencyRatioLength := StrLen(CurrencyRatioLength) < StrLen(ValueInChaos[A_Index][3]) ? StrLen(ValueInChaos[A_Index][3]) : CurrencyRatioLength
+				}
+				Loop, % ValueInChaos.Length()
+				{
+					CurrencyDetails .= ValueInChaos[A_Index][1]
+					CurrencyDetails .= "" . StrPad(ValueInChaos[A_Index][2], CurrencyValueLength, "left") . " Chaos " 
+					CurrencyDetails .= StrPad("(" . ValueInChaos[A_Index][3], CurrencyRatioLength + 1, "left") . "c)`n"
 				}
 			}
 		}
@@ -10312,55 +10303,92 @@ CheckForUpdates:
 	}
 	return
 
-FetchCurrencyData:
-	CurrencyDataJSON := {}
-	currencyLeagues := ["Standard", "Hardcore", "tmpstandard", "tmphardcore"]
+; TODO: use this for trademacro also
+CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", project ="", tmpFileName = "", fallbackDir = "", ByRef usedFallback = false) {
+	errorMsg := "Parsing the currency data (json) from poe.ninja failed.`n"
+	errorMsg .= "This should only happen when the servers are down / unavailable."
+	errorMsg .= "`n`n"
+	errorMsg .= "Using archived data from a fallback file. League: """ league """."
+	errorMsg .= "`n`n"
+	errorMsg .= "This can fix itself when the servers are up again and the data gets updated automatically or if you restart the script at such a time."
 
+	errors := 0
+	Try {
+		reqHeaders.push("Host: poe.ninja")
+		reqHeaders.push("Connection: keep-alive")
+		reqHeaders.push("Cache-Control: max-age=0")
+		;reqHeaders.push("Content-type: application/x-www-form-urlencoded; charset=UTF-8")
+		reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")	
+		reqHeaders.push("User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36")
+		parsedJSON := PoEScripts_Download(url, postData, reqHeaders, options, true, true, false, "", reqHeadersCurl)
+		
+		; first currency data parsing (script start)
+		If (critical and not sampleValue or not parsedJSON.lines.length()) {
+			errors++
+		}
+	} Catch error {
+		; first currency data parsing (script start)
+		If (critical and not sampleValue) {
+			errors++
+		}
+	}
+
+	If (errors and critical and not sampleValue) {
+		MsgBox, 16, %project% - Error, %errorMsg%
+		FileRead, JSONFile, %fallbackDir%\currencyData_Fallback_%league%.json
+		parsedJSON := JSON.Load(JSONFile)
+		usedFallback := true
+	} Else {
+		parsedJSON := JSON.Load(parsedJSON)
+	}
+
+	Return parsedJSON
+}
+
+FetchCurrencyData:
+	_CurrencyDataJSON	:= {}
+	currencyLeagues	:= ["Standard", "Hardcore", "tmpstandard", "tmphardcore"]
+	sampleValue		:= "ff"
+	
 	Loop, % currencyLeagues.Length() {
 		currencyLeague := currencyLeagues[A_Index]
 		url  := "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
 		file := A_ScriptDir . "\temp\currencyData_" . currencyLeague . ".json"
-		UrlDownloadToFile, %url% , %file%
-		
+
+		url		:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
+		critical	:= StrLen(Globals.Get("LastCurrencyUpdate")) ? false : true
+		parsedJSON := CurrencyDataDowloadURLtoJSON(url, sampleValue, critical, currencyLeague, "PoE-ItemInfo", file, A_ScriptDir "\data", usedFallback)		
+
 		Try {
-			If (FileExist(file)) {
-				FileRead, JSONFile, %file%
-				parsedJSON := JSON.Load(JSONFile)
-				CurrencyDataJSON[currencyLeague] := parsedJSON.lines
-				ParsedAtLeastOneLeague := True
+			If (parsedJSON) {		
+				_CurrencyDataJSON[currencyLeague] := parsedJSON.lines
+				If (not usedFallback) {
+					ParsedAtLeastOneLeague := True	
+				}		
 			}
 			Else	{
-				CurrencyDataJSON[currencyLeague] := null
+				_CurrencyDataJSON[currencyLeague] := null
 			}
 		} Catch error {
 			errorMsg := "Parsing the currency data (json) from poe.ninja failed for league:"
 			errorMsg .= "`n" currencyLeague
 			;MsgBox, 16, PoE-ItemInfo - Error, %errorMsg%
-		}
+		}		
+		parsedJSON :=
 	}
-
+	
 	If (ParsedAtLeastOneLeague) {
 		Globals.Set("LastCurrencyUpdate", A_NowUTC)
 	}
 
 	; parse JSON and write files to disk (like \data\CurrencyRates.txt)
-	For league, data in CurrencyDataJSON {
-		ratesFile := A_ScriptDir . "\temp\currencyRates_" . league . ".txt"
-		ratesJSONFile := A_ScriptDir . "\temp\currencyData_" . league . ".json"
-		FileDelete, %ratesFile%
-		FileDelete, %ratesJSONFile%
+	_CurrencyDataRates := {}
+	For league, data in _CurrencyDataJSON {
+		_CurrencyDataRates[league] := {}
 
-		If (league == "tmpstandard" or league == "tmphardcore" ) {
-			comment := InStr(league, "standard") ? ";Challenge Standard`n" : ";Challenge Hardcore`n"
-		}
-		Else {
-			comment := ";Permanent " . league . "`n"
-		}
-		FileAppend, %comment%, %ratesFile%
-
-		Loop, % data.Length() {
-			cName       := data[A_Index].currencyBaseName
-			cChaosEquiv := data[A_Index].chaosEquivalent
+		For currency, cData in data {
+			cName       := cData.currencyTypeName
+			cChaosEquiv := cData.chaosEquivalent
 
 			If (cChaosEquiv >= 1) {
 				cChaosQuantity := ZeroTrim(Round(cChaosEquiv, 2))
@@ -10369,14 +10397,17 @@ FetchCurrencyData:
 			Else {
 				cChaosQuantity := 1
 				cOwnQuantity   := ZeroTrim(Round(1 / cChaosEquiv, 2))
-			}
-
-			result := cName . "|" . cOwnQuantity . ":" . cChaosQuantity . "`n"
-			FileAppend, %result%, %ratesFile%
+			}	
+			
+			_CurrencyDataRates[league][cName] := {}
+			_CurrencyDataRates[league][cName].ChaosEquiv := cChaosEquiv
+			_CurrencyDataRates[league][cName].ChaosQuantity := cChaosQuantity
+			_CurrencyDataRates[league][cName].OwnQuantity := cOwnQuantity
 		}
 	}
-
-	CurrencyDataJSON :=
+	
+	Globals.Set("CurrencyDataRates", _CurrencyDataRates)
+	_CurrencyDataJSON :=
 	return
 
 ZeroTrim(number) {
