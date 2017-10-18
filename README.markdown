@@ -1,72 +1,48 @@
 Introduction
 ------------
 
-**PoE Item Info** is a heavily extended version of the PoE Item Level and DPS Revealer script.
+**PoE-ItemInfo** grew out of smaller scripts. It is included in the even bigger PoE-TradeMacro (see "Links").
 
-The script has been added to substantially to enable the following features in addition to
-item level and weapon DPS reveal:
+ItemInfo itself brings the following features:
+* Affix overview on all items, in particular:
+  * Roll ranges and roll tier classification for rare/magic equipment
+  * Roll ranges for uniques, flasks and jewels
+* Maps: infos such as the 3->1 vendor recipe result, bosses, layout and possible divination cards
+  * Optional "Map Mod Warnings" when certain affixes are present
+* Divination Cards: drop locations
+* Gems: display the quality effect
+* Calculate chaos value of other currency items with ratios fetched from http://poe.ninja/
+* Optional "Additional Macros" for fast hideout travel (via chat command), faster stash tab selection and more
 
-- total affix statistic for rare items
-- possible min-max ranges for all affixes on rare items
-- affix ranges for uniques
-- maps: infos such as the 3->1 vendor recipe result, bosses, layout and possible divination cards
-- divination cards: drop locations
-- gems: display the quality effect
-- has the ability to convert currency items to chaos orbs with ratios fetched from http://poe.ninja/
-- optional macros for fast hideout travel (via chat command), faster stash tab selection and more
-- adds a system tray icon and proper system tray description tooltip
+Many of these features are user-adjustable in the settings menu or corresponding .ini files.
 
-All of these features are user-adjustable by using a "database" of text files which come
-with the script and are easy to edit by non developers. See header comments in those files
-for format infos and data sources.
-
-Please note that the PoE Item Level and DPS Revealer script and PoE Item Info have been merged
-into this version.
-
-PoE Forums Thread
------------------
-
-https://www.pathofexile.com/forum/view-thread/1678678
+Links
+-----
+ItemInfo Forum Thread: https://www.pathofexile.com/forum/view-thread/1678678  
+TradeMacro GitHub page: https://poe-trademacro.github.io/  
+TradeMacro Forum Thread: https://www.pathofexile.com/forum/view-thread/1757730  
 
 Requirements
 ------------
-
-AutoHotkey v1.1.24 or newer. You can get AutoHotkey from http://ahkscript.org/
-
+A recent AutoHotkey version. You can get AutoHotkey from http://ahkscript.org/  
+Use the typical version which is v1.1.xx, do **not** use v2 from "Other Releases".
 
 Known Issues
 ------------
-
 The script is not always right. Take it as a helper, not as dead certainty.
 
-Even though there have been lots of tests made on composite affix combinations, I expect there
-to be odd edge cases still that may return an invalid or not found affix bracket. In general,
-be alert when it comes to composite affixes.
-
-You can see these entries in the affix detail lines if they have the text `n/a` (not available)
-somewhere in them or if you see an empty range ` - *`.
-
-The star, by the way, marks ranges that have been added together for a guessed attempt as to the
-composition of a possible compound affix.
-
-If you see this star, take a closer look for a moment to check if the projection is correct.
-I expect these edge cases to be properly dealt with over time as the script matures.
-
-See start of script for some more background info on these issues.
-
-Contributors
-------------
-
-See AUTHORS.txt for contributor info.
+Essence mods are not marked in any way, so the script will treat them as a regular mod or mark them as unknown.  
+Crafted mods are marked ingame, but not in the data visible to the script. The script recognizes a few crafted mods, but will treat the majority as regular mods or mark them as unknown.
 
 Attribution
 -----------
+Foundations created by
+* Nipper4369 and original authors (http://www.pathofexile.com/forum/view-thread/594346)  
+* Hazydoc (https://www.pathofexile.com/forum/view-thread/790438)  
 
-Created by Nipper4369 and original authors.  
-Created by hazydoc / IGN: Sadou
-Updated/Curated by Slinkston and Bahnzo from Oct 2015 - Apr 2016
-currently Updated/Curated by aRTy42
+Extended, updated and curated by Slinkston and Bahnzo from Oct 2015 - Apr 2016 (https://www.pathofexile.com/forum/view-thread/1463814)  
+Currently extended, updated and curated by aRTy42 and Eruyome (TradeMacro)
 
-Supersedes the POE_iLVL_DPS-Revealer script.
-
-See http://www.pathofexile.com/forum/view-thread/594346 for original author info.
+Contributors
+------------
+See AUTHORS.txt for contributor info.
