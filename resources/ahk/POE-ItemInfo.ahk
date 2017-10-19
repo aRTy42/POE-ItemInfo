@@ -436,7 +436,7 @@ If (StrLen(overwrittenUserFiles)) {
 }
 GoSub, AM_AssignHotkeys
 GoSub, FetchCurrencyData
-global gdipTooltip = new GdipTooltip(2, 8,,,[Opts.GDIWindowOpacity, Opts.GDIWindowColor, 10],[Opts.GDIBorderOpacity, Opts.GDIBorderColor, 10],[Opts.GDITextOpacity, Opts.GDITextColor, 10],true, Opts.RenderingFix, -0.3)
+GoSub, InitGDITooltip
 
 Menu, TextFiles, Add, Additional Macros Settings, EditAdditionalMacrosSettings
 Menu, TextFiles, Add, Map Mod Warnings, EditMapModWarningsConfig
@@ -8598,7 +8598,7 @@ ChangeTooltipColorByItem(conditionalColors = false) {
 			_bOpacity	:= 90
 		}	
 	}
-	
+
 	If (not StrLen(_bColor) or not conditionalColors) {
 		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)	
 	} Else {
@@ -8632,7 +8632,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 			YCoord := 0 + ScreenOffsetY
 			
 			If (Opts.UseGDI)
-			{				
+			{
 				ChangeTooltipColorByItem(conditionalColors)
 				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
 			}
@@ -8931,39 +8931,38 @@ CreateSettingsUI()
 	}	
 	
 	; GDI+
-	GuiAddGroupBox("GDI+", "x7 y+20 w260 h305 Section")
+	GuiAddGroupBox("GDI+", "x7 y+20 w260 h345 Section")
 	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
-	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")	
-	GuiAddButton("Edit Window", "xs9 ys40 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys45 w150", "LblGDIWindowColor")
-	GuiAddEdit(Opts.GDIWindowColor, "xs190 ys42 w60", "GDIWindowColor", "GDIWindowColorH")
-	GuiAddText("Opactiy (0-100):", "xs100 ys75 w150", "LblGDIWindowOpacity")
-	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys72 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
-	GuiAddButton("Edit Border", "xs9 ys100 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys105 w150", "LblGDIBorderColor")
-	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys102 w60", "GDIBorderColor", "GDIBorderColorH")	
-	GuiAddText("Opacity (0-100):", "xs100 ys135 w150", "LblGDIBorderOpacity")
-	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys132 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
-	GuiAddButton("Edit Text", "xs9 ys160 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys165 w150", "LblGDITextColor")
-	GuiAddEdit(Opts.GDITextColor, "xs190 ys162 w60", "GDITextColor", "GDITextColorH")
-	GuiAddText("Opacity (0-100):", "xs100 ys195 w150", "LblGDITextOpacity")
-	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys192 w60", "GDITextOpacity", "GDITextOpacityH")
-	GuiAddCheckBox("Rendering Fix", "xs10 ys216 w110", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
+	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")
+	GuiAddText("If this causes FPS drops for you without any tooltip being active, disable it and restart the script.", "xs10 ys43 w240 cRed", "")
+	GuiAddButton("Edit Window", "xs9 ys80 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
+	GuiAddText("Color (hex RGB):", "xs100 ys85 w150", "LblGDIWindowColor")
+	GuiAddEdit(Opts.GDIWindowColor, "xs190 ys82 w60", "GDIWindowColor", "GDIWindowColorH")
+	GuiAddText("Opactiy (0-100):", "xs100 ys115 w150", "LblGDIWindowOpacity")
+	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys112 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
+	GuiAddButton("Edit Border", "xs9 ys140 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
+	GuiAddText("Color (hex RGB):", "xs100 ys145 w150", "LblGDIBorderColor")
+	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys142 w60", "GDIBorderColor", "GDIBorderColorH")	
+	GuiAddText("Opacity (0-100):", "xs100 ys175 w150", "LblGDIBorderOpacity")
+	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys172 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
+	GuiAddButton("Edit Text", "xs9 ys200 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
+	GuiAddText("Color (hex RGB):", "xs100 ys205 w150", "LblGDITextColor")
+	GuiAddEdit(Opts.GDITextColor, "xs190 ys202 w60", "GDITextColor", "GDITextColorH")
+	GuiAddText("Opacity (0-100):", "xs100 ys235 w150", "LblGDITextOpacity")
+	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys232 w60", "GDITextOpacity", "GDITextOpacityH")
+	GuiAddCheckBox("Rendering Fix", "xs10 ys256 w110", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
-	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys241 w210", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
+	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys281 w210", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
 	
-	GuiAddButton("GDI Defaults", "xs9 ys275 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
-	GuiAddButton("Preview", "xs170 ys275 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
-	
-	
+	GuiAddButton("GDI Defaults", "xs9 ys315 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
+	GuiAddButton("Preview", "xs170 ys315 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
+
 	; Tooltip
 	GuiAddGroupBox("Tooltip", "x277 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h140 Section")
 
 	GuiAddEdit(Opts.MouseMoveThreshold, "xs180 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
 	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w150 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
 	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip when the mouse cursor moved x pixel away from the initial position.`nEffectively permanent tooltip when using a value larger than the monitor diameter.")
-	
 	
 	GuiAddEdit(Opts.ToolTipTimeoutSeconds, "xs180 yp+27 w50 Number", "ToolTipTimeoutSeconds")
 	GuiAddCheckBox("Use tooltip timeout (seconds)", "xs10 yp+3 w160", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
@@ -8977,9 +8976,8 @@ CreateSettingsUI()
 		GuiAddText("Y", "xs115 yp+0 w15", "LblScreenOffsetY")
 	
 	
-	; Display
-	
-	GuiAddGroupBox("Display", "x277 y+62 w260 h370 Section")
+	; Display	
+	GuiAddGroupBox("Display", "x277 y+37 w260 h370 Section")
 	
 	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w210 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
 	AddToolTip(ShowHeaderForAffixOverviewH, "Include a header above the affix overview:`n   TierRange ilvl   Total ilvl  Tier")
@@ -10012,6 +10010,14 @@ SettingsUI_BtnDefaults:
 	ShowSettingsUI()
 	return
 
+InitGDITooltip:
+	Global Opts
+	; some users experience FPS drops when gdi tooltip is initialized.
+	If (Opts.UseGDI) {
+		global gdipTooltip = new GdipTooltip(2, 8,,,[Opts.GDIWindowOpacity, Opts.GDIWindowColor, 10],[Opts.GDIBorderOpacity, Opts.GDIBorderColor, 10],[Opts.GDITextOpacity, Opts.GDITextColor, 10],true, Opts.RenderingFix, -0.3)
+	}
+	return
+
 OpenGDIColorPicker(type, rgb, opacity, title, image) {
 	; GDI+
 	global
@@ -10126,6 +10132,9 @@ SettingsUI_ChkUseGDI:
 	}
 	Else
 	{
+		If (not gdipTooltip) {
+			GoSub, InitGDITooltip
+		}
 		GuiControl, Enable, GDIWindowColor
 		GuiControl, Enable, GDIWindowOpacity
 		GuiControl, Enable, GDIBorderColor
