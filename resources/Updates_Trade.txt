@@ -1,5 +1,12 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.6.0-beta.2
+================================================================================================
+Added a fix/workaround for the new and optional GDI+ tooltip causing FPS drops.
+Fixed ItemInfo/TradeMacro currency rate fetching/parsing (and ItemInfos currency stack conversion to chaos equivalent).
+Fixed MapModWarnings not working.
+Fixed a potential issue with hotkey assigning when the ini files have invalid values assigned (space for example).
+
 2.6.0-beta.1
 ================================================================================================
 Three big new features:
