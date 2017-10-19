@@ -47,7 +47,9 @@ AM_AssignHotkeys:
 		for labelIndex, labelName in StrSplit(AM_Config.GetSections("|", "C"), "|") {
 			if (labelName != "General") {
 				for labelKeyIndex, labelKeyName in StrSplit(AM_Config[labelName].Hotkeys, ", ") {
-					Hotkey, % KeyNameToKeyCode(labelKeyName, AM_KeyToSCState), %labelName%_HKey, % AM_Config[labelName].State
+					if (labelKeyName and labelKeyName != A_Space) {
+						Hotkey, % KeyNameToKeyCode(labelKeyName, AM_KeyToSCState), %labelName%_HKey, % AM_Config[labelName].State
+					}
 				}
 			}
 		}

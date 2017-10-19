@@ -46,7 +46,7 @@ Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
-Globals.Set("SettingsUIHeight", 575)
+Globals.Set("SettingsUIHeight", 600)
 Globals.Set("AboutWindowHeight", 340)
 Globals.Set("AboutWindowWidth", 435)
 Globals.Set("SettingsUITitle", "PoE ItemInfo Settings")
@@ -436,7 +436,7 @@ If (StrLen(overwrittenUserFiles)) {
 }
 GoSub, AM_AssignHotkeys
 GoSub, FetchCurrencyData
-global gdipTooltip = new GdipTooltip(2, 8,,,[Opts.GDIWindowOpacity, Opts.GDIWindowColor, 10],[Opts.GDIBorderOpacity, Opts.GDIBorderColor, 10],[Opts.GDITextOpacity, Opts.GDITextColor, 10],true, Opts.RenderingFix, -0.3)
+GoSub, InitGDITooltip
 
 Menu, TextFiles, Add, Additional Macros Settings, EditAdditionalMacrosSettings
 Menu, TextFiles, Add, Map Mod Warnings, EditMapModWarningsConfig
@@ -2262,28 +2262,28 @@ SetMapInfoLine(AffixType, ByRef MapAffixCount, EnumLabel="")
 ParseMapAffixes(ItemDataAffixes)
 {
 	Global Globals, Opts, AffixTotals, AffixLines
-
-	MapModWarn := class_EasyIni(userDirectory "\MapModWarnings.ini")
+	
+	MapModWarn := class_EasyIni(userDirectory "\MapModWarnings.ini").Affixes
 	; FileRead, File_MapModWarn, %userDirectory%\MapModWarnings.txt
 	; MapModWarn := JSON.Load(File_MapModWarn)
-
+	
 	ItemDataChunk	:= ItemDataAffixes
-
+	
 	ItemBaseType	:= Item.BaseType
-	ItemSubType		:= Item.SubType
-
-
+	ItemSubType	:= Item.SubType
+	
+	
 	; Reset the AffixLines "array" and other vars
 	ResetAffixDetailVars()
-
+	
 	IfInString, ItemDataChunk, Unidentified
 	{
 		return ; Not interested in unidentified items
 	}
-
+	
 	MapAffixCount := 0
 	TempAffixCount := 0
-
+	
 	Index_RareMonst :=
 	Index_MonstSlowedTaunted :=
 	Index_BossDamageAttackCastSpeed :=
@@ -5993,7 +5993,7 @@ ParseAffixes(ItemDataAffixes, Item)
 	AffixTotals.NumPrefixesMax := AffixTotals.NumPrefixes
 	AffixTotals.NumSuffixesMax := AffixTotals.NumSuffixes
 	AffixTotals.NumTotal := AffixTotals.NumPrefixes + AffixTotals.NumSuffixes
-	
+	AffixTotals.NumTotalMax := AffixTotals.NumTotal
 	
 	; THIS FUNCTION IS QUITE COMPLICATED. IT INVOLVES FOUR LOOPS THAT FULFILL DIFFERENT JOBS AT DIFFERENT TIMES.
 	;   CONSEQUENTLY THE CODE CAN'T BE SIMPLY READ FROM TOP TO BOTTOM. IT IS HEAVILY COMMENTED THOUGH.
@@ -6900,40 +6900,24 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 
 	; Use downloaded currency rates if they exist, otherwise use hardcoded fallback
 	fallback		:= A_ScriptDir . "\data\CurrencyRates.txt"
-	ninjaRates	:= [A_ScriptDir . "\temp\CurrencyRates_tmpstandard.txt", A_ScriptDir . "\temp\CurrencyRates_tmphardcore.txt", A_ScriptDir . "\temp\CurrencyRates_Standard.txt", A_ScriptDir . "\temp\CurrencyRates_Hardcore.txt"]
 	result		:= []
 
-	Loop, % ninjaRates.Length()
-	{
-		dataSource := "Currency rates powered by poe.ninja`n`n"
-		If (FileExist(ninjaRates[A_Index]))
-		{
-			ValueInChaos	:= 0
-			leagueName	:= ""
-			file			:= ninjaRates[A_Index]
-			Loop, Read, %file%
-			{
-				Line := Trim(A_LoopReadLine)
-				RegExMatch(Line, "i)^;(.*)", match)
-				If (match) {
-					leagueName := match1 . ": "
-					Continue
-				}
-
-				IfInString, Line, %ItemName%
-				{
-					StringSplit, LineParts, Line, |
-					ChaosRatio	:= LineParts2
-					StringSplit, ChaosRatioParts,ChaosRatio, :
-					ChaosMult		:= ChaosRatioParts2 / ChaosRatioParts1
-					ValueInChaos	:= (ChaosMult * StackSize)
-				}
-			}
-
-			If (ValueInChaos) {
-				tmp := [leagueName, ValueInChaos, ChaosRatio]
-				result.push(tmp)
-			}
+	CurrencyDataRates := Globals.Get("CurrencyDataRates")
+	For league, ninjaRates in CurrencyDataRates {
+		ChaosRatio	:= ninjaRates[ItemName].OwnQuantity ":" ninjaRates[ItemName].ChaosQuantity
+		ChaosMult		:= ninjaRates[ItemName].ChaosQuantity / ninjaRates[ItemName].OwnQuantity
+		ValueInChaos	:= (ChaosMult * StackSize)
+		
+		If (league == "tmpstandard" or league == "tmphardcore" ) {
+			leagueName := InStr(league, "standard") ? "Challenge Standard" : "Challenge Hardcore"
+		}
+		Else {
+			leagueName := "Permanent " . league
+		}
+		
+		If (ValueInChaos) {
+			tmp := [leagueName ": ", ValueInChaos, ChaosRatio]
+			result.push(tmp)
 		}
 	}
 
@@ -7289,9 +7273,18 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			If (ValueInChaos.Length() and not Item.Name == "Chaos Orb")
 			{
 				CurrencyDetails := "`n" . dataSource
+				CurrencyValueLength := 0
+				CurrencyRatioLength := 0
 				Loop, % ValueInChaos.Length()
 				{
-					CurrencyDetails .= ValueInChaos[A_Index][1] . "" . ValueInChaos[A_Index][2] . " Chaos (" . ValueInChaos[A_Index][3] . "c)`n"
+					CurrencyValueLength := CurrencyValueLength < StrLen(ValueInChaos[A_Index][2]) ? StrLen(ValueInChaos[A_Index][2]) : CurrencyValueLength
+					CurrencyRatioLength := CurrencyRatioLength < StrLen(ValueInChaos[A_Index][3]) ? StrLen(ValueInChaos[A_Index][3]) : CurrencyRatioLength
+				}
+				Loop, % ValueInChaos.Length()
+				{
+					CurrencyDetails .= ValueInChaos[A_Index][1]
+					CurrencyDetails .= "" . StrPad(ValueInChaos[A_Index][2], CurrencyValueLength, "left") . " Chaos " 
+					CurrencyDetails .= StrPad("(" . ValueInChaos[A_Index][3], CurrencyRatioLength + 1, "left") . "c)`n"
 				}
 			}
 		}
@@ -8607,7 +8600,7 @@ ChangeTooltipColorByItem(conditionalColors = false) {
 			_bOpacity	:= 90
 		}	
 	}
-	
+
 	If (not StrLen(_bColor) or not conditionalColors) {
 		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)	
 	} Else {
@@ -8641,7 +8634,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 			YCoord := 0 + ScreenOffsetY
 			
 			If (Opts.UseGDI)
-			{				
+			{
 				ChangeTooltipColorByItem(conditionalColors)
 				gdipTooltip.ShowGdiTooltip(Opts.FontSize, String, XCoord, YCoord, RelativeToActiveWindow, PoEWindowHwnd)
 			}
@@ -8904,14 +8897,14 @@ CreateSettingsUI()
 {
 	Global
 
-	ExtraHeightOfTabsWithTradeMacro := SkipItemInfoUpdateCall ? 25 : 0
-	
-	; General
-	generalHeight := SkipItemInfoUpdateCall ? "150" : "240"		; "180" : "270" with ParseItemHotKey
-	GuiAddGroupBox("General", "x7 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h" generalHeight " Section")
-	
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 	
+	ExtraHeightOfTabsWithTradeMacro := SkipItemInfoUpdateCall ? 25 : 0
+	generalHeight := SkipItemInfoUpdateCall ? "150" : "240"		; "180" : "270" with ParseItemHotKey
+	YShiftWhenIncludedInTradeMacro := SkipItemInfoUpdateCall ? -25 : 0
+	
+	; General
+	GuiAddGroupBox("General", "x7 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h" generalHeight " Section")
 	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "When checked the script only activates while you are ingame`n(technically while the game window is the frontmost)")
 	
@@ -8940,39 +8933,40 @@ CreateSettingsUI()
 	}	
 	
 	; GDI+
-	GuiAddGroupBox("GDI+", "x7 y+20 w260 h305 Section")
-	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w210", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
-	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")	
-	GuiAddButton("Edit Window", "xs9 ys40 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys45 w150", "LblGDIWindowColor")
-	GuiAddEdit(Opts.GDIWindowColor, "xs190 ys42 w60", "GDIWindowColor", "GDIWindowColorH")
-	GuiAddText("Opactiy (0-100):", "xs100 ys75 w150", "LblGDIWindowOpacity")
-	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys72 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
-	GuiAddButton("Edit Border", "xs9 ys100 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys105 w150", "LblGDIBorderColor")
-	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys102 w60", "GDIBorderColor", "GDIBorderColorH")	
-	GuiAddText("Opacity (0-100):", "xs100 ys135 w150", "LblGDIBorderOpacity")
-	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys132 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
-	GuiAddButton("Edit Text", "xs9 ys160 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys165 w150", "LblGDITextColor")
-	GuiAddEdit(Opts.GDITextColor, "xs190 ys162 w60", "GDITextColor", "GDITextColorH")
-	GuiAddText("Opacity (0-100):", "xs100 ys195 w150", "LblGDITextOpacity")
-	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys192 w60", "GDITextOpacity", "GDITextOpacityH")
-	GuiAddCheckBox("Rendering Fix", "xs10 ys216 w110", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
+	GuiAddGroupBox("GDI+", "x7 ym+" 255+YShiftWhenIncludedInTradeMacro " w260 h320 Section")
+	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w90", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
+	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")
+	GuiAddCheckBox("Rendering Fix", "xs10 yp+30 w90", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
-	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys241 w210", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
+	GuiAddText("Restart script after enabling/`ndisabling GDI+.`nMight cause general FPS drop.", "xs105 ys+22 w150 cRed", "")
 	
-	GuiAddButton("GDI Defaults", "xs9 ys275 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
-	GuiAddButton("Preview", "xs170 ys275 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
+	GuiAddButton("Edit Window", "xs9 ys80 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
+	GuiAddText("Color (hex RGB):", "xs100 ys85 w150", "LblGDIWindowColor")
+	GuiAddEdit(Opts.GDIWindowColor, "xs190 ys82 w60", "GDIWindowColor", "GDIWindowColorH")
+	GuiAddText("Opactiy (0-100):", "xs100 ys115 w150", "LblGDIWindowOpacity")
+	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys112 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
+	GuiAddButton("Edit Border", "xs9 ys140 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
+	GuiAddText("Color (hex RGB):", "xs100 ys145 w150", "LblGDIBorderColor")
+	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys142 w60", "GDIBorderColor", "GDIBorderColorH")	
+	GuiAddText("Opacity (0-100):", "xs100 ys175 w150", "LblGDIBorderOpacity")
+	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys172 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
+	GuiAddButton("Edit Text", "xs9 ys200 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
+	GuiAddText("Color (hex RGB):", "xs100 ys205 w150", "LblGDITextColor")
+	GuiAddEdit(Opts.GDITextColor, "xs190 ys202 w60", "GDITextColor", "GDITextColorH")
+	GuiAddText("Opacity (0-100):", "xs100 ys235 w150", "LblGDITextOpacity")
+	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys232 w60", "GDITextOpacity", "GDITextOpacityH")
 	
+	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys260 w210", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
 	
+	GuiAddButton("GDI Defaults", "xs9 ys290 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
+	GuiAddButton("Preview", "xs170 ys290 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
+
 	; Tooltip
 	GuiAddGroupBox("Tooltip", "x277 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h140 Section")
 
 	GuiAddEdit(Opts.MouseMoveThreshold, "xs180 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
 	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w150 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
 	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip when the mouse cursor moved x pixel away from the initial position.`nEffectively permanent tooltip when using a value larger than the monitor diameter.")
-	
 	
 	GuiAddEdit(Opts.ToolTipTimeoutSeconds, "xs180 yp+27 w50 Number", "ToolTipTimeoutSeconds")
 	GuiAddCheckBox("Use tooltip timeout (seconds)", "xs10 yp+3 w160", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
@@ -8987,8 +8981,7 @@ CreateSettingsUI()
 	
 	
 	; Display
-	
-	GuiAddGroupBox("Display", "x277 y+62 w260 h370 Section")
+	GuiAddGroupBox("Display", "x277 ym+" 205+YShiftWhenIncludedInTradeMacro " w260 h370 Section")
 	
 	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w210 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
 	AddToolTip(ShowHeaderForAffixOverviewH, "Include a header above the affix overview:`n   TierRange ilvl   Total ilvl  Tier")
@@ -10021,6 +10014,14 @@ SettingsUI_BtnDefaults:
 	ShowSettingsUI()
 	return
 
+InitGDITooltip:
+	Global Opts
+	; some users experience FPS drops when gdi tooltip is initialized.
+	If (Opts.UseGDI) {
+		global gdipTooltip = new GdipTooltip(2, 8,,,[Opts.GDIWindowOpacity, Opts.GDIWindowColor, 10],[Opts.GDIBorderOpacity, Opts.GDIBorderColor, 10],[Opts.GDITextOpacity, Opts.GDITextColor, 10],true, Opts.RenderingFix, -0.3)
+	}
+	return
+
 OpenGDIColorPicker(type, rgb, opacity, title, image) {
 	; GDI+
 	global
@@ -10095,6 +10096,9 @@ SettingsUI_BtnGDIPreviewTooltip:
 		Increased Mana Cost of Skill…   80-40  
 		Energy Shield gained on Kill    15-20
 	)
+	If (not gdipTooltip) {
+		GoSub, InitGDITooltip	
+	}	
 	ShowToolTip(_testString)
 	; reset options
 	Opts.UseGDI := _tempGDIState
@@ -10135,6 +10139,9 @@ SettingsUI_ChkUseGDI:
 	}
 	Else
 	{
+		If (not gdipTooltip) {
+			GoSub, InitGDITooltip
+		}
 		GuiControl, Enable, GDIWindowColor
 		GuiControl, Enable, GDIWindowOpacity
 		GuiControl, Enable, GDIBorderColor
@@ -10312,55 +10319,92 @@ CheckForUpdates:
 	}
 	return
 
-FetchCurrencyData:
-	CurrencyDataJSON := {}
-	currencyLeagues := ["Standard", "Hardcore", "tmpstandard", "tmphardcore"]
+; TODO: use this for trademacro also
+CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", project ="", tmpFileName = "", fallbackDir = "", ByRef usedFallback = false) {
+	errorMsg := "Parsing the currency data (json) from poe.ninja failed.`n"
+	errorMsg .= "This should only happen when the servers are down / unavailable."
+	errorMsg .= "`n`n"
+	errorMsg .= "Using archived data from a fallback file. League: """ league """."
+	errorMsg .= "`n`n"
+	errorMsg .= "This can fix itself when the servers are up again and the data gets updated automatically or if you restart the script at such a time."
 
+	errors := 0
+	Try {
+		reqHeaders.push("Host: poe.ninja")
+		reqHeaders.push("Connection: keep-alive")
+		reqHeaders.push("Cache-Control: max-age=0")
+		;reqHeaders.push("Content-type: application/x-www-form-urlencoded; charset=UTF-8")
+		reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")	
+		reqHeaders.push("User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36")
+		parsedJSON := PoEScripts_Download(url, postData, reqHeaders, options, true, true, false, "", reqHeadersCurl)
+		
+		; first currency data parsing (script start)
+		If (critical and not sampleValue or not parsedJSON.lines.length()) {
+			errors++
+		}
+	} Catch error {
+		; first currency data parsing (script start)
+		If (critical and not sampleValue) {
+			errors++
+		}
+	}
+
+	If (errors and critical and not sampleValue) {
+		MsgBox, 16, %project% - Error, %errorMsg%
+		FileRead, JSONFile, %fallbackDir%\currencyData_Fallback_%league%.json
+		parsedJSON := JSON.Load(JSONFile)
+		usedFallback := true
+	} Else {
+		parsedJSON := JSON.Load(parsedJSON)
+	}
+
+	Return parsedJSON
+}
+
+FetchCurrencyData:
+	_CurrencyDataJSON	:= {}
+	currencyLeagues	:= ["Standard", "Hardcore", "tmpstandard", "tmphardcore"]
+	sampleValue		:= "ff"
+	
 	Loop, % currencyLeagues.Length() {
 		currencyLeague := currencyLeagues[A_Index]
 		url  := "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
 		file := A_ScriptDir . "\temp\currencyData_" . currencyLeague . ".json"
-		UrlDownloadToFile, %url% , %file%
-		
+
+		url		:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
+		critical	:= StrLen(Globals.Get("LastCurrencyUpdate")) ? false : true
+		parsedJSON := CurrencyDataDowloadURLtoJSON(url, sampleValue, critical, currencyLeague, "PoE-ItemInfo", file, A_ScriptDir "\data", usedFallback)		
+
 		Try {
-			If (FileExist(file)) {
-				FileRead, JSONFile, %file%
-				parsedJSON := JSON.Load(JSONFile)
-				CurrencyDataJSON[currencyLeague] := parsedJSON.lines
-				ParsedAtLeastOneLeague := True
+			If (parsedJSON) {		
+				_CurrencyDataJSON[currencyLeague] := parsedJSON.lines
+				If (not usedFallback) {
+					ParsedAtLeastOneLeague := True	
+				}		
 			}
 			Else	{
-				CurrencyDataJSON[currencyLeague] := null
+				_CurrencyDataJSON[currencyLeague] := null
 			}
 		} Catch error {
 			errorMsg := "Parsing the currency data (json) from poe.ninja failed for league:"
 			errorMsg .= "`n" currencyLeague
 			;MsgBox, 16, PoE-ItemInfo - Error, %errorMsg%
-		}
+		}		
+		parsedJSON :=
 	}
-
+	
 	If (ParsedAtLeastOneLeague) {
 		Globals.Set("LastCurrencyUpdate", A_NowUTC)
 	}
 
 	; parse JSON and write files to disk (like \data\CurrencyRates.txt)
-	For league, data in CurrencyDataJSON {
-		ratesFile := A_ScriptDir . "\temp\currencyRates_" . league . ".txt"
-		ratesJSONFile := A_ScriptDir . "\temp\currencyData_" . league . ".json"
-		FileDelete, %ratesFile%
-		FileDelete, %ratesJSONFile%
+	_CurrencyDataRates := {}
+	For league, data in _CurrencyDataJSON {
+		_CurrencyDataRates[league] := {}
 
-		If (league == "tmpstandard" or league == "tmphardcore" ) {
-			comment := InStr(league, "standard") ? ";Challenge Standard`n" : ";Challenge Hardcore`n"
-		}
-		Else {
-			comment := ";Permanent " . league . "`n"
-		}
-		FileAppend, %comment%, %ratesFile%
-
-		Loop, % data.Length() {
-			cName       := data[A_Index].currencyBaseName
-			cChaosEquiv := data[A_Index].chaosEquivalent
+		For currency, cData in data {
+			cName       := cData.currencyTypeName
+			cChaosEquiv := cData.chaosEquivalent
 
 			If (cChaosEquiv >= 1) {
 				cChaosQuantity := ZeroTrim(Round(cChaosEquiv, 2))
@@ -10369,14 +10413,17 @@ FetchCurrencyData:
 			Else {
 				cChaosQuantity := 1
 				cOwnQuantity   := ZeroTrim(Round(1 / cChaosEquiv, 2))
-			}
-
-			result := cName . "|" . cOwnQuantity . ":" . cChaosQuantity . "`n"
-			FileAppend, %result%, %ratesFile%
+			}	
+			
+			_CurrencyDataRates[league][cName] := {}
+			_CurrencyDataRates[league][cName].ChaosEquiv := cChaosEquiv
+			_CurrencyDataRates[league][cName].ChaosQuantity := cChaosQuantity
+			_CurrencyDataRates[league][cName].OwnQuantity := cOwnQuantity
 		}
 	}
-
-	CurrencyDataJSON :=
+	
+	Globals.Set("CurrencyDataRates", _CurrencyDataRates)
+	_CurrencyDataJSON :=
 	return
 
 ZeroTrim(number) {
