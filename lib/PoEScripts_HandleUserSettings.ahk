@@ -70,7 +70,10 @@ PoEScripts_ConvertOldFiles(sourceDir, destDir, ByRef overwrittenFiles) {
 
 PoEScripts_ConvertOldConfig(sourceDir, destDir, fileFullName, ByRef overwrittenFiles) {
 	OldConfigObj := PoEScripts_TrimEndingSpacesInKeys(class_EasyIni(destDir "\" fileFullName))
-	if (InStr(OldConfigObj.GetTopComments(), "Converted")) {
+	if (InStr(OldConfigObj.GetTopComments(), "Converted with PoeScripts_ConvertOldConfig")) {
+		return
+	}
+	if (InStr(OldConfigObj.GetTopComments(), "Based on default file")) {
 		return
 	}
 	PoEScripts_BackupUserFileOnDate(destDir, fileFullName)
