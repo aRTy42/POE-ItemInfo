@@ -6905,7 +6905,7 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 	CurrencyDataRates := Globals.Get("CurrencyDataRates")
 	For league, ninjaRates in CurrencyDataRates {
 		ChaosRatio	:= ninjaRates[ItemName].OwnQuantity ":" ninjaRates[ItemName].ChaosQuantity
-		ChaosMult		:= ninjaRates[ItemName].OwnQuantity / ninjaRates[ItemName].ChaosQuantity
+		ChaosMult		:= ninjaRates[ItemName].ChaosQuantity / ninjaRates[ItemName].OwnQuantity
 		ValueInChaos	:= (ChaosMult * StackSize)
 		
 		If (league == "tmpstandard" or league == "tmphardcore" ) {
@@ -7273,10 +7273,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			If (ValueInChaos.Length() and not Item.Name == "Chaos Orb")
 			{
 				CurrencyDetails := "`n" . dataSource
+				CurrencyValueLength := 0
+				CurrencyRatioLength := 0
 				Loop, % ValueInChaos.Length()
 				{
-					CurrencyValueLength := StrLen(CurrencyValueLength) < StrLen(ValueInChaos[A_Index][2]) ? StrLen(ValueInChaos[A_Index][2]) : CurrencyValueLength
-					CurrencyRatioLength := StrLen(CurrencyRatioLength) < StrLen(ValueInChaos[A_Index][3]) ? StrLen(ValueInChaos[A_Index][3]) : CurrencyRatioLength
+					CurrencyValueLength := CurrencyValueLength < StrLen(ValueInChaos[A_Index][2]) ? StrLen(ValueInChaos[A_Index][2]) : CurrencyValueLength
+					CurrencyRatioLength := CurrencyRatioLength < StrLen(ValueInChaos[A_Index][3]) ? StrLen(ValueInChaos[A_Index][3]) : CurrencyRatioLength
 				}
 				Loop, % ValueInChaos.Length()
 				{
