@@ -137,6 +137,9 @@ class GdipTooltip
 		
 		this.window.WriteText(String, options)
 		this.window.Update({ x: Round(XCoord, 5), y: Round(YCoord, 5)})
+		
+		ttWindowHwnd := this.window.hwnd
+		WinSet, ExStyle, +0x20, ahk_id %ttWindowHwnd% ; 0x20 = WS_EX_CLICKTHROUGH
 		this.isVisible := true
 	}
 	

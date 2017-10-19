@@ -10094,6 +10094,9 @@ SettingsUI_BtnGDIPreviewTooltip:
 		Increased Mana Cost of Skill…   80-40  
 		Energy Shield gained on Kill    15-20
 	)
+	If (not gdipTooltip) {
+		GoSub, InitGDITooltip	
+	}	
 	ShowToolTip(_testString)
 	; reset options
 	Opts.UseGDI := _tempGDIState
