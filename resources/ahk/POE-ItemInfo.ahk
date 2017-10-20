@@ -9087,13 +9087,14 @@ UpdateSettingsUI()
 	GuiControl,, UseGDI, % Opts.UseGDI
 	GuiControl,, GDIRenderingFix, % Opts.GDIRenderingFix
 	gdipTooltip.SetRenderingFix(Opts.GDIRenderingFix)
-	
-	GuiControl,, GDIWindowColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, Opts.GDIWindowColorDefault)
-	GuiControl,, GDIWindowOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIWindowOpacity, Opts.GDIWindowOpacityDefault, "10", "10")
-	GuiControl,, GDIBorderColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIBorderColor, Opts.GDIBorderColorDefault)
-	GuiControl,, GDIBorderOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIBorderOpacity, Opts.GDIBorderOpacityDefault, "10", "10")
-	GuiControl,, GDITextColor	, % gdipTooltip.ValidateRGBColor(Opts.GDITextColor, Opts.GDITextColorDefault)
-	GuiControl,, GDITextOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDITextOpacity, Opts.GDITextOpacityDefault, "10", "10")
+
+	; If the gdipTooltip is not yet initialised use the color value without validation, it will be validated and updated on enabling GDI
+	GuiControl,, GDIWindowColor	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, Opts.GDIWindowColorDefault) : Opts.GDIWindowColor
+	GuiControl,, GDIWindowOpacity	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateOpacity(Opts.GDIWindowOpacity, Opts.GDIWindowOpacityDefault, "10", "10") : Opts.GDIWindowOpacity
+	GuiControl,, GDIBorderColor	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateRGBColor(Opts.GDIBorderColor, Opts.GDIBorderColorDefault) : Opts.GDIBorderColor
+	GuiControl,, GDIBorderOpacity	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateOpacity(Opts.GDIBorderOpacity, Opts.GDIBorderOpacityDefault, "10", "10") : Opts.GDIBorderOpacity
+	GuiControl,, GDITextColor	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateRGBColor(Opts.GDITextColor, Opts.GDITextColorDefault) : Opts.GDITextColor
+	GuiControl,, GDITextOpacity	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateOpacity(Opts.GDITextOpacity, Opts.GDITextOpacityDefault, "10", "10") : Opts.GDITextOpacity
 	gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)
 	
 	If (Opts.UseGDI == False)
@@ -10016,7 +10017,8 @@ InitGDITooltip:
 	Global Opts
 	; some users experience FPS drops when gdi tooltip is initialized.
 	If (Opts.UseGDI) {
-		global gdipTooltip = new GdipTooltip(2, 8,,,[Opts.GDIWindowOpacity, Opts.GDIWindowColor, 10],[Opts.GDIBorderOpacity, Opts.GDIBorderColor, 10],[Opts.GDITextOpacity, Opts.GDITextColor, 10],true, Opts.RenderingFix, -0.3)
+		global gdipTooltip := new GdipTooltip(2, 8,,,[Opts.GDIWindowOpacity, Opts.GDIWindowColor, 10],[Opts.GDIBorderOpacity, Opts.GDIBorderColor, 10],[Opts.GDITextOpacity, Opts.GDITextColor, 10],true, Opts.RenderingFix, -0.3)
+		console.log("GdipTooltip initialised? " (IsObject(gdipTooltip.window) ? "Yes" : "No"))
 	}
 	return
 
@@ -10029,7 +10031,6 @@ OpenGDIColorPicker(type, rgb, opacity, title, image) {
 	_opacity			:= gdipTooltip.ValidateOpacity(opacity, _defaultOpacity, 10, 10)
 	_ColorHandle		:= GDI%_type%ColorH
 	_OpacityHandle		:= GDI%_type%OpacityH
-	;msgbox % type "`n" rgb " -> " _defaultColor " -> " _rgb "`n" opacity " -> " _defaultOpacity " -> " _opacity
 	
 	ColorPickerResults	:= new ColorPicker(_rgb, _opacity, title, image)
 	If (StrLen(ColorPickerResults[2])) {		
@@ -10094,9 +10095,11 @@ SettingsUI_BtnGDIPreviewTooltip:
 		Increased Mana Cost of Skill…   80-40  
 		Energy Shield gained on Kill    15-20
 	)
-	If (not gdipTooltip) {
-		GoSub, InitGDITooltip	
-	}	
+	
+	If (not IsObject(gdipTooltip.window)) {
+		GoSub, InitGDITooltip
+	}
+	
 	ShowToolTip(_testString)
 	; reset options
 	Opts.UseGDI := _tempGDIState
@@ -10118,7 +10121,7 @@ SettingsUI_ChkUseGDI:
 	; GDI+
 	GuiControlGet, IsChecked,, UseGDI
 	If (Not IsChecked)
-	{		
+	{
 		GuiControl, Disable, GDIWindowColor
 		GuiControl, Disable, GDIWindowOpacity
 		GuiControl, Disable, GDIBorderColor
@@ -10136,10 +10139,25 @@ SettingsUI_ChkUseGDI:
 		GuiControl, Disable, GDIConditionalColors
 	}
 	Else
-	{
-		If (not gdipTooltip) {
+	{	
+		If (not IsObject(gdipTooltip.window)) {
+			_tempUseGDI := Opts.UseGDI
+			Opts.UseGDI := 1
 			GoSub, InitGDITooltip
-		}
+			Opts.UseGDI := _tempUseGDI		
+
+			;update color and validate values and set rendering fix after initialising GDI
+			gdipTooltip.SetRenderingFix(Opts.GDIRenderingFix)
+			
+			GuiControl,, GDIWindowColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, Opts.GDIWindowColorDefault)
+			GuiControl,, GDIWindowOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIWindowOpacity, Opts.GDIWindowOpacityDefault, "10", "10")
+			GuiControl,, GDIBorderColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIBorderColor, Opts.GDIBorderColorDefault)
+			GuiControl,, GDIBorderOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIBorderOpacity, Opts.GDIBorderOpacityDefault, "10", "10")
+			GuiControl,, GDITextColor	, % gdipTooltip.ValidateRGBColor(Opts.GDITextColor, Opts.GDITextColorDefault)
+			GuiControl,, GDITextOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDITextOpacity, Opts.GDITextOpacityDefault, "10", "10")
+			gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)
+		}	
+		
 		GuiControl, Enable, GDIWindowColor
 		GuiControl, Enable, GDIWindowOpacity
 		GuiControl, Enable, GDIBorderColor
