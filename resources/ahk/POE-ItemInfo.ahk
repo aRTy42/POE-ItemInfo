@@ -5592,7 +5592,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				LookupAffixAndSetInfoLine(FileMaxLife, "Prefix", ItemLevel, Value, LineTxt, LineNum)
 			}
 			
-			If (HasToArmour or HasToEvasion or HasToMaxES and (ItemBaseType = "Armour"))
+			If ( (HasToArmour or HasToEvasion or HasToMaxES) and (ItemBaseType = "Armour") )
 			{
 				If (HasToArmour and HasToEvasion)
 				{
