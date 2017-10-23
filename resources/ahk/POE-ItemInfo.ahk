@@ -3735,7 +3735,7 @@ SolveAffixes_PreSuf(Keyname, LineNum, Value, Filename1, Filename2, ItemLevel)
 
 ParseAffixes(ItemDataAffixes, Item)
 {
-	Global Globals, Opts, AffixTotals, AffixLines, Itemdata, DebugMode
+	Global Globals, Opts, AffixTotals, AffixLines, Itemdata
 	
 	ItemDataChunk	:= ItemDataAffixes
 	
@@ -6181,6 +6181,30 @@ ParseAffixes(ItemDataAffixes, Item)
 		FinalizeUncertainAffixGroup(grp)
 	}
 	
+	; Remove lines with identical entries (coming from different mod-combinations)
+	; For example if line1 can be either "T1 HybP" or "T6 P + T1 HybP" but the corresponding
+	;   line2 is "T1 HybP" in both cases, we don't want that double entry in line2.
+	For key1, line in Itemdata.UncAffTmpAffixLines{
+		For key2, subline in line{
+			If(IsObject(subline)){
+				; Check line possibilities starting from the last index (safer when removing entries)
+				i := line.MaxIndex()
+				While(i > key2)
+				{
+					; Check all entries after our current entry at line[key2] if they are duplicates of it
+					;   (by comparing "TypeAndTier" and line index 3). Remove if identical.
+					If(line[i][3] = line[key2][3])
+					{
+						line.RemoveAt(i)
+					}
+					--i
+				}
+			}Else{
+				break
+			}
+		}
+	}
+	
 	AffixLines.Reset()
 	
 	; Go through Itemdata.UncAffTmpAffixLines and write lines that have multiple possibilities stored in an array
@@ -6197,6 +6221,7 @@ ParseAffixes(ItemDataAffixes, Item)
 	;	  [Line2Data_#2],
 	;	  [Line3Data]
 	;	]
+	
 	i := 1
 	For key1, line in Itemdata.UncAffTmpAffixLines{
 		If(IsObject(line)){
@@ -6216,7 +6241,6 @@ ParseAffixes(ItemDataAffixes, Item)
 			++i
 		}
 	}
-	DebugMode := True
 	return
 }
 
@@ -6254,7 +6278,6 @@ FinalizeUncertainAffixGroup(grp)
 			TotalMax := entry[1] + entry[2]
 		}
 		
-		
 		For junk, val in [3,5,7,9,11,13]	; these are the potential line number entries, the +1's are the line texts.
 		{
 			If(entry[val])
@@ -6273,31 +6296,14 @@ FinalizeUncertainAffixGroup(grp)
 				}
 			}
 		}
-		
-		If(key_entry = "2_OnlyHyb" or key_entry = "3_Mod1Hyb")
-		{
-			; There are two mods that bring a single Hyb2 part: "Hyb1, Hyb2" and "Mod1+Hyb1, Hyb2"
-			; We just added one of them and we don't want to have the exact visual entry twice if both
-			;   mods get included (even though the rest of the mod is fine). So we just delete that spot.
-			; The single Hyb2 part is always on the second lineposition, so entry[5].
-			grp["2_OnlyHyb"][5] := ""
-			grp["3_Mod1Hyb"][5] := ""
-		}
-		
-		If(key_entry = "2_OnlyHyb" or key_entry = "4_Mod2Hyb")
-		{
-			; Same here for a single Hyb1 part at entry[3].
-			grp["2_OnlyHyb"][3] := ""
-			grp["4_Mod2Hyb"][3] := ""
-		}
 	}
 	
-	AffixTotals.NumPrefixes += PrefixMin
+	AffixTotals.NumPrefixes    += PrefixMin
 	AffixTotals.NumPrefixesMax += PrefixMax
-	AffixTotals.NumSuffixes += SuffixMin
+	AffixTotals.NumSuffixes    += SuffixMin
 	AffixTotals.NumSuffixesMax += SuffixMax
-	AffixTotals.NumTotal += TotalMin
-	AffixTotals.NumTotalMax += TotalMax
+	AffixTotals.NumTotal       += TotalMin
+	AffixTotals.NumTotalMax    += TotalMax
 }
 
 ResetAffixDetailVars()
@@ -7019,7 +7025,7 @@ ParseUnique(ItemName)
 		{
 			Continue
 		}
-		IfInString, ALine, %ItemName%
+		If(RegExMatch(ALine, "^" ItemName "\|"))
 		{
 			StringSplit, LineParts, ALine, |
 			NumLineParts := LineParts0
