@@ -541,23 +541,6 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 
-	If (TradeOpts.debug) {
-		uniq := Item.IsUnique ? "Yes" : "No"
-		;console.log("Is unique: " uniq)
-		ench := Enchantment.param ? "Yes" : "No"
-		;console.log("Has enchantment: " ench " - " Enchantment.param)
-		If (ench == "Yes") {
-			enchused := Item.UsedInSearch.Enchantment ? "Yes" : "No"
-			;console.log("Enchantment used in search: " enchused)
-		}
-		corr := Corruption.param ? "Yes" : "No"
-		;console.log("Has corruption: " corr " - " Corruption.param)
-		If (corr == "Yes") {
-			corrused := Item.UsedInSearch.CorruptedMod ? "Yes" : "No"
-			;console.log("Enchantment used in search: " corrused)
-		}
-	}
-
 	; don't overwrite advancedItemPriceChecks decision to include/exclude sockets/links
 	If (not isAdvancedPriceCheckRedirect) {
 		; handle item sockets
