@@ -9160,7 +9160,6 @@ ShowUpdateNotes()
 {
 	; remove POE-Item-Info tooltip if still visible
 	SetTimer, ToolTipTimer, Off
-	console.log(gdipTooltip)
 	If (gdipTooltip.GetVisibility()) {
 		gdipTooltip.HideGdiTooltip()
 	}

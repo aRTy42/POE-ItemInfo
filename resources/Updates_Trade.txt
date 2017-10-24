@@ -1,5 +1,16 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.6.0-beta.3
+================================================================================================
+The GDI+ tooltip is now clickthrough, accidentally clicking it won't make the PoE client lose focus.
+Fixed GDI+ initialisation, it won't be initialised on script start if it's not enabled but doesn't require a restart after enabling it.
+Fixed the corrupted option (search) override not working (missing INI key).
+ItemInfo only: 
+	Fixed an issue that could cause long .ini file write times.
+	+Flat Def on non-armour pieces (like belts) are now handled correctly.
+	Fixed a bug about mismatching data of similarly named uniques.
+	Lines in the affix overview are no longer duplicated if they are identical (and only the other line of the hybrid mod part varies).
+
 2.6.0-beta.2
 ================================================================================================
 Added a fix/workaround for the new and optional GDI+ tooltip causing FPS drops.
