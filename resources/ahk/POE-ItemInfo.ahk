@@ -2757,14 +2757,15 @@ ParseMapAffixes(ItemDataAffixes)
 		; Pure life:  (20-29)/(30-39)/(40-49)% more Monster Life
 		; Hybrid mod: (15-19)/(20-24)/(25-30)% more Monster Life, Monsters cannot be Stunned
 
-		If (RegExMatch(A_LoopField, "(\d+)% more Monster Life", RegExMonsterLife))
+		If (RegExMatch(A_LoopField, "(\d+)% more Monster Life", match))
 		{
+			RegExMonsterLife := match1
 			MapModWarnings .= MapModWarn.MonstMoreLife ? "`nMore Life" : ""
 
 			RegExMatch(ItemData.FullText, "Map Tier: (\d+)", RegExMapTier)
 
 			; only hybrid mod
-			If ((RegExMapTier1 >= 11 and RegExMonsterLife1 <= 30) or (RegExMapTier1 >= 6 and RegExMonsterLife1 <= 24) or RegExMonsterLife <= 19)
+			If ((RegExMapTier1 >= 11 and RegExMonsterLife <= 30) or (RegExMapTier1 >= 6 and RegExMonsterLife <= 24) or RegExMonsterLife <= 19)
 			{
 				If (Not Index_MonstStunLife)
 				{
@@ -2782,7 +2783,7 @@ ParseMapAffixes(ItemDataAffixes)
 			}
 
 			; pure life mod
-			Else If ((RegExMapTier1 >= 11 and RegExMonsterLife1 <= 49) or (RegExMapTier1 >= 6 and RegExMonsterLife1 <= 39) or RegExMonsterLife <= 29)
+			Else If ((RegExMapTier1 >= 11 and RegExMonsterLife <= 49) or (RegExMapTier1 >= 6 and RegExMonsterLife <= 39) or RegExMonsterLife <= 29)
 			{
 				MapAffixCount += 1
 				AffixTotals.NumPrefixes += 1
@@ -3735,7 +3736,7 @@ SolveAffixes_PreSuf(Keyname, LineNum, Value, Filename1, Filename2, ItemLevel)
 
 ParseAffixes(ItemDataAffixes, Item)
 {
-	Global Globals, Opts, AffixTotals, AffixLines, Itemdata, DebugMode
+	Global Globals, Opts, AffixTotals, AffixLines, Itemdata
 	
 	ItemDataChunk	:= ItemDataAffixes
 	
@@ -3778,7 +3779,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		HasIncrDefencesCraftType := ""
 		HasStunBlockRecovery	:= 0
 		HasChanceToBlockStrShield := 0
-		; pure str shields can have a hybrid prefix "#% increased Armour / +#% Chance to Block"
+		; pure str shields ("tower shields") can have a hybrid prefix "#% increased Armour / +#% Chance to Block"
 		; This means those fuckers can have 5 mods that combine:
 		; Prefix:
 		;   #% increased Armour
@@ -5277,7 +5278,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Buy:Vagan 4", ""), A_Index)
 			Continue
 		}
-
+		
 		
 		; Meta Craft Mods
 		
@@ -5354,7 +5355,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			FilePrefix := "data\IncrRarity_Prefix_AmuletRing.txt"
 			FileSuffix := "data\IncrRarity_Suffix_AmuletRingHelmet.txt"
-
+			
 			If (HasIncrRarityCraft)
 			{
 				FileSuffix := "data\IncrRarity_Suffix_Craft.txt"
@@ -5384,7 +5385,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			FilePrefix := "data\IncrRarity_Prefix_Helmet.txt"
 			FileSuffix := "data\IncrRarity_Suffix_AmuletRingHelmet.txt"
-
+			
 			LineNum := HasIncrRarity
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value
@@ -5396,7 +5397,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			FilePrefix := "data\IncrRarity_Prefix_GlovesBoots.txt"
 			FileSuffix := "data\IncrRarity_Suffix_GlovesBoots.txt"
-
+			
 			LineNum := HasIncrRarity
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value
@@ -5592,7 +5593,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				LookupAffixAndSetInfoLine(FileMaxLife, "Prefix", ItemLevel, Value, LineTxt, LineNum)
 			}
 			
-			If (HasToArmour or HasToEvasion or HasToMaxES and (ItemBaseType = "Armour"))
+			If ( (HasToArmour or HasToEvasion or HasToMaxES) and (ItemBaseType = "Armour") )
 			{
 				If (HasToArmour and HasToEvasion)
 				{
@@ -6181,6 +6182,30 @@ ParseAffixes(ItemDataAffixes, Item)
 		FinalizeUncertainAffixGroup(grp)
 	}
 	
+	; Remove lines with identical entries (coming from different mod-combinations)
+	; For example if line1 can be either "T1 HybP" or "T6 P + T1 HybP" but the corresponding
+	;   line2 is "T1 HybP" in both cases, we don't want that double entry in line2.
+	For key1, line in Itemdata.UncAffTmpAffixLines{
+		For key2, subline in line{
+			If(IsObject(subline)){
+				; Check line possibilities starting from the last index (safer when removing entries)
+				i := line.MaxIndex()
+				While(i > key2)
+				{
+					; Check all entries after our current entry at line[key2] if they are duplicates of it
+					;   (by comparing "TypeAndTier" and line index 3). Remove if identical.
+					If(line[i][3] = line[key2][3])
+					{
+						line.RemoveAt(i)
+					}
+					--i
+				}
+			}Else{
+				break
+			}
+		}
+	}
+	
 	AffixLines.Reset()
 	
 	; Go through Itemdata.UncAffTmpAffixLines and write lines that have multiple possibilities stored in an array
@@ -6197,6 +6222,7 @@ ParseAffixes(ItemDataAffixes, Item)
 	;	  [Line2Data_#2],
 	;	  [Line3Data]
 	;	]
+	
 	i := 1
 	For key1, line in Itemdata.UncAffTmpAffixLines{
 		If(IsObject(line)){
@@ -6216,7 +6242,6 @@ ParseAffixes(ItemDataAffixes, Item)
 			++i
 		}
 	}
-	DebugMode := True
 	return
 }
 
@@ -6254,7 +6279,6 @@ FinalizeUncertainAffixGroup(grp)
 			TotalMax := entry[1] + entry[2]
 		}
 		
-		
 		For junk, val in [3,5,7,9,11,13]	; these are the potential line number entries, the +1's are the line texts.
 		{
 			If(entry[val])
@@ -6273,31 +6297,14 @@ FinalizeUncertainAffixGroup(grp)
 				}
 			}
 		}
-		
-		If(key_entry = "2_OnlyHyb" or key_entry = "3_Mod1Hyb")
-		{
-			; There are two mods that bring a single Hyb2 part: "Hyb1, Hyb2" and "Mod1+Hyb1, Hyb2"
-			; We just added one of them and we don't want to have the exact visual entry twice if both
-			;   mods get included (even though the rest of the mod is fine). So we just delete that spot.
-			; The single Hyb2 part is always on the second lineposition, so entry[5].
-			grp["2_OnlyHyb"][5] := ""
-			grp["3_Mod1Hyb"][5] := ""
-		}
-		
-		If(key_entry = "2_OnlyHyb" or key_entry = "4_Mod2Hyb")
-		{
-			; Same here for a single Hyb1 part at entry[3].
-			grp["2_OnlyHyb"][3] := ""
-			grp["4_Mod2Hyb"][3] := ""
-		}
 	}
 	
-	AffixTotals.NumPrefixes += PrefixMin
+	AffixTotals.NumPrefixes    += PrefixMin
 	AffixTotals.NumPrefixesMax += PrefixMax
-	AffixTotals.NumSuffixes += SuffixMin
+	AffixTotals.NumSuffixes    += SuffixMin
 	AffixTotals.NumSuffixesMax += SuffixMax
-	AffixTotals.NumTotal += TotalMin
-	AffixTotals.NumTotalMax += TotalMax
+	AffixTotals.NumTotal       += TotalMin
+	AffixTotals.NumTotalMax    += TotalMax
 }
 
 ResetAffixDetailVars()
@@ -7019,7 +7026,7 @@ ParseUnique(ItemName)
 		{
 			Continue
 		}
-		IfInString, ALine, %ItemName%
+		If(RegExMatch(ALine, "^" ItemName "\|"))
 		{
 			StringSplit, LineParts, ALine, |
 			NumLineParts := LineParts0
@@ -8938,7 +8945,7 @@ CreateSettingsUI()
 	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")
 	GuiAddCheckBox("Rendering Fix", "xs10 yp+30 w90", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
-	GuiAddText("Restart script after enabling/`ndisabling GDI+.`nMight cause general FPS drop.", "xs105 ys+22 w150 cRed", "")
+	GuiAddText("(Restart script after disabling GDI+. Enabling might cause general FPS drops.)", "xs110 ys+20 w150 cRed", "")
 	
 	GuiAddButton("Edit Window", "xs9 ys80 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
 	GuiAddText("Color (hex RGB):", "xs100 ys85 w150", "LblGDIWindowColor")
@@ -8955,7 +8962,6 @@ CreateSettingsUI()
 	GuiAddEdit(Opts.GDITextColor, "xs190 ys202 w60", "GDITextColor", "GDITextColorH")
 	GuiAddText("Opacity (0-100):", "xs100 ys235 w150", "LblGDITextOpacity")
 	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys232 w60", "GDITextOpacity", "GDITextOpacityH")
-	
 	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys260 w210", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
 	
 	GuiAddButton("GDI Defaults", "xs9 ys290 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
@@ -8980,7 +8986,7 @@ CreateSettingsUI()
 		GuiAddText("Y", "xs115 yp+0 w15", "LblScreenOffsetY")
 	
 	
-	; Display
+	; Display	
 	GuiAddGroupBox("Display", "x277 ym+" 205+YShiftWhenIncludedInTradeMacro " w260 h370 Section")
 	
 	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w210 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
@@ -9089,13 +9095,14 @@ UpdateSettingsUI()
 	GuiControl,, UseGDI, % Opts.UseGDI
 	GuiControl,, GDIRenderingFix, % Opts.GDIRenderingFix
 	gdipTooltip.SetRenderingFix(Opts.GDIRenderingFix)
-	
-	GuiControl,, GDIWindowColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, Opts.GDIWindowColorDefault)
-	GuiControl,, GDIWindowOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIWindowOpacity, Opts.GDIWindowOpacityDefault, "10", "10")
-	GuiControl,, GDIBorderColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIBorderColor, Opts.GDIBorderColorDefault)
-	GuiControl,, GDIBorderOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIBorderOpacity, Opts.GDIBorderOpacityDefault, "10", "10")
-	GuiControl,, GDITextColor	, % gdipTooltip.ValidateRGBColor(Opts.GDITextColor, Opts.GDITextColorDefault)
-	GuiControl,, GDITextOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDITextOpacity, Opts.GDITextOpacityDefault, "10", "10")
+
+	; If the gdipTooltip is not yet initialised use the color value without validation, it will be validated and updated on enabling GDI
+	GuiControl,, GDIWindowColor	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, Opts.GDIWindowColorDefault) : Opts.GDIWindowColor
+	GuiControl,, GDIWindowOpacity	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateOpacity(Opts.GDIWindowOpacity, Opts.GDIWindowOpacityDefault, "10", "10") : Opts.GDIWindowOpacity
+	GuiControl,, GDIBorderColor	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateRGBColor(Opts.GDIBorderColor, Opts.GDIBorderColorDefault) : Opts.GDIBorderColor
+	GuiControl,, GDIBorderOpacity	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateOpacity(Opts.GDIBorderOpacity, Opts.GDIBorderOpacityDefault, "10", "10") : Opts.GDIBorderOpacity
+	GuiControl,, GDITextColor	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateRGBColor(Opts.GDITextColor, Opts.GDITextColorDefault) : Opts.GDITextColor
+	GuiControl,, GDITextOpacity	, % not IsObject(gdipTooltip.window) ? gdipTooltip.ValidateOpacity(Opts.GDITextOpacity, Opts.GDITextOpacityDefault, "10", "10") : Opts.GDITextOpacity
 	gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)
 	
 	If (Opts.UseGDI == False)
@@ -9154,6 +9161,10 @@ ShowUpdateNotes()
 {
 	; remove POE-Item-Info tooltip if still visible
 	SetTimer, ToolTipTimer, Off
+	
+	If (gdipTooltip.GetVisibility()) {
+		gdipTooltip.HideGdiTooltip()
+	}
 	ToolTip
 	Gui, UpdateNotes:Destroy
 	Fonts.SetUIFont(9)
@@ -9203,141 +9214,146 @@ ShowChangedUserFiles()
 	ControlFocus, Close, Changed User Files
 }
 
-IniRead(ConfigPath, SectionName, KeyName, DefaultVal)
+IniRead(SectionName, KeyName, DefaultVal)
 {
-	ConfigObj := class_EasyIni(ConfigPath)
-	If(ConfigObj[SectionName].HasKey(KeyName)){
+	Global ItemInfoConfigObj
+	
+	If(ItemInfoConfigObj[SectionName].HasKey(KeyName)){
 		; return value and replace potential leading or trailing 
-		return RegExReplace(ConfigObj[SectionName, KeyName], "^""'|'""$")
+		return RegExReplace(ItemInfoConfigObj[SectionName, KeyName], "^""'|'""$")
 	}
 	Else{
 		return DefaultVal
 	}
-	;Result := ""
-	;IniRead, Result, %ConfigPath%, %SectionName%, %KeyName%, %DefaultVal%
-	;return Result
 }
 
-IniWrite(Val, ConfigPath, SectionName, KeyName)
+IniWrite(Val, SectionName, KeyName)
 {
+	Global ItemInfoConfigObj
+	
 	If(RegExMatch(Val, "^\s|\s$")){
 		Val := """'" Val "'"""
 	}
-	ConfigObj := class_EasyIni(ConfigPath)
-	ConfigObj.SetKeyVal(SectionName, KeyName, Val)
-	ConfigObj.Save(ConfigPath)
 	
-	;IniWrite, %Val%, %ConfigPath%, %SectionName%, %KeyName%
+	ItemInfoConfigObj.SetKeyVal(SectionName, KeyName, Val)
 }
 
 ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 {
-	Global
+	Global Opts, ItemInfoConfigObj
+	
 	If (StrLen(ConfigDir) < 1) {
 		ConfigDir := userDirectory
 	}
 	ConfigPath := StrLen(ConfigDir) > 0 ? ConfigDir . "\" . ConfigFile : ConfigFile
-
+	
+	ItemInfoConfigObj := class_EasyIni(ConfigPath)
+	
 	IfExist, %ConfigPath%
 	{
 		; General
-		;Opts.ParseItemHotKey := IniRead(ConfigPath, "General", "ParseItemHotKey", Opts.ParseItemHotKey)
-		Opts.OnlyActiveIfPOEIsFront	:= IniRead(ConfigPath, "General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
-		Opts.PutResultsOnClipboard	:= IniRead(ConfigPath, "General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
-		Opts.EnableAdditionalMacros	:= IniRead(ConfigPath, "General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
-		Opts.EnableMapModWarnings	:= IniRead(ConfigPath, "General", "EnableMapModWarnings", Opts.EnableMapModWarnings)
-		Opts.ShowUpdateNotifications	:= IniRead(ConfigPath, "General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
-		Opts.UpdateSkipSelection		:= IniRead(ConfigPath, "General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
-		Opts.UpdateSkipBackup		:= IniRead(ConfigPath, "General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
+		;Opts.ParseItemHotKey := IniRead("General", "ParseItemHotKey", Opts.ParseItemHotKey)
+		Opts.OnlyActiveIfPOEIsFront	:= IniRead("General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
+		Opts.PutResultsOnClipboard	:= IniRead("General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
+		Opts.EnableAdditionalMacros	:= IniRead("General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
+		Opts.EnableMapModWarnings	:= IniRead("General", "EnableMapModWarnings", Opts.EnableMapModWarnings)
+		Opts.ShowUpdateNotifications	:= IniRead("General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
+		Opts.UpdateSkipSelection		:= IniRead("General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
+		Opts.UpdateSkipBackup		:= IniRead("General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
 		
 		; Tooltip
-		Opts.MouseMoveThreshold	:= IniRead(ConfigPath, "Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold)
-		Opts.UseTooltipTimeout	:= IniRead(ConfigPath, "Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout)
-		Opts.ToolTipTimeoutSeconds	:= IniRead(ConfigPath, "Tooltip", "ToolTipTimeoutSeconds", Opts.ToolTipTimeoutSeconds)
-		Opts.DisplayToolTipAtFixedCoords := IniRead(ConfigPath, "Tooltip", "DisplayToolTipAtFixedCoords", Opts.DisplayToolTipAtFixedCoords)
-		Opts.ScreenOffsetX		:= IniRead(ConfigPath, "Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX)
-		Opts.ScreenOffsetY		:= IniRead(ConfigPath, "Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY)
+		Opts.MouseMoveThreshold	:= IniRead("Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold)
+		Opts.UseTooltipTimeout	:= IniRead("Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout)
+		Opts.ToolTipTimeoutSeconds	:= IniRead("Tooltip", "ToolTipTimeoutSeconds", Opts.ToolTipTimeoutSeconds)
+		Opts.DisplayToolTipAtFixedCoords := IniRead("Tooltip", "DisplayToolTipAtFixedCoords", Opts.DisplayToolTipAtFixedCoords)
+		Opts.ScreenOffsetX		:= IniRead("Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX)
+		Opts.ScreenOffsetY		:= IniRead("Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY)
 		
 		; Display
-		Opts.ShowHeaderForAffixOverview		:= IniRead(ConfigPath, "Display", "ShowHeaderForAffixOverview", Opts.ShowHeaderForAffixOverview)
-		Opts.ShowExplanationForUsedNotation	:= IniRead(ConfigPath, "Display", "ShowExplanationForUsedNotation", Opts.ShowExplanationForUsedNotation)
-		Opts.AffixTextEllipsis				:= IniRead(ConfigPath, "Display", "AffixTextEllipsis", Opts.AffixTextEllipsis)
-		Opts.AffixColumnSeparator			:= IniRead(ConfigPath, "Display", "AffixColumnSeparator", Opts.AffixColumnSeparator)
-		Opts.DoubleRangeSeparator			:= IniRead(ConfigPath, "Display", "DoubleRangeSeparator", Opts.DoubleRangeSeparator)
-		Opts.UseCompactDoubleRanges			:= IniRead(ConfigPath, "Display", "UseCompactDoubleRanges", Opts.UseCompactDoubleRanges)
-		Opts.OnlyCompactForTotalColumn		:= IniRead(ConfigPath, "Display", "OnlyCompactForTotalColumn", Opts.OnlyCompactForTotalColumn)
-		Opts.MultiTierRangeSeparator			:= IniRead(ConfigPath, "Display", "MultiTierRangeSeparator", Opts.MultiTierRangeSeparator)
-		Opts.FontSize						:= IniRead(ConfigPath, "Display", "FontSize", Opts.FontSize)
+		Opts.ShowHeaderForAffixOverview		:= IniRead("Display", "ShowHeaderForAffixOverview", Opts.ShowHeaderForAffixOverview)
+		Opts.ShowExplanationForUsedNotation	:= IniRead("Display", "ShowExplanationForUsedNotation", Opts.ShowExplanationForUsedNotation)
+		Opts.AffixTextEllipsis				:= IniRead("Display", "AffixTextEllipsis", Opts.AffixTextEllipsis)
+		Opts.AffixColumnSeparator			:= IniRead("Display", "AffixColumnSeparator", Opts.AffixColumnSeparator)
+		Opts.DoubleRangeSeparator			:= IniRead("Display", "DoubleRangeSeparator", Opts.DoubleRangeSeparator)
+		Opts.UseCompactDoubleRanges			:= IniRead("Display", "UseCompactDoubleRanges", Opts.UseCompactDoubleRanges)
+		Opts.OnlyCompactForTotalColumn		:= IniRead("Display", "OnlyCompactForTotalColumn", Opts.OnlyCompactForTotalColumn)
+		Opts.MultiTierRangeSeparator			:= IniRead("Display", "MultiTierRangeSeparator", Opts.MultiTierRangeSeparator)
+		Opts.FontSize						:= IniRead("Display", "FontSize", Opts.FontSize)
 		
 		; GDI+		
-		Opts.UseGDI				:= IniRead(ConfigPath, "GDI", "Enabled", Opts.UseGDI)
-		Opts.GDIRenderingFix		:= IniRead(ConfigPath, "GDI", "RenderingFix", Opts.GDIRenderingFix)
-		Opts.GDIConditionalColors	:= IniRead(ConfigPath, "GDI", "ConditionalColors", Opts.GDIConditionalColors)
-		Opts.GDIWindowColor			:= IniRead(ConfigPath, "GDI", "WindowColor", Opts.GDIWindowColor)
-		Opts.GDIWindowColorDefault	:= IniRead(ConfigPath, "GDI", "WindowColorDefault", Opts.GDIWindowColorDefault)
-		Opts.GDIWindowOpacity		:= IniRead(ConfigPath, "GDI", "WindowOpacity", Opts.GDIWindowOpacity)
-		Opts.GDIWindowOpacityDefault	:= IniRead(ConfigPath, "GDI", "WindowOpacityDefault", Opts.GDIWindowOpacityDefault)
-		Opts.GDIBorderColor			:= IniRead(ConfigPath, "GDI", "BorderColor", Opts.GDIBorderColor)
-		Opts.GDIBorderColorDefault	:= IniRead(ConfigPath, "GDI", "BorderColorDefault", Opts.GDIBorderColorDefault)
-		Opts.GDIBorderOpacity		:= IniRead(ConfigPath, "GDI", "BorderOpacity", Opts.GDIBorderOpacity)
-		Opts.GDIBorderOpacityDefault	:= IniRead(ConfigPath, "GDI", "BorderOpacityDefault", Opts.GDIBorderOpacityDefault)
-		Opts.GDITextColor			:= IniRead(ConfigPath, "GDI", "TextColor", Opts.GDITextColor)
-		Opts.GDITextColorDefault		:= IniRead(ConfigPath, "GDI", "TextColorDefault", Opts.GDITextColorDefault)
-		Opts.GDITextOpacity			:= IniRead(ConfigPath, "GDI", "TextOpacity", Opts.GDITextOpacity)
-		Opts.GDITextOpacityDefault	:= IniRead(ConfigPath, "GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault)
+		Opts.UseGDI				:= IniRead("GDI", "Enabled", Opts.UseGDI)
+		Opts.GDIRenderingFix		:= IniRead("GDI", "RenderingFix", Opts.GDIRenderingFix)
+		Opts.GDIConditionalColors	:= IniRead("GDI", "ConditionalColors", Opts.GDIConditionalColors)
+		Opts.GDIWindowColor			:= IniRead("GDI", "WindowColor", Opts.GDIWindowColor)
+		Opts.GDIWindowColorDefault	:= IniRead("GDI", "WindowColorDefault", Opts.GDIWindowColorDefault)
+		Opts.GDIWindowOpacity		:= IniRead("GDI", "WindowOpacity", Opts.GDIWindowOpacity)
+		Opts.GDIWindowOpacityDefault	:= IniRead("GDI", "WindowOpacityDefault", Opts.GDIWindowOpacityDefault)
+		Opts.GDIBorderColor			:= IniRead("GDI", "BorderColor", Opts.GDIBorderColor)
+		Opts.GDIBorderColorDefault	:= IniRead("GDI", "BorderColorDefault", Opts.GDIBorderColorDefault)
+		Opts.GDIBorderOpacity		:= IniRead("GDI", "BorderOpacity", Opts.GDIBorderOpacity)
+		Opts.GDIBorderOpacityDefault	:= IniRead("GDI", "BorderOpacityDefault", Opts.GDIBorderOpacityDefault)
+		Opts.GDITextColor			:= IniRead("GDI", "TextColor", Opts.GDITextColor)
+		Opts.GDITextColorDefault		:= IniRead("GDI", "TextColorDefault", Opts.GDITextColorDefault)
+		Opts.GDITextOpacity			:= IniRead("GDI", "TextOpacity", Opts.GDITextOpacity)
+		Opts.GDITextOpacityDefault	:= IniRead("GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault)
 		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, "10", "16")
 	}
 }
 
 WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 {
-	Global
+	Global Opts, ItemInfoConfigObj
+	
 	If (StrLen(ConfigDir) < 1) {
 		ConfigDir := userDirectory
 	}
 	ConfigPath := StrLen(ConfigDir) > 0 ? ConfigDir . "\" . ConfigFile : ConfigFile
 	
+	ItemInfoConfigObj := class_EasyIni(ConfigPath)
+	
 	Opts.ScanUI()
 	
 	; General
-	;IniWrite(Opts.ParseItemHotKey, ConfigPath, "General", "ParseItemHotKey")
-	IniWrite(Opts.OnlyActiveIfPOEIsFront, ConfigPath, "General", "OnlyActiveIfPOEIsFront")
-	IniWrite(Opts.PutResultsOnClipboard, ConfigPath, "General", "PutResultsOnClipboard")
-	IniWrite(Opts.EnableAdditionalMacros, ConfigPath, "General", "EnableAdditionalMacros")
-	IniWrite(Opts.EnableMapModWarnings, ConfigPath, "General", "EnableMapModWarnings")
-	IniWrite(Opts.ShowUpdateNotifications, ConfigPath, "General", "ShowUpdateNotifications")
-	IniWrite(Opts.UpdateSkipSelection, ConfigPath, "General", "UpdateSkipSelection")
-	IniWrite(Opts.UpdateSkipBackup, ConfigPath, "General", "UpdateSkipBackup")
+	;IniWrite(Opts.ParseItemHotKey, "General", "ParseItemHotKey")
+	IniWrite(Opts.OnlyActiveIfPOEIsFront, "General", "OnlyActiveIfPOEIsFront")
+	IniWrite(Opts.PutResultsOnClipboard, "General", "PutResultsOnClipboard")
+	IniWrite(Opts.EnableAdditionalMacros, "General", "EnableAdditionalMacros")
+	IniWrite(Opts.EnableMapModWarnings, "General", "EnableMapModWarnings")
+	IniWrite(Opts.ShowUpdateNotifications, "General", "ShowUpdateNotifications")
+	IniWrite(Opts.UpdateSkipSelection, "General", "UpdateSkipSelection")
+	IniWrite(Opts.UpdateSkipBackup, "General", "UpdateSkipBackup")
 	
 	; Display
-	IniWrite(Opts.ShowHeaderForAffixOverview, ConfigPath, "Display", "ShowHeaderForAffixOverview")
-	IniWrite(Opts.ShowExplanationForUsedNotation, ConfigPath, "Display", "ShowExplanationForUsedNotation")
-	IniWrite("" . Opts.AffixTextEllipsis . "", ConfigPath, "Display", "AffixTextEllipsis")
-	IniWrite("" . Opts.AffixColumnSeparator . "", ConfigPath, "Display", "AffixColumnSeparator")
-	IniWrite("" . Opts.DoubleRangeSeparator . "", ConfigPath, "Display", "DoubleRangeSeparator")
-	IniWrite(Opts.UseCompactDoubleRanges, ConfigPath, "Display", "UseCompactDoubleRanges")
-	IniWrite(Opts.OnlyCompactForTotalColumn, ConfigPath, "Display", "OnlyCompactForTotalColumn")
-	IniWrite("" . Opts.MultiTierRangeSeparator . "", ConfigPath, "Display", "MultiTierRangeSeparator")
-	IniWrite(Opts.FontSize, ConfigPath, "Display", "FontSize")
+	IniWrite(Opts.ShowHeaderForAffixOverview, "Display", "ShowHeaderForAffixOverview")
+	IniWrite(Opts.ShowExplanationForUsedNotation, "Display", "ShowExplanationForUsedNotation")
+	IniWrite("" . Opts.AffixTextEllipsis . "", "Display", "AffixTextEllipsis")
+	IniWrite("" . Opts.AffixColumnSeparator . "", "Display", "AffixColumnSeparator")
+	IniWrite("" . Opts.DoubleRangeSeparator . "", "Display", "DoubleRangeSeparator")
+	IniWrite(Opts.UseCompactDoubleRanges, "Display", "UseCompactDoubleRanges")
+	IniWrite(Opts.OnlyCompactForTotalColumn, "Display", "OnlyCompactForTotalColumn")
+	IniWrite("" . Opts.MultiTierRangeSeparator . "", "Display", "MultiTierRangeSeparator")
+	IniWrite(Opts.FontSize, "Display", "FontSize")
 	
 	; Tooltip
-	IniWrite(Opts.MouseMoveThreshold, ConfigPath, "Tooltip", "MouseMoveThreshold")
-	IniWrite(Opts.UseTooltipTimeout, ConfigPath, "Tooltip", "UseTooltipTimeout")
-	IniWrite(Opts.ToolTipTimeoutSeconds, ConfigPath, "Tooltip", "ToolTipTimeoutSeconds")
-	IniWrite(Opts.DisplayToolTipAtFixedCoords, ConfigPath, "Tooltip", "DisplayToolTipAtFixedCoords")
-	IniWrite(Opts.ScreenOffsetX, ConfigPath, "Tooltip", "ScreenOffsetX")
-	IniWrite(Opts.ScreenOffsetY, ConfigPath, "Tooltip", "ScreenOffsetY")
+	IniWrite(Opts.MouseMoveThreshold, "Tooltip", "MouseMoveThreshold")
+	IniWrite(Opts.UseTooltipTimeout, "Tooltip", "UseTooltipTimeout")
+	IniWrite(Opts.ToolTipTimeoutSeconds, "Tooltip", "ToolTipTimeoutSeconds")
+	IniWrite(Opts.DisplayToolTipAtFixedCoords, "Tooltip", "DisplayToolTipAtFixedCoords")
+	IniWrite(Opts.ScreenOffsetX, "Tooltip", "ScreenOffsetX")
+	IniWrite(Opts.ScreenOffsetY, "Tooltip", "ScreenOffsetY")
 	
 	; GDI+
-	IniWrite(Opts.UseGDI, ConfigPath, "GDI", "Enabled")
-	IniWrite(Opts.GDIRenderingFix, ConfigPath, "GDI", "RenderingFix")
-	IniWrite(Opts.GDIConditionalColors, ConfigPath, "GDI", "ConditionalColors")
-	IniWrite(Opts.GDIWindowColor, ConfigPath, "GDI", "WindowColor")
-	IniWrite(Opts.GDIWindowOpacity, ConfigPath, "GDI", "WindowOpacity")
-	IniWrite(Opts.GDIBorderColor, ConfigPath, "GDI", "BorderColor")
-	IniWrite(Opts.GDIBorderOpacity, ConfigPath, "GDI", "BorderOpacity")
-	IniWrite(Opts.GDITextColor, ConfigPath, "GDI", "TextColor")
-	IniWrite(Opts.GDITextOpacity, ConfigPath, "GDI", "TextOpacity")
+	IniWrite(Opts.UseGDI, "GDI", "Enabled")
+	IniWrite(Opts.GDIRenderingFix, "GDI", "RenderingFix")
+	IniWrite(Opts.GDIConditionalColors, "GDI", "ConditionalColors")
+	IniWrite(Opts.GDIWindowColor, "GDI", "WindowColor")
+	IniWrite(Opts.GDIWindowOpacity, "GDI", "WindowOpacity")
+	IniWrite(Opts.GDIBorderColor, "GDI", "BorderColor")
+	IniWrite(Opts.GDIBorderOpacity, "GDI", "BorderOpacity")
+	IniWrite(Opts.GDITextColor, "GDI", "TextColor")
+	IniWrite(Opts.GDITextOpacity, "GDI", "TextOpacity")
+	
+	ItemInfoConfigObj.Save(ConfigPath)
 }
 
 CopyDefaultConfig()
@@ -10022,6 +10038,7 @@ InitGDITooltip:
 	}
 	return
 
+
 OpenGDIColorPicker(type, rgb, opacity, title, image) {
 	; GDI+
 	global
@@ -10031,7 +10048,6 @@ OpenGDIColorPicker(type, rgb, opacity, title, image) {
 	_opacity			:= gdipTooltip.ValidateOpacity(opacity, _defaultOpacity, 10, 10)
 	_ColorHandle		:= GDI%_type%ColorH
 	_OpacityHandle		:= GDI%_type%OpacityH
-	;msgbox % type "`n" rgb " -> " _defaultColor " -> " _rgb "`n" opacity " -> " _defaultOpacity " -> " _opacity
 	
 	ColorPickerResults	:= new ColorPicker(_rgb, _opacity, title, image)
 	If (StrLen(ColorPickerResults[2])) {		
@@ -10096,9 +10112,11 @@ SettingsUI_BtnGDIPreviewTooltip:
 		Increased Mana Cost of Skill…   80-40  
 		Energy Shield gained on Kill    15-20
 	)
-	If (not gdipTooltip) {
-		GoSub, InitGDITooltip	
-	}	
+	
+	If (not IsObject(gdipTooltip.window)) {
+		GoSub, InitGDITooltip
+	}
+	
 	ShowToolTip(_testString)
 	; reset options
 	Opts.UseGDI := _tempGDIState
@@ -10120,7 +10138,7 @@ SettingsUI_ChkUseGDI:
 	; GDI+
 	GuiControlGet, IsChecked,, UseGDI
 	If (Not IsChecked)
-	{		
+	{
 		GuiControl, Disable, GDIWindowColor
 		GuiControl, Disable, GDIWindowOpacity
 		GuiControl, Disable, GDIBorderColor
@@ -10138,10 +10156,25 @@ SettingsUI_ChkUseGDI:
 		GuiControl, Disable, GDIConditionalColors
 	}
 	Else
-	{
-		If (not gdipTooltip) {
+	{	
+		If (not IsObject(gdipTooltip.window)) {
+			_tempUseGDI := Opts.UseGDI
+			Opts.UseGDI := 1
 			GoSub, InitGDITooltip
-		}
+			Opts.UseGDI := _tempUseGDI		
+
+			;update color and validate values and set rendering fix after initialising GDI
+			gdipTooltip.SetRenderingFix(Opts.GDIRenderingFix)
+			
+			GuiControl,, GDIWindowColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIWindowColor, Opts.GDIWindowColorDefault)
+			GuiControl,, GDIWindowOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIWindowOpacity, Opts.GDIWindowOpacityDefault, "10", "10")
+			GuiControl,, GDIBorderColor	, % gdipTooltip.ValidateRGBColor(Opts.GDIBorderColor, Opts.GDIBorderColorDefault)
+			GuiControl,, GDIBorderOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDIBorderOpacity, Opts.GDIBorderOpacityDefault, "10", "10")
+			GuiControl,, GDITextColor	, % gdipTooltip.ValidateRGBColor(Opts.GDITextColor, Opts.GDITextColorDefault)
+			GuiControl,, GDITextOpacity	, % gdipTooltip.ValidateOpacity(Opts.GDITextOpacity, Opts.GDITextOpacityDefault, "10", "10")
+			gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, 10, 16)
+		}	
+		
 		GuiControl, Enable, GDIWindowColor
 		GuiControl, Enable, GDIWindowOpacity
 		GuiControl, Enable, GDIBorderColor
