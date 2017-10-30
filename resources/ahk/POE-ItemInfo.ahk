@@ -2757,14 +2757,15 @@ ParseMapAffixes(ItemDataAffixes)
 		; Pure life:  (20-29)/(30-39)/(40-49)% more Monster Life
 		; Hybrid mod: (15-19)/(20-24)/(25-30)% more Monster Life, Monsters cannot be Stunned
 
-		If (RegExMatch(A_LoopField, "(\d+)% more Monster Life", RegExMonsterLife))
+		If (RegExMatch(A_LoopField, "(\d+)% more Monster Life", match))
 		{
+			RegExMonsterLife := match1
 			MapModWarnings .= MapModWarn.MonstMoreLife ? "`nMore Life" : ""
 
 			RegExMatch(ItemData.FullText, "Map Tier: (\d+)", RegExMapTier)
 
 			; only hybrid mod
-			If ((RegExMapTier1 >= 11 and RegExMonsterLife1 <= 30) or (RegExMapTier1 >= 6 and RegExMonsterLife1 <= 24) or RegExMonsterLife <= 19)
+			If ((RegExMapTier1 >= 11 and RegExMonsterLife <= 30) or (RegExMapTier1 >= 6 and RegExMonsterLife <= 24) or RegExMonsterLife <= 19)
 			{
 				If (Not Index_MonstStunLife)
 				{
@@ -2782,7 +2783,7 @@ ParseMapAffixes(ItemDataAffixes)
 			}
 
 			; pure life mod
-			Else If ((RegExMapTier1 >= 11 and RegExMonsterLife1 <= 49) or (RegExMapTier1 >= 6 and RegExMonsterLife1 <= 39) or RegExMonsterLife <= 29)
+			Else If ((RegExMapTier1 >= 11 and RegExMonsterLife <= 49) or (RegExMapTier1 >= 6 and RegExMonsterLife <= 39) or RegExMonsterLife <= 29)
 			{
 				MapAffixCount += 1
 				AffixTotals.NumPrefixes += 1
