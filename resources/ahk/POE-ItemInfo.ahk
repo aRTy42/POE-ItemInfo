@@ -3779,7 +3779,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		HasIncrDefencesCraftType := ""
 		HasStunBlockRecovery	:= 0
 		HasChanceToBlockStrShield := 0
-		; pure str shields can have a hybrid prefix "#% increased Armour / +#% Chance to Block"
+		; pure str shields ("tower shields") can have a hybrid prefix "#% increased Armour / +#% Chance to Block"
 		; This means those fuckers can have 5 mods that combine:
 		; Prefix:
 		;   #% increased Armour
@@ -5278,7 +5278,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Buy:Vagan 4", ""), A_Index)
 			Continue
 		}
-
+		
 		
 		; Meta Craft Mods
 		
@@ -5355,7 +5355,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			FilePrefix := "data\IncrRarity_Prefix_AmuletRing.txt"
 			FileSuffix := "data\IncrRarity_Suffix_AmuletRingHelmet.txt"
-
+			
 			If (HasIncrRarityCraft)
 			{
 				FileSuffix := "data\IncrRarity_Suffix_Craft.txt"
@@ -5385,7 +5385,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			FilePrefix := "data\IncrRarity_Prefix_Helmet.txt"
 			FileSuffix := "data\IncrRarity_Suffix_AmuletRingHelmet.txt"
-
+			
 			LineNum := HasIncrRarity
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value
@@ -5397,7 +5397,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			FilePrefix := "data\IncrRarity_Prefix_GlovesBoots.txt"
 			FileSuffix := "data\IncrRarity_Suffix_GlovesBoots.txt"
-
+			
 			LineNum := HasIncrRarity
 			LineTxt := Itemdata.AffixTextLines[LineNum].Text
 			Value   := Itemdata.AffixTextLines[LineNum].Value

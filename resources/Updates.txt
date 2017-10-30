@@ -1,6 +1,18 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy (GitHub/PoE Account: aRTy42, Reddit: -aRTy-)
 
+3.0.06-beta
+================================
+from aRTy, Eruyome
+
+* Uncertain mods in the affix overview no longer cause multiple lines with identical entries. This happened when a hybrid mod brought multiple variants to one part/line, but the other part/line was unambiguous.
+* Flat +Def on non-armour pieces (like belts) is now handled correctly.
+* Fixed an issue that could cause long .ini file write time.
+* Fixed a bug about mismatching data of similarly named uniques.
+* Fixed the double range display for unique items. The format "(a-b) to (c-d)" was displayed as "a-c|b-d" instead of "a-b|c-d".
+* Fixed the MapModCount for tier 1-5 maps with the hybrid mod "Monster Life / Stun Immune".
+* Fixed a bug with GDI+ causing FPS drops even if it was disabled. Having it enabled might still cause issues for you. (by Eruyome)
+
 3.0.05-beta
 ================================
 from Eruyome, aRTy
