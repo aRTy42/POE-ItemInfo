@@ -6910,7 +6910,8 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 	result		:= []
 
 	CurrencyDataRates := Globals.Get("CurrencyDataRates")
-	For league, ninjaRates in CurrencyDataRates {
+	For idx, league in ["tmpstandard", "tmphardcore", "Standard", "Hardcore"] {
+		ninjaRates	:= CurrencyDataRates[league]
 		ChaosRatio	:= ninjaRates[ItemName].OwnQuantity ":" ninjaRates[ItemName].ChaosQuantity
 		ChaosMult		:= ninjaRates[ItemName].ChaosQuantity / ninjaRates[ItemName].OwnQuantity
 		ValueInChaos	:= (ChaosMult * StackSize)
