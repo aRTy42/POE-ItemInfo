@@ -87,10 +87,10 @@ argumentOverwrittenFiles = %4%
 If (!StrLen(argumentProjectName) > 0) {
 	argumentProjectName		:= "PoE-TradeMacro"
 	FilesToCopyToUserFolder	:= A_ScriptDir . "\resources\default_UserFiles"
-	argumentOverwrittenFiles	:= PoEScripts_HandleUserSettings(projectName, A_MyDocuments, projectName, FilesToCopyToUserFolder, A_ScriptDir)
+	argumentOverwrittenFiles	:= PoEScripts_HandleUserSettings(argumentProjectName, A_MyDocuments, argumentProjectName, FilesToCopyToUserFolder, A_ScriptDir)
 	argumentIsDevVersion	:= PoEScripts_isDevelopmentVersion(A_ScriptDir)
-	argumentUserDirectory	:= A_MyDocuments . "\" . projectName . isDevelopmentVersion
-
+	argumentUserDirectory	:= A_MyDocuments . "\" . argumentProjectName . argumentIsDevVersion
+	
 	If (!PoEScripts_CreateTempFolder(A_ScriptDir, "PoE-TradeMacro")) {
 		ExitApp
 	}

@@ -30,6 +30,10 @@ If (InStr(arguments, "-nosplash", 0)) {
 	StartSplashScreen()
 }
 
+If (InStr(arguments, "-mergeonly", 0)) {
+	onlyMergeFiles := 1
+}
+
 /*
 	Set ProjectName to create user settings folder in A_MyDocuments
 */
@@ -88,7 +92,9 @@ FileAppend, %trade%		, %scriptDir%\_TradeMacroMain.ahk
 ; set script hidden
 FileSetAttrib, +H, %scriptDir%\_TradeMacroMain.ahk
 ; pass some parameters to TradeMacroInit
-Run "%A_AhkPath%" "%scriptDir%\_TradeMacroMain.ahk" "%projectName%" "%userDirectory%" "%isDevelopmentVersion%" "%overwrittenFiles%" "isMergedScript" "%skipSplash%"
+If (not onlyMergeFiles) {
+	Run "%A_AhkPath%" "%scriptDir%\_TradeMacroMain.ahk" "%projectName%" "%userDirectory%" "%isDevelopmentVersion%" "%overwrittenFiles%" "isMergedScript" "%skipSplash%"
+}
 
 ExitApp
 
