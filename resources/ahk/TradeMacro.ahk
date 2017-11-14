@@ -2430,15 +2430,17 @@ TradeFunc_FindInModGroup(modgroup, needle) {
 		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)|\(leaguestone\)", ""))
 		s  := RegExReplace(s, "# ?to ? #", "#")
 		s  := TradeUtils.CleanUp(s)
-		ss := TradeUtils.CleanUp(ss)
-		ss := Trim(needle.name)
+		ss := TradeUtils.CleanUp(needle.name)
+		st := TradeUtils.CleanUp(needle.name_orig)
+		
 		; matches "1 to" in for example "adds 1 to (20-40) lightning damage"
 		ss := RegExReplace(ss, "\d+ ?to ?#", "#")
-		ss := RegExReplace(ss, "Monsters' skills Chain # additional times", "Monsters' skills Chain 2 additional times")
+		;ss := RegExReplace(ss, "Monsters' skills Chain # additional times", "Monsters' skills Chain 2 additional times")
+		;ss := RegExReplace(ss, "Has # socket", "Has 1 socket")
 		editedNeedle := ss
-
+		
 		; push matches to array to find multiple matches (case sensitive variations)
-		If (s = ss) {
+		If (s = ss or s = st) {
 			temp := {}
 			temp.s := s
 			temp.mod := mod
@@ -2453,7 +2455,7 @@ TradeFunc_FindInModGroup(modgroup, needle) {
 		Else {
 			Loop % matches.Length()
 			{
-				; use == instead of = to search case sensitive, there is at least on case where this matters (Life regenerated per second)
+				; use == instead of = to search case sensitive, there is at least one case where this matters (Life regenerated per second)
 				If (matches[A_Index].s == editedNeedle) {
 					Return matches[A_Index].mod
 				}
@@ -2615,16 +2617,16 @@ TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 	}
 }
 
-TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
+TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod, ByRef keepOrigModName = false) {
 	If (StrLen(poeTradeMod) < 1) {
 		ErrorMsg := "Mod not found on poe.trade!"
 		Return ErrorMsg
 	}
+	
 	CurrValue	:= ""
 	CurrValues:= []
 	CurrValue := GetActualValue(itemModifiers.name_orig)
 	If (CurrValue ~= "\d+") {
-
 		; handle value range
 		RegExMatch(CurrValue, "(\d+) ?(-|to) ?(\d+)", values)
 
@@ -2644,9 +2646,12 @@ TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 		; replace multi spaces with a single one
 		ModStr := RegExReplace(ModStr, " +", " ")
 		poeTradeMod := RegExReplace(poeTradeMod, "# ?to ? #", "#")
-
+		
 		If (RegExMatch(poeTradeMod, "i).*" ModStr "$")) {
 			Return CurrValues
+		} Else If (RegExMatch(poeTradeMod, "i).*" itemModifiers.name_orig "$")) {
+			keepOrigModName := true
+			Return 
 		}
 	}
 }
@@ -3001,7 +3006,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		Gui, SelectModsGui:Add, Text, x0 w700 yp+18 cc9cacd, %line%
 	}
 
-	;add mods
+	; add mods
 	l := 1
 	p := 1
 	TradeAdvancedNormalModCount := 0
@@ -3015,6 +3020,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		xPosMin := modGroupBox + 25
 
 		; matches "1 to #" in for example "adds 1 to # lightning damage"
+		; may be replaced later with original name
 		If (RegExMatch(advItem.mods[A_Index].name, "i)Adds (\d+(.\d+)?) to #.*Damage", match)) {
 			displayName := RegExReplace(advItem.mods[A_Index].name, "\d+(.\d+)? to #", "#")
 			staticValue := match1
@@ -3046,8 +3052,13 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			modValues := TradeFunc_GetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)
 		}
 		Else {
-			modValues := TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(advItem.mods[A_Index], advItem.mods[A_Index].param)
+			useOriginalModName := false
+			modValues := TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(advItem.mods[A_Index], advItem.mods[A_Index].param, useOriginalModName)
+			If (useOriginalModName) {
+				displayName := advItem.mods[A_Index].name_orig
+			}
 		}
+		
 		If (modValues.Length() > 1) {
 			modValue := (modValues[1] + modValues[2]) / 2
 		}
@@ -3110,7 +3121,6 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		}
 
 		; make sure that the lower vaule is always min (reduced mana cost of minion skills)
-		console.log(switchValue)
 		If (not StrLen(switchValue)) {
 			minLabelFirst	:= minLF
 			maxLabelFirst	:= maxLF
