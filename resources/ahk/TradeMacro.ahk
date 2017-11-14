@@ -1486,6 +1486,7 @@ TradeFunc_ParseCurrencyHtml(html, payload, ParsingError = "") {
 
 TradeFunc_ParseAlternativeCurrencySearch(name, payload) {
 	Global Item, ItemData, TradeOpts
+	
 	LeagueName	:= RegexReplace(TradeGlobals.Get("LeagueName"), "\s")
 	shortName		:= Trim(RegExReplace(name,  "Orb\s?|\s?of| Cartographer's", ""))
 	shortTitleName	:= Trim(RegExReplace(Item.Name,  " Cartographer's", ""))
@@ -1513,7 +1514,7 @@ TradeFunc_ParseAlternativeCurrencySearch(name, payload) {
 
 	currencyData :=
 	For key, val in CurrencyHistoryData {
-		If (val.currencyBaseName = name) {
+		If (val.currencyTypeName = name) {
 			currencyData := val
 			break
 		}
