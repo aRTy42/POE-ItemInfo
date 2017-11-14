@@ -62,6 +62,7 @@ global SavedTradeSettings := false
 ; }
 
 TradeOpts_New := class_EasyIni(A_ScriptDir "\resources\default_UserFiles\config_trade.ini")
+MakeOldTradeOptsAndVars(TradeOpts_New)
 
 
 ; Check If Temp-Leagues are active and set defaultLeague accordingly
@@ -113,9 +114,10 @@ global overwrittenUserFiles	:= argumentOverwrittenFiles
 ; 	}
 ; 	CopyDefaultTradeConfig()
 ; }
-ReadTradeConfig()
-Sleep, 100
+
 TradeFunc_CheckIfCloudFlareBypassNeeded()
+Sleep, 200
+ReadTradeConfig()
 
 ; set this variable to skip the update check in "PoE-ItemInfo.ahk"
 SkipItemInfoUpdateCall := 1
