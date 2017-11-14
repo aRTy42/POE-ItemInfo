@@ -12,7 +12,8 @@ TradeFunc_PriceCheckHotkey(priceCheckTest = false, itemData = "") {
 	Global TradeOpts, Item
 
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-
+	TradeFunc_PreventClipboardGarbageAfterInit()
+	
 	; simulate clipboard change to test item pricing
 	If (priceCheckTest) {
 		Clipboard :=
@@ -36,7 +37,8 @@ TradeFunc_AdvancedPriceCheckHotkey(priceCheckTest = false, itemData = "") {
 	Global TradeOpts, Item
 
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-
+	TradeFunc_PreventClipboardGarbageAfterInit()
+	
 	; simulate clipboard change to test item pricing
 	If (priceCheckTest) {
 		Clipboard :=
@@ -60,6 +62,7 @@ TradeFunc_OpenSearchOnPoeTradeHotkey(priceCheckTest = false, itemData = "") {
 	Global TradeOpts, Item
 
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+	TradeFunc_PreventClipboardGarbageAfterInit()
 
 	; simulate clipboard change to test item pricing
 	If (priceCheckTest) {
@@ -82,6 +85,8 @@ ShowItemAge:
 			return
 		}
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		TradeFunc_PreventClipboardGarbageAfterInit()
+		
 		Send ^{sc02E}
 		Sleep 250
 		TradeFunc_Main(false, false, false, true)
@@ -4061,6 +4066,15 @@ TradeFunc_ChangeLeague() {
 
 	TempChangingLeagueInProgress := True
 	GoSub, ReadPoeNinjaCurrencyData
+}
+
+TradeFunc_PreventClipboardGarbageAfterInit() {
+	Global
+	
+	If (not TradeGlobals.Get("FirstSearchTriggered")) {
+		Clipboard := ""
+	}
+	TradeGlobals.Set("FirstSearchTriggered", true)
 }
 
 ResetWinHttpProxy:

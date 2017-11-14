@@ -32,9 +32,6 @@ If (not argumentSkipSplash) {
 	TradeFunc_StartSplashScreen()
 }
 
-; empty clipboard on start to fix first search searching random stuff
-Clipboard := ""
-
 class TradeGlobals {
 	Set(name, value) {
 		TradeGlobals[name] := value
@@ -140,6 +137,7 @@ TradeGlobals.Set("CraftingData", TradeFunc_ReadCraftingBases())
 TradeGlobals.Set("EnchantmentData", TradeFunc_ReadEnchantments())
 TradeGlobals.Set("CorruptedModsData", TradeFunc_ReadCorruptions())
 TradeGlobals.Set("CurrencyIDs", object := {})
+TradeGlobals.Set("FirstSearchTriggered", false)
 
 ; get currency ids from currency.poe.trade
 TradeFunc_DoCurrencyRequest("", false, true)
