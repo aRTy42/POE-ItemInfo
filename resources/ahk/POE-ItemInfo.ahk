@@ -46,7 +46,7 @@ Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
 Globals.Set("SettingsUIWidth", 545)
-Globals.Set("SettingsUIHeight", 600)
+Globals.Set("SettingsUIHeight", 615)
 Globals.Set("AboutWindowHeight", 340)
 Globals.Set("AboutWindowWidth", 435)
 Globals.Set("SettingsUITitle", "PoE ItemInfo Settings")
@@ -54,6 +54,7 @@ Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
 Globals.Set("ScriptList", [A_ScriptDir "\POE-ItemInfo"])
 Globals.Set("UpdateNoteFileList", [[A_ScriptDir "\resources\updates.txt","ItemInfo"]])
+Globals.Set("SettingsScriptList", ["ItemInfo", "Additional Macros"])
 argumentProjectName		= %1%
 argumentUserDirectory	= %2%
 argumentIsDevVersion	= %3%
@@ -8904,15 +8905,26 @@ AddToolTip(con, text, Modify=0){
 CreateSettingsUI()
 {
 	Global
+	
+	; ItemInfo is not included in other scripts
+	If (not SkipItemInfoUpdateCall) {		
+		Scripts := Globals.Get("SettingsScriptList")
+		TabNames := ""
+		Loop, % Scripts.Length() {
+			name := Scripts[A_Index]
+			TabNames .= name "|"
+		}
 
+		StringTrimRight, TabNames, TabNames, 1
+		Gui, Add, Tab3, Choose1 h610 x0, %TabNames%	
+	}
+	
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 	
-	ExtraHeightOfTabsWithTradeMacro := SkipItemInfoUpdateCall ? 25 : 0
 	generalHeight := SkipItemInfoUpdateCall ? "150" : "240"		; "180" : "270" with ParseItemHotKey
-	YShiftWhenIncludedInTradeMacro := SkipItemInfoUpdateCall ? -25 : 0
 	
 	; General
-	GuiAddGroupBox("General", "x7 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h" generalHeight " Section")
+	GuiAddGroupBox("General", "x7 ym" 30 " w260 h" generalHeight " Section")
 	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "When checked the script only activates while you are ingame`n(technically while the game window is the frontmost)")
 	
@@ -8941,7 +8953,8 @@ CreateSettingsUI()
 	}	
 	
 	; GDI+
-	GuiAddGroupBox("GDI+", "x7 ym+" 255+YShiftWhenIncludedInTradeMacro " w260 h320 Section")
+	GDIShift := SkipItemInfoUpdateCall ? 190 : 280
+	GuiAddGroupBox("GDI+", "x7 ym+" GDIShift " w260 h320 Section")
 	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w90", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
 	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")
 	GuiAddCheckBox("Rendering Fix", "xs10 yp+30 w90", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
@@ -8969,7 +8982,7 @@ CreateSettingsUI()
 	GuiAddButton("Preview", "xs170 ys290 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
 
 	; Tooltip
-	GuiAddGroupBox("Tooltip", "x277 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h140 Section")
+	GuiAddGroupBox("Tooltip", "x277 ym" 30 " w260 h140 Section")
 
 	GuiAddEdit(Opts.MouseMoveThreshold, "xs180 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
 	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w150 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
@@ -8988,7 +9001,7 @@ CreateSettingsUI()
 	
 	
 	; Display	
-	GuiAddGroupBox("Display", "x277 ym+" 205+YShiftWhenIncludedInTradeMacro " w260 h300 Section")
+	GuiAddGroupBox("Display", "x277 ym+" 180 " w260 h295 Section")
 	
 	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w210 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
 	AddToolTip(ShowHeaderForAffixOverviewH, "Include a header above the affix overview:`n   TierRange ilvl   Total ilvl  Tier")
@@ -9022,19 +9035,27 @@ CreateSettingsUI()
 	GuiAddText("Font Size:", "xs10 yp+3 w130 h20 0x0100")
 
 	; Buttons
+	ButtonsShiftX := SkipItemInfoUpdateCall ? "x557 " : "xs10 yp+35 "
+	ButtonsShiftY := SkipItemInfoUpdateCall ? "y40 " : "yp+35 "
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX ButtonsShiftY "w240 h30 0x0100")
 	
-	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", "xs10 yp+35 w240 h30 0x0100")
-	
-	GuiAddButton("Defaults", "xs10 ys340 w75 h23", "SettingsUI_BtnDefaults")
-	GuiAddButton("OK", "Default xs91 ys340 w75 h23", "SettingsUI_BtnOK")
-	GuiAddButton("Cancel", "xs172 ys340 w75 h23", "SettingsUI_BtnCancel")	
+	GuiAddButton("Defaults", "xp+0 y+8 w75 h23", "SettingsUI_BtnDefaults")
+	GuiAddButton("OK", "Default x+5 yp+0 w75 h23", "SettingsUI_BtnOK")
+	GuiAddButton("Cancel", "x+5 yp+0 w75 h23", "SettingsUI_BtnCancel")	
 	
 	If (SkipItemInfoUpdateCall) {
-		GuiAddText("Use these buttons to change ItemInfo settings (TradeMacro has it's own buttons).", "x287 y+10 w250 h50 cRed")
+		GuiAddText("Use these buttons to change ItemInfo settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+10 w250 h50 cRed")
 		GuiAddText("", "x10 y10 w250 h10")
+	}	
+	
+	; Begin Additional Macros Tab
+	If (SkipItemInfoUpdateCall) {
+		Gui, Tab, 3 
+	} Else {
+		Gui, Tab, 2
 	}
 	
-	; close tabs in case some other script added some
+	; close tabs
 	Gui, Tab
 }
 
@@ -9160,7 +9181,7 @@ ShowSettingsUI()
 	SettingsUIWidth := Globals.Get("SettingsUIWidth", 545)
 	; Adjust user option window height depending on whether ItemInfo is used as a Standalone or included in the TradeMacro.
 	; The TradeMacro needs much more space for all the options.
-	SettingsUIHeight := Globals.Get("SettingsUIHeight", 600)
+	SettingsUIHeight := Globals.Get("SettingsUIHeight", 615)
 	SettingsUITitle := Globals.Get("SettingsUITitle", "PoE ItemInfo Settings")
 	Gui, Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
 }

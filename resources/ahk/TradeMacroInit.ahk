@@ -76,7 +76,7 @@ globalUpdateInfo.skipSelection 	:= 0
 globalUpdateInfo.skipBackup 		:= 0
 globalUpdateInfo.skipUpdateCheck 	:= 0
 
-TradeGlobals.Set("SettingsScriptList", ["TradeMacro", "ItemInfo"])
+TradeGlobals.Set("SettingsScriptList", ["TradeMacro", "ItemInfo", "Additional Macros"])
 TradeGlobals.Set("SettingsUITitle", "PoE (Trade) Item Info Settings")
 argumentProjectName		= %1%
 argumentUserDirectory	= %2%
@@ -491,7 +491,7 @@ CreateTradeSettingsUI()
 	}
 
 	StringTrimRight, TabNames, TabNames, 1
-	Gui, Add, Tab3, Choose1 h790 x0, %TabNames%
+	Gui, Add, Tab3, Choose1 h660 x0, %TabNames%
 
     ; General
 
