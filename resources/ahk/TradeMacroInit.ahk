@@ -534,7 +534,7 @@ CreateTradeSettingsUI()
 
     ; Hotkeys
 
-	GuiAddGroupBox("[TradeMacro] Hotkeys", "x7 yp+42 w260 h255")
+	GuiAddGroupBox("[TradeMacro] Hotkeys", "x7 yp+42 w260 h295")
 
 	GuiAddText("Price Check:", "x17 yp+28 w100 h20 0x0100", "LblPriceCheckHotKey", "LblPriceCheckHotKeyH")
 	AddToolTip(LblPriceCheckHotKeyH, "Check item prices.")
@@ -587,30 +587,9 @@ CreateTradeSettingsUI()
 
 	Gui, Add, Link, x17 yp+32 w160 h20 cBlue BackgroundTrans, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
 
-    ; Cookies
-
-	GuiAddGroupBox("[TradeMacro] Manual cookie selection", "x7 yp+33 w260 h160")
-
-	GuiAddCheckbox("Overwrite automatic cookie retrieval.", "x17 yp+20 w200 h30", TradeOpts.UseManualCookies, "UseManualCookies", "UseManualCookiesH")
-	AddToolTip(UseManualCookiesH, "Use your own cookies instead of automatically retrieving`nthem from Internet Explorer.")
-
-	GuiAddText("User-Agent:", "x17 yp+32 w70 h20 0x0100", "LblUserAgent", "LblUserAgentH")
-	AddToolTip(LblUserAgentH, "Your browsers user-agent. See 'How to'.")
-	GuiAddEdit(TradeOpts.UserAgent, "x+10 yp-2 w150 h20", "UserAgent", "UserAgentH")
-
-	GuiAddText("__cfduid:", "x17 yp+30 w70 h20 0x0100", "LblCfdUid", "LblCfdUidH")
-	AddToolTip(LblCfdUidH, "'__cfduid' cookie. See 'How to'.")
-	GuiAddEdit(TradeOpts.CfdUid, "x+10 yp-2 w150 h20", "CfdUid", "CfdUidH")
-
-	GuiAddText("cf_clearance:", "x17 yp+30 w70 h20 0x0100", "LblCfClearance", "LblCfClearanceH")
-	AddToolTip(LblCfClearanceH, "'cf_clearance' cookie. See 'How to'.")
-	GuiAddEdit(TradeOpts.CfClearance, "x+10 yp-2 w150 h20", "CfClearance", "CfClearanceH")
-
-	Gui, Add, Link, x17 yp+28 w160 h20 cBlue BackgroundTrans, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Cookie-retrieval">How to</a>
-
     ; Search
 
-	GuiAddGroupBox("[TradeMacro] Search", "x277 y34 w260 h625")
+	GuiAddGroupBox("[TradeMacro] Search", "x277 y35 w260 h625")
 
 	GuiAddText("League:", "x287 yp+28 w100 h20 0x0100", "LblSearchLeague", "LblSearchLeagueH")
 	AddToolTip(LblSearchLeagueH, "Defaults to ""Standard"" or ""TmpStandard"" If there is a`nTemp-League active at the time of script execution.`n`n""TmpStandard"" and ""TmpHardcore"" are automatically replaced`nwith their permanent counterparts If no Temp-League is active.")
@@ -718,21 +697,41 @@ CreateTradeSettingsUI()
 
 	Gui, Add, Link, x287 yp+43 w230 cBlue BackgroundTrans, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
 
-	GuiAddText("Mouse over settings to see a detailed description.", "x287 y680 w250 h30")
+	; Cookies
 
-	GuiAddCheckbox("Debug Output", "x287 yp+13 w100 h25", TradeOpts.Debug, "Debug", "DebugH")
+	GuiAddGroupBox("[TradeMacro] Manual cookie selection", "x547 y35 w260 h160")
+
+	GuiAddCheckbox("Overwrite automatic cookie retrieval.", "x557 yp+20 w200 h30", TradeOpts.UseManualCookies, "UseManualCookies", "UseManualCookiesH")
+	AddToolTip(UseManualCookiesH, "Use your own cookies instead of automatically retrieving`nthem from Internet Explorer.")
+
+	GuiAddText("User-Agent:", "x557 yp+32 w70 h20 0x0100", "LblUserAgent", "LblUserAgentH")
+	AddToolTip(LblUserAgentH, "Your browsers user-agent. See 'How to'.")
+	GuiAddEdit(TradeOpts.UserAgent, "x+10 yp-2 w150 h20", "UserAgent", "UserAgentH")
+
+	GuiAddText("__cfduid:", "x557 yp+30 w70 h20 0x0100", "LblCfdUid", "LblCfdUidH")
+	AddToolTip(LblCfdUidH, "'__cfduid' cookie. See 'How to'.")
+	GuiAddEdit(TradeOpts.CfdUid, "x+10 yp-2 w150 h20", "CfdUid", "CfdUidH")
+
+	GuiAddText("cf_clearance:", "x557 yp+30 w70 h20 0x0100", "LblCfClearance", "LblCfClearanceH")
+	AddToolTip(LblCfClearanceH, "'cf_clearance' cookie. See 'How to'.")
+	GuiAddEdit(TradeOpts.CfClearance, "x+10 yp-2 w150 h20", "CfClearance", "CfClearanceH")
+
+	Gui, Add, Link, x557 yp+28 w160 h20 cBlue BackgroundTrans, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Cookie-retrieval">How to</a>
+	
+	; Buttons	
+	
+	GuiAddText("Mouse over settings to see a detailed description.", "x557 y214 w250 h30")
+
+	GuiAddCheckbox("Debug Output", "x557 yp+13 w100 h25", TradeOpts.Debug, "Debug", "DebugH")
 	AddToolTip(DebugH, "Don't use this unless you're developing!")
 
-	GuiAddButton("Defaults", "x282 y725 w90 h23", "TradeSettingsUI_BtnDefaults")
-	GuiAddButton("Ok", "Default x+5 y725 w75 h23", "TradeSettingsUI_BtnOK")
-	GuiAddButton("Cancel", "x+5 y725 w80 h23", "TradeSettingsUI_BtnCancel")
+	GuiAddButton("Defaults", "x552 y+10 w90 h23", "TradeSettingsUI_BtnDefaults")
+	GuiAddButton("Ok", "Default x+5 yp+0 w75 h23", "TradeSettingsUI_BtnOK")
+	GuiAddButton("Cancel", "x+5 yp+0 w80 h23", "TradeSettingsUI_BtnCancel")
 
-	GuiAddText("Use these buttons to change TradeMacro settings (ItemInfo has it's own buttons).", "x287 y+10 w250 h50 cRed")
+	GuiAddText("Use these buttons to change TradeMacro settings (ItemInfo has it's own buttons).", "x557 y+10 w250 h50 cRed")
 
 	Gui, Tab, 2
-
-	GuiAddText("Use these buttons to change ItemInfo settings (TradeMacro has it's own buttons).", "x287 yp+0 w250 h50 cRed")
-	GuiAddText("", "x10 y10 w250 h10")
 }
 
 TradeFunc_GetDelimitedLeagueList() {

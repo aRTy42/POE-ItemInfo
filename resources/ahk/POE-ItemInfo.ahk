@@ -8988,7 +8988,7 @@ CreateSettingsUI()
 	
 	
 	; Display	
-	GuiAddGroupBox("Display", "x277 ym+" 205+YShiftWhenIncludedInTradeMacro " w260 h370 Section")
+	GuiAddGroupBox("Display", "x277 ym+" 205+YShiftWhenIncludedInTradeMacro " w260 h300 Section")
 	
 	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w210 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
 	AddToolTip(ShowHeaderForAffixOverviewH, "Include a header above the affix overview:`n   TierRange ilvl   Total ilvl  Tier")
@@ -9020,13 +9020,20 @@ CreateSettingsUI()
 	
 	GuiAddEdit(Opts.FontSize, "xs160 y+6 w40 h20 Number", "FontSize")
 	GuiAddText("Font Size:", "xs10 yp+3 w130 h20 0x0100")
+
+	; Buttons
 	
 	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", "xs10 yp+35 w240 h30 0x0100")
 	
 	GuiAddButton("Defaults", "xs10 ys340 w75 h23", "SettingsUI_BtnDefaults")
 	GuiAddButton("OK", "Default xs91 ys340 w75 h23", "SettingsUI_BtnOK")
-	GuiAddButton("Cancel", "xs172 ys340 w75 h23", "SettingsUI_BtnCancel")
-
+	GuiAddButton("Cancel", "xs172 ys340 w75 h23", "SettingsUI_BtnCancel")	
+	
+	If (SkipItemInfoUpdateCall) {
+		GuiAddText("Use these buttons to change ItemInfo settings (TradeMacro has it's own buttons).", "x287 y+10 w250 h50 cRed")
+		GuiAddText("", "x10 y10 w250 h10")
+	}
+	
 	; close tabs in case some other script added some
 	Gui, Tab
 }

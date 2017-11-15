@@ -3658,7 +3658,7 @@ OverwriteSettingsWidthTimer:
 	o := Globals.Get("SettingsUIWidth")
 
 	If (o) {
-		Globals.Set("SettingsUIWidth", 543)
+		Globals.Set("SettingsUIWidth", 813)
 		SetTimer, OverwriteSettingsWidthTimer, Off
 	}
 Return
@@ -3667,7 +3667,7 @@ OverwriteSettingsHeightTimer:
 	o := Globals.Get("SettingsUIHeight")
 
 	If (o) {
-		Globals.Set("SettingsUIHeight", 795)
+		Globals.Set("SettingsUIHeight", 665)
 		SetTimer, OverwriteSettingsHeightTimer, Off
 	}
 Return
@@ -3876,7 +3876,7 @@ OpenPageInInternetExplorer:
 Return
 
 ReloadScriptAtCookieError:
-	scriptName :="Run_TradeMacro.ahk"
+	scriptName := "Run_TradeMacro.ahk"
 	Run, "%A_AhkPath%" "%A_ScriptDir%\%scriptName%"
 Return
 
