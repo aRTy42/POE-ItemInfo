@@ -39,7 +39,7 @@ AM_AssignHotkeys:
 	
 	AM_ReadConfig()
 	Sleep, 200
-
+	
 	global AM_Config := class_EasyIni(argumentUserDirectory "\AdditionalMacros.ini")
 	global AM_CharacterName		:= AM_Config["AM_KickYourself"].CharacterName
 	global AM_ChannelName		:= AM_Config["AM_JoinChannel"].ChannelName
@@ -51,7 +51,7 @@ AM_AssignHotkeys:
 
 	; This option can be set in the settings menu (ItemInfo tab) to completely disable assigning
 	; AdditionalMacros hotkeys.
-	If (AM_Opts.EnableAdditionalMacros) {
+	If (AM_Opts.General_Enable) {
 		for labelIndex, labelName in StrSplit(AM_Config.GetSections("|", "C"), "|") {
 			if (labelName != "AM_General") {
 				for labelKeyIndex, labelKeyName in StrSplit(AM_Config[labelName].Hotkeys, ", ") {
