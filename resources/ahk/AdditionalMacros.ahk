@@ -32,6 +32,14 @@
 ;###########-------------------------------------------------------------------###########
 
 AM_AssignHotkeys:
+	class AM_Options extends UserOptions {
+		
+	}	
+	global AM_Opts := new AM_Options()
+	
+	AM_ReadConfig()
+	Sleep, 200
+
 	global AM_Config := class_EasyIni(argumentUserDirectory "\AdditionalMacros.ini")
 	global AM_CharacterName		:= AM_Config["AM_KickYourself"].CharacterName
 	global AM_ChannelName		:= AM_Config["AM_JoinChannel"].ChannelName
@@ -39,13 +47,13 @@ AM_AssignHotkeys:
 	global AM_HighlightArg2		:= AM_Config["AM_HighlightItems"].Arg2
 	global AM_HighlightAltArg1	:= AM_Config["AM_HighlightItemsAlt"].Arg1
 	global AM_HighlightAltArg2	:= AM_Config["AM_HighlightItemsAlt"].Arg2
-	global AM_KeyToSCState		:= (TradeOpts.KeyToSCState != "") ? TradeOpts.KeyToSCState : AM_Config["General"].KeyToSCState
+	global AM_KeyToSCState		:= (TradeAM_Opts.KeyToSCState != "") ? TradeAM_Opts.KeyToSCState : AM_Config["AM_General"].General_KeyToSCState
 
 	; This option can be set in the settings menu (ItemInfo tab) to completely disable assigning
 	; AdditionalMacros hotkeys.
-	If (Opts.EnableAdditionalMacros) {
+	If (AM_Opts.EnableAdditionalMacros) {
 		for labelIndex, labelName in StrSplit(AM_Config.GetSections("|", "C"), "|") {
-			if (labelName != "General") {
+			if (labelName != "AM_General") {
 				for labelKeyIndex, labelKeyName in StrSplit(AM_Config[labelName].Hotkeys, ", ") {
 					if (labelKeyName and labelKeyName != A_Space) {
 						Hotkey, % KeyNameToKeyCode(labelKeyName, AM_KeyToSCState), %labelName%_HKey, % AM_Config[labelName].State
@@ -162,4 +170,48 @@ setAfkMessage(){
 			Send {Shift Up}
 		}
 	}
+}
+
+AM_ReadConfig(ConfigDir = "", ConfigFile = "AdditionalMacros.ini")
+{
+	Global AM_Opts, AM_ConfigObj
+	
+	If (StrLen(ConfigDir) < 1) {
+		ConfigDir := userDirectory
+	}
+	ConfigPath := StrLen(ConfigDir) > 0 ? ConfigDir . "\" . ConfigFile : ConfigFile
+	
+	AM_ConfigObj := class_EasyIni(ConfigPath)
+	
+	IfExist, %ConfigPath%
+	{		
+		For section, keys in AM_ConfigObj {
+			For key, val in keys {
+				sectionName := RegExReplace(section, "i)^(AM_)?")
+				AM_Opts[sectionName "_" key] := IniRead(section, key, AM_Opts[key], AM_ConfigObj)
+			}
+		}
+	}
+}
+
+AM_WriteConfig(ConfigDir = "", ConfigFile = "AdditionalMacros.ini")
+{
+	Global AM_Opts, AM_ConfigObj
+	
+	If (StrLen(ConfigDir) < 1) {
+		ConfigDir := userDirectory
+	}
+	ConfigPath := StrLen(ConfigDir) > 0 ? ConfigDir . "\" . ConfigFile : ConfigFile
+	
+	AM_ConfigObj := class_EasyIni(ConfigPath)
+	
+	AM_Opts.ScanUI()
+	
+	For key, val in AM_Opts {
+		section := "AM_" RegExReplace(key, "i)(.*)_.*", "$1")
+		keyName := RegExReplace(key, "i).*_(.*)", "$1")
+		IniWrite(AM_Opts[key], section, keyName, AM_ConfigObj)	
+	}	
+	
+	AM_ConfigObj.Save(ConfigPath)
 }

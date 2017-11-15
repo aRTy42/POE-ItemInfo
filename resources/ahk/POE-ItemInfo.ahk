@@ -67,7 +67,17 @@ global overwrittenUserFiles	:= overwrittenUserFiles ? overwrittenUserFiles : arg
 
 global SuspendPOEItemScript = 0
 
-class UserOptions {
+class UserOptions {	
+	ScanUI()
+	{
+		For key, val in this {
+			_get := GuiGet(key, "", Error)
+			this[key] := not Error ? _get : this[key]
+		}
+	}
+}
+
+class ItemInfoOptions extends UserOptions {
 	; Hotkey to invoke ItemInfo. Default: Ctrl+C.
 	ParseItemHotKey := "^c"
 	
@@ -157,16 +167,8 @@ class UserOptions {
 	GDITextOpacity			:= 100
 	GDIRenderingFix		:= 1
 	GDIConditionalColors	:= 0
-	
-	ScanUI()
-	{
-		For key, val in this {
-			_get := GuiGet(key, "", Error)
-			this[key] := not Error ? _get : this[key]
-		}
-	}
 }
-Opts := new UserOptions()
+Opts := new ItemInfoOptions()
 
 class Fonts {
 
@@ -9243,28 +9245,24 @@ ShowChangedUserFiles()
 	ControlFocus, Close, Changed User Files
 }
 
-IniRead(SectionName, KeyName, DefaultVal)
-{
-	Global ItemInfoConfigObj
-	
-	If(ItemInfoConfigObj[SectionName].HasKey(KeyName)){
+IniRead(SectionName, KeyName, DefaultVal, ConfigObj)
+{	
+	If (ConfigObj[SectionName].HasKey(KeyName)) {
 		; return value and replace potential leading or trailing 
-		return RegExReplace(ItemInfoConfigObj[SectionName, KeyName], "^""'|'""$")
+		return RegExReplace(ConfigObj[SectionName, KeyName], "^""'|'""$")
 	}
-	Else{
+	Else {
 		return DefaultVal
 	}
 }
 
-IniWrite(Val, SectionName, KeyName)
-{
-	Global ItemInfoConfigObj
-	
-	If(RegExMatch(Val, "^\s|\s$")){
+IniWrite(Val, SectionName, KeyName, ByRef ConfigObj)
+{	
+	If (RegExMatch(Val, "^\s|\s$")) {
 		Val := """'" Val "'"""
 	}
 	
-	ItemInfoConfigObj.SetKeyVal(SectionName, KeyName, Val)
+	ConfigObj.SetKeyVal(SectionName, KeyName, Val)
 }
 
 ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
@@ -9282,49 +9280,49 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 	{
 		; General
 		;Opts.ParseItemHotKey := IniRead("General", "ParseItemHotKey", Opts.ParseItemHotKey)
-		Opts.OnlyActiveIfPOEIsFront	:= IniRead("General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
-		Opts.PutResultsOnClipboard	:= IniRead("General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
-		Opts.EnableAdditionalMacros	:= IniRead("General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
-		Opts.EnableMapModWarnings	:= IniRead("General", "EnableMapModWarnings", Opts.EnableMapModWarnings)
-		Opts.ShowUpdateNotifications	:= IniRead("General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
-		Opts.UpdateSkipSelection		:= IniRead("General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
-		Opts.UpdateSkipBackup		:= IniRead("General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
+		Opts.OnlyActiveIfPOEIsFront	:= IniRead("General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront, ItemInfoConfigObj)
+		Opts.PutResultsOnClipboard	:= IniRead("General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard, ItemInfoConfigObj)
+		Opts.EnableAdditionalMacros	:= IniRead("General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros, ItemInfoConfigObj)
+		Opts.EnableMapModWarnings	:= IniRead("General", "EnableMapModWarnings", Opts.EnableMapModWarnings, ItemInfoConfigObj)
+		Opts.ShowUpdateNotifications	:= IniRead("General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications, ItemInfoConfigObj)
+		Opts.UpdateSkipSelection		:= IniRead("General", "UpdateSkipSelection", Opts.UpdateSkipSelection, ItemInfoConfigObj)
+		Opts.UpdateSkipBackup		:= IniRead("General", "UpdateSkipBackup", Opts.UpdateSkipBackup, ItemInfoConfigObj)
 		
 		; Tooltip
-		Opts.MouseMoveThreshold	:= IniRead("Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold)
-		Opts.UseTooltipTimeout	:= IniRead("Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout)
-		Opts.ToolTipTimeoutSeconds	:= IniRead("Tooltip", "ToolTipTimeoutSeconds", Opts.ToolTipTimeoutSeconds)
-		Opts.DisplayToolTipAtFixedCoords := IniRead("Tooltip", "DisplayToolTipAtFixedCoords", Opts.DisplayToolTipAtFixedCoords)
-		Opts.ScreenOffsetX		:= IniRead("Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX)
-		Opts.ScreenOffsetY		:= IniRead("Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY)
+		Opts.MouseMoveThreshold	:= IniRead("Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold, ItemInfoConfigObj)
+		Opts.UseTooltipTimeout	:= IniRead("Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout, ItemInfoConfigObj)
+		Opts.ToolTipTimeoutSeconds		:= IniRead("Tooltip", "ToolTipTimeoutSeconds", Opts.ToolTipTimeoutSeconds, ItemInfoConfigObj)
+		Opts.DisplayToolTipAtFixedCoords 	:= IniRead("Tooltip", "DisplayToolTipAtFixedCoords", Opts.DisplayToolTipAtFixedCoords, ItemInfoConfigObj)
+		Opts.ScreenOffsetX		:= IniRead("Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX, ItemInfoConfigObj)
+		Opts.ScreenOffsetY		:= IniRead("Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY, ItemInfoConfigObj)
 		
 		; Display
-		Opts.ShowHeaderForAffixOverview		:= IniRead("Display", "ShowHeaderForAffixOverview", Opts.ShowHeaderForAffixOverview)
-		Opts.ShowExplanationForUsedNotation	:= IniRead("Display", "ShowExplanationForUsedNotation", Opts.ShowExplanationForUsedNotation)
-		Opts.AffixTextEllipsis				:= IniRead("Display", "AffixTextEllipsis", Opts.AffixTextEllipsis)
-		Opts.AffixColumnSeparator			:= IniRead("Display", "AffixColumnSeparator", Opts.AffixColumnSeparator)
-		Opts.DoubleRangeSeparator			:= IniRead("Display", "DoubleRangeSeparator", Opts.DoubleRangeSeparator)
-		Opts.UseCompactDoubleRanges			:= IniRead("Display", "UseCompactDoubleRanges", Opts.UseCompactDoubleRanges)
-		Opts.OnlyCompactForTotalColumn		:= IniRead("Display", "OnlyCompactForTotalColumn", Opts.OnlyCompactForTotalColumn)
-		Opts.MultiTierRangeSeparator			:= IniRead("Display", "MultiTierRangeSeparator", Opts.MultiTierRangeSeparator)
-		Opts.FontSize						:= IniRead("Display", "FontSize", Opts.FontSize)
+		Opts.ShowHeaderForAffixOverview		:= IniRead("Display", "ShowHeaderForAffixOverview", Opts.ShowHeaderForAffixOverview, ItemInfoConfigObj)
+		Opts.ShowExplanationForUsedNotation	:= IniRead("Display", "ShowExplanationForUsedNotation", Opts.ShowExplanationForUsedNotation, ItemInfoConfigObj)
+		Opts.AffixTextEllipsis				:= IniRead("Display", "AffixTextEllipsis", Opts.AffixTextEllipsis, ItemInfoConfigObj)
+		Opts.AffixColumnSeparator			:= IniRead("Display", "AffixColumnSeparator", Opts.AffixColumnSeparator, ItemInfoConfigObj)
+		Opts.DoubleRangeSeparator			:= IniRead("Display", "DoubleRangeSeparator", Opts.DoubleRangeSeparator, ItemInfoConfigObj)
+		Opts.UseCompactDoubleRanges			:= IniRead("Display", "UseCompactDoubleRanges", Opts.UseCompactDoubleRanges, ItemInfoConfigObj)
+		Opts.OnlyCompactForTotalColumn		:= IniRead("Display", "OnlyCompactForTotalColumn", Opts.OnlyCompactForTotalColumn, ItemInfoConfigObj)
+		Opts.MultiTierRangeSeparator			:= IniRead("Display", "MultiTierRangeSeparator", Opts.MultiTierRangeSeparator, ItemInfoConfigObj)
+		Opts.FontSize						:= IniRead("Display", "FontSize", Opts.FontSize, ItemInfoConfigObj)
 		
 		; GDI+		
-		Opts.UseGDI				:= IniRead("GDI", "Enabled", Opts.UseGDI)
-		Opts.GDIRenderingFix		:= IniRead("GDI", "RenderingFix", Opts.GDIRenderingFix)
-		Opts.GDIConditionalColors	:= IniRead("GDI", "ConditionalColors", Opts.GDIConditionalColors)
-		Opts.GDIWindowColor			:= IniRead("GDI", "WindowColor", Opts.GDIWindowColor)
-		Opts.GDIWindowColorDefault	:= IniRead("GDI", "WindowColorDefault", Opts.GDIWindowColorDefault)
-		Opts.GDIWindowOpacity		:= IniRead("GDI", "WindowOpacity", Opts.GDIWindowOpacity)
-		Opts.GDIWindowOpacityDefault	:= IniRead("GDI", "WindowOpacityDefault", Opts.GDIWindowOpacityDefault)
-		Opts.GDIBorderColor			:= IniRead("GDI", "BorderColor", Opts.GDIBorderColor)
-		Opts.GDIBorderColorDefault	:= IniRead("GDI", "BorderColorDefault", Opts.GDIBorderColorDefault)
-		Opts.GDIBorderOpacity		:= IniRead("GDI", "BorderOpacity", Opts.GDIBorderOpacity)
-		Opts.GDIBorderOpacityDefault	:= IniRead("GDI", "BorderOpacityDefault", Opts.GDIBorderOpacityDefault)
-		Opts.GDITextColor			:= IniRead("GDI", "TextColor", Opts.GDITextColor)
-		Opts.GDITextColorDefault		:= IniRead("GDI", "TextColorDefault", Opts.GDITextColorDefault)
-		Opts.GDITextOpacity			:= IniRead("GDI", "TextOpacity", Opts.GDITextOpacity)
-		Opts.GDITextOpacityDefault	:= IniRead("GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault)
+		Opts.UseGDI				:= IniRead("GDI", "Enabled", Opts.UseGDI, ItemInfoConfigObj)
+		Opts.GDIRenderingFix		:= IniRead("GDI", "RenderingFix", Opts.GDIRenderingFix, ItemInfoConfigObj)
+		Opts.GDIConditionalColors	:= IniRead("GDI", "ConditionalColors", Opts.GDIConditionalColors, ItemInfoConfigObj)
+		Opts.GDIWindowColor			:= IniRead("GDI", "WindowColor", Opts.GDIWindowColor, ItemInfoConfigObj)
+		Opts.GDIWindowColorDefault	:= IniRead("GDI", "WindowColorDefault", Opts.GDIWindowColorDefault, ItemInfoConfigObj)
+		Opts.GDIWindowOpacity		:= IniRead("GDI", "WindowOpacity", Opts.GDIWindowOpacity, ItemInfoConfigObj)
+		Opts.GDIWindowOpacityDefault	:= IniRead("GDI", "WindowOpacityDefault", Opts.GDIWindowOpacityDefault, ItemInfoConfigObj)
+		Opts.GDIBorderColor			:= IniRead("GDI", "BorderColor", Opts.GDIBorderColor, ItemInfoConfigObj)
+		Opts.GDIBorderColorDefault	:= IniRead("GDI", "BorderColorDefault", Opts.GDIBorderColorDefault, ItemInfoConfigObj)
+		Opts.GDIBorderOpacity		:= IniRead("GDI", "BorderOpacity", Opts.GDIBorderOpacity, ItemInfoConfigObj)
+		Opts.GDIBorderOpacityDefault	:= IniRead("GDI", "BorderOpacityDefault", Opts.GDIBorderOpacityDefault, ItemInfoConfigObj)
+		Opts.GDITextColor			:= IniRead("GDI", "TextColor", Opts.GDITextColor, ItemInfoConfigObj)
+		Opts.GDITextColorDefault		:= IniRead("GDI", "TextColorDefault", Opts.GDITextColorDefault, ItemInfoConfigObj)
+		Opts.GDITextOpacity			:= IniRead("GDI", "TextOpacity", Opts.GDITextOpacity, ItemInfoConfigObj)
+		Opts.GDITextOpacityDefault	:= IniRead("GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault, ItemInfoConfigObj)
 		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, "10", "16")
 	}
 }
@@ -9344,43 +9342,43 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	
 	; General
 	;IniWrite(Opts.ParseItemHotKey, "General", "ParseItemHotKey")
-	IniWrite(Opts.OnlyActiveIfPOEIsFront, "General", "OnlyActiveIfPOEIsFront")
-	IniWrite(Opts.PutResultsOnClipboard, "General", "PutResultsOnClipboard")
-	IniWrite(Opts.EnableAdditionalMacros, "General", "EnableAdditionalMacros")
-	IniWrite(Opts.EnableMapModWarnings, "General", "EnableMapModWarnings")
-	IniWrite(Opts.ShowUpdateNotifications, "General", "ShowUpdateNotifications")
-	IniWrite(Opts.UpdateSkipSelection, "General", "UpdateSkipSelection")
-	IniWrite(Opts.UpdateSkipBackup, "General", "UpdateSkipBackup")
+	IniWrite(Opts.OnlyActiveIfPOEIsFront, "General", "OnlyActiveIfPOEIsFront", ItemInfoConfigObj)
+	IniWrite(Opts.PutResultsOnClipboard, "General", "PutResultsOnClipboard", ItemInfoConfigObj)
+	IniWrite(Opts.EnableAdditionalMacros, "General", "EnableAdditionalMacros", ItemInfoConfigObj)
+	IniWrite(Opts.EnableMapModWarnings, "General", "EnableMapModWarnings", ItemInfoConfigObj)
+	IniWrite(Opts.ShowUpdateNotifications, "General", "ShowUpdateNotifications", ItemInfoConfigObj)
+	IniWrite(Opts.UpdateSkipSelection, "General", "UpdateSkipSelection", ItemInfoConfigObj)
+	IniWrite(Opts.UpdateSkipBackup, "General", "UpdateSkipBackup", ItemInfoConfigObj)
 	
 	; Display
-	IniWrite(Opts.ShowHeaderForAffixOverview, "Display", "ShowHeaderForAffixOverview")
-	IniWrite(Opts.ShowExplanationForUsedNotation, "Display", "ShowExplanationForUsedNotation")
-	IniWrite("" . Opts.AffixTextEllipsis . "", "Display", "AffixTextEllipsis")
-	IniWrite("" . Opts.AffixColumnSeparator . "", "Display", "AffixColumnSeparator")
-	IniWrite("" . Opts.DoubleRangeSeparator . "", "Display", "DoubleRangeSeparator")
-	IniWrite(Opts.UseCompactDoubleRanges, "Display", "UseCompactDoubleRanges")
-	IniWrite(Opts.OnlyCompactForTotalColumn, "Display", "OnlyCompactForTotalColumn")
-	IniWrite("" . Opts.MultiTierRangeSeparator . "", "Display", "MultiTierRangeSeparator")
-	IniWrite(Opts.FontSize, "Display", "FontSize")
+	IniWrite(Opts.ShowHeaderForAffixOverview, "Display", "ShowHeaderForAffixOverview", ItemInfoConfigObj)
+	IniWrite(Opts.ShowExplanationForUsedNotation, "Display", "ShowExplanationForUsedNotation", ItemInfoConfigObj)
+	IniWrite("" . Opts.AffixTextEllipsis . "", "Display", "AffixTextEllipsis", ItemInfoConfigObj)
+	IniWrite("" . Opts.AffixColumnSeparator . "", "Display", "AffixColumnSeparator", ItemInfoConfigObj)
+	IniWrite("" . Opts.DoubleRangeSeparator . "", "Display", "DoubleRangeSeparator", ItemInfoConfigObj)
+	IniWrite(Opts.UseCompactDoubleRanges, "Display", "UseCompactDoubleRanges", ItemInfoConfigObj)
+	IniWrite(Opts.OnlyCompactForTotalColumn, "Display", "OnlyCompactForTotalColumn", ItemInfoConfigObj)
+	IniWrite("" . Opts.MultiTierRangeSeparator . "", "Display", "MultiTierRangeSeparator", ItemInfoConfigObj)
+	IniWrite(Opts.FontSize, "Display", "FontSize", ItemInfoConfigObj)
 	
 	; Tooltip
-	IniWrite(Opts.MouseMoveThreshold, "Tooltip", "MouseMoveThreshold")
-	IniWrite(Opts.UseTooltipTimeout, "Tooltip", "UseTooltipTimeout")
-	IniWrite(Opts.ToolTipTimeoutSeconds, "Tooltip", "ToolTipTimeoutSeconds")
-	IniWrite(Opts.DisplayToolTipAtFixedCoords, "Tooltip", "DisplayToolTipAtFixedCoords")
-	IniWrite(Opts.ScreenOffsetX, "Tooltip", "ScreenOffsetX")
-	IniWrite(Opts.ScreenOffsetY, "Tooltip", "ScreenOffsetY")
+	IniWrite(Opts.MouseMoveThreshold, "Tooltip", "MouseMoveThreshold", ItemInfoConfigObj)
+	IniWrite(Opts.UseTooltipTimeout, "Tooltip", "UseTooltipTimeout", ItemInfoConfigObj)
+	IniWrite(Opts.ToolTipTimeoutSeconds, "Tooltip", "ToolTipTimeoutSeconds", ItemInfoConfigObj)
+	IniWrite(Opts.DisplayToolTipAtFixedCoords, "Tooltip", "DisplayToolTipAtFixedCoords", ItemInfoConfigObj)
+	IniWrite(Opts.ScreenOffsetX, "Tooltip", "ScreenOffsetX", ItemInfoConfigObj)
+	IniWrite(Opts.ScreenOffsetY, "Tooltip", "ScreenOffsetY", ItemInfoConfigObj)
 	
 	; GDI+
-	IniWrite(Opts.UseGDI, "GDI", "Enabled")
-	IniWrite(Opts.GDIRenderingFix, "GDI", "RenderingFix")
-	IniWrite(Opts.GDIConditionalColors, "GDI", "ConditionalColors")
-	IniWrite(Opts.GDIWindowColor, "GDI", "WindowColor")
-	IniWrite(Opts.GDIWindowOpacity, "GDI", "WindowOpacity")
-	IniWrite(Opts.GDIBorderColor, "GDI", "BorderColor")
-	IniWrite(Opts.GDIBorderOpacity, "GDI", "BorderOpacity")
-	IniWrite(Opts.GDITextColor, "GDI", "TextColor")
-	IniWrite(Opts.GDITextOpacity, "GDI", "TextOpacity")
+	IniWrite(Opts.UseGDI, "GDI", "Enabled", ItemInfoConfigObj)
+	IniWrite(Opts.GDIRenderingFix, "GDI", "RenderingFix", ItemInfoConfigObj)
+	IniWrite(Opts.GDIConditionalColors, "GDI", "ConditionalColors", ItemInfoConfigObj)
+	IniWrite(Opts.GDIWindowColor, "GDI", "WindowColor", ItemInfoConfigObj)
+	IniWrite(Opts.GDIWindowOpacity, "GDI", "WindowOpacity", ItemInfoConfigObj)
+	IniWrite(Opts.GDIBorderColor, "GDI", "BorderColor", ItemInfoConfigObj)
+	IniWrite(Opts.GDIBorderOpacity, "GDI", "BorderOpacity", ItemInfoConfigObj)
+	IniWrite(Opts.GDITextColor, "GDI", "TextColor", ItemInfoConfigObj)
+	IniWrite(Opts.GDITextOpacity, "GDI", "TextOpacity", ItemInfoConfigObj)
 	
 	ItemInfoConfigObj.Save(ConfigPath)
 }
