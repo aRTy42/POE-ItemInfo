@@ -47,7 +47,7 @@ AM_AssignHotkeys:
 	global AM_HighlightArg2		:= AM_Config["AM_HighlightItems"].Arg2
 	global AM_HighlightAltArg1	:= AM_Config["AM_HighlightItemsAlt"].Arg1
 	global AM_HighlightAltArg2	:= AM_Config["AM_HighlightItemsAlt"].Arg2
-	global AM_KeyToSCState		:= (TradeAM_Opts.KeyToSCState != "") ? TradeAM_Opts.KeyToSCState : AM_Config["AM_General"].General_KeyToSCState
+	global AM_KeyToSCState		:= (TradeOpts.KeyToSCState != "") ? TradeOpts.KeyToSCState : AM_Config["AM_General"].General_KeyToSCState
 
 	; This option can be set in the settings menu (ItemInfo tab) to completely disable assigning
 	; AdditionalMacros hotkeys.
