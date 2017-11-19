@@ -294,6 +294,8 @@ class Item_ {
 		This.BaseType		:= ""
 		This.GripType		:= ""
 		This.Level		:= ""
+		This.Experience	:= ""
+		This.ExperienceFlat	:= ""
 		This.MapLevel		:= ""
 		This.MapTier		:= ""
 		This.MaxSockets	:= ""
@@ -1488,6 +1490,27 @@ ParseGemLevel(ItemDataText, PartialString="Level:")
 			StringSplit, ItemLevelParts, A_LoopField, %A_Space%
 			Result := StrTrimWhitespace(ItemLevelParts2)
 			return Result
+		}
+	}
+}
+
+ParseGemXP(ItemDataText, PartialString="Experience:", ByRef Flat = "")
+{
+	ItemDataChunk := GetItemDataChunk(ItemDataText, PartialString)
+	Loop, Parse, ItemDataChunk, `n, `r
+	{
+		IfInString, A_LoopField, %PartialString%
+		{
+			StringSplit, ItemLevelParts, A_LoopField, %A_Space%
+			XP := StrTrimWhitespace(ItemLevelParts2)
+			Flat := XP
+		}
+	}
+	If (XP) {
+		RegExMatch(XP, "i)([0-9.,]+)\/([0-9.,]+)", xpPart)
+		If (StrLen(xpPart1) and StrLen(xpPart2)) {
+			Percent := Round(xpPart1 / xpPart2)
+			Return Percent
 		}
 	}
 }
@@ -7272,7 +7295,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		RarityLevel	:= 0
 		Item.Level	:= ParseGemLevel(ItemDataText, "Level:")
+		Item.Experience:= ParseGemXP(ItemDataText, "Experience:", Item.ExperienceFlat)
 		ItemLevelWord	:= "Gem Level:"
+		ItemXPWord	:= "Experience:"
 		Item.BaseType	:= "Gem"
 	}
 	Else
@@ -7461,6 +7486,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		TT := TT . "`n"
 		TT := TT . ItemLevelWord . "   " . StrPad(Item.Level, 3, Side="left")
+		
+		If (Item.IsGem) {
+			TT := TT . "`n"
+			TT := TT . ItemXPWord . "   " . StrPad(Item.Experience "%", 3, Side="left")
+		}
 		
 		If Item.IsTalisman {
 			TT := TT . "`nTalisman Tier: " . StrPad(Item.TalismanTier, 2, Side="left")

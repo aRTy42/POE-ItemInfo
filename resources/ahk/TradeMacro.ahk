@@ -1836,6 +1836,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		; add gem headers
 		Title .= StrPad("Q. |",6,"left")
 		Title .= StrPad("Lvl |",6,"left")
+		Title .= StrPad("Xp |",6,"left")
 	}
 	If (showItemLevel) {
 		; add ilvl
@@ -1849,6 +1850,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	Title .= StrPad("--------------------",20)
 	Title .= StrPad("--------------------",19,"left")
 	If (Item.IsGem) {
+		Title .= StrPad("------",6,"left")
 		Title .= StrPad("------",6,"left")
 		Title .= StrPad("------",6,"left")
 	}
@@ -1893,7 +1895,9 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 			Pos := RegExMatch(ItemBlock, "i)data-name=""ilvl"">.*: ?(\d+?)<", iLvl, Pos)
 		}
 		If (Item.IsGem) {
-			; get gem quality and level
+			; get gem quality, level and xp
+			RegExMatch(ItemBlock, "i)data-name=""progress"".*<b>\s?(\d+)\/(\d+)\s?<\/b>", GemXP_Flat)
+			RegExMatch(ItemBlock, "i)data-name=""progress"">\s*?Experience:.*?([0-9.]+)\s?%", GemXP_Percent)
 			Pos := RegExMatch(ItemBlock, "i)data-name=""q"".*?data-value=""(.*?)""", Q, Pos)
 			Pos := RegExMatch(ItemBlock, "i)data-name=""level"".*?data-value=""(.*?)""", LVL, Pos)
 		}
@@ -1939,6 +1943,12 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 				Title .= StrPad("|  -  ",6,"right")
 			}
 			Title .= StrPad("| " . StrPad(LVL1,3,"left") . " " ,6,"right")
+			
+			If (GemXP_Percent1) {
+				Title .= StrPad("| " . StrPad(GemXP_Percent1,2,"left") . "% ",6,"right")
+			} Else {
+				Title .= StrPad("|  -  ",6,"right")
+			}
 		}
 		If (showItemLevel) {
 			; add item level
