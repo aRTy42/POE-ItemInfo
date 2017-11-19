@@ -1502,14 +1502,15 @@ ParseGemXP(ItemDataText, PartialString="Experience:", ByRef Flat = "")
 		IfInString, A_LoopField, %PartialString%
 		{
 			StringSplit, ItemLevelParts, A_LoopField, %A_Space%
-			XP := StrTrimWhitespace(ItemLevelParts2)
-			Flat := XP
+			_Flat := StrTrimWhitespace(ItemLevelParts2)
+			XP := RegExReplace(_Flat, "\.")			
 		}
 	}
 	If (XP) {
 		RegExMatch(XP, "i)([0-9.,]+)\/([0-9.,]+)", xpPart)
 		If (StrLen(xpPart1) and StrLen(xpPart2)) {
-			Percent := Round(xpPart1 / xpPart2)
+			Percent := Round((xpPart1 / xpPart2) * 100)
+			Flat := _Flat
 			Return Percent
 		}
 	}
@@ -7295,7 +7296,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		RarityLevel	:= 0
 		Item.Level	:= ParseGemLevel(ItemDataText, "Level:")
-		Item.Experience:= ParseGemXP(ItemDataText, "Experience:", Item.ExperienceFlat)
+		ItemExperienceFlat := ""
+		Item.Experience:= ParseGemXP(ItemDataText, "Experience:", ItemExperienceFlat)
+		Item.ExperienceFlat := ItemExperienceFlat
 		ItemLevelWord	:= "Gem Level:"
 		ItemXPWord	:= "Experience:"
 		Item.BaseType	:= "Gem"
