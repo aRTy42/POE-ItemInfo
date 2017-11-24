@@ -138,7 +138,9 @@ TradeFunc_OpenWikiHotkey(priceCheckTest = false, itemData = "") {
 	}
 
 	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
-	SetClipboardContents("")
+	If (not TradeOpts.CopyUrlToClipboard) {
+		SetClipboardContents("")	
+	}	
 }
 
 CustomInputSearch:
@@ -748,9 +750,10 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			ShowToolTip(ParsingError)
 		} Else {
 			TradeFunc_OpenUrlInBrowser(ParsedUrl1)
-			SetClipboardContents("")
+			If (not TradeOpts.CopyUrlToClipboard) {
+				SetClipboardContents("")	
+			}
 		}
-
 	}
 	Else If (Item.isCurrency and !Item.IsEssence and TradeFunc_CurrencyFoundOnCurrencySearch(Item.Name)) {
 		; Default currency search
@@ -1349,9 +1352,17 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 ; Open given Url with default Browser
 TradeFunc_OpenUrlInBrowser(Url) {
 	Global TradeOpts
-
+	
 	openWith :=
-	If (TradeFunc_CheckBrowserPath(TradeOpts.BrowserPath, false)) {
+	If (TradeOpts.CopyUrlToClipboard) {	
+		SuspendPOEItemScript := 1
+		Clipboard = %Url%		
+		SuspendPOEItemScript := 0
+		shortenedUrl := StrLen(Url) > 50 ? SubStr(Url, 1, 50) "..." : Url
+		ShowToolTip("Copied URL to clipboard:`n`n" shortenedUrl)
+		Return
+	}	
+	Else If (TradeFunc_CheckBrowserPath(TradeOpts.BrowserPath, false)) {
 		openWith := TradeOpts.BrowserPath
 		OpenWebPageWith(openWith, Url)
 	}
@@ -3664,7 +3675,7 @@ OverwriteSettingsWidthTimer:
 	o := Globals.Get("SettingsUIWidth")
 
 	If (o) {
-		Globals.Set("SettingsUIWidth", 813)
+		Globals.Set("SettingsUIWidth", 963)
 		SetTimer, OverwriteSettingsWidthTimer, Off
 	}
 Return

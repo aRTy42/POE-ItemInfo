@@ -61,6 +61,7 @@ data_trade/backup/*
 backup/*
 backup/
 test.ahk
+test.txt
 DebugFile.txt
 
 lib/node_modules
@@ -69,3 +70,4 @@ release
 _TradeMacroMain.ahk
 _ItemInfoMain.ahk
 resources/tests/tempOutput/*
+data/lang/lang.json
