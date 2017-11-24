@@ -29,7 +29,7 @@
 	If (wrongLanguage) {
 		msg := "It seems that you aren't using 'English' as your game clients language, according to the file '" readFile "'." "`n`n"
 		msg .= "As long as GGG doesn't add a way to get the items data in english when using different game clients, this script won't work with those languages." "`n`n"
-		msg .= "Please change your language or click 'continue' if you want to start the script anyway."
+		msg .= "Please change your language or click 'ignore' if you want to start the script anyway."
 		
 		MsgBox, 0x1012, Wrong PoE Game Client Language, % msg
 		
