@@ -16,8 +16,6 @@
 ; # --- MODIFICATION START (dein0s) ---
 ; # --- MODIFICATION END (dein0s) ---;
 ; #############################################################################################################
-
-
 class_EasyIni(sFile="", sLoadFromStr="")
 {
 	return new EasyIni(sFile, sLoadFromStr)
@@ -174,8 +172,8 @@ class EasyIni
 
 	DeleteSection(sec)
 	{
-		this.Remove(sec)
-		return
+		r := this.Remove(sec)
+		return r
 	}
 
 	GetSections(sDelim="`n", sSort="")
@@ -511,7 +509,7 @@ class EasyIni
 		return this.DeleteComment(sec, key, comment, , rsError)
 	}
 
-	Update(SourceIni, sections=true, keys=true, values=false, top_comments=false, section_comments=true, key_comments=true)
+	Update(SourceIni, sections=true, keys=true, values=false, top_comments=false, section_comments=true, key_comments=true, repeatedRecursions=0)
 	; TODO: add docstring
 	{
 		if (!IsObject(SourceIni)) {
@@ -572,10 +570,24 @@ class EasyIni
 				}
 			}
 		}
+		
+		; workaround: the deletion loop often only loops over half the old sections 
+		; (when the deletion code is used, at least, just counting the old ones works).
+		; repeat the update function recursively if more old sections are present than deleted ones.
+		oldSections := 0
+		for sectionName, sectionKeys in this
+		{
+			if (sections and !SourceIni.HasKey(sectionName)) {				
+				oldSections++
+			}
+		}
+		
+		removedSections := 0		
 		for sectionName, sectionKeys in this {
 			; Remove old section
 			if (sections and !SourceIni.HasKey(sectionName)) {
 				this.DeleteSection(sectionName)
+				removedSections++
 			}
 			; Remove old section comment
 			if (section_comments and SourceIni.HasKey(sectionName)) {
@@ -600,6 +612,11 @@ class EasyIni
 				}
 			}
 		}
+		
+		If (oldSections > removedSections and repeatedRecursions < 15) {
+			this.Update(SourceIni, sections, keys, values, top_comments, section_comments, key_comments, repeatedRecursions)
+		}
+		
 		return
 	}
 
