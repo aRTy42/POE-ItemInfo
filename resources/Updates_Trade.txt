@@ -1,5 +1,18 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.6.0-beta.5
+================================================================================================
+Added gem experience to ItemInfo tooltips and TradeMacro searches. For that certain new unique ring.
+Settings menu rework:
+	The window is now wider and shorter in height to better acommodate different screensizes.
+	Improved readability with a different font.
+	Added an option to copy generated URLs to the clipboard instead of opening them.
+	Added a tab for AdditionalMacros settings:
+		Up until now you stil had to edit the .ini files to change these settings.
+		The hotkey sselection UI element is a bit experimental and might cause issues for people using non-latin keybaord layouts.
+		Unfortunately the default AHK UI element doen't support special keys and mouse buttons.
+		Editing via .ini file is still possible, of course.
+
 2.6.0-beta.4
 ================================================================================================
 Fixed an issue that caused temporary (race) leagues not being saved.
