@@ -48,15 +48,12 @@ AssociatedProgram(p_FileExt) {
         DllCall("WideCharToMultiByte","UInt",0,"UInt",0,PtrType,&l_EXENameW,"Int",-1,PtrType,&l_EXEName,"Int",nSize,PtrType,0,PtrType,0)
         program := l_EXEName
     }
-	
-    if (not StrLen(program)) {
-		app1 := AssocQueryApp(ext)
-		if (ext = "html" or ext = "htm") {
-			app2 := DefaultBrowser()
-		}
-		program := (app2 and app1 != app2) ? app2 : app1        
-    }
-	
+    
+    app1 := AssocQueryApp(ext)
+    app2 := DefaultProgramUserChoice(ext)
+    app := (app2 and app1 != app2) ? app2 : app1
+    program := (program != app) ? app : program
+
     Return program
 }
 
@@ -70,26 +67,26 @@ AssocQueryApp(ext) {
     Return, app
 }
 
-DefaultBrowser() {
+DefaultProgramUserChoice(ext) {
 	; Find the Registry key name for the default browser
     Try {
-        RegRead, BrowserKeyName, HKEY_CURRENT_USER, Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.html\UserChoice, Progid
+        RegRead, AppKeyName, HKEY_CURRENT_USER, Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.%ext%\UserChoice, Progid
 
         ; Find the executable command associated with the above Registry key
-        RegRead, BrowserFullCommand, HKEY_CLASSES_ROOT, %BrowserKeyName%\shell\open\command
+        RegRead, AppFullCommand, HKEY_CLASSES_ROOT, %AppKeyName%\shell\open\command
 
-        ; The above RegRead will return the path and executable name of the brower contained within quotes and optional parameters
+        ; The above RegRead will return the path and executable name of the application contained within quotes and optional parameters
         ; We only want the text contained inside the first set of quotes which is the path and executable
         ; Find the ending quote position (we know the beginning quote is in position 0 so start searching at position 1)
-        StringGetPos, pos, BrowserFullCommand, ",,1
+        StringGetPos, pos, AppFullCommand, ",,1
 
         ; Decrement the found position by one to work correctly with the StringMid function
         pos := --pos
 
         ; Extract and return the path and executable of the browser
-        StringMid, BrowserPathandEXE, BrowserFullCommand, 2, %pos%
+        StringMid, AppPathandEXE, AppFullCommand, 2, %pos%
     } Catch e {
 
     }
-	Return BrowserPathandEXE
+	Return AppPathandEXE
 }

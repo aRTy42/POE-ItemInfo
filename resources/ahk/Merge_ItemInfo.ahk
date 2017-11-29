@@ -1,6 +1,6 @@
 ﻿; ####################################################################################################
 ; # This script merges PoE-ItemInfo and AdditionalMacros into one script and executes it.
-; # We also have to set some global variables and pass them to the ItemInfo script. 
+; # We also have to set some global variables and pass them to the ItemInfo script.
 ; # This is to support using ItemInfo as dependancy for other tools.
 ; ####################################################################################################
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_CheckFolderWriteAccess.ahk
@@ -13,7 +13,7 @@ RunAsAdmin()
 arg1 	= %1%
 scriptDir := FileExist(arg1) ? arg1 : RegExReplace(A_ScriptDir, "(.*)\\[^\\]+\\.*", "$1")
 
-/*	 
+/*
 	Set ProjectName to create user settings folder in A_MyDocuments
 */
 projectName := "PoE-ItemInfo"
@@ -21,8 +21,8 @@ projectName := "PoE-ItemInfo"
 /*
 	Check some folder permissions
 */
-PoE_Scripts_CheckFolderWriteAccess(A_MyDocuments . "\" . projectName)
-PoE_Scripts_CheckFolderWriteAccess(scriptDir)
+PoEScripts_CheckFolderWriteAccess(A_MyDocuments . "\" . projectName)
+PoEScripts_CheckFolderWriteAccess(scriptDir)
 
 If (not PoEScripts_CheckCorrectClientLanguage()) {
 	ExitApp
@@ -34,7 +34,7 @@ If (InStr(scriptDir, A_Desktop)) {
 	Msgbox, 0x1010, Invalid Installation Path, Executing PoE-ItemInfo from your Desktop (or any of its subfolders) may cause script errors, please choose a different directory.
 }
 
-/*	 
+/*
 	Set some important variables
 */
 FilesToCopyToUserFolder	:= scriptDir . "\resources\default_UserFiles"
@@ -48,10 +48,10 @@ PoEScripts_CompareUserFolderWithScriptFolder(userDirectory, scriptDir, projectNa
 	merge all scripts into `_ItemInfoMain.ahk` and execute it.
 */
 info		:= ReadFileToMerge(scriptDir "\resources\ahk\POE-ItemInfo.ahk")
-addMacros := ReadFileToMerge(userDirectory "\AdditionalMacros.txt", FilesToCopyToUserFolder)
+addMacros := ReadFileToMerge(scriptDir "\resources\ahk\AdditionalMacros.ahk")
 
 info		:= info . "`n`r`n`r"
-addMacros	:= "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros
+addMacros	:= "`n`r#IfWinActive ahk_group PoEWindowGrp" . "`n`r`n`r" . addMacros
 addMacros	.= AppendCustomMacros(userDirectory)
 
 CloseScript("ItemInfoMain.ahk")
@@ -65,7 +65,7 @@ FileSetAttrib, +H, %scriptDir%\_ItemInfoMain.ahk
 ; pass some parameters to ItemInfo
 Run "%A_AhkPath%" "%scriptDir%\_ItemInfoMain.ahk" "%projectName%" "%userDirectory%" "%isDevelopmentVersion%" "%overwrittenFiles%"
 
-ExitApp 
+ExitApp
 
 
 ; ####################################################################################################
@@ -89,16 +89,16 @@ CloseScript(Name)
 		Return Name . " not found"
 }
 
-RunAsAdmin() 
+RunAsAdmin()
 {
-    ShellExecute := A_IsUnicode ? "shell32\ShellExecute":"shell32\ShellExecuteA" 
-    If Not A_IsAdmin 
-    { 
-		If A_IsCompiled 
-			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_ScriptFullPath, str, A_WorkingDir, int, 1) 
-		Else 
-			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_AhkPath, str, """" . A_ScriptFullPath . """", str, A_WorkingDir, int, 1) 
-		ExitApp 
+    ShellExecute := A_IsUnicode ? "shell32\ShellExecute":"shell32\ShellExecuteA"
+    If Not A_IsAdmin
+    {
+		If A_IsCompiled
+			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_ScriptFullPath, str, A_WorkingDir, int, 1)
+		Else
+			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_AhkPath, str, """" . A_ScriptFullPath . """", str, A_WorkingDir, int, 1)
+		ExitApp
     }
 }
 
@@ -107,19 +107,19 @@ AppendCustomMacros(userDirectory)
 	If(!InStr(FileExist(userDirectory "\CustomMacros"), "D")) {
 		FileCreateDir, %userDirectory%\CustomMacros\
 	}
-	
+
 	appendedMacros := "`n`n"
 	extensions := "txt,ahk"
 	Loop %userDirectory%\CustomMacros\*
 	{
-		If A_LoopFileExt in %extensions% 
+		If A_LoopFileExt in %extensions%
 		{
 			FileRead, tmp, %A_LoopFileFullPath%
 			appendedMacros .= "; appended custom macro file: " A_LoopFileName " ---------------------------------------------------"
 			appendedMacros .= "`n" tmp "`n`n"
 		}
 	}
-	
+
 	Return appendedMacros
 }
 
@@ -141,10 +141,10 @@ ReadFileToMerge(path, fallbackSrcPath = "") {
 			Msgbox, 4096, Critical file read error, The system lacks sufficient memory to load the file "%path%".`n`nClosing Script...
 			ExitApp
 		} Else {
-			Return file	
-		}		
+			Return file
+		}
 	} Else {
 		Msgbox, 4096, Critical file read error, The file "%path%" doesn't exist. %fallback%`n`nClosing Script...
-		ExitApp		
-	}	
+		ExitApp
+	}
 }

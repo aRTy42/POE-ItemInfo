@@ -1,5 +1,98 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.6.0-beta.5
+================================================================================================
+Added gem experience to ItemInfo tooltips and TradeMacro searches. For that certain new unique ring.
+Settings menu rework:
+	The window is now wider and shorter in height to better acommodate different screensizes.
+	Improved readability with a different font.
+	Added an option to copy generated URLs to the clipboard instead of opening them.
+	Added a tab for AdditionalMacros settings:
+		Up until now you stil had to edit the .ini files to change these settings.
+		The hotkey sselection UI element is a bit experimental and might cause issues for people using non-latin keybaord layouts.
+		Unfortunately the default AHK UI element doen't support special keys and mouse buttons.
+		Editing via .ini file is still possible, of course.
+
+2.6.0-beta.4
+================================================================================================
+Fixed an issue that caused temporary (race) leagues not being saved.
+Fixed some special mods not working on poe.trade (advanced search).
+Fixed clipboard being emptied at script start.
+Fixed the "Remove multiple Listings from same Account" option not working anymore.
+Fixed the alternative currency search (via poe.ninja) being broken.
+Fixed some issues with the "Fallback.exe" file.
+
+ItemInfo:
+	Uncertain mods in the affix overview no longer cause multiple lines with identical entries. This happened when a hybrid mod brought multiple variants to one part/line, but the other part/line was unambiguous.
+	Flat +Def on non-armour pieces (like belts) is now handled correctly.
+	Fixed an issue that could cause long .ini file write time.
+	Fixed a bug about mismatching data of similarly named uniques.
+	Fixed the double range display for unique items. The format "(a-b) to (c-d)" was displayed as "a-c|b-d" instead of "a-b|c-d".
+	Fixed the MapModCount for tier 1-5 maps with the hybrid mod "Monster Life / Stun Immune".
+
+2.6.0-beta.3
+================================================================================================
+The GDI+ tooltip is now clickthrough, accidentally clicking it won't make the PoE client lose focus.
+Fixed GDI+ initialisation, it won't be initialised on script start if it's not enabled but doesn't require a restart after enabling it.
+Fixed the corrupted option (search) override not working (missing INI key).
+ItemInfo only: 
+	Fixed an issue that could cause long .ini file write times.
+	+Flat Def on non-armour pieces (like belts) are now handled correctly.
+	Fixed a bug about mismatching data of similarly named uniques.
+	Lines in the affix overview are no longer duplicated if they are identical (and only the other line of the hybrid mod part varies).
+
+2.6.0-beta.2
+================================================================================================
+Added a fix/workaround for the new and optional GDI+ tooltip causing FPS drops.
+Fixed ItemInfo/TradeMacro currency rate fetching/parsing (and ItemInfos currency stack conversion to chaos equivalent).
+Fixed MapModWarnings not working.
+Fixed a potential issue with hotkey assigning when the ini files have invalid values assigned (space for example).
+
+2.6.0-beta.1
+================================================================================================
+Three big new features:
+1) Full rework of ItemInfo affix parsing.
+2) Alternative tooltip display option using the GDI+ library/dll.
+3) Reworked INI handling.
+
+These changes are quite extensive and will likely bring a few bugs that were not found. This is a beta-release for that reason. Please report issues, preferably on GitHub.
+
+1) ItemInfo affix parsing:
+* The script handles potentially ambiguous mods completely different now. Multiple possibilities are shown when the script considers all of them fitting. This means in particular that hybrid mods are now almost fully supported. Please report items where the scripts results seem wrong. (A few cases currently remain unhandled, these will be fixed later. See the end of section 1 for details.)
+* Flasks mods are supported now.
+* The user settings were reworked. Most "Display" settings were removed and replaced by new ones. Tell if you miss anything.
+* Ingame tooltip changes:
+** Implicit value ranges are shown now.
+** The detailed affix overview has a header now (which can be disabled in the settings).
+** Long notation of double ranges ("added damage" mods) is the default now. (settings option)
+** A new notation for "multi tier ranges" has been introduced. These are shown when multiple mods overlap in a way that makes it uncertain which tier combination was actually rolled. They show the worst case range and best case range for the roll. Contrary to "double range" mods this does not mean that you can certainly get to the top roll (via Divine Orbs), it means your actual roll range is somewhere within the displayed ranges.
+** All these notations aswell as new abbreviations get a 1 line info at the end of the tooltip when they are present.
+** The top section with basic information and DPS calculation for weapons was rearranged. It includes a warning now when a low itemlevel lowers the item's max socket number. Furthermore Q20PhysDps got added.
+* Currently unhandled affix cases:
+** Weapons with #% increased Physical Damage, +# to Accuracy Rating and 5-10% increased Light Radius. (up to 4 mods mix)
+** Tower shields with #% increased Armour, #% increased Stun and Block Recovery and +#% Chance to Block. (up to 5 mods mix)
+
+2) GDI+ display:
+* You can enable GDI+ in the settings menu, which results in a tooltip using the GDI+ graphics library. This alternative tooltip allows colour customization and transparency.
+
+3) Reworked .ini handling:
+* User defined settings will now persist between new version updates (proper INI file updating instead of overwriting).
+* The script should now run correctly regardless of the selected keyboard layout, previously non-latin layouts like russian caused errors related to hotkeys on script start.
+* AdditionalMacros hotkeys, their states and other configurations should be changed in AdditionalMacros.ini from now on.
+* AdditionalMacros.txt was moved out of the user folder and shouldn't be edited anymore. The subfolder CustomMacros with it's user created/added/edited scripts serves its old purpose from now on.
+* MapModWarning states should be changed in MapModWarnings.ini.
+
+4) Minor notes and bugfixes:
+* Fixed Chance To Poison / Increased Poison Damage that was swapped.
+* Chance To Bleed's data file was missing a | character so a value was not read properly.
+* 3.0's new increased Cast Speed mod for ES shields was missing.
+* 3.0's new increased Attack Damage mod for AR/EV hybrid base shields is now correctly considered as a prefix and not a suffix.
+* Adapted rewording of jewel Bleeding suffix and jewel Poison Duration suffix.
+* Fixed MapModWarning for "Monsters cannot be Stunned".
+* Map Info: Lair Map upgrades to Mineral Pools (not Spider Forest).
+* The gem quality info for Summon Skeleton gets displayed now (by not expecting "Summon Skeletons").
+* Fixed a bug with increased Elemental Damage with Attack Skills: There are two almost identical progressions, but the script only knew one. This is not a new change, but simply was never noticed. It is now correctly differentiated between 'on weapon' and 'on other item type' which shifts the T2 to T1 breakpoint from 37/38 to 36/37.
+
 2.5.7
 ================================================================================================
 Added client language check since ItemInfo/TradeMacro only work with the english client.

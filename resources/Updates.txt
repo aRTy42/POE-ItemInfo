@@ -1,9 +1,82 @@
 The following is a list of what has been updated, starting with 1.9.3.
-Current Script Caretaker: aRTy42
+Current Script Caretaker: aRTy (GitHub/PoE Account: aRTy42, Reddit: -aRTy-)
+
+3.0.06-beta
+================================
+from aRTy, Eruyome
+
+* Uncertain mods in the affix overview no longer cause multiple lines with identical entries. This happened when a hybrid mod brought multiple variants to one part/line, but the other part/line was unambiguous.
+* Flat +Def on non-armour pieces (like belts) is now handled correctly.
+* Fixed an issue that could cause long .ini file write time.
+* Fixed a bug about mismatching data of similarly named uniques.
+* Fixed the double range display for unique items. The format "(a-b) to (c-d)" was displayed as "a-c|b-d" instead of "a-b|c-d".
+* Fixed the MapModCount for tier 1-5 maps with the hybrid mod "Monster Life / Stun Immune".
+* Fixed a bug with GDI+ causing FPS drops even if it was disabled. Having it enabled might still cause issues for you. (by Eruyome)
+
+3.0.05-beta
+================================
+from Eruyome, aRTy
+
+* Added a fix/workaround for the new and optional GDI+ tooltip causing FPS drops.
+* Fixed ItemInfo/TradeMacro currency rate fetching/parsing (and ItemInfos currency stack conversion to chaos equivalent).
+* Fixed MapModWarnings not working.
+
+3.0.04-beta
+================================
+from aRTy, Eruyome, dein0s, esunder
+
+Three big new features:
+1) Full rework of ItemInfo affix parsing (aRTy)
+2) GDI+ display option (Eruyome and esunder)
+3) Reworked .ini handling (mostly dein0s)
+
+These changes are quite extensive and will likely bring a few bugs that were not found. This is a beta-release for that reason. Please report issues, preferably on GitHub.
+
+### 1) ItemInfo affix parsing:
+* The script handles potentially ambiguous mods completely different now. Multiple possibilities are shown when the script considers all of them fitting. This means in particular that hybrid mods are now almost fully supported. Please report items where the scripts results seem wrong. (A few cases currently remain unhandled, these will be fixed later. See the end of section 1 for details.)
+* Flasks mods are supported now.
+* The user settings were reworked. Most "Display" settings were removed and replaced by new ones. Tell if you miss anything.
+* Ingame tooltip changes:
+  * Implicit value ranges are shown now.
+  * The detailed affix overview has a header now (which can be disabled in the settings).
+  * Long notation of double ranges ("added damage" mods) is the default now. (settings option)
+  * A new notation for "multi tier ranges" has been introduced. These are shown when multiple mods overlap in a way that makes it uncertain which tier combination was actually rolled. They show the worst case range and best case range for the roll. Contrary to "double range" mods this does not mean that you can certainly get to the top roll (via Divine Orbs), it means your actual roll range is somewhere within the displayed ranges.
+  * All these notations aswell as new abbreviations get a 1 line info at the end of the tooltip when they are present.
+  * The top section with basic information and DPS calculation for weapons was rearranged. It includes a warning now when a low itemlevel lowers the item's max socket number. Furthermore Q20PhysDps got added.
+* Currently unhandled affix cases:
+  * Weapons with #% increased Physical Damage, +# to Accuracy Rating and 5-10% increased Light Radius. (up to 4 mods mix)
+  * Tower shields with #% increased Armour, #% increased Stun and Block Recovery and +#% Chance to Block. (up to 5 mods mix)
+
+### 2) GDI+ display:
+* You can enable GDI+ in the settings menu, which results in a tooltip using the GDI+ graphics library. This alternative tooltip allows colour customization and transparency.
+
+### 3) Reworked .ini handling:
+* User defined settings will now persist between new version updates (proper INI file updating instead of overwriting).
+* The script should now run correctly regardless of the selected keyboard layout, previously non-latin layouts like russian caused errors related to hotkeys on script start.
+* AdditionalMacros hotkeys, their states and other configurations should be changed in AdditionalMacros.ini from now on.
+* AdditionalMacros.txt was moved out of the user folder and shouldn't be edited anymore. The subfolder CustomMacros with it's user created/added/edited scripts serves its old purpose from now on.
+* MapModWarning states should be changed in MapModWarnings.ini.
+
+### 4) Other notable changes:
+* The changed poe.ninja API endpoint is fixed.
+* New AdditionalMacros:
+  * Ctrl + Alt + C opens an item on pathof.info for an advanced affix breakdown.
+  * Ctrl + Alt + Enter sends "/whois <lastWhisperCharacterName>" when keys are released (not when pressed).
+
+### 5) Minor notes and bugfixes:
+* Fixed Chance To Poison / Increased Poison Damage that was swapped.
+* Chance To Bleed's data file was missing a | character so a value was not read properly.
+* 3.0's new increased Cast Speed mod for ES shields was missing.
+* 3.0's new increased Attack Damage mod for AR/EV hybrid base shields is now correctly considered as a prefix and not a suffix.
+* Adapted rewording of jewel Bleeding suffix and jewel Poison Duration suffix.
+* Fixed MapModWarning for "Monsters cannot be Stunned".
+* Map Info: Lair Map upgrades to Mineral Pools (not Spider Forest).
+* The gem quality info for Summon Skeleton gets displayed now (by not expecting "Summon Skeletons").
+* Fixed a bug with increased Elemental Damage with Attack Skills: There are two almost identical progressions, but the script only knew one. This is not a new change, but simply was never noticed. It is now correctly differentiated between 'on weapon' and 'on other item type' which shifts the T2 to T1 breakpoint from 37/38 to 36/37.
 
 3.0.03
 ================================
-from aRTy42
+from aRTy
 
 Improvements for 3.0 mods: All new ailment mods should now be supported. Old Energy Shield mods should now all be fixed.
 	Flat defense mods on hybrid armour bases are supported, hybrid life mods are not (if you see .5 prefixes, it's likely hybrid life).
@@ -12,7 +85,7 @@ Updated Divination Cards and Uniques with data from the wiki.
 
 3.0.02
 ================================
-from aRTy42
+from aRTy
 
 Updated Divination cards with data from the wiki. Note that a lot of information is still missing.
 Updated and corrected Unique data from the wiki.
@@ -22,13 +95,13 @@ Adopted the new wording for the two map mods concerning "Elemental Ailments" (no
 
 3.0.01
 ================================
-from aRTy42
+from aRTy
 
 Imported new unique data from the wiki.
 
 3.0.00
 ================================
-from aRTy42, Eruyome
+from aRTy, Eruyome
 
 Reworked AdditionalMacros (by Eruyome). Refer to the ReadMe section at the start of the AdditionalMacros.txt file.
 Improved several technical aspects regarding file downloads and updates (by Eruyome).
@@ -37,7 +110,7 @@ Added most unambiguous new mods and updated existing ones. NOT included: The new
 
 2.6.04
 ================================
-from aRTy42, Eruyome, Nightblade
+from aRTy, Eruyome, Nightblade
 
 Map parsing: MapModWarnings can now be customized. Like AdditionalMacros the file is put into the user folder and 
 	can be accessed via the context menu "Edit -> Map Mod Warnings".
@@ -48,14 +121,14 @@ AdditionalMacros: Added more functions and enabled more functions by default.
 
 2.6.03
 ================================
-from aRTy42
+from aRTy
 
 Map mod parsing improved. Includes mod warnings for unpopular or difficult mods.
 Map data: Tooltip now includes "Boss Arena: Yes/No". Updated most difficulty and layout ratings with the wiki's map article.
 
 2.6.03-beta
 ================================
-from aRTy42 and Eruyome
+from aRTy and Eruyome
 
 New feature: Map affix parsing which includes mod counting, so you no longer have to guesstimate 8-mods. Since this was a big chunk of code and
 	is probably not completely bug-free yet this is a beta-release. If you want to test it: Please do! (and report any oddities you find).
@@ -68,7 +141,7 @@ Updated Uniques and Maps with wiki info (with thanks to cirf for updating all th
 
 2.6.01
 ================================
-from aRTy42
+from aRTy
 
 Updated Uniques, Divination Cards and Maps with the current wiki info.
 Fixed Atlas info: Grotto Map and Dungeon Map now list each other as connected. (with thanks to "paulcdejean" on GitHub)
@@ -76,14 +149,14 @@ Fixed a bug that only occured when ItemInfo was used via the TradeMacro: The pre
 
 2.6.00
 ================================
-from aRTy42
+from aRTy
 
 Updated Uniques, Divination Cards and Maps with the current wiki info.
 	(Be still attentive when checking uniques since the wiki is not fully updated yet)
 
 2.5.06
 ================================
-from Eruyome, 4GForce, aRTy42
+from Eruyome, 4GForce, aRTy
 
 New features: Auto-updater and global user settings. (by Eruyome)
 	The update notification window now comes with a button "update". This feature allows the script to download the new files
@@ -107,14 +180,14 @@ Made some adjustments to the handling of Implicits. (by Eruyome)
 	
 2.5.05
 ================================
-from aRTy42, Eruyome, 4GForce
+from aRTy, Eruyome, 4GForce
 
 Fixed an issue with the file encoding of the config file and adjusted the handling of it. If you had weird characters instead
 	of the three dots for abbreviating mods, try this release.
 
 2.5.04
 ================================
-from Eruyome, aRTy42, 4GForce
+from Eruyome, aRTy, 4GForce
 
 UPDATE YOUR AUTOHOTKEY INSTALLATION
 (unless you updated in the last 2-3 months already)
@@ -135,20 +208,20 @@ Updated Maps, Divination Cards and Uniques with the current wiki info.
 
 2.5.03
 ================================
-from aRTy42, Eruyome
+from aRTy, Eruyome
 Included an update notifier for the script (by Eruyome).
 Updated Maps, Divination Cards and Uniques with the current wiki info.
 Included the name change of "Armory Map" to "Armoury Map" (again), because it got partially reverted with v2.5.02.
 
 2.5.02
 ================================
-from aRTy42
+from aRTy
 Fixed a bug with added elemental damage for bows that got introduced in 2.5.01.
 Moved the pause function key binding to the "AdditionalMacros" file so that people can change the key more easily.
 
 2.5.01
 ================================
-from aRTy42
+from aRTy
 Updated maps and divination cards with wiki info.
 Added gem quality info to cast while channeling.
 Fixed a bug that sometimes caused item types of rares to be mismatched if their randomly assigned name contained a keyword
@@ -157,7 +230,7 @@ Corrected the data for the unique "Prismatic Eclipse" that was missing two mods 
 
 2.5.00
 ================================
-from aRTy42, Eruyome
+from aRTy, Eruyome
 Updated Uniques for PoE v2.5.
 Uniques now only show those values on the right side that actually have a range to roll. This should simplify comparing your rolls.
 The method of pulling the unique data was changed, so a few errors might have slipped in. Please report any errors you find.
@@ -167,7 +240,7 @@ Fixed a bug that caused item flavour text or usage hints to appear at the bottom
 
 2.4.05
 ================================
-from aRTy42, Eruyome, Arkaf
+from aRTy, Eruyome, Arkaf
 Changed Direct3DWindowClass to POEWindowClass and the relevant .exe names, so that the script works again.
 	It should support both standalone and steam version and both 32 and 64 bit.
 Currency stacks of 1000+ in the currency tab should now read correctly for the currency conversion function.
@@ -175,12 +248,12 @@ Currency stacks of 1000+ in the currency tab should now read correctly for the c
 
 2.4.04
 ================================
-from aRTy42
+from aRTy
 Minor fix for map matching (Ivory Temple Map and Vaal Temple Map were detected as Temple Map)
 
 2.4.03
 ================================
-from aRTy42 and Eruyome
+from aRTy and Eruyome
 Updated Maps. Added shaped maps and included information from the wiki where possible.
 Corrected the data for the "Cast Speed" affix, which is higher for staves since PoE v2.4
 Fixed item type detection for magic items (by Eruyome)
@@ -189,13 +262,13 @@ Added or changed several functions and data storing methods so that the "PoE-Tra
 
 2.4.02
 ================================
-from aRTy42
+from aRTy
 Updated Uniques.
 Maps have updated Boss descriptions, general notes and ratings for difficulty (1-5) and layout (A-C).
 
 2.4.01
 ================================
-from aRTy42
+from aRTy
 Compiled new map info from various sources, see the forum thread for details.
 Updated Divinations cards with wiki information.
 Uniques not updated yet, because there are lots of things to fix and holding back
@@ -203,14 +276,14 @@ Uniques not updated yet, because there are lots of things to fix and holding bac
 
 2.4.00
 ================================
-from aRTy42
+from aRTy
 Basic support for the new value range format ("#-#" was changed to "# to #"). The script will continue to display its results as before.
 Map and Divination card information was not updated yet. This will follow in a few days once there is enough on the wiki.
 Fixed how the "AdditionalMacros" file was included to support shortcuts to the script from the start menu and task bar.
 
 2.3.07
 ================================
-from aRTy42
+from aRTy
 New feature: Gem quality info. Full 20% quality effect and effect per quality point get displayed.
 Completely restructured jewels: Separated both the affix parsing code and the data files.
 	This change should have no visible impact ingame. Please report bugs if you notice any.
@@ -221,7 +294,7 @@ Updated Divination Cards with wiki infos
 
 2.3.06
 ================================
-from aRTy42
+from aRTy
 The new label "Map Drop" introduced in PoE v2.3.2 is now accounted for and thus no longer breaks parsing items.
 Added new file "AdditionalMacros.txt" in the main folder. The user macros that used to be at the very end of the ahk-file
 	are now located here, for easier access. Added detection for the Steam version exe-file. The user macros are disabled
@@ -245,7 +318,7 @@ Added Shavronne's Gambit to uniques, which was still missing (pointed out by mag
 
 2.3.03
 ================================
-from aRTy42
+from aRTy
 Uniques: Included more of the new 2.3 uniques. Updated implicits for Sceptres and Wands.
 	Manually adjusted the display for a few more uniques (notable: Ventor's Gamble and several Jewels)
 Updated Divination Cards
@@ -253,7 +326,7 @@ Updated Maps
 
 2.3.02
 ================================
-from underbent, vdorie, aRTy42
+from underbent, vdorie, aRTy
 Improved data thanks to underbent's additions to the data fetch script: https://github.com/underbent/scrape_poe_info
 	This means divination cards are now updated to today's wiki infos
 	and uniques with decimal point values (like 0.2% leech) no longer truncate the displayed value to 0
@@ -266,7 +339,7 @@ Included a fix from underbent so that the warning info of equipped items that yo
 
 2.3.01
 ================================
-from aRTy42
+from aRTy
 Added "Has Fated Variant" line to info for respective uniques
 "Max Sockets" should no longer show up on non armour/weapon items
 Fixed Drillneck data that got lost due to an odd wiki entry
@@ -274,11 +347,11 @@ Fixed Drillneck data that got lost due to an odd wiki entry
 2.3
 ================================
 from /u/trecko1234 and /u/netarc: https://www.reddit.com/r/pathofexile/comments/4nd1mj/updated_bahnzos_item_info_script_for_23/
-Merged with the latest version from Bahnzo by aRTy42
+Merged with the latest version from Bahnzo by aRTy
 
 2.11
 ================================
-from aRTy42
+from aRTy
 Armour matching with RegEx. MaxLife fix & cleanup
 
 2.1

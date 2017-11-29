@@ -1,8 +1,8 @@
-﻿If (!FileExist(A_ScriptDir "\_TradeMacroMain.ahk")) {
-	RunWait, Run_TradeMacro.ahk
-	While (!FileExist(A_ScriptDir "\_TradeMacroMain.ahk")) {
-		Sleep, 500
-	}
+﻿#SingleInstance, force
+
+RunWait, Run_TradeMacro.ahk -mergeonly
+While (!FileExist(A_ScriptDir "\_TradeMacroMain.ahk")) {
+	Sleep, 500
 }
 
 SplitPath, A_AhkPath,, AhkDir

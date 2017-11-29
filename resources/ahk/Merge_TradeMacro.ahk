@@ -1,6 +1,6 @@
 ; #####################################################################################################################
 ; # This script merges TradeMacro, TradeMacroInit, PoE-ItemInfo and AdditionalMacros into one script and executes it.
-; # We also have to set some global variables and pass them to the ItemInfo/TradeMacroInit scripts. 
+; # We also have to set some global variables and pass them to the ItemInfo/TradeMacroInit scripts.
 ; # This is to support using ItemInfo as dependancy for TradeMacro.
 ; #####################################################################################################################
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_CheckFolderWriteAccess.ahk
@@ -30,7 +30,11 @@ If (InStr(arguments, "-nosplash", 0)) {
 	StartSplashScreen()
 }
 
-/*	 
+If (InStr(arguments, "-mergeonly", 0)) {
+	onlyMergeFiles := 1
+}
+
+/*
 	Set ProjectName to create user settings folder in A_MyDocuments
 */
 projectName := "PoE-TradeMacro"
@@ -53,7 +57,7 @@ If (InStr(scriptDir, A_Desktop)) {
 	Msgbox, 0x1010, Invalid Installation Path, Executing PoE-TradeMacro from your Desktop (or any of its subfolders) may cause script errors, please choose a different directory.
 }
 
-/*	 
+/*
 	Set some important variables
 */
 FilesToCopyToUserFolder	:= scriptDir . "\resources\default_UserFiles"
@@ -63,16 +67,16 @@ userDirectory			:= A_MyDocuments . "\" . projectName . isDevelopmentVersion
 
 PoEScripts_CompareUserFolderWithScriptFolder(userDirectory, scriptDir, projectName)
 
-/*	 
+/*
 	merge all scripts into `_TradeMacroMain.ahk` and execute it.
 */
 info		:= ReadFileToMerge(scriptDir "\resources\ahk\POE-ItemInfo.ahk")
 tradeInit := ReadFileToMerge(scriptDir "\resources\ahk\TradeMacroInit.ahk")
 trade	:= ReadFileToMerge(scriptDir "\resources\ahk\TradeMacro.ahk")
-addMacros := ReadFileToMerge(userDirectory "\AdditionalMacros.txt", FilesToCopyToUserFolder)
+addMacros := ReadFileToMerge(scriptDir "\resources\ahk\AdditionalMacros.ahk")
 
 info		:= "`n`r`n`r" . info . "`n`r`n`r"
-addMacros	:= "#IfWinActive Path of Exile ahk_class POEWindowClass ahk_group PoEexe" . "`n`r`n`r" . addMacros . "`n`r`n`r"
+addMacros	:= "`n`r#IfWinActive ahk_group PoEWindowGrp" . "`n`r`n`r" . addMacros . "`n`r`n`r"
 addMacros	.= AppendCustomMacros(userDirectory)
 
 CloseScript("_TradeMacroMain.ahk")
@@ -88,7 +92,9 @@ FileAppend, %trade%		, %scriptDir%\_TradeMacroMain.ahk
 ; set script hidden
 FileSetAttrib, +H, %scriptDir%\_TradeMacroMain.ahk
 ; pass some parameters to TradeMacroInit
-Run "%A_AhkPath%" "%scriptDir%\_TradeMacroMain.ahk" "%projectName%" "%userDirectory%" "%isDevelopmentVersion%" "%overwrittenFiles%" "isMergedScript" "%skipSplash%"
+If (not onlyMergeFiles) {
+	Run "%A_AhkPath%" "%scriptDir%\_TradeMacroMain.ahk" "%projectName%" "%userDirectory%" "%isDevelopmentVersion%" "%overwrittenFiles%" "isMergedScript" "%skipSplash%"
+}
 
 ExitApp
 
@@ -114,20 +120,20 @@ CloseScript(Name)
 		Return Name . " not found"
 }
 
-RunAsAdmin(arguments) 
+RunAsAdmin(arguments)
 {
     ShellExecute := A_IsUnicode ? "shell32\ShellExecute":"shell32\ShellExecuteA"
-    If Not A_IsAdmin 
-    { 
-		If A_IsCompiled 
-			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_ScriptFullPath . " " . arguments, str, A_WorkingDir, int, 1) 
-		Else 
-			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_AhkPath, str, """" . A_ScriptFullPath . """" . " " . arguments, str, A_WorkingDir, int, 1) 
+    If Not A_IsAdmin
+    {
+		If A_IsCompiled
+			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_ScriptFullPath . " " . arguments, str, A_WorkingDir, int, 1)
+		Else
+			DllCall(ShellExecute, uint, 0, str, "RunAs", str, A_AhkPath, str, """" . A_ScriptFullPath . """" . " " . arguments, str, A_WorkingDir, int, 1)
 		ExitApp
     }
 
     Return arguments
-}	
+}
 
 StartSplashScreen() {
     SplashTextOn, , 20, PoE-TradeMacro, Merging and starting Scripts...
@@ -138,19 +144,19 @@ AppendCustomMacros(userDirectory)
 	If(!InStr(FileExist(userDirectory "\CustomMacros"), "D")) {
 		FileCreateDir, %userDirectory%\CustomMacros\
 	}
-	
+
 	appendedMacros := "`n`n"
 	extensions := "txt,ahk"
 	Loop %userDirectory%\CustomMacros\*
 	{
-		If A_LoopFileExt in %extensions% 
+		If A_LoopFileExt in %extensions%
 		{
 			FileRead, tmp, %A_LoopFileFullPath%
 			appendedMacros .= "; appended custom macro file: " A_LoopFileName " ---------------------------------------------------"
 			appendedMacros .= "`n" tmp "`n`n"
 		}
 	}
-	
+
 	Return appendedMacros
 }
 
@@ -172,10 +178,10 @@ ReadFileToMerge(path, fallbackSrcPath = "") {
 			Msgbox, 4096, Critical file read error, The system lacks sufficient memory to load the file "%path%".`n`nClosing Script...
 			ExitApp
 		} Else {
-			Return file	
-		}		
+			Return file
+		}
 	} Else {
 		Msgbox, 4096, Critical file read error, The file "%path%" doesn't exist. %fallback%`n`nClosing Script...
-		ExitApp		
-	}	
+		ExitApp
+	}
 }
