@@ -23,31 +23,31 @@ Phys DPS:   147.0     Q20 Phys:   162.3
 Total DPS:  183.0     Q20 Total:  198.3
 */
 
-Gui, TTbg:New, +AlwaysOnTop +ToolWindow +hwndTTbgHWnd
-Gui, TTbg:Color, Red
+;Gui, TTbg:New, +AlwaysOnTop +ToolWindow +hwndTTbgHWnd
+;Gui, TTbg:Color, 000000
 Gui, TT:New, +AlwaysOnTop +ToolWindow +hwndTTHWnd
 
 ;--------------
-table01 := new Table("TT", "t01", "t01H", 9, "Consolas")
-table01.AddCell(1, 1, item.name)
-table01.AddCell(2, 1, item.basetype)
+table01 := new Table("TT", "t01", "t01H", 9, "Consolas", "FEFEFE", false)
+table01.AddCell(1, 1, item.name, "", "", "", "Trans", "", true)
+table01.AddCell(1, 1, item.basetype, "", "", "", "Trans", "", true)
 
 ;--------------
-table02 := new Table("TT", "t02", "t02H", 9, "Consolas")
+table02 := new Table("TT", "t02", "t02H", 9, "Consolas", "FEFEFE", true)
 
 table02.AddCell(1, 1, "Item Level:", "", "", "", "Trans", "", true)
 table02.AddCell(1, 2, item.lvl)
 table02.AddCell(1, 3, "", "", "", "", "", "", true)
-table02.AddCell(1, 4, "Base Level:", "", "", "", "", "bold", true)
+table02.AddCell(1, 4, "Base Level:", "", "", "", "", "bold", "", true)
 table02.AddCell(1, 5, item.baselvl)
 
-table02.AddCell(2, 1, "Max Sockets:", "", "", "White", "Blue", "", true)
+table02.AddCell(2, 1, "Max Sockets:", "", "", "", "Red", "", true)
 table02.AddCell(2, 2, item.msockets)
 table02.AddCell(2, 3, "", "", "", "", "", "", true)
 table02.AddCell(2, 4, "")
 table02.AddCell(2, 5, "")
 	
-table02.AddCell(3, 1, "Ele DPS:", "", "", "Red", "", "", true)
+table02.AddCell(3, 1, "Ele DPS:", "", "", "", "", "", true)
 table02.AddCell(3, 2, item.dps.ele)
 table02.AddCell(3, 3, "", "", "", "", "", "", true)
 table02.AddCell(3, 4, "Chaos DPS:", "", "", "", "", "italic", true)
@@ -65,27 +65,29 @@ table02.AddCell(5, 3, "", "", "", "", "", "", true)
 table02.AddCell(5, 4, "Q20 Total:", "", "", "", "", "strike", true)
 table02.AddCell(5, 5, item.dps.qtotal)
 
-;table01.drawtable()
-table02.drawtable()
+;table01.drawTable()
+table02.drawTable()
 
-Gui, TT:Color, FFFFFF
+Gui, TT:Color, 000000
 Gui, TT:Show, AutoSize, CustomTooltip
 
 WinSet, ExStyle, +0x20, ahk_id %TTHWnd% ; 0x20 = WS_EX_CLICKTHROUGH
-WinSet, TransColor, White 255, ahk_id %TTHWnd%
+;WinSet, TransColor, FF0001 255, ahk_id %TTHWnd%
+WinSet, Transparent, 200, ahk_id %TTHWnd%
 WinSet, Style, -0xC00000, A
 
 ; get text gui dimensions
-WinGetPos, ttXPos, ttYPos, ttWidth, ttHeight, ahk_id %TTHWnd%
+;WinGetPos, ttXPos, ttYPos, ttWidth, ttHeight, ahk_id %TTHWnd%
 ; show bg gui again, now with dimensions/positions
-Gui, TTbg:Show, w%ttWidth% h%ttHeight% x%ttXPos% y %ttYPos%
-WinSet, ExStyle, +0x20, ahk_id %TTbgHWnd% ; 0x20 = WS_EX_CLICKTHROUGH
-WinSet, Style, -0xC00000, A
-
+;Gui, TTbg:Show, w%ttWidth% h%ttHeight% x%ttXPos% y %ttYPos%
+;WinSet, ExStyle, +0x20, ahk_id %TTbgHWnd% ; 0x20 = WS_EX_CLICKTHROUGH
+;WinSet, Style, -0xC00000, A
+;WinSet, TransColor, FFFFFF 200, ahk_id %TTbgHWnd%
 
 ; show text gui again to have it on top
-Gui, TT:Show, AutoSize, CustomTooltip
+;Gui, TT:Show, AutoSize, CustomTooltip
 ;DllCall("SetParent", "uint", TTBGHWnd, "uint", TTHWnd)
+
 
 Return
 GuiClose:
@@ -93,7 +95,7 @@ ExitApp
 
 
 class Table {
-	__New(GuiName, assocVar, assocHwnd, fontSize = 9, font = "Verdana", color = "Default") {
+	__New(GuiName, assocVar, assocHwnd, fontSize = 9, font = "Verdana", color = "Default", grid = false) {
 		this.assocVar := "v" assocVar
 		this.assocHwnd := "hwnd" assocHwnd
 		this.GuiName := StrLen(GuiName) ? GuiName ":" : ""
@@ -102,9 +104,10 @@ class Table {
 		this.fColor := color
 		this.rows := []
 		this.maxColumns := 0
+		this.showGrid := grid
 	}
 	
-	DrawTable() {
+	DrawTable(tableXPos = "", tableYPos = "") {
 		columnWidths := []		
 		rowHeights := []		
 		Loop, % this.maxColumns {
@@ -131,19 +134,46 @@ class Table {
 		Gui, %guiName%Font, %guiFontOptions%, % this.font 
 		
 		shiftY := 0
+		
+		tableXPos := not StrLen(tableXPos) ? "x+10" : tableXPos
+		tableYPos := not StrLen(tableYPos) ? "y+10" : tableYPos
+	;	Gui, %guiName%Add, Text, w0 h0 %tableXPos% %tableYPos%, % ""
+		;msgbox % tablexpos " " tableypos
 		For key, row in this.rows {
 			shiftY += 15
 			For k, cell in row {
 				addedBackground := false
 				width := columnWidths[k] + 20
-				height := rowHeights[key]
-				yPos := k = 1 ? " y" shiftY : " yp+0"
-				xPos := k = 1 ? " x10" : " x+5"
+				height := rowHeights[key] + (this.fontSize / 3)
+				
+				If (k = 1 and key = 1) {
+					yPos := " " tableYPos
+				} Else If (k = 1) {
+					yPos := " y" shiftY
+				} Else {
+					yPos := " yp+0"
+				}
+
+				;yPos := k = 1 ? " y" shiftY : " yp+0"
+				If (k = 1 and key = 1) {
+					xPos := " " tableXPos					
+				}
+				Else If (k = 1) {
+					xPos := " x10"
+				} Else If (not this.showGrid) {
+					xPos := " x+5"
+				} Else {
+					xPos := " x+-1"
+				}
 				
 				options := ""
 				options .= StrLen(cell.color) ? " c" cell.color : ""				
 				options .= " w" width 
 				options .= " h" height
+				
+				If (k = 1 and key = 1) {
+					options .= " Section"
+				}
 
 				If (cell.bgColor = "Trans") {
 					options .= " BackGroundTrans"
@@ -159,34 +189,42 @@ class Table {
 					options .= yPos
 					options .= xPos
 				}
+				
+				If (this.showGrid) {
+					options .= " +Border"
+				}
 
 				If (cell.fColor or cell.font or cell.fontOptions) {
 					elementFontOptions := StrLen(cell.fColor) ? " c" cell.fColor : ""
 					elementFontOptions .= StrLen(cell.fontOptions) ? " " cell.fontOptions : ""
 					elementFont := StrLen(cell.font) ? cell.font : this.font
 					Gui, %guiName%Font, %elementFontOptions%, % elementFont 
-				}				
+				}
+				
+				If (RegExMatch(cell.alignment, "i)left|center|right")) {
+					options .= " " cell.alignment
+				}
+				
 				Gui, %guiName%Add, Text, %options%, % cell.value
 				If (cell.fColor or cell.font) {
 					Gui, %guiName%Font, %guiFontOptions% " norm", % this.font 
-				}
-				
+				}				
 			}
 		}		
 	}
 	
-	AddCell(rowIndex, cellIndex, value, alignment = "right", font = "", fColor = "", bgColor = "", fontOptions = "", isSpacingCell = false) {
+	AddCell(rowIndex, cellIndex, value, alignment = "left", font = "", fColor = "", bgColor = "", fontOptions = "", isSpacingCell = false) {
 		If (not this.rows[rowIndex]) {
 			this.rows[rowIndex] := []
 		}
 		
 		this.rows[rowIndex][cellIndex] := {}
-		this.rows[rowIndex][cellIndex].value := value
+		this.rows[rowIndex][cellIndex].value := " " value " "	; add spaces as table padding
 		this.rows[rowIndex][cellIndex].font := StrLen(font) ? font : this.font
-		size := this.MeasureText(value, this.fontSize + 1, font)
+		size := this.MeasureText(this.rows[rowIndex][cellIndex].value, this.fontSize + 2, font)
 		this.rows[rowIndex][cellIndex].height := size.H
 		this.rows[rowIndex][cellIndex].width := (not StrLen(value) and isSpacingCell) ? 10 : size.W
-		this.rows[rowIndex][cellIndex].alignment := StrLen(alignment) ? alignment : "right"		
+		this.rows[rowIndex][cellIndex].alignment := StrLen(alignment) ? alignment : "left"		
 		this.rows[rowIndex][cellIndex].color := fColor
 		this.rows[rowIndex][cellIndex].bgColor := bgColor
 		this.rows[rowIndex][cellIndex].fontOptions := fontOptions
