@@ -571,25 +571,11 @@ class EasyIni
 			}
 		}
 		
-		; workaround: the deletion loop often only loops over half the old sections 
-		; (when the deletion code is used, at least, just counting the old ones works).
-		; repeat the update function recursively if more old sections are present than deleted ones.
-		oldSections := 0
-		totalSections := 0
-		for sectionName, sectionKeys in this
-		{
-			totalSections++
-			if (sections and !SourceIni.HasKey(sectionName)) {				
-				oldSections++
-			}
-		}
-		
-		removedSections := 0		
+		removeSectionsList := []
 		for sectionName, sectionKeys in this {
-			; Remove old section
-			if (sections and !SourceIni.HasKey(sectionName)) {
-				this.DeleteSection(sectionName)
-				removedSections++
+			; Remove old section, remember Section, remove later to not mess up the object index.
+			if (sections and !SourceIni.HasKey(sectionName)) {				
+				removeSectionsList.push(sectionName)				
 			}
 			; Remove old section comment
 			if (section_comments and SourceIni.HasKey(sectionName)) {
@@ -614,9 +600,9 @@ class EasyIni
 				}
 			}
 		}
-
-		If (oldSections > removedSections and repeatedRecursions < totalSections) {
-			this.Update(SourceIni, sections, keys, values, top_comments, section_comments, key_comments, repeatedRecursions)
+		
+		Loop, % removeSectionsList.MaxIndex() {
+			this.DeleteSection(removeSectionsList[A_Index])
 		}
 		
 		return
