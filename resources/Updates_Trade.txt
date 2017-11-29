@@ -29,6 +29,7 @@ These changes are quite extensive and will likely bring a few bugs that were not
 ** It won't be initialised on script start if it's not enabled, this is a fix for a potential issue where having GDI+ enabled/initialized can cause FPS drops. 
 
 3) Reworked .ini handling:
+* The first macro start after updating from the last stable version may overwrite some INI files, or small parts of them, while converting the old files.
 * User defined settings will now persist between new version updates (proper INI file updating instead of overwriting).
 * The script should now run correctly regardless of the selected keyboard layout, previously non-latin layouts like russian caused errors related to hotkeys on script start.
 * AdditionalMacros hotkeys, their states and other configurations should be changed in AdditionalMacros.ini from now on.
@@ -36,7 +37,7 @@ These changes are quite extensive and will likely bring a few bugs that were not
 * MapModWarning states should be changed in MapModWarnings.ini.
 
 4) Settings menu rework:
-* The window is now wider and shorter in height to better acommodate different screensizes.
+* The window is now wider and shorter in height to better accommodate different screensizes.
 * Improved readability with a different font.
 * Added an option to copy generated URLs to the clipboard instead of opening them.
 * Added a tab for AdditionalMacros settings:

@@ -46,7 +46,7 @@ class Globals {
 Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
-Globals.Set("SettingsUIWidth", 813)
+Globals.Set("SettingsUIWidth", 963)
 Globals.Set("SettingsUIHeight", 665)
 Globals.Set("AboutWindowHeight", 340)
 Globals.Set("AboutWindowWidth", 435)
@@ -7736,7 +7736,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		ImplicitValueArray := LookupImplicitValue(Item.BaseName)
 		
 		maxIndex 	:= Item.Implicit.MaxIndex()
-		TextLineWidth := 20
+		TextLineWidth := ImplicitValueArray.MaxIndex() and StrLen(ImplicitValueArray[1]) ? 20 : 50
 		Ellipsis := Opts.AffixTextEllipsis
 		
 		Loop, % maxIndex {

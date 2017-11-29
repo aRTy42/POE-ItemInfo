@@ -591,18 +591,20 @@ CreateTradeSettingsUI()
 	GuiAddText("Account Name:", "x337 yp+34 w160 h20 0x0100", "LblAccountName", "LblAccountNameH")
 	AddToolTip(LblAccountNameH, "Your Account Name used to check your item's age.")
 	GuiAddEdit(TradeOpts.AccountName, "x+10 yp-2 w120 h20", "AccountName", "AccountNameH")
-
-	GuiAddText("Gem Level:", "x337 yp+32 w230 h20 0x0100", "LblGemLevel", "LblGemLevelH")
+	
+	; gem section start
+	GuiAddText("Gem Lvl:", "x337 yp+32 w54 h20 0x0100", "LblGemLevel", "LblGemLevelH")
 	AddToolTip(LblGemLevelH, "Gem level is ignored in the search unless it's equal`nor higher than this value.`n`nSet to something like 30 to completely ignore the level.")
-	GuiAddEdit(TradeOpts.GemLevel, "x+10 yp-2 w50 h20", "GemLevel", "GemLevelH")
+	GuiAddEdit(TradeOpts.GemLevel, "x+1 yp-2 w33 h20", "GemLevel", "GemLevelH")
 
-	GuiAddText("Gem Level Range:", "x337 yp+32 w230 h20 0x0100", "LblGemLevelRange", "LblGemLevelRangeH")
-	AddToolTip(LblGemLevelRangeH, "Uses GemLevel option to create a range around it.`n `nSetting it to 0 ignores this option.")
-	GuiAddEdit(TradeOpts.GemLevelRange, "x+10 yp-2 w50 h20", "GemLevelRange", "GemLevelRangeH")
+	GuiAddText("Lvl Range:", "x+5 yp+2 w63 h20 0x0100", "LblGemLevelRange", "LblGemLevelRangeH")
+	AddToolTip(LblGemLevelRangeH, "Uses Gem level option to create a range around it.`n `nSetting it to 0 ignores this option.")
+	GuiAddEdit(TradeOpts.GemLevelRange, "x+1 yp-2 w33 h20", "GemLevelRange", "GemLevelRangeH")
 
-	GuiAddText("Gem Quality Range:", "x337 yp+32 w230 h20 0x0100", "LblGemQualityRange", "LblGemQualityRangeH")
+	GuiAddText("Q. Range:", "x+5 yp+2 w62 h20 0x0100", "LblGemQualityRange", "LblGemQualityRangeH")
 	AddToolTip(LblGemQualityRangeH, "Use this to set a range to quality Gem searches. For example a range of 1`n searches 14% - 16% when you have a 15% Quality Gem.`nSetting it to 0 (default) uses your Gems quality as min_quality`nwithout max_quality in your search.")
-	GuiAddEdit(TradeOpts.GemQualityRange, "x+10 yp-2 w50 h20", "GemQualityRange", "GemQualityRangeH")
+	GuiAddEdit(TradeOpts.GemQualityRange, "x+1 yp-2 w33 h20", "GemQualityRange", "GemQualityRangeH")
+	; gem section end
 
 	GuiAddText("Mod Range Modifier (%):", "x337 yp+32 w190 h20 0x0100", "LblAdvancedSearchModValueRange", "LblAdvancedSearchModValueRangeH")
 	AddToolTip(LblAdvancedSearchModValueRangeH, "Advanced search lets you select the items mods to include in your`nsearch and lets you set their min/max values.`n`nThese min/max values are pre-filled, to calculate them we look at`nthe difference between the mods theoretical max and min value and`ntreat it as 100%.`n`nWe then use this modifier as a percentage of this differences to`ncreate a range (min/max value) to search in. ")
