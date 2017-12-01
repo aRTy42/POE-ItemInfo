@@ -2,10 +2,11 @@ The following is a list of what has been updated, starting with 1.1.0
 
 2.6.0
 ================================================================================================
-Big new features:
+Big new features/changes:
 1) Full rework of ItemInfo affix parsing.
 2) Alternative tooltip display option using the GDI+ library/dll.
 3) Reworked INI handling.
+4) Settings menu rework.
 
 These changes are quite extensive and will likely bring a few bugs that were not found. This is a beta-release for that reason. Please report issues, preferably on GitHub.
 
@@ -41,9 +42,8 @@ These changes are quite extensive and will likely bring a few bugs that were not
 * Improved readability with a different font.
 * Added an option to copy generated URLs to the clipboard instead of opening them.
 * Added a tab for AdditionalMacros settings:
-** Up until now you stil had to edit the .ini files to change these settings.
-** The hotkey sselection UI element is a bit experimental and might cause issues for people using non-latin keybaord layouts.
-** Unfortunately the default AHK UI element doen't support special keys and mouse buttons.
+** Up until now you still had to edit the .ini files to change these settings.
+** The hotkey selection UI element is a bit experimental and might cause issues for people using non-latin keybaord layouts. Using the default input box was not sufficient because it doesn't support special keys and mouse buttons.
 ** Editing via .ini file is still possible, of course.
 
 5) Minor notes and bugfixes:
