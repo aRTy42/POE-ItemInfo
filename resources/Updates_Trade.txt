@@ -8,7 +8,7 @@ Big new features/changes:
 3) Reworked INI handling.
 4) Settings menu rework.
 
-These changes are quite extensive and will likely bring a few bugs that were not found. This is a beta-release for that reason. Please report issues, preferably on GitHub.
+While there shouldn't be any issues updating from any beta or stable version, try deleting your user files (.ini files) if there are issues starting the macro after updating.
 
 1) ItemInfo affix parsing:
 * The script handles potentially ambiguous mods completely different now. Multiple possibilities are shown when the script considers all of them fitting. This means in particular that hybrid mods are now almost fully supported. Please report items where the scripts results seem wrong. (A few cases currently remain unhandled, these will be fixed later. See the end of section 1 for details.)
