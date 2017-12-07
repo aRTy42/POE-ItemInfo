@@ -7,6 +7,10 @@ DebugPrintArray(Array, Display=1, Level=0, guiWidth=800, guiHeight=900)
 	
 	Output := "Array`r`n" . SubStr(Tabs, 5) . "(" 
 	
+	If (StrLen(Array)) {
+		Array := [Array]
+	}
+	
 	For Key, Value in Array
 	{
 		If (IsObject(Value))

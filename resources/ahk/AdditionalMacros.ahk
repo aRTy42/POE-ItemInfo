@@ -31,29 +31,34 @@
 ;#     https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/AdditionalMacros            #
 ;###########-------------------------------------------------------------------###########
 
-AM_AssignHotkeys:
-	global AM_Config := class_EasyIni(argumentUserDirectory "\AdditionalMacros.ini")
-	global AM_CharacterName		:= AM_Config["AM_KickYourself"].CharacterName
-	global AM_ChannelName		:= AM_Config["AM_JoinChannel"].ChannelName
-	global AM_HighlightArg1		:= AM_Config["AM_HighlightItems"].Arg1
-	global AM_HighlightArg2		:= AM_Config["AM_HighlightItems"].Arg2
-	global AM_HighlightAltArg1	:= AM_Config["AM_HighlightItemsAlt"].Arg1
-	global AM_HighlightAltArg2	:= AM_Config["AM_HighlightItemsAlt"].Arg2
-	global AM_KeyToSCState		:= (TradeOpts.KeyToSCState != "") ? TradeOpts.KeyToSCState : AM_Config["General"].KeyToSCState
+AM_Init:
 
-	; This option can be set in the settings menu (ItemInfo tab) to completely disable assigning
-	; AdditionalMacros hotkeys.
-	If (Opts.EnableAdditionalMacros) {
-		for labelIndex, labelName in StrSplit(AM_Config.GetSections("|", "C"), "|") {
-			if (labelName != "General") {
-				for labelKeyIndex, labelKeyName in StrSplit(AM_Config[labelName].Hotkeys, ", ") {
-					if (labelKeyName and labelKeyName != A_Space) {
-						Hotkey, % KeyNameToKeyCode(labelKeyName, AM_KeyToSCState), %labelName%_HKey, % AM_Config[labelName].State
-					}
-				}
-			}
-		}
+	class AM_Options extends UserOptions {
+		
+	}	
+	global AM_Opts := new AM_Options()
+	
+	AM_Config := {}
+	AM_ConfigDefault := class_EasyIni(A_ScriptDir "\resources\default_UserFiles\AdditionalMacros.ini")
+	AM_ReadConfig(AM_Config)
+	Sleep, 150
+Return
+
+AM_AssignHotkeys:
+	If (not AM_Config) {
+		GoSub, AM_Init
 	}
+	; TODO: Refactor
+	global AM_CharacterName		:= AM_Config["KickYourself"].Character
+	global AM_ChannelName		:= AM_Config["JoinChannel"].Channel
+	global AM_HighlightArg1		:= AM_Config["HighlightItems"].Arg1
+	global AM_HighlightArg2		:= AM_Config["HighlightItems"].Arg2
+	global AM_HighlightAltArg1	:= AM_Config["HighlightItemsAlt"].Arg1
+	global AM_HighlightAltArg2	:= AM_Config["HighlightItemsAlt"].Arg2
+	global AM_KeyToSCState		:= (TradeOpts.KeyToSCState != "") ? TradeOpts.KeyToSCState : AM_Config["General"].General_KeyToSCState
+
+	; AdditionalMacros hotkeys.
+	AM_SetHotkeys()
 
 	GoSub, CM_ExecuteCustomMacrosCode_Label
 Return
@@ -93,7 +98,7 @@ AM_KickYourself_HKey:
 Return
 
 AM_Hideout_HKey:
-	SendInput {Enter}/hideout{Enter}					; Go to hideout with F5.
+	SendInput {Enter}/hideout{Enter}{Enter}{Up}{Up}{Esc}	; Go to hideout with F5. Restores the last chat that you were in.
 Return
 
 AM_ScrollTabRight_HKey:
@@ -162,4 +167,121 @@ setAfkMessage(){
 			Send {Shift Up}
 		}
 	}
+}
+
+AM_SetHotkeys() {
+	Global AM_Config
+	
+	If (AM_Config.General.EnableState) {
+		For labelIndex, labelName in StrSplit(AM_Config.GetSections("|", "C"), "|") {
+			If (labelName != "General") {
+				For labelKeyIndex, labelKeyName in StrSplit(AM_Config[labelName].Hotkeys, ", ") {
+					If (labelKeyName and labelKeyName != A_Space) {
+						AM_Config[labelName].State := AM_ConvertState(AM_Config[labelName].State)						
+						stateValue := AM_Config[labelName].State ? "on" : "off"
+						
+						; TODO: Fix hotkeys not being set without restart						
+						Hotkey, % KeyNameToKeyCode(labelKeyName, AM_KeyToSCState), AM_%labelName%_HKey, % stateValue
+						;console.log(labelKeyName ", " KeyNameToKeyCode(labelKeyName, AM_KeyToSCState) ", " "AM_" labelName "_HKey, " stateValue ", " ErrorLevel)
+					}
+				}
+			}
+		}
+	}
+}
+
+AM_ReadConfig(ByRef ConfigObj, ConfigDir = "", ConfigFile = "AdditionalMacros.ini")
+{
+	defaultFile := A_ScriptDir . "\resources\default_UserFiles\" . ConfigFile
+	ConfigDir  := StrLen(ConfigDir) < 1 ? userDirectory : ConfigDir	; userDirectory is global
+	ConfigPath := StrLen(ConfigDir) > 0 ? ConfigDir . "\" . ConfigFile : defaultFile
+	
+	ConfigObj  := class_EasyIni(ConfigPath)
+	ConfigObj.Update(defaultFile)
+}
+
+AM_WriteConfig(ConfigDir = "", ConfigFile = "AdditionalMacros.ini")
+{
+	Global AM_Config, AM_ConfigDefault
+	
+	ConfigDir  := StrLen(ConfigDir) < 1 ? userDirectory : ConfigDir	; userDirectory is global
+	ConfigPath := ConfigDir . "\" . ConfigFile
+	
+	AM_UpdateConfigFromGui(AM_Config, "AM_")
+	AM_Config.Save(ConfigPath)
+	AM_SetHotkeys()
+}
+
+AM_UpdateConfigKeyFromGuiControl(key, controlID) {
+	_get := GuiGet(controlID, "", Error)
+	return (not Error ? _get : key)
+}
+
+AM_UpdateConfigFromGui(ByRef Config, prefix) {
+	For section, keys in Config {
+		For key, val in keys {			
+			controlID := prefix . section "_" key
+			If (key = "Hotkeys") {
+				_value := ""
+				Loop {
+					_get := AM_GetHotkeyListViewValue(controlID "_" A_Index, Error)
+					If (not Error) {
+						_value .= _get ", "
+					} Else {
+						Break
+					}					
+				}
+				Config.SetKeyVal(section, key, RegExReplace(Trim(_value), "(.*)(,$)", "$1"))
+			}
+			; descriptions come from the default config file, we don't need to save them in the user config
+			Else If (not RegExMatch(key, "i).*_Description$|^Description$")) {				
+				Config.SetKeyVal(section, key, AM_UpdateConfigKeyFromGuiControl(Config[section][key], controlID))
+			}			
+		}	
+	}
+}
+
+AM_ConvertState(state, reverse = false) {
+	If (reverse) {
+		state := state = 1 ? "on" : state
+		state := state = 0 ? "off" : state	
+	} Else {
+		state := state = "on" ? 1 : state
+		state := state = "off" ? 0 : state	
+	}	
+	Return state
+}
+
+AM_UpdateSettingsUI() {
+	Global AM_Config
+	
+	_AM_sections := StrSplit(AM_Config.GetSections("|", "C"), "|")
+	For sectionIndex, sectionName in _AM_sections {	; this enables section sorting		
+		If (sectionName != "General") {
+			For keyIndex, keyValue in StrSplit(AM_Config[sectionName].Hotkeys, ", ") {	
+				HotKeyID := "AM_" sectionName "_HotKeys_" keyIndex
+				AM_UpdateHotkeyListView(HotKeyID, keyValue)
+			}
+		}
+		For keyIndex, keyValue in AM_Config[sectionName] {
+			If (not RegExMatch(keyIndex, "i)^Hotkeys$|^Description$|.*_Description$")) {
+				ControlID := "AM_" sectionName "_" keyIndex
+				GuiControl,, %ControlID%, % AM_Config[sectionName][keyIndex]
+			}
+		}
+	}
+}
+
+AM_UpdateHotkeyListView(controlID, value) {
+	Gui, ListView, %controlID%
+	LV_Delete(1)
+	LV_Add("","",value)
+}
+
+AM_GetHotkeyListViewValue(controlID, ByRef Error = false) {
+	GuiControlGet, _g, , %controlID%
+	Error := ErrorLevel ? true : false
+	Gui, ListView, %controlID%
+	LV_GetText(value, 1, 2)
+	Return value
 }
