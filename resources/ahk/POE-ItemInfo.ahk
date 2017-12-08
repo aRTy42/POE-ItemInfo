@@ -23,6 +23,7 @@ GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExi
 #Include, %A_ScriptDir%\lib\ConvertKeyToKeyCode.ahk
 #Include, %A_ScriptDir%\lib\Class_GdipTooltip.ahk
 #Include, %A_ScriptDir%\lib\Class_ColorPicker.ahk
+#Include, %A_ScriptDir%\lib\AdvancedHotkey.ahk
 IfNotExist, %A_ScriptDir%\temp
 FileCreateDir, %A_ScriptDir%\temp
 
@@ -45,8 +46,8 @@ class Globals {
 Globals.Set("AHKVersionRequired", AHKVersionRequired)
 Globals.Set("ReleaseVersion", ReleaseVersion)
 Globals.Set("DataDir", A_ScriptDir . "\data")
-Globals.Set("SettingsUIWidth", 545)
-Globals.Set("SettingsUIHeight", 600)
+Globals.Set("SettingsUIWidth", 963)
+Globals.Set("SettingsUIHeight", 665)
 Globals.Set("AboutWindowHeight", 340)
 Globals.Set("AboutWindowWidth", 435)
 Globals.Set("SettingsUITitle", "PoE ItemInfo Settings")
@@ -54,6 +55,7 @@ Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
 Globals.Set("ScriptList", [A_ScriptDir "\POE-ItemInfo"])
 Globals.Set("UpdateNoteFileList", [[A_ScriptDir "\resources\updates.txt","ItemInfo"]])
+Globals.Set("SettingsScriptList", ["ItemInfo", "Additional Macros"])
 argumentProjectName		= %1%
 argumentUserDirectory	= %2%
 argumentIsDevVersion	= %3%
@@ -66,7 +68,17 @@ global overwrittenUserFiles	:= overwrittenUserFiles ? overwrittenUserFiles : arg
 
 global SuspendPOEItemScript = 0
 
-class UserOptions {
+class UserOptions {	
+	ScanUI()
+	{
+		For key, val in this {
+			_get := GuiGet(key, "", Error)
+			this[key] := not Error ? _get : this[key]
+		}
+	}
+}
+
+class ItemInfoOptions extends UserOptions {
 	; Hotkey to invoke ItemInfo. Default: Ctrl+C.
 	ParseItemHotKey := "^c"
 	
@@ -82,7 +94,7 @@ class UserOptions {
 	UpdateSkipBackup := 0
 	
 	; Enable/disable the entire AdditionalMacros. The individual settings are in the AdditionalMacros.ini
-	EnableAdditionalMacros := 1
+	;EnableAdditionalMacros := 1
 	; Enable/disable the entire MapModWarnings functionality. The individual settings are in the MapModWarnings.ini
 	EnableMapModWarnings := 1
 	
@@ -156,51 +168,47 @@ class UserOptions {
 	GDITextOpacity			:= 100
 	GDIRenderingFix		:= 1
 	GDIConditionalColors	:= 0
-	
-	ScanUI()
-	{
-		For key, val in this {
-			_get := GuiGet(key, "", Error)
-			this[key] := not Error ? _get : this[key]
-		}
-	}
 }
-Opts := new UserOptions()
+Opts := new ItemInfoOptions()
 
 class Fonts {
-
-	Init(FontSizeFixed, FontSizeUI)
+	__New(FontSizeFixed, FontSizeUI = 9)
 	{
 		this.FontSizeFixed	:= FontSizeFixed
 		this.FontSizeUI	:= FontSizeUI
-		this.FixedFont		:= this.CreateFixedFont(FontSizeFixed)
-		this.UIFont		:= this.CreateUIFont(FontSizeUI)
+		this.FixedFont		:= this.CreateFixedFont(this.FontSizeFixed)
+		this.UIFont		:= this.CreateUIFont(this.FontSizeUI)
+		;debugprintarray(this)
 	}
 
-	CreateFixedFont(FontSize_)
+	CreateFixedFont(FontSize_, Options = "")
 	{
-		Options :=
+		; Q5 = Windows XP and later: If set, text is rendered (when possible) using ClearType antialiasing method.
+		Options .= " q5 "
 		If (!(FontSize_ == ""))
 		{
-			Options = s%FontSize_%
+			Options .= "s" FontSize_
 		}
 		Gui Font, %Options%, Courier New
 		Gui Font, %Options%, Consolas
-		Gui Add, Text, HwndHidden,
+		Gui Add, Text, HwndHidden h0 w0 x0 y0,
 		SendMessage, 0x31,,,, ahk_id %Hidden%
 		return ErrorLevel
 	}
 
-	CreateUIFont(FontSize_)
+	CreateUIFont(FontSize_, Options = "")
 	{
-		Options :=
+		; Q5 = Windows XP and later: If set, text is rendered (when possible) using ClearType antialiasing method.
+		Options .= " q5 "
 		If (!(FontSize_ == ""))
 		{
-			Options = s%FontSize_%
-		}
+			Options .= "s" FontSize_
+		}		
+		Gui Font, %Options%, Arial
 		Gui Font, %Options%, Tahoma
 		Gui Font, %Options%, Segoe UI
-		Gui Add, Text, HwndHidden,
+		Gui Font, %Options%, Verdana
+		Gui Add, Text, HwndHidden h0 w0 x0 y0,
 		SendMessage, 0x31,,,, ahk_id %Hidden%
 		return ErrorLevel
 	}
@@ -215,32 +223,34 @@ class Fonts {
 		SendMessage, 0x30, NewFont, 1,, ahk_class tooltips_class32 ahk_exe AutoHotkeyU64.exe
 	}
 
-	SetFixedFont(FontSize_=-1)
-	{
-		If (FontSize_ == -1)
-		{
+	SetFixedFont(FontSize_=-1, Options = "")
+	{		
+		If (FontSize_ != -1) {
 			FontSize_ := this.FontSizeFixed
-		}
-		Else
-		{
+		} Else {
 			this.FontSizeFixed := FontSize_
-			this.FixedFont := this.CreateFixedFont(FontSize_)
 		}
-		this.Set(this.FixedFont)
+		FixedFont := this.CreateFixedFont(FontSize_, Options)
+		
+		If (FixedFont) {		
+			this.Set(this.FixedFont)
+			this.FontSizeFixed := FixedFont
+		}		
 	}
 
-	SetUIFont(FontSize_=-1)
-	{
-		If (FontSize_ == -1)
-		{
+	SetUIFont(FontSize_=-1, Options = "")
+	{		
+		If (FontSize_ == -1) {
 			FontSize_ := this.FontSizeUI
-		}
-		Else
-		{
+		} Else {
 			this.FontSizeUI := FontSize_
-			this.UIFont := this.CreateUIFont(FontSize_)
-		}
-		this.Set(this.UIFont)
+		}		
+		UIFont := this.CreateUIFont(FontSize_, Options)
+		
+		If (UIFont and (this.UIFont != UIFont)) {
+			this.Set(this.UIFont)
+			this.UIFont := UIFont
+		}		
 	}
 
 	GetFixedFont()
@@ -291,6 +301,8 @@ class Item_ {
 		This.BaseType		:= ""
 		This.GripType		:= ""
 		This.Level		:= ""
+		This.Experience	:= ""
+		This.ExperienceFlat	:= ""
 		This.MapLevel		:= ""
 		This.MapTier		:= ""
 		This.MaxSockets	:= ""
@@ -331,6 +343,9 @@ class Item_ {
 		This.IsMapFragment	:= False
 		This.IsEssence		:= False
 		This.IsRelic		:= False
+		This.IsElderBase	:= False
+		This.IsShaperBase	:= False
+		This.IsAbyssJewel	:= False
 	}
 }
 Global Item := new Item_
@@ -438,6 +453,17 @@ GoSub, AM_AssignHotkeys
 GoSub, FetchCurrencyData
 GoSub, InitGDITooltip
 
+
+/*
+	Item data translation, won't be used for now.
+	Todo: remove test/debug code
+*/
+If (false) {
+	global currentLocale := ""
+	_Debug := true
+	global translationData := PoEScripts_DownloadLanguageFiles(currentLocale, false, "PoE-ItemInfo", "Updating and parsing language files...", _Debug)
+}
+
 Menu, TextFiles, Add, Additional Macros Settings, EditAdditionalMacrosSettings
 Menu, TextFiles, Add, Map Mod Warnings, EditMapModWarningsConfig
 Menu, TextFiles, Add, Custom Macros Example, EditCustomMacrosExample
@@ -451,6 +477,10 @@ Menu, Tray, NoStandard
 Menu, Tray, Add, Reload Script (Use only this), ReloadScript
 Menu, Tray, Add ; Separator
 Menu, Tray, Add, About..., MenuTray_About
+/*
+	;Item data Translation, won't be used for now.
+	Menu, Tray, Add, Translate Item, ShowTranslationUI
+*/
 Menu, Tray, Add, Show all assigned Hotkeys, ShowAssignedHotkeys
 Menu, Tray, Add, % Globals.Get("SettingsUITitle", "PoE ItemInfo Settings"), ShowSettingsUI
 Menu, Tray, Add, Check for updates, CheckForUpdates
@@ -468,8 +498,7 @@ Menu, Tray, Default, % Globals.Get("SettingsUITitle", "PoE ItemInfo Settings")
 #Include %A_ScriptDir%\data\DivinationCardList.txt
 #Include %A_ScriptDir%\data\GemQualityList.txt
 
-
-Fonts.Init(Opts.FontSize, 9)
+Fonts := new Fonts(Opts.FontSize, 9)
 
 GetAhkExeFilename(Default_="AutoHotkey.exe")
 {
@@ -734,6 +763,12 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			SubType = Belt
 			return
 		}
+		IfInString, LoopField, Stygian Vise
+		{
+			BaseType = Item
+			SubType = Belt
+			return
+		}
 		IfInString, LoopField, Belt
 		{
 			BaseType = Item
@@ -747,7 +782,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			return
 		}
 
-		If(RegExMatch(LoopField, "\bRing\b"))
+		If (RegExMatch(LoopField, "\bRing\b"))
 		{
 			BaseType = Item
 			SubType = Ring
@@ -799,28 +834,15 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		}
 
 		; Jewels
-		IfInString, LoopField, Cobalt%A_Space%Jewel
-		{
+		If (RegExMatch(LoopField, "i)(Cobalt|Crimson|Viridian|Prismatic) Jewel", match)) {
 			BaseType = Jewel
-			SubType = Cobalt Jewel
+			SubType := match1 " Jewel"
 			return
 		}
-		IfInString, LoopField, Crimson%A_Space%Jewel
-		{
+		; Abyss Jewels
+		If (RegExMatch(LoopField, "i)(Hypnotic|Murderous|Ghastly|Searching) Eye Jewel", match)) {
 			BaseType = Jewel
-			SubType = Crimson Jewel
-			return
-		}
-		IfInString, LoopField, Viridian%A_Space%Jewel
-		{
-			BaseType = Jewel
-			SubType = Viridian Jewel
-			return
-		}
-		IfInString, LoopField, Prismatic%A_Space%Jewel
-		{
-			BaseType = Jewel
-			SubType = Prismatic Jewel
+			SubType := match1 " Eye Jewel"
 			return
 		}
 
@@ -1489,6 +1511,28 @@ ParseGemLevel(ItemDataText, PartialString="Level:")
 	}
 }
 
+ParseGemXP(ItemDataText, PartialString="Experience:", ByRef Flat = "")
+{
+	ItemDataChunk := GetItemDataChunk(ItemDataText, PartialString)
+	Loop, Parse, ItemDataChunk, `n, `r
+	{
+		IfInString, A_LoopField, %PartialString%
+		{
+			StringSplit, ItemLevelParts, A_LoopField, %A_Space%
+			_Flat := StrTrimWhitespace(ItemLevelParts2)
+			XP := RegExReplace(_Flat, "\.")			
+		}
+	}
+	If (XP) {
+		RegExMatch(XP, "i)([0-9.,]+)\/([0-9.,]+)", xpPart)
+		If (StrLen(xpPart1) and StrLen(xpPart2)) {
+			Percent := Round((xpPart1 / xpPart2) * 100)
+			Flat := _Flat
+			Return Percent
+		}
+	}
+}
+
 ; For Debug purposes. Can be used to unravel an object into a printable format.
 ExploreObj(Obj, NewRow="`n", Equal="  =  ", Indent="`t", Depth=12, CurIndent="")
 { 
@@ -1648,40 +1692,40 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 {
 	Global ItemData, AffixTotals
 	
-	If(CountAffixTotals)
+	If (CountAffixTotals)
 	{
-		If(AffixType = "Hybrid Prefix" or AffixType = "Hybrid Defence Prefix"){
+		If (AffixType = "Hybrid Prefix" or AffixType = "Hybrid Defence Prefix"){
 			AffixTotals.NumPrefixes += 0.5
 		}
-		Else If(AffixType = "Hybrid Suffix"){
+		Else If (AffixType = "Hybrid Suffix"){
 			AffixTotals.NumSuffixes += 0.5
 		}
-		Else If(AffixType ~= "Prefix"){	; using ~= to match all that contains "Prefix", such as "Crafted Prefix".
+		Else If (AffixType ~= "Prefix"){	; using ~= to match all that contains "Prefix", such as "Crafted Prefix".
 			AffixTotals.NumPrefixes += 1
 		}
-		Else If(AffixType ~= "Suffix"){
+		Else If (AffixType ~= "Suffix"){
 			AffixTotals.NumSuffixes += 1
 		}
 	}
 	
-	If(Item.IsJewel)
+	If (Item.IsJewel)
 	{
 		TierAndType := AffixTypeShort(AffixType)	; Discard tier since it's always T1
 		
 		return [AffixLine, ValueRange, TierAndType]
 	}
 	
-	If(IsObject(AffixType))
+	If (IsObject(AffixType))
 	{
 		; Multiple mods in one line
 		TierAndType := ""
 		
 		For n, AfTy in AffixType
 		{
-			If(IsObject(Tier[A_Index]))
+			If (IsObject(Tier[A_Index]))
 			{
 				; Tier has a range
-				If(Tier[A_Index][1] = Tier[A_Index][2])
+				If (Tier[A_Index][1] = Tier[A_Index][2])
 				{
 					Ti := Tier[A_Index][1]
 				}
@@ -1700,10 +1744,10 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 		
 		TierAndType := SubStr(TierAndType, 1, -3)	; Remove trailing " + " at line end
 	}
-	Else If(IsObject(Tier))
+	Else If (IsObject(Tier))
 	{
 		; Just one mod in the line, but Tier has a range
-		If(Tier[1] = Tier[2])
+		If (Tier[1] = Tier[2])
 		{
 			Ti := Tier[1]
 		}
@@ -1716,7 +1760,7 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 	}
 	Else
 	{
-		If(IsNum(Tier) or Tier = "?")
+		If (IsNum(Tier) or Tier = "?")
 		{
 			; Just one mod and a single numeric tier
 			TierAndType := "T" Tier " " AffixTypeShort(AffixType)
@@ -6341,11 +6385,18 @@ PreProcessContents(CBContents)
 {
 ; --- Place fixes for data inconsistencies here ---
 	
-; Remove the line that indicates an item cannot be used due to missing character stats
-	Needle := "You cannot use this item. Its stats will be ignored`r`n--------`r`n"
-	StringReplace, CBContents, CBContents, %Needle%,
-; Replace double separator lines with one separator line
-	Needle := "--------`r`n--------`r`n"
+; Remove the line that indicates an item cannot be used due to missing character stats	
+	; Matches "Rarity: ..." + anything until "--------"\r\n
+	If (RegExMatch(CBContents, "s)^(.+?:.+?\r\n)(.+?-{8}\r\n)(.*)", match)) {
+		; Matches any ".", looking for the 2 sentences saying "You cannot use this item. Its stats will be ignored."
+		; Could be improved, should suffice though because the alternative would be the item name/type, which can't have any dots.
+		; This should work regardless of the selected language.
+		If (RegExMatch(match2, "\.")) {
+			CBContents := match1 . match3	
+		}		
+	}
+	
+     Needle := "--------`r`n--------`r`n"
 	StringReplace, CBContents, CBContents, %Needle%, --------`r`n, All
 	
 	return CBContents
@@ -6387,9 +6438,12 @@ ParseClipBoardChanges(debug = false)
 	
 	CBContents := GetClipboardContents()
 	CBContents := PreProcessContents(CBContents)
+	/*
+		;Item Data Translation, won't be used for now.
+		CBContents := PoEScripts_TranslateItemData(CBContents, translationData, currentLocale, retObj, retCode)
+	*/	
 	
 	Globals.Set("ItemText", CBContents)
-	
 	
 	ParsedData := ParseItemData(CBContents)
 	ParsedData := PostProcessData(ParsedData)
@@ -7174,9 +7228,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	Loop, Parse, ItemDataText, `n, `r
 	{
-		RegExMatch(Trim(A_LoopField), "i)^Corrupted$", match)
-		If (match) {
+		RegExMatch(Trim(A_LoopField), "i)^Corrupted$", corrMatch)
+		If (corrMatch) {
 			Item.IsCorrupted := True
+		}
+		RegExMatch(Trim(A_LoopField), "i)^(Elder|Shaper) Item$", match)
+		If (match) {
+			Item["Is" match1 "Base"] := True
 		}
 	}
 	
@@ -7269,7 +7327,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		RarityLevel	:= 0
 		Item.Level	:= ParseGemLevel(ItemDataText, "Level:")
+		ItemExperienceFlat := ""
+		Item.Experience:= ParseGemXP(ItemDataText, "Experience:", ItemExperienceFlat)
+		Item.ExperienceFlat := ItemExperienceFlat
 		ItemLevelWord	:= "Gem Level:"
+		ItemXPWord	:= "Experience:"
 		Item.BaseType	:= "Gem"
 	}
 	Else
@@ -7337,6 +7399,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsMap		:= (Item.BaseType == "Map")
 	Item.IsLeaguestone	:= (Item.BaseType == "Leaguestone")
 	Item.IsJewel		:= (Item.BaseType == "Jewel")
+	Item.IsAbyssJewel	:= (Item.IsJewel and RegExMatch(Item.SubType, "i)Ghastly Eye|Murderous Eye|Hypnotic Eye"))
 	Item.IsMirrored	:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
 	Item.Note			:= Globals.Get("ItemNote")
@@ -7458,6 +7521,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		TT := TT . "`n"
 		TT := TT . ItemLevelWord . "   " . StrPad(Item.Level, 3, Side="left")
+		
+		If (Item.IsGem) {
+			TT := TT . "`n"
+			TT := TT . ItemXPWord . "   " . StrPad(Item.Experience "%", 3, Side="left")
+		}
 		
 		If Item.IsTalisman {
 			TT := TT . "`nTalisman Tier: " . StrPad(Item.TalismanTier, 2, Side="left")
@@ -7669,7 +7737,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		ImplicitValueArray := LookupImplicitValue(Item.BaseName)
 		
 		maxIndex 	:= Item.Implicit.MaxIndex()
-		TextLineWidth := 20
+		TextLineWidth := ImplicitValueArray.MaxIndex() and StrLen(ImplicitValueArray[1]) ? 20 : 50
 		Ellipsis := Opts.AffixTextEllipsis
 		
 		Loop, % maxIndex {
@@ -8718,7 +8786,7 @@ GuiGet(ControlID, DefaultValue="", ByRef Error = false)
 {
 	curVal =
 	ErrorLevel := 0
-	GuiControlGet, curVal,, %ControlID%, %DefaultValue%	
+	GuiControlGet, curVal,, %ControlID%, %DefaultValue%
 	Error := ErrorLevel	
 	return curVal
 }
@@ -8732,7 +8800,9 @@ GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabe
 	ah := StrPrefix(AssocHwnd, "hwnd")
 
 	If (ControlType = "GroupBox") {
-		Gui, Font, cDA4F49
+		Options := Param4 " cDA4F49 "
+	}
+	Else If (ControlType = "ListView") {
 		Options := Param4
 	}
 	Else {
@@ -8741,7 +8811,11 @@ GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabe
 
 	GuiName := (StrLen(GuiName) > 0) ? Trim(GuiName) . ":Add" : "Add"
 	Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Options%, %Contents%
-	Gui, Font
+}
+
+GuiAddListView(ColumnHeaders, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="")
+{	
+	GuiAdd("ListView", ColumnHeaders, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
 }
 
 GuiAddButton(Contents, PositionInfo, AssocLabel="", AssocVar="", AssocHwnd="", Options="", GuiName="")
@@ -8904,82 +8978,93 @@ AddToolTip(con, text, Modify=0){
 CreateSettingsUI()
 {
 	Global
+	
+	; ItemInfo is not included in other scripts
+	If (not SkipItemInfoUpdateCall) {	
+		Fonts.SetUIFont()
+		Scripts := Globals.Get("SettingsScriptList")
+		TabNames := ""
+		Loop, % Scripts.Length() {
+			name := Scripts[A_Index]
+			TabNames .= name "|"
+		}
 
+		StringTrimRight, TabNames, TabNames, 1
+		Gui, Add, Tab3, Choose1 h660 x0, %TabNames%	
+	}
+	
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 	
-	ExtraHeightOfTabsWithTradeMacro := SkipItemInfoUpdateCall ? 25 : 0
 	generalHeight := SkipItemInfoUpdateCall ? "150" : "240"		; "180" : "270" with ParseItemHotKey
-	YShiftWhenIncludedInTradeMacro := SkipItemInfoUpdateCall ? -25 : 0
 	
 	; General
-	GuiAddGroupBox("General", "x7 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h" generalHeight " Section")
-	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w210 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
+	GuiAddGroupBox("General", "x7 ym" 30 " w310 h" generalHeight " Section")
+	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w250 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "When checked the script only activates while you are ingame`n(technically while the game window is the frontmost)")
 	
 	;GuiAddHotkey(Opts.ParseItemHotKey, "xs75 yp+37 w120 h20", "ParseItemHotKey")
 	;GuiAddText("Hotkey:", "xs27 yp+2 w50 h20 0x0100", "LblParseItemHotKey")
 	; Change next from yp+30 to yp+25 when this is implemented.
 	
-	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 yp+30 w210 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
+	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 yp+30 w250 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
 	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text into the system clipboard`n(overwriting the raw text PoE itself put there to begin with)")
 	
-	GuiAddCheckbox("Enable Additional Macros", "xs10 yp+30 w210 h30", Opts.EnableAdditionalMacros, "EnableAdditionalMacros", "EnableAdditionalMacrosH")
-	AddToolTip(EnableAdditionalMacrosH, "Enables or disables the entire 'AdditionalMacros.ahk' file.`nNeeds a script reload to take effect.")
-	
-	GuiAddCheckbox("Enable Map Mod Warnings", "xs10 yp+30 w210 h30", Opts.EnableMapModWarnings, "EnableMapModWarnings", "EnableMapModWarningsH")
+	GuiAddCheckbox("Enable Map Mod Warnings", "xs10 yp+30 w250 h30", Opts.EnableMapModWarnings, "EnableMapModWarnings", "EnableMapModWarningsH")
 	AddToolTip(EnableMapModWarningsH, "Enables or disables the entire Map Mod Warnings function.")
 	
 	If (!SkipItemInfoUpdateCall) {
-		GuiAddCheckbox("Update: Show Notifications", "xs10 yp+30 w210 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
+		GuiAddCheckbox("Update: Show Notifications", "xs10 yp+30 w250 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
 		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")
 		
-		GuiAddCheckbox("Update: Skip folder selection", "xs10 yp+30 w210 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+		GuiAddCheckbox("Update: Skip folder selection", "xs10 yp+30 w250 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
 		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")
 		
-		GuiAddCheckbox("Update: Skip backup", "xs10 yp+30 w210 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+		GuiAddCheckbox("Update: Skip backup", "xs10 yp+30 w250 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
 		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
 	}	
 	
 	; GDI+
-	GuiAddGroupBox("GDI+", "x7 ym+" 255+YShiftWhenIncludedInTradeMacro " w260 h320 Section")
-	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w90", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
+	GDIShift := SkipItemInfoUpdateCall ? 190 : 280
+	GuiAddGroupBox("GDI+", "x7 ym+" GDIShift " w310 h320 Section")
+	
+	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w115", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
 	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")
-	GuiAddCheckBox("Rendering Fix", "xs10 yp+30 w90", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
+	GuiAddCheckBox("Rendering Fix", "xs10 yp+30 w115", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
-	GuiAddText("(Restart script after disabling GDI+. Enabling might cause general FPS drops.)", "xs110 ys+20 w150 cRed", "")
+	GuiAddText("(Restart script after disabling GDI+. Enabling might cause general FPS drops.)", "xs120 ys+20 w185 cRed", "")
 	
 	GuiAddButton("Edit Window", "xs9 ys80 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys85 w150", "LblGDIWindowColor")
-	GuiAddEdit(Opts.GDIWindowColor, "xs190 ys82 w60", "GDIWindowColor", "GDIWindowColorH")
-	GuiAddText("Opactiy (0-100):", "xs100 ys115 w150", "LblGDIWindowOpacity")
-	GuiAddEdit(Opts.GDIWindowOpacity, "xs190 ys112 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
+	GuiAddText("Color (hex RGB):", "xs100 ys85 w200", "LblGDIWindowColor")
+	GuiAddEdit(Opts.GDIWindowColor, "xs240 ys82 w60", "GDIWindowColor", "GDIWindowColorH")
+	GuiAddText("Opactiy (0-100):", "xs100 ys115 w200", "LblGDIWindowOpacity")
+	GuiAddEdit(Opts.GDIWindowOpacity, "xs240 ys112 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
 	GuiAddButton("Edit Border", "xs9 ys140 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys145 w150", "LblGDIBorderColor")
-	GuiAddEdit(Opts.GDIBorderColor, "xs190 ys142 w60", "GDIBorderColor", "GDIBorderColorH")	
-	GuiAddText("Opacity (0-100):", "xs100 ys175 w150", "LblGDIBorderOpacity")
-	GuiAddEdit(Opts.GDIBorderOpacity, "xs190 ys172 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
+	GuiAddText("Color (hex RGB):", "xs100 ys145 w200", "LblGDIBorderColor")
+	GuiAddEdit(Opts.GDIBorderColor, "xs240 ys142 w60", "GDIBorderColor", "GDIBorderColorH")	
+	GuiAddText("Opacity (0-100):", "xs100 ys175 w200", "LblGDIBorderOpacity")
+	GuiAddEdit(Opts.GDIBorderOpacity, "xs240 ys172 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
 	GuiAddButton("Edit Text", "xs9 ys200 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys205 w150", "LblGDITextColor")
-	GuiAddEdit(Opts.GDITextColor, "xs190 ys202 w60", "GDITextColor", "GDITextColorH")
-	GuiAddText("Opacity (0-100):", "xs100 ys235 w150", "LblGDITextOpacity")
-	GuiAddEdit(Opts.GDITextOpacity, "xs190 ys232 w60", "GDITextOpacity", "GDITextOpacityH")
-	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys260 w210", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
+	GuiAddText("Color (hex RGB):", "xs100 ys205 w200", "LblGDITextColor")
+	GuiAddEdit(Opts.GDITextColor, "xs240 ys202 w60", "GDITextColor", "GDITextColorH")
+	GuiAddText("Opacity (0-100):", "xs100 ys235 w200", "LblGDITextOpacity")
+	GuiAddEdit(Opts.GDITextOpacity, "xs240 ys232 w60", "GDITextOpacity", "GDITextOpacityH")
+	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys260 w260", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
 	
-	GuiAddButton("GDI Defaults", "xs9 ys290 w80 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
-	GuiAddButton("Preview", "xs170 ys290 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
+	GuiAddButton("GDI Defaults", "xs9 ys290 w100 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
+	GuiAddButton("Preview", "xs210 ys290 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
 
 	; Tooltip
-	GuiAddGroupBox("Tooltip", "x277 ym" 5+ExtraHeightOfTabsWithTradeMacro " w260 h140 Section")
+	GuiAddGroupBox("Tooltip", "x327 ym" 30 " w310 h140 Section")
 
-	GuiAddEdit(Opts.MouseMoveThreshold, "xs180 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
-	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w150 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
+	GuiAddEdit(Opts.MouseMoveThreshold, "xs250 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
+	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w200 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
 	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip when the mouse cursor moved x pixel away from the initial position.`nEffectively permanent tooltip when using a value larger than the monitor diameter.")
 	
-	GuiAddEdit(Opts.ToolTipTimeoutSeconds, "xs180 yp+27 w50 Number", "ToolTipTimeoutSeconds")
-	GuiAddCheckBox("Use tooltip timeout (seconds)", "xs10 yp+3 w160", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
+	GuiAddEdit(Opts.ToolTipTimeoutSeconds, "xs250 yp+27 w50 Number", "ToolTipTimeoutSeconds")
+	GuiAddCheckBox("Use tooltip timeout (seconds)", "xs10 yp+3 w200", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
 	AddToolTip(UseTooltipTimeoutH, "Hide tooltip automatically after defined time.")
 	
-	GuiAddCheckbox("Display at fixed coordinates", "xs10 yp+30 w230", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
+	GuiAddCheckbox("Display at fixed coordinates", "xs10 yp+30 w280", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
 	AddToolTip(DisplayToolTipAtFixedCoordsH, "Show tooltip in virtual screen space at the fixed`ncoordinates given below. Virtual screen space means`nthe full desktop frame, including any secondary`nmonitors. Coords are relative to the top left edge`nand increase going down and to the right.")
 		GuiAddEdit(Opts.ScreenOffsetX, "xs50 yp+22 w50", "ScreenOffsetX")
 		GuiAddEdit(Opts.ScreenOffsetY, "xs130 yp+0 w50", "ScreenOffsetY")
@@ -8988,24 +9073,24 @@ CreateSettingsUI()
 	
 	
 	; Display	
-	GuiAddGroupBox("Display", "x277 ym+" 205+YShiftWhenIncludedInTradeMacro " w260 h370 Section")
+	GuiAddGroupBox("Display", "x327 ym+" 180 " w310 h295 Section")
 	
-	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w210 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
+	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w260 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
 	AddToolTip(ShowHeaderForAffixOverviewH, "Include a header above the affix overview:`n   TierRange ilvl   Total ilvl  Tier")
 	
-	GuiAddCheckbox("Show explanation for used notation", "xs10 yp+30 w210 h30", Opts.ShowExplanationForUsedNotation, "ShowExplanationForUsedNotation", "ShowExplanationForUsedNotationH")
+	GuiAddCheckbox("Show explanation for used notation", "xs10 yp+30 w260 h30", Opts.ShowExplanationForUsedNotation, "ShowExplanationForUsedNotation", "ShowExplanationForUsedNotationH")
 	AddToolTip(ShowExplanationForUsedNotationH, "Explain abbreviations and special notation symbols at`nthe end of the tooltip when they are used")
 	
-	GuiAddEdit(Opts.AffixTextEllipsis, "xs160 y+5 w40 h20", "AffixTextEllipsis")
-	GuiAddText("Affix text ellipsis:", "xs10 yp+3 w120 h20 0x0100", "LblAffixTextEllipsis", "AffixTextEllipsisH")
+	GuiAddEdit(Opts.AffixTextEllipsis, "xs260 y+5 w40 h20", "AffixTextEllipsis")
+	GuiAddText("Affix text ellipsis:", "xs10 yp+3 w170 h20 0x0100", "LblAffixTextEllipsis", "AffixTextEllipsisH")
 	AddToolTip(AffixTextEllipsisH, "Symbol used when affix text is shortened, such as:`n50% increased Spell…")
 	
-	GuiAddEdit(Opts.AffixColumnSeparator, "xs160 y+7 w40 h20", "AffixColumnSeparator")
-	GuiAddText("Affix column separator:", "xs10 yp+3 w120 h20 0x0100", "LblAffixColumnSeparator", "AffixColumnSeparatorH")
+	GuiAddEdit(Opts.AffixColumnSeparator, "xs260 y+7 w40 h20", "AffixColumnSeparator")
+	GuiAddText("Affix column separator:", "xs10 yp+3 w170 h20 0x0100", "LblAffixColumnSeparator", "AffixColumnSeparatorH")
 	AddToolTip(AffixColumnSeparatorH, "Select separator (default: 2 spaces) for the \\ spots:`n50% increased Spell…\\50-59 (46)\\75-79 (84)\\T4 P")
 	
-	GuiAddEdit(Opts.DoubleRangeSeparator, "xs160 y+7 w40 h20", "DoubleRangeSeparator")
-	GuiAddText("Double range separator:", "xs10 yp+3 w120 h20 0x0100", "LblDoubleRangeSeparator", "DoubleRangeSeparatorH")
+	GuiAddEdit(Opts.DoubleRangeSeparator, "xs260 y+7 w40 h20", "DoubleRangeSeparator")
+	GuiAddText("Double range separator:", "xs10 yp+3 w170 h20 0x0100", "LblDoubleRangeSeparator", "DoubleRangeSeparatorH")
 	AddToolTip(DoubleRangeSeparatorH, "Select separator (default: | ) for double ranges from 'added damage' mods:`na-b to c-d is displayed as a-b|c-d")
 	
 	GuiAddCheckbox("Use compact double ranges", "xs10 y+3 w210 h30", Opts.UseCompactDoubleRanges, "UseCompactDoubleRanges", "UseCompactDoubleRangesH", "SettingsUI_ChkUseCompactDoubleRanges")
@@ -9014,20 +9099,121 @@ CreateSettingsUI()
 	GuiAddCheckbox("Only compact for 'Total' column", "xs30 yp+30 w210 h30", Opts.OnlyCompactForTotalColumn, "OnlyCompactForTotalColumn", "OnlyCompactForTotalColumnH")
 	AddToolTip(OnlyCompactForTotalColumnH, "Only use compact double ranges for the second range column`nin the affix overview (with the header 'total')")
 	
-	GuiAddEdit(Opts.MultiTierRangeSeparator, "xs160 y+6 w40 h20", "MultiTierRangeSeparator")
-	GuiAddText("Multi tier range separator:", "xs10 yp+3 w120 h20 0x0100", "LblMultiTierRangeSeparator", "MultiTierRangeSeparatorH")
+	GuiAddEdit(Opts.MultiTierRangeSeparator, "xs260 y+6 w40 h20", "MultiTierRangeSeparator")
+	GuiAddText("Multi tier range separator:", "xs10 yp+3 w170 h20 0x0100", "LblMultiTierRangeSeparator", "MultiTierRangeSeparatorH")
 	AddToolTip(MultiTierRangeSeparatorH, "Select separator (default: … ) for a multi tier roll range with uncertainty:`n83% increased Light…   73-85…83-95   102-109 (84)  T1-4 P + T1-6 S`n	                     There--^")
 	
-	GuiAddEdit(Opts.FontSize, "xs160 y+6 w40 h20 Number", "FontSize")
-	GuiAddText("Font Size:", "xs10 yp+3 w130 h20 0x0100")
-	
-	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", "xs10 yp+35 w240 h30 0x0100")
-	
-	GuiAddButton("Defaults", "xs10 ys340 w75 h23", "SettingsUI_BtnDefaults")
-	GuiAddButton("OK", "Default xs91 ys340 w75 h23", "SettingsUI_BtnOK")
-	GuiAddButton("Cancel", "xs172 ys340 w75 h23", "SettingsUI_BtnCancel")
+	GuiAddEdit(Opts.FontSize, "xs260 y+6 w40 h20 Number", "FontSize")
+	GuiAddText("Font Size:", "xs10 yp+3 w180 h20 0x0100")
 
-	; close tabs in case some other script added some
+	; Buttons
+	ButtonsShiftX := "x659 "
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX "y40 w290 h30 0x0100")
+	
+	GuiAddButton("Defaults", ButtonsShiftX "y+8 w90 h23", "SettingsUI_BtnDefaults")
+	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")	
+	
+	If (SkipItemInfoUpdateCall) {
+		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+10 w250 h50 cRed")
+		GuiAddText("", "x10 y10 w250 h10")
+	}	
+	
+	; Begin Additional Macros Tab
+	If (SkipItemInfoUpdateCall) {
+		Gui, Tab, 3 
+	} Else {
+		Gui, Tab, 2
+	}
+	
+	; AM Hotkeys
+	GuiAddGroupBox("[AdditionalMacros] Hotkeys", "x7 y35 w630 h625")	
+	
+	If (not AM_Config) {
+		GoSub, AM_Init
+	}
+	
+	chkBoxWidth := 160
+	chkBoxShiftY := 28
+	LVWidth := 185
+
+	_AM_sections := StrSplit(AM_Config.GetSections("|", "C"), "|")
+	For sectionIndex, sectionName in _AM_sections {	; this enables section sorting		
+		If (sectionName != "General") {
+			; hotkey checkboxes (enable/disable)
+			HKCheckBoxID := "AM_" sectionName "_State"
+			GuiAddCheckbox(sectionName ":", "x17 yp+" chkBoxShiftY " w" chkBoxWidth " h20 0x0100", AM_Config[sectionName].State, HKCheckBoxID, HKCheckBoxID "H")
+			AddToolTip(%HKCheckBoxID%H, RegExReplace(AM_ConfigDefault[sectionName].Description, "i)(\(Default = .*\))", "`n$1"))	; read description from default config
+			
+			For keyIndex, keyValue in StrSplit(AM_Config[sectionName].Hotkeys, ", ") {	
+				HotKeyID := "AM_" sectionName "_HotKeys_" keyIndex
+				LV_shiftY := keyIndex > 1 ? 1 : 0 
+				GuiAddListView("1|2", "x+10 yp+" LV_shiftY " h20 w" LVWidth, HotKeyID, HotKeyID "H", "", "r1 -Hdr -LV0x20 r1 C454444 Backgroundf0f0f0")			
+				LV_ModifyCol(1, 0)
+				LV_ModifyCol(2, LVWidth - 5)
+				LV_Delete(1)
+				LV_Add("","", keyValue)			
+
+				GuiAddButton("Edit", "xp+" LVWidth " yp-1 w30 h22 v" HotKeyID "_Trigger", "LV_HotkeyEdit")
+			}
+			
+			For keyIndex, keyValue in AM_Config[sectionName] {
+				If (not RegExMatch(keyIndex, "i)State|Hotkeys|Description")) {
+					If (RegExMatch(sectionName, "i)HighlightItems|HighlightItemsAlt")) {
+						If (keyIndex = "Arg2") {
+							CheckBoxID := "AM_" sectionName "_Arg2"
+							GuiAddCheckbox("Leave search field.", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY, keyValue, CheckBoxID, CheckBoxID "H")
+						}
+					}
+					Else {
+						EditID := "AM_" sectionName "_" keyIndex
+						GuiAddText(keyIndex ":", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w85 h20 0x0100")
+						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID)
+					}					
+				}
+			}
+		}
+	}
+	
+	; AM General
+
+	GuiAddGroupBox("[AdditionalMacros] General", "x647 y35 w310 h60")
+	
+	_i := 0
+	For keyIndex, keyValue in AM_Config.General {
+		If (not RegExMatch(keyIndex, ".*_Description$")) {
+			elementYPos := _i > 0 ? 20 : 30
+			
+			If (RegExMatch(keyIndex, ".*State$") and not (InStr(keyIndex, "KeyToSC", 0))) {
+				RegExMatch(AM_ConfigDefault.General[keyIndex "_Description"], ".*Short\$(.*)Long\$(.*)""", _description)		; read description from default config
+				ControlID := "AM_General_" keyIndex
+				GuiAddCheckbox(Trim(_description1), "x657 yp+" elementYPos " w250 h30", AM_Config.General[keyIndex], ControlID, ControlID "H")
+				AddToolTip(%ControlID%H, Trim(_description2))
+			}
+			_i++
+		}	
+	}
+	
+	; AM Buttons
+	
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX "yp+60 w290 h30 0x0100")	
+	GuiAddButton("Defaults", "xp-5 y+8 w90 h23", "SettingsUI_AM_BtnDefaults")
+	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")
+	
+	If (SkipItemInfoUpdateCall) {
+		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+10 w280 h50 cRed")
+	}
+	
+	GuiAddText("Experimental Feature!", ButtonsShiftX "y+35 w280 h200 cRed")
+	experimentalNotice := "This new feature to assign hotkeys may cause issues for users with non-latin keyboard layouts."
+	experimentalNotice .= "`n`n" . "AHKs default UI element for selecting hotkeys doesn't support any special keys and mouse buttons."
+	experimentalNotice .= "`n`n" . "Please report any issues that you are experiencing."
+	experimentalNotice .= " You can still assign your settings directly using the AdditionalMacros.ini like before."
+	experimentalNotice .= " (Right-click system tray icon -> Edit Files)."
+	GuiAddText(experimentalNotice, ButtonsShiftX "yp+25 w290")
+	
+	; close tabs
 	Gui, Tab
 }
 
@@ -9039,7 +9225,7 @@ UpdateSettingsUI()
 	;GuiControl,, ParseItemHotKey, % Opts.ParseItemHotKey
 	GuiControl,, OnlyActiveIfPOEIsFront, % Opts.OnlyActiveIfPOEIsFront
 	GuiControl,, PutResultsOnClipboard, % Opts.PutResultsOnClipboard
-	GuiControl,, EnableAdditionalMacros, % Opts.EnableAdditionalMacros
+	;GuiControl,, EnableAdditionalMacros, % Opts.EnableAdditionalMacros
 	GuiControl,, EnableMapModWarnings, % Opts.EnableMapModWarnings
 	If (!SkipItemInfoUpdateCall) {
 		GuiControl,, ShowUpdateNotifications, % Opts.ShowUpdateNotifications
@@ -9142,6 +9328,9 @@ UpdateSettingsUI()
 		GuiControl, Enable, GDIRenderingFix
 		GuiControl, Enable, GDIConditionalColors
 	}		
+	
+	; AdditionalMacros 
+	AM_UpdateSettingsUI()
 }
 
 ShowSettingsUI()
@@ -9153,7 +9342,7 @@ ShowSettingsUI()
 	SettingsUIWidth := Globals.Get("SettingsUIWidth", 545)
 	; Adjust user option window height depending on whether ItemInfo is used as a Standalone or included in the TradeMacro.
 	; The TradeMacro needs much more space for all the options.
-	SettingsUIHeight := Globals.Get("SettingsUIHeight", 600)
+	SettingsUIHeight := Globals.Get("SettingsUIHeight", 615)
 	SettingsUITitle := Globals.Get("SettingsUITitle", "PoE ItemInfo Settings")
 	Gui, Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
 }
@@ -9215,28 +9404,24 @@ ShowChangedUserFiles()
 	ControlFocus, Close, Changed User Files
 }
 
-IniRead(SectionName, KeyName, DefaultVal)
-{
-	Global ItemInfoConfigObj
-	
-	If(ItemInfoConfigObj[SectionName].HasKey(KeyName)){
+IniRead(SectionName, KeyName, DefaultVal, ConfigObj)
+{	
+	If (ConfigObj[SectionName].HasKey(KeyName)) {
 		; return value and replace potential leading or trailing 
-		return RegExReplace(ItemInfoConfigObj[SectionName, KeyName], "^""'|'""$")
+		return RegExReplace(ConfigObj[SectionName, KeyName], "^""'|'""$")
 	}
-	Else{
+	Else {
 		return DefaultVal
 	}
 }
 
-IniWrite(Val, SectionName, KeyName)
-{
-	Global ItemInfoConfigObj
-	
-	If(RegExMatch(Val, "^\s|\s$")){
+IniWrite(Val, SectionName, KeyName, ByRef ConfigObj)
+{	
+	If (RegExMatch(Val, "^\s|\s$")) {
 		Val := """'" Val "'"""
 	}
 	
-	ItemInfoConfigObj.SetKeyVal(SectionName, KeyName, Val)
+	ConfigObj.SetKeyVal(SectionName, KeyName, Val)
 }
 
 ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
@@ -9254,49 +9439,49 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 	{
 		; General
 		;Opts.ParseItemHotKey := IniRead("General", "ParseItemHotKey", Opts.ParseItemHotKey)
-		Opts.OnlyActiveIfPOEIsFront	:= IniRead("General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront)
-		Opts.PutResultsOnClipboard	:= IniRead("General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard)
-		Opts.EnableAdditionalMacros	:= IniRead("General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros)
-		Opts.EnableMapModWarnings	:= IniRead("General", "EnableMapModWarnings", Opts.EnableMapModWarnings)
-		Opts.ShowUpdateNotifications	:= IniRead("General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications)
-		Opts.UpdateSkipSelection		:= IniRead("General", "UpdateSkipSelection", Opts.UpdateSkipSelection)
-		Opts.UpdateSkipBackup		:= IniRead("General", "UpdateSkipBackup", Opts.UpdateSkipBackup)
+		Opts.OnlyActiveIfPOEIsFront	:= IniRead("General", "OnlyActiveIfPOEIsFront", Opts.OnlyActiveIfPOEIsFront, ItemInfoConfigObj)
+		Opts.PutResultsOnClipboard	:= IniRead("General", "PutResultsOnClipboard", Opts.PutResultsOnClipboard, ItemInfoConfigObj)
+		;Opts.EnableAdditionalMacros	:= IniRead("General", "EnableAdditionalMacros", Opts.EnableAdditionalMacros, ItemInfoConfigObj)
+		Opts.EnableMapModWarnings	:= IniRead("General", "EnableMapModWarnings", Opts.EnableMapModWarnings, ItemInfoConfigObj)
+		Opts.ShowUpdateNotifications	:= IniRead("General", "ShowUpdateNotifications", Opts.ShowUpdateNotifications, ItemInfoConfigObj)
+		Opts.UpdateSkipSelection		:= IniRead("General", "UpdateSkipSelection", Opts.UpdateSkipSelection, ItemInfoConfigObj)
+		Opts.UpdateSkipBackup		:= IniRead("General", "UpdateSkipBackup", Opts.UpdateSkipBackup, ItemInfoConfigObj)
 		
 		; Tooltip
-		Opts.MouseMoveThreshold	:= IniRead("Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold)
-		Opts.UseTooltipTimeout	:= IniRead("Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout)
-		Opts.ToolTipTimeoutSeconds	:= IniRead("Tooltip", "ToolTipTimeoutSeconds", Opts.ToolTipTimeoutSeconds)
-		Opts.DisplayToolTipAtFixedCoords := IniRead("Tooltip", "DisplayToolTipAtFixedCoords", Opts.DisplayToolTipAtFixedCoords)
-		Opts.ScreenOffsetX		:= IniRead("Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX)
-		Opts.ScreenOffsetY		:= IniRead("Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY)
+		Opts.MouseMoveThreshold	:= IniRead("Tooltip", "MouseMoveThreshold", Opts.MouseMoveThreshold, ItemInfoConfigObj)
+		Opts.UseTooltipTimeout	:= IniRead("Tooltip", "UseTooltipTimeout", Opts.UseTooltipTimeout, ItemInfoConfigObj)
+		Opts.ToolTipTimeoutSeconds		:= IniRead("Tooltip", "ToolTipTimeoutSeconds", Opts.ToolTipTimeoutSeconds, ItemInfoConfigObj)
+		Opts.DisplayToolTipAtFixedCoords 	:= IniRead("Tooltip", "DisplayToolTipAtFixedCoords", Opts.DisplayToolTipAtFixedCoords, ItemInfoConfigObj)
+		Opts.ScreenOffsetX		:= IniRead("Tooltip", "ScreenOffsetX", Opts.ScreenOffsetX, ItemInfoConfigObj)
+		Opts.ScreenOffsetY		:= IniRead("Tooltip", "ScreenOffsetY", Opts.ScreenOffsetY, ItemInfoConfigObj)
 		
 		; Display
-		Opts.ShowHeaderForAffixOverview		:= IniRead("Display", "ShowHeaderForAffixOverview", Opts.ShowHeaderForAffixOverview)
-		Opts.ShowExplanationForUsedNotation	:= IniRead("Display", "ShowExplanationForUsedNotation", Opts.ShowExplanationForUsedNotation)
-		Opts.AffixTextEllipsis				:= IniRead("Display", "AffixTextEllipsis", Opts.AffixTextEllipsis)
-		Opts.AffixColumnSeparator			:= IniRead("Display", "AffixColumnSeparator", Opts.AffixColumnSeparator)
-		Opts.DoubleRangeSeparator			:= IniRead("Display", "DoubleRangeSeparator", Opts.DoubleRangeSeparator)
-		Opts.UseCompactDoubleRanges			:= IniRead("Display", "UseCompactDoubleRanges", Opts.UseCompactDoubleRanges)
-		Opts.OnlyCompactForTotalColumn		:= IniRead("Display", "OnlyCompactForTotalColumn", Opts.OnlyCompactForTotalColumn)
-		Opts.MultiTierRangeSeparator			:= IniRead("Display", "MultiTierRangeSeparator", Opts.MultiTierRangeSeparator)
-		Opts.FontSize						:= IniRead("Display", "FontSize", Opts.FontSize)
+		Opts.ShowHeaderForAffixOverview		:= IniRead("Display", "ShowHeaderForAffixOverview", Opts.ShowHeaderForAffixOverview, ItemInfoConfigObj)
+		Opts.ShowExplanationForUsedNotation	:= IniRead("Display", "ShowExplanationForUsedNotation", Opts.ShowExplanationForUsedNotation, ItemInfoConfigObj)
+		Opts.AffixTextEllipsis				:= IniRead("Display", "AffixTextEllipsis", Opts.AffixTextEllipsis, ItemInfoConfigObj)
+		Opts.AffixColumnSeparator			:= IniRead("Display", "AffixColumnSeparator", Opts.AffixColumnSeparator, ItemInfoConfigObj)
+		Opts.DoubleRangeSeparator			:= IniRead("Display", "DoubleRangeSeparator", Opts.DoubleRangeSeparator, ItemInfoConfigObj)
+		Opts.UseCompactDoubleRanges			:= IniRead("Display", "UseCompactDoubleRanges", Opts.UseCompactDoubleRanges, ItemInfoConfigObj)
+		Opts.OnlyCompactForTotalColumn		:= IniRead("Display", "OnlyCompactForTotalColumn", Opts.OnlyCompactForTotalColumn, ItemInfoConfigObj)
+		Opts.MultiTierRangeSeparator			:= IniRead("Display", "MultiTierRangeSeparator", Opts.MultiTierRangeSeparator, ItemInfoConfigObj)
+		Opts.FontSize						:= IniRead("Display", "FontSize", Opts.FontSize, ItemInfoConfigObj)
 		
 		; GDI+		
-		Opts.UseGDI				:= IniRead("GDI", "Enabled", Opts.UseGDI)
-		Opts.GDIRenderingFix		:= IniRead("GDI", "RenderingFix", Opts.GDIRenderingFix)
-		Opts.GDIConditionalColors	:= IniRead("GDI", "ConditionalColors", Opts.GDIConditionalColors)
-		Opts.GDIWindowColor			:= IniRead("GDI", "WindowColor", Opts.GDIWindowColor)
-		Opts.GDIWindowColorDefault	:= IniRead("GDI", "WindowColorDefault", Opts.GDIWindowColorDefault)
-		Opts.GDIWindowOpacity		:= IniRead("GDI", "WindowOpacity", Opts.GDIWindowOpacity)
-		Opts.GDIWindowOpacityDefault	:= IniRead("GDI", "WindowOpacityDefault", Opts.GDIWindowOpacityDefault)
-		Opts.GDIBorderColor			:= IniRead("GDI", "BorderColor", Opts.GDIBorderColor)
-		Opts.GDIBorderColorDefault	:= IniRead("GDI", "BorderColorDefault", Opts.GDIBorderColorDefault)
-		Opts.GDIBorderOpacity		:= IniRead("GDI", "BorderOpacity", Opts.GDIBorderOpacity)
-		Opts.GDIBorderOpacityDefault	:= IniRead("GDI", "BorderOpacityDefault", Opts.GDIBorderOpacityDefault)
-		Opts.GDITextColor			:= IniRead("GDI", "TextColor", Opts.GDITextColor)
-		Opts.GDITextColorDefault		:= IniRead("GDI", "TextColorDefault", Opts.GDITextColorDefault)
-		Opts.GDITextOpacity			:= IniRead("GDI", "TextOpacity", Opts.GDITextOpacity)
-		Opts.GDITextOpacityDefault	:= IniRead("GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault)
+		Opts.UseGDI				:= IniRead("GDI", "Enabled", Opts.UseGDI, ItemInfoConfigObj)
+		Opts.GDIRenderingFix		:= IniRead("GDI", "RenderingFix", Opts.GDIRenderingFix, ItemInfoConfigObj)
+		Opts.GDIConditionalColors	:= IniRead("GDI", "ConditionalColors", Opts.GDIConditionalColors, ItemInfoConfigObj)
+		Opts.GDIWindowColor			:= IniRead("GDI", "WindowColor", Opts.GDIWindowColor, ItemInfoConfigObj)
+		Opts.GDIWindowColorDefault	:= IniRead("GDI", "WindowColorDefault", Opts.GDIWindowColorDefault, ItemInfoConfigObj)
+		Opts.GDIWindowOpacity		:= IniRead("GDI", "WindowOpacity", Opts.GDIWindowOpacity, ItemInfoConfigObj)
+		Opts.GDIWindowOpacityDefault	:= IniRead("GDI", "WindowOpacityDefault", Opts.GDIWindowOpacityDefault, ItemInfoConfigObj)
+		Opts.GDIBorderColor			:= IniRead("GDI", "BorderColor", Opts.GDIBorderColor, ItemInfoConfigObj)
+		Opts.GDIBorderColorDefault	:= IniRead("GDI", "BorderColorDefault", Opts.GDIBorderColorDefault, ItemInfoConfigObj)
+		Opts.GDIBorderOpacity		:= IniRead("GDI", "BorderOpacity", Opts.GDIBorderOpacity, ItemInfoConfigObj)
+		Opts.GDIBorderOpacityDefault	:= IniRead("GDI", "BorderOpacityDefault", Opts.GDIBorderOpacityDefault, ItemInfoConfigObj)
+		Opts.GDITextColor			:= IniRead("GDI", "TextColor", Opts.GDITextColor, ItemInfoConfigObj)
+		Opts.GDITextColorDefault		:= IniRead("GDI", "TextColorDefault", Opts.GDITextColorDefault, ItemInfoConfigObj)
+		Opts.GDITextOpacity			:= IniRead("GDI", "TextOpacity", Opts.GDITextOpacity, ItemInfoConfigObj)
+		Opts.GDITextOpacityDefault	:= IniRead("GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault, ItemInfoConfigObj)
 		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, "10", "16")
 	}
 }
@@ -9316,55 +9501,55 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	
 	; General
 	;IniWrite(Opts.ParseItemHotKey, "General", "ParseItemHotKey")
-	IniWrite(Opts.OnlyActiveIfPOEIsFront, "General", "OnlyActiveIfPOEIsFront")
-	IniWrite(Opts.PutResultsOnClipboard, "General", "PutResultsOnClipboard")
-	IniWrite(Opts.EnableAdditionalMacros, "General", "EnableAdditionalMacros")
-	IniWrite(Opts.EnableMapModWarnings, "General", "EnableMapModWarnings")
-	IniWrite(Opts.ShowUpdateNotifications, "General", "ShowUpdateNotifications")
-	IniWrite(Opts.UpdateSkipSelection, "General", "UpdateSkipSelection")
-	IniWrite(Opts.UpdateSkipBackup, "General", "UpdateSkipBackup")
+	IniWrite(Opts.OnlyActiveIfPOEIsFront, "General", "OnlyActiveIfPOEIsFront", ItemInfoConfigObj)
+	IniWrite(Opts.PutResultsOnClipboard, "General", "PutResultsOnClipboard", ItemInfoConfigObj)
+	;IniWrite(Opts.EnableAdditionalMacros, "General", "EnableAdditionalMacros", ItemInfoConfigObj)
+	IniWrite(Opts.EnableMapModWarnings, "General", "EnableMapModWarnings", ItemInfoConfigObj)
+	IniWrite(Opts.ShowUpdateNotifications, "General", "ShowUpdateNotifications", ItemInfoConfigObj)
+	IniWrite(Opts.UpdateSkipSelection, "General", "UpdateSkipSelection", ItemInfoConfigObj)
+	IniWrite(Opts.UpdateSkipBackup, "General", "UpdateSkipBackup", ItemInfoConfigObj)
 	
 	; Display
-	IniWrite(Opts.ShowHeaderForAffixOverview, "Display", "ShowHeaderForAffixOverview")
-	IniWrite(Opts.ShowExplanationForUsedNotation, "Display", "ShowExplanationForUsedNotation")
-	IniWrite("" . Opts.AffixTextEllipsis . "", "Display", "AffixTextEllipsis")
-	IniWrite("" . Opts.AffixColumnSeparator . "", "Display", "AffixColumnSeparator")
-	IniWrite("" . Opts.DoubleRangeSeparator . "", "Display", "DoubleRangeSeparator")
-	IniWrite(Opts.UseCompactDoubleRanges, "Display", "UseCompactDoubleRanges")
-	IniWrite(Opts.OnlyCompactForTotalColumn, "Display", "OnlyCompactForTotalColumn")
-	IniWrite("" . Opts.MultiTierRangeSeparator . "", "Display", "MultiTierRangeSeparator")
-	IniWrite(Opts.FontSize, "Display", "FontSize")
+	IniWrite(Opts.ShowHeaderForAffixOverview, "Display", "ShowHeaderForAffixOverview", ItemInfoConfigObj)
+	IniWrite(Opts.ShowExplanationForUsedNotation, "Display", "ShowExplanationForUsedNotation", ItemInfoConfigObj)
+	IniWrite("" . Opts.AffixTextEllipsis . "", "Display", "AffixTextEllipsis", ItemInfoConfigObj)
+	IniWrite("" . Opts.AffixColumnSeparator . "", "Display", "AffixColumnSeparator", ItemInfoConfigObj)
+	IniWrite("" . Opts.DoubleRangeSeparator . "", "Display", "DoubleRangeSeparator", ItemInfoConfigObj)
+	IniWrite(Opts.UseCompactDoubleRanges, "Display", "UseCompactDoubleRanges", ItemInfoConfigObj)
+	IniWrite(Opts.OnlyCompactForTotalColumn, "Display", "OnlyCompactForTotalColumn", ItemInfoConfigObj)
+	IniWrite("" . Opts.MultiTierRangeSeparator . "", "Display", "MultiTierRangeSeparator", ItemInfoConfigObj)
+	IniWrite(Opts.FontSize, "Display", "FontSize", ItemInfoConfigObj)
 	
 	; Tooltip
-	IniWrite(Opts.MouseMoveThreshold, "Tooltip", "MouseMoveThreshold")
-	IniWrite(Opts.UseTooltipTimeout, "Tooltip", "UseTooltipTimeout")
-	IniWrite(Opts.ToolTipTimeoutSeconds, "Tooltip", "ToolTipTimeoutSeconds")
-	IniWrite(Opts.DisplayToolTipAtFixedCoords, "Tooltip", "DisplayToolTipAtFixedCoords")
-	IniWrite(Opts.ScreenOffsetX, "Tooltip", "ScreenOffsetX")
-	IniWrite(Opts.ScreenOffsetY, "Tooltip", "ScreenOffsetY")
+	IniWrite(Opts.MouseMoveThreshold, "Tooltip", "MouseMoveThreshold", ItemInfoConfigObj)
+	IniWrite(Opts.UseTooltipTimeout, "Tooltip", "UseTooltipTimeout", ItemInfoConfigObj)
+	IniWrite(Opts.ToolTipTimeoutSeconds, "Tooltip", "ToolTipTimeoutSeconds", ItemInfoConfigObj)
+	IniWrite(Opts.DisplayToolTipAtFixedCoords, "Tooltip", "DisplayToolTipAtFixedCoords", ItemInfoConfigObj)
+	IniWrite(Opts.ScreenOffsetX, "Tooltip", "ScreenOffsetX", ItemInfoConfigObj)
+	IniWrite(Opts.ScreenOffsetY, "Tooltip", "ScreenOffsetY", ItemInfoConfigObj)
 	
 	; GDI+
-	IniWrite(Opts.UseGDI, "GDI", "Enabled")
-	IniWrite(Opts.GDIRenderingFix, "GDI", "RenderingFix")
-	IniWrite(Opts.GDIConditionalColors, "GDI", "ConditionalColors")
-	IniWrite(Opts.GDIWindowColor, "GDI", "WindowColor")
-	IniWrite(Opts.GDIWindowOpacity, "GDI", "WindowOpacity")
-	IniWrite(Opts.GDIBorderColor, "GDI", "BorderColor")
-	IniWrite(Opts.GDIBorderOpacity, "GDI", "BorderOpacity")
-	IniWrite(Opts.GDITextColor, "GDI", "TextColor")
-	IniWrite(Opts.GDITextOpacity, "GDI", "TextOpacity")
+	IniWrite(Opts.UseGDI, "GDI", "Enabled", ItemInfoConfigObj)
+	IniWrite(Opts.GDIRenderingFix, "GDI", "RenderingFix", ItemInfoConfigObj)
+	IniWrite(Opts.GDIConditionalColors, "GDI", "ConditionalColors", ItemInfoConfigObj)
+	IniWrite(Opts.GDIWindowColor, "GDI", "WindowColor", ItemInfoConfigObj)
+	IniWrite(Opts.GDIWindowOpacity, "GDI", "WindowOpacity", ItemInfoConfigObj)
+	IniWrite(Opts.GDIBorderColor, "GDI", "BorderColor", ItemInfoConfigObj)
+	IniWrite(Opts.GDIBorderOpacity, "GDI", "BorderOpacity", ItemInfoConfigObj)
+	IniWrite(Opts.GDITextColor, "GDI", "TextColor", ItemInfoConfigObj)
+	IniWrite(Opts.GDITextOpacity, "GDI", "TextOpacity", ItemInfoConfigObj)
 	
 	ItemInfoConfigObj.Save(ConfigPath)
 }
 
-CopyDefaultConfig()
+CopyDefaultConfig(config = "config.ini")
 {
-	FileCopy, %A_ScriptDir%\resources\default_UserFiles\config.ini, %userDirectory%\config.ini
+	FileCopy, %A_ScriptDir%\resources\default_UserFiles\%config%, %userDirectory%\%config%
 }
 
-RemoveConfig()
+RemoveConfig(config = "config.ini")
 {
-	FileDelete, %userDirectory%\config.ini
+	FileDelete, %userDirectory%\%config%
 }
 
 StdOutStream(sCmd, Callback = "") {
@@ -9988,6 +10173,70 @@ OnClipBoardChange:
 ShowUpdateNotes:
 	ShowUpdateNotes()
 	return
+	
+ShowTranslationUI:
+	ShowTranslationUI()
+	return
+
+TranslationUI_BtnTranslate:
+	Gui, Translate:Submit, NoHide
+	GuiControlGet, cbTransData, , TranslationEditInput
+	CBContents := PreProcessContents(cbTransData)
+	CBContents := PoEScripts_TranslateItemData(CBContents, translationData, currentLocale, retObj, retCode)
+	GuiControl, Translate:, TranslationEditOutput, % CBContents
+	GuiControl, Translate:, TranslationEditOutputDebug, % DebugPrintarray(retObj, 0)
+	CBContents :=
+	return
+
+TranslationUI_BtnCancel:
+	Gui, Translate:Destroy
+	return
+	
+TranslationUI_BtnCopyToClipboard:
+	Gui, Translate:Submit, NoHide
+	SuspendPOEItemScript = 1
+	GuiControlGet, cbTransData, , TranslationEditOutput
+	Clipboard := cbTransData
+	SuspendPOEItemScript = 0
+	return
+
+ShowTranslationUI() {
+	Global 
+	
+	Gui, Translate:Destroy
+	
+	Gui, Translate:Margin, 10 , 10
+	Gui, Translate:Add, Text, , Add your copied item information to translate it to english. The rightmost column shows some debug information. 
+	
+	TransGuiWidth	:= 1300
+	TransGuiHeight	:= 750
+	TransEditWidth	:= 375
+	TransEditDebugWidth := 500
+	TransEditHeight := (TransGuiHeight - 115)
+	TransGuiSecondColumnPosX := TransEditWidth + 30
+	TransGuiCopyButtonPosX := TransGuiWidth - 130 - 500
+	TransGuiTransButtonPosX := TransEditWidth + 10 - 100
+	TransGuiCloseButtonPosX := TransGuiWidth - 110
+
+	Gui, Translate:Font, bold, Tahoma
+	Gui, Translate:Add, Text, y+20, Add item text (copied ingame via ctrl + c)
+	Gui, Translate:Font
+	Gui, Translate:Add, Button, yp-5 w100 x%TransGuiTransButtonPosX% gTranslationUI_BtnTranslate, Translate
+	Gui, Translate:Font, bold, Tahoma
+	Gui, Translate:Add, Text, yp+5 x%TransGuiSecondColumnPosX%, Translated text
+	Gui, Translate:Font
+	Gui, Translate:Add, Button, yp-5 w100 x%TransGuiCopyButtonPosX% gTranslationUI_BtnCopyToClipboard, Copy (Clipboard)
+	Gui, Translate:Font, , Consolas 
+	Gui, Translate:Add, Edit, w%TransEditWidth% h%TransEditHeight% y+5 x10 HScroll vTranslationEditInput hwndTransateEditHwnd, 	
+	Gui, Translate:Add, Edit, w%TransEditWidth% h%TransEditHeight% yp+0 x+20 HScroll vTranslationEditOutput ReadOnly, 
+	Gui, Translate:Add, Edit, w%TransEditDebugWidth% h%TransEditHeight% yp+0 x+10 HScroll vTranslationEditOutputDebug ReadOnly, 
+	Gui, Translate:Font
+	
+	Gui, Translate:Add, Button, x%TransGuiCloseButtonPosX% y+15 w100 gTranslationUI_BtnCancel, Close
+	
+	ControlFocus, , ahk_id %TransateEditHwnd%
+	Gui, Translate:Show, w%TransGuiWidth% h%TransGuiHeight%, Translate Item Data
+}
 
 ChangedUserFilesWindow_Cancel:
 	Gui, ChangedUserFiles:Cancel
@@ -9997,6 +10246,57 @@ ChangedUserFilesWindow_OpenFolder:
 	Gui, ChangedUserFiles:Cancel
 	GoSub, EditOpenUserSettings
 	return
+
+LV_HotkeyEdit:
+	If (not RegexMatch(A_GuiControlEvent, "Normal|DoubleClick")) {
+		Return
+	}
+	If (RegExMatch(A_GuiControl, "i).*_Trigger$")) {
+		_LVID := RegExReplace(A_GuiControl, "i)(.*)_Trigger$", "$1")
+	} Else {
+		_LVID := A_GuiControl
+	}
+	
+	; check keyboard layout = eng_US and switch to if not, quick and dirty workaround
+	; to support non-latin layouts (russian etc)
+	; TODO: remove later
+	_ENG_US := 0x4090409
+	_Defaultlayout := GetCurrentLayout()
+	If (GetKeySC("d") = 0 and _Defaultlayout != _ENG_US) {	 
+	;If (_Defaultlayout != _ENG_US) {
+		console.log("change layout")
+		SwitchLayoutStart := A_TickCount
+		SwitchLayoutElapsed := 0
+		While (GetCurrentLayout() != _ENG_US and SwitchLayoutElapsed < 120) {
+			SwitchLayout(_ENG_US)
+			Sleep, 50
+			SwitchLayoutElapsed := (A_TickCount - SwitchLayoutStart) / 1000
+		}
+		_switched := (GetCurrentLayout() != _Defaultlayout) ? true : false
+	}
+	
+	Gui, ListView, %_LVID%
+	LV_GetText(_oV, 1, 2)
+	
+	_prompt := "Please hold down the keys or mouse buttons you want to turn into a hotkey:"
+	_note := "The majority of common keys from latin keyboard layouts should work."
+	If (_switched) {
+		_note := "`n`n" . "Forcibly switched to en_US layout because your layout seems to be unsupported."
+	}
+	_nV := Hotkey("+Tooltips", _prompt, _note, "Choose a Hotkey")
+	
+	; TODO: remove later
+	If (_switched) {
+		SwitchLayout(_Defaultlayout)
+		console.log("changed layout back")
+	}	
+	
+	LV_Delete(1)	
+	If (not StrLen(_nV)) {
+		_nV := _oV
+	}
+	LV_Add("","",_nV)
+Return
 
 ShowSettingsUI:
 	ReadConfig()
@@ -10011,6 +10311,7 @@ SettingsUI_BtnOK:
 	Gui, Submit
 	Sleep, 50
 	WriteConfig()
+	AM_WriteConfig()
 	UpdateSettingsUI()
 	Fonts.SetFixedFont(GuiGet("FontSize", Opts.FontSize))
 	return
@@ -10030,6 +10331,19 @@ SettingsUI_BtnDefaults:
 	UpdateSettingsUI()
 	ShowSettingsUI()
 	return
+	
+SettingsUI_AM_BtnDefaults:
+	Gui, Cancel
+	RemoveConfig("AdditionalMacros.ini")
+	Sleep, 75
+	CopyDefaultConfig("AdditionalMacros.ini")
+	Sleep, 75
+	AM_ReadConfig(AM_Config)
+	Sleep, 75
+	UpdateSettingsUI()
+	ShowSettingsUI()
+	AM_SetHotkeys()
+	Return
 
 InitGDITooltip:
 	Global Opts

@@ -61,11 +61,14 @@ data_trade/backup/*
 backup/*
 backup/
 test.ahk
+test.txt
 DebugFile.txt
 
 lib/node_modules
 lib/npm-debug.log.*
+*.orig
 release
 _TradeMacroMain.ahk
 _ItemInfoMain.ahk
-resources/tests/test_temp/*
+resources/tests/tempOutput/*
+data/lang/lang.json

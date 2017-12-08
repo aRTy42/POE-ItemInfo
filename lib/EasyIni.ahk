@@ -16,8 +16,6 @@
 ; # --- MODIFICATION START (dein0s) ---
 ; # --- MODIFICATION END (dein0s) ---;
 ; #############################################################################################################
-
-
 class_EasyIni(sFile="", sLoadFromStr="")
 {
 	return new EasyIni(sFile, sLoadFromStr)
@@ -174,8 +172,8 @@ class EasyIni
 
 	DeleteSection(sec)
 	{
-		this.Remove(sec)
-		return
+		r := this.Remove(sec)
+		return r
 	}
 
 	GetSections(sDelim="`n", sSort="")
@@ -511,7 +509,7 @@ class EasyIni
 		return this.DeleteComment(sec, key, comment, , rsError)
 	}
 
-	Update(SourceIni, sections=true, keys=true, values=false, top_comments=false, section_comments=true, key_comments=true)
+	Update(SourceIni, sections=true, keys=true, values=false, top_comments=false, section_comments=true, key_comments=true, repeatedRecursions=0)
 	; TODO: add docstring
 	{
 		if (!IsObject(SourceIni)) {
@@ -572,10 +570,12 @@ class EasyIni
 				}
 			}
 		}
+		
+		removeSectionsList := []
 		for sectionName, sectionKeys in this {
-			; Remove old section
-			if (sections and !SourceIni.HasKey(sectionName)) {
-				this.DeleteSection(sectionName)
+			; Remove old section, remember Section, remove later to not mess up the object index.
+			if (sections and !SourceIni.HasKey(sectionName)) {				
+				removeSectionsList.push(sectionName)				
 			}
 			; Remove old section comment
 			if (section_comments and SourceIni.HasKey(sectionName)) {
@@ -600,6 +600,11 @@ class EasyIni
 				}
 			}
 		}
+		
+		Loop, % removeSectionsList.MaxIndex() {
+			this.DeleteSection(removeSectionsList[A_Index])
+		}
+		
 		return
 	}
 

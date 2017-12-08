@@ -12,7 +12,7 @@
 		reqHeadersCurl = returns the returned headers from the curl request 
 		handleAccessForbidden = "true" throws an error message if "403 Forbidden" is returned, "false" prevents it, returning "403 Forbidden" to enable custom error handling
 	*/
-	
+
 	; https://curl.haxx.se/download.html -> https://bintray.com/vszakats/generic/curl/
 	Loop, 2 
 	{
@@ -47,7 +47,7 @@
 				PreventErrorMsg := true
 			}
 		}
-		
+
 		e := {}
 		Try {		
 			commandData	:= ""		; console curl command to return data/content 
@@ -83,8 +83,11 @@
 
 			; get data
 			html	:= StdOutStream(curl """" url """" commandData)
+			if (instr(url, "cdn")) {
+				;msgbox % curl """" url """" commandData
+			}
 			;html := ReadConsoleOutputFromFile(commandData """" url """", "commandData") ; alternative function
-			
+
 			; get return headers in seperate request
 			If (not binaryDL) {
 				If (StrLen(ioData)) {
@@ -94,17 +97,19 @@
 				}
 				ioHdr := StdOutStream(commandHdr)
 				;ioHrd := ReadConsoleOutputFromFile(commandHdr, "commandHdr") ; alternative function
+			} Else {
+				ioHdr := html
 			}
 			reqHeadersCurl := commandHdr
 		} Catch e {
-			
+
 		}
 		
 		If (Strlen(ioHdr)) {
 			Break	; only go into the second loop if the respone is empty (possible problem with the added host header)			
 		}
-	}	
-	
+	}
+
 	goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
 	If (RegExMatch(ioHdr, "i)HTTP\/1.1 403 Forbidden") and not handleAccessForbidden) {
 		PreventErrorMsg		:= true
@@ -121,7 +126,8 @@
 	; handle binary file downloads
 	Else If (not e.what) {
 		; check returned request headers
-		ioHdr := ParseReturnedHeaders(html)
+		ioHdr := ParseReturnedHeaders(ioHdr)
+		
 		goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
 		If (not goodStatusCode) {
 			MsgBox, 16,, % "Error downloading file to " SavePath
@@ -130,11 +136,24 @@
 		
 		; compare file sizes
 		FileGetSize, sizeOnDisk, %SavePath%
-		RegExMatch(ioHdr, "i)Content-Length:\s(\d+)", size)
-		size := size1
-		If (size != sizeOnDisk) {
-			html := "Error: Different Size"
-		}
+		RegExMatch(ioHdr, "i)Content-Length:\s(\d+)(k|m)?", size)
+		size := Trim(size1)
+		If (Strlen(size2)) {
+			size := size2 = "k" ? size * 1024 : size * 1024 * 1024
+			sizeVariation := Round(size * 99.8 / 100) - size
+		}		
+		
+		; give the comparison some leeway in case of the extracted filesize from the response headers being 
+		; imprecise (shown in kilobyte/megabyte)
+		If (sizeVariation) {
+			If (not (sizeOnDisk > (size - sizeVariation) and sizeOnDisk < (size + sizeVariation))) {
+				html := "Error: Different Size"
+			}
+		} Else {
+			If (size != sizeOnDisk) {
+				html := "Error: Different Size"
+			}
+		}		
 	} Else {
 		ThrowError(e, false, ioHdr, PreventErrorMsg)
 	}
@@ -145,12 +164,23 @@
 ParseReturnedHeaders(output) {
 	headerGroups	:= []
 	headerGroup	:= ""
-	
+
 	Pos		:= 0
 	While Pos := RegExMatch(output, "is)\[5 bytes data.*?({|$)", match, Pos + (StrLen(match) ? StrLen(match) : 1)) {
 		headerGroups.push(match)
+		LastPos := Pos
+		LastMatch := match
 	}
-		
+	
+	If (not headerGroups.Length()) {
+		RegExMatch(output, "is).*(HTTP\/1.1.*)", dlStats)
+		dlStats := dlStats1
+		headerGroups.push(dlStats)
+	} Else {
+		LastPos := LastPos + StrLen(LastMatch)
+		RegExMatch(output, "is).*", dlStats, LastPos ? LastPos : 0)
+	}
+
 	i := headerGroups.Length()
 	Loop, % i {
 		If (RegExMatch(headerGroups[i], "is)Content-Length")) {
@@ -159,16 +189,36 @@ ParseReturnedHeaders(output) {
 		}		
 		i--
 	}
-	
+
 	out := ""
-	headerGroup := RegExReplace(headerGroup, "im)^<|\[5 bytes data\]|^{")
-	Loop, parse, headerGroup, `n, `r 
-	{
-		If (StrLen(Trim(A_LoopField))) {
-			out .= Trim(A_LoopField)
+	If (StrLen(headerGroup)) {
+		headerGroup := RegExReplace(headerGroup, "im)^<|\[5 bytes data\]|^{")
+		Loop, parse, headerGroup, `n, `r 
+		{
+			If (StrLen(Trim(A_LoopField))) {
+				out .= Trim(A_LoopField)
+			}
 		}
+	} Else {
+		; workaround for missing content-length		
+		fLength := ""
+		Loop, parse, dlStats, `n`r 
+		{
+			If (StrLen(Trim(A_LoopField))) {
+				If (RegExMatch(Trim(A_LoopField), "^\d*\s*(\d+k?m?).*(\d|\dk|\dm)$", length)) {
+					fLength := length1
+				}
+			}
+			If (RegExMatch(Trim(A_LoopField), ".*Connection.*left intact.*", length)) {
+				
+			}
+		}
+		
+		RegExMatch(output, "i)HTTP\/1.1 (200 OK|302 Found)", code)		
+		out := code "`n"
+		out .= "Content-Length: " fLength
 	}
-	
+
 	Return out
 }
 
