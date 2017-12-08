@@ -343,6 +343,9 @@ class Item_ {
 		This.IsMapFragment	:= False
 		This.IsEssence		:= False
 		This.IsRelic		:= False
+		This.IsElderBase	:= False
+		This.IsShaperBase	:= False
+		This.IsAbyssJewel	:= False
 	}
 }
 Global Item := new Item_
@@ -760,6 +763,12 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			SubType = Belt
 			return
 		}
+		IfInString, LoopField, Stygian Vise
+		{
+			BaseType = Item
+			SubType = Belt
+			return
+		}
 		IfInString, LoopField, Belt
 		{
 			BaseType = Item
@@ -773,7 +782,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			return
 		}
 
-		If(RegExMatch(LoopField, "\bRing\b"))
+		If (RegExMatch(LoopField, "\bRing\b"))
 		{
 			BaseType = Item
 			SubType = Ring
@@ -825,28 +834,15 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		}
 
 		; Jewels
-		IfInString, LoopField, Cobalt%A_Space%Jewel
-		{
+		If (RegExMatch(LoopField, "i)(Cobalt|Crimson|Viridian|Prismatic) Jewel", match)) {
 			BaseType = Jewel
-			SubType = Cobalt Jewel
+			SubType := match1 " Jewel"
 			return
 		}
-		IfInString, LoopField, Crimson%A_Space%Jewel
-		{
+		; Abyss Jewels
+		If (RegExMatch(LoopField, "i)(Hypnotic|Murderous|Ghastly|Searching) Eye Jewel", match)) {
 			BaseType = Jewel
-			SubType = Crimson Jewel
-			return
-		}
-		IfInString, LoopField, Viridian%A_Space%Jewel
-		{
-			BaseType = Jewel
-			SubType = Viridian Jewel
-			return
-		}
-		IfInString, LoopField, Prismatic%A_Space%Jewel
-		{
-			BaseType = Jewel
-			SubType = Prismatic Jewel
+			SubType := match1 " Eye Jewel"
 			return
 		}
 
@@ -1696,40 +1692,40 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 {
 	Global ItemData, AffixTotals
 	
-	If(CountAffixTotals)
+	If (CountAffixTotals)
 	{
-		If(AffixType = "Hybrid Prefix" or AffixType = "Hybrid Defence Prefix"){
+		If (AffixType = "Hybrid Prefix" or AffixType = "Hybrid Defence Prefix"){
 			AffixTotals.NumPrefixes += 0.5
 		}
-		Else If(AffixType = "Hybrid Suffix"){
+		Else If (AffixType = "Hybrid Suffix"){
 			AffixTotals.NumSuffixes += 0.5
 		}
-		Else If(AffixType ~= "Prefix"){	; using ~= to match all that contains "Prefix", such as "Crafted Prefix".
+		Else If (AffixType ~= "Prefix"){	; using ~= to match all that contains "Prefix", such as "Crafted Prefix".
 			AffixTotals.NumPrefixes += 1
 		}
-		Else If(AffixType ~= "Suffix"){
+		Else If (AffixType ~= "Suffix"){
 			AffixTotals.NumSuffixes += 1
 		}
 	}
 	
-	If(Item.IsJewel)
+	If (Item.IsJewel)
 	{
 		TierAndType := AffixTypeShort(AffixType)	; Discard tier since it's always T1
 		
 		return [AffixLine, ValueRange, TierAndType]
 	}
 	
-	If(IsObject(AffixType))
+	If (IsObject(AffixType))
 	{
 		; Multiple mods in one line
 		TierAndType := ""
 		
 		For n, AfTy in AffixType
 		{
-			If(IsObject(Tier[A_Index]))
+			If (IsObject(Tier[A_Index]))
 			{
 				; Tier has a range
-				If(Tier[A_Index][1] = Tier[A_Index][2])
+				If (Tier[A_Index][1] = Tier[A_Index][2])
 				{
 					Ti := Tier[A_Index][1]
 				}
@@ -1748,10 +1744,10 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 		
 		TierAndType := SubStr(TierAndType, 1, -3)	; Remove trailing " + " at line end
 	}
-	Else If(IsObject(Tier))
+	Else If (IsObject(Tier))
 	{
 		; Just one mod in the line, but Tier has a range
-		If(Tier[1] = Tier[2])
+		If (Tier[1] = Tier[2])
 		{
 			Ti := Tier[1]
 		}
@@ -1764,7 +1760,7 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 	}
 	Else
 	{
-		If(IsNum(Tier) or Tier = "?")
+		If (IsNum(Tier) or Tier = "?")
 		{
 			; Just one mod and a single numeric tier
 			TierAndType := "T" Tier " " AffixTypeShort(AffixType)
@@ -7232,9 +7228,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	Loop, Parse, ItemDataText, `n, `r
 	{
-		RegExMatch(Trim(A_LoopField), "i)^Corrupted$", match)
-		If (match) {
+		RegExMatch(Trim(A_LoopField), "i)^Corrupted$", corrMatch)
+		If (corrMatch) {
 			Item.IsCorrupted := True
+		}
+		RegExMatch(Trim(A_LoopField), "i)^(Elder|Shaper) Item$", match)
+		If (match) {
+			Item["Is" match1 "Base"] := True
 		}
 	}
 	
@@ -7399,6 +7399,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsMap		:= (Item.BaseType == "Map")
 	Item.IsLeaguestone	:= (Item.BaseType == "Leaguestone")
 	Item.IsJewel		:= (Item.BaseType == "Jewel")
+	Item.IsAbyssJewel	:= (Item.IsJewel and RegExMatch(Item.SubType, "i)Ghastly Eye|Murderous Eye|Hypnotic Eye"))
 	Item.IsMirrored	:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
 	Item.Note			:= Globals.Get("ItemNote")

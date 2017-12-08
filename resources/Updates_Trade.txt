@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.6.1
+================================================================================================
+Added parsing for the new bases (elder/shaper items and abyss jewels/Stygian Vise belt).
+The search options/parameters for these bases should work, may need some fixing though when the new patch is live. Be careful at the start when pricing these bases.
+
 2.6.0
 ================================================================================================
 Big new features/changes:

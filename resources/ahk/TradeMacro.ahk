@@ -245,6 +245,11 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		preparedItem.Name		:= Item.Name
 		preparedItem.BaseName	:= Item.BaseName
 		preparedItem.Rarity		:= Item.RarityLevel
+		If (Item.isShaperBase or Item.isElderBase or Item.IsAbyssJewel) {
+			preparedItem.specialBase	:= Item.isShaperBase ? "Shaper Base" : ""
+			preparedItem.specialBase	:= Item.isElderBase ? "Elder Base" : preparedItem.specialBase
+			;preparedItem.specialBase	:= Item.isAbyssJewel ? "Abyss Jewel" : preparedItem.specialBase
+		}		
 		Stats.Defense := TradeFunc_ParseItemDefenseStats(ItemData.Stats, preparedItem)
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)
 
@@ -343,6 +348,18 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 				RequestParams.link_min := 3
 			}
 		}
+		
+		; special bases (elder/shaper)
+		If (Item.IsShaperBase or Item.IsElderBase) {
+			If (Item.IsShaperBase) {
+				RequestParams.Shaper := 1
+				Item.UsedInSearch.specialBase := "Shaper"
+			}
+			Else If (Item.IsElderBase) {
+				RequestParams.Elder := 1
+				Item.UsedInSearch.specialBase := "Elder"
+			}
+		}
 	}
 
 	; ignore mod rolls unless the TradeFunc_AdvancedPriceCheckGui is used to search
@@ -437,6 +454,16 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		If (s.onlineOverride) {
 			RequestParams.online := ""
 		}
+		
+		; special bases (elder/shaper)
+		If (s.useSpecialBase) {
+			If (Item.IsShaperBase) {
+				RequestParams.Shaper := 1
+			}
+			Else If (Item.IsElderBase) {
+				RequestParams.Elder := 1
+			}
+		}		
 	}
 
 	; prepend the item.subtype to match the options used on poe.trade
@@ -496,6 +523,20 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		} Else {
 			RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
 			Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType
+		}
+		
+		If (Item.IsShaperBase) {
+			RequestParams.Shaper := 1
+			Item.UsedInSearch.specialBase := "Shaper"
+		} Else {		
+			RequestParams.Shaper := 0
+		} 
+		
+		If (Item.IsElderBase) {
+			RequestParams.Elder := 1
+			Item.UsedInSearch.specialBase := "Elder"
+		} Else {			
+			RequestParams.Elder := 0
 		}
 	} Else {
 		RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
@@ -658,6 +699,11 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		RequestParams.xtype := Item.BaseType
 		If (Item.IsJewel and Item.IsUnique) {
 			RequestParams.xbase := Item.SubType
+		}
+		; TODO: add request param (not supported yet)
+		If (Item.IsAbyssJewel) {
+			;RequestParams. := 1
+			;Item.UsedInSearch.abyssJewel := 1 
 		}
 	}
 
@@ -1825,8 +1871,10 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 			Title .= (Item.UsedInSearch.Rarity) ? "(" Item.UsedInSearch.Rarity ") " : ""
 			Title .= (Item.UsedInSearch.Corruption and not Item.IsMapFragment and not Item.IsDivinationCard and not Item.IsCurrency)   ? "| Corrupted (" . Item.UsedInSearch.Corruption . ") " : ""
 			Title .= (Item.UsedInSearch.ItemXP) ?  "| XP (>= 70%) " : ""
-			Title .= (Item.UsedInSearch.Type)     ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
+			Title .= (Item.UsedInSearch.Type) ? "| Type (" . Item.UsedInSearch.Type . ") " : ""
+			Title .= (Item.UsedInSearch.abyssJewel) ? "| Abyss Jewel " : ""
 			Title .= (Item.UsedInSearch.ItemBase and ShowFullNameNote) ? "| Base (" . Item.UsedInSearch.ItemBase . ") " : ""
+			Title .= (Item.UsedInSearch.specialBase) ? "| " . Item.UsedInSearch.specialBase . " Base " : ""
 			Title .= (Item.UsedInSearch.Charges) ? "`n" . Item.UsedInSearch.Charges . " " : ""
 			Title .= (Item.UsedInSearch.AreaMonsterLvl) ? "| " . Item.UsedInSearch.AreaMonsterLvl . " " : ""
 
@@ -2103,6 +2151,10 @@ class RequestParams_ {
 	enchanted 	:= ""
 	progress_min	:= ""
 	progress_max	:= ""
+	sockets_a_min	:= ""
+	sockets_a_max	:= ""
+	shaper		:= ""
+	elder		:= ""
 
 	ToPayload() {
 		modGroupStr := ""
@@ -3231,13 +3283,13 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	}
 
 	If (Links >= 5) {
-		offset := (m > 1 ) ? "+15" : "15"
+		offset := (m > 1 ) ? "+10" : "15"
 		m++
 		text := "Links:  " . Trim(Links)
 		Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinks Checked, % text
 	}
 	Else If (Links <= 4 and advItem.maxSockets = 4) {
-		offset := (m > 1 ) ? "+15" : "15"
+		offset := (m > 1 ) ? "+10" : "15"
 		m++
 		text := "Links (max): 4"
 		/*
@@ -3250,7 +3302,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		Gui, SelectModsGui:Add, CheckBox, x%offset% yp+0 vTradeAdvancedUseLinksMaxFour, % text
 	}
 	Else If (Links <= 3 and advItem.maxSockets = 3) {
-		offset := (m > 1 ) ? "+15" : "15"
+		offset := (m > 1 ) ? "+10" : "15"
 		m++
 		text := "Links (max): 3"
 		/*
@@ -3264,7 +3316,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	}
 
 	; ilvl
-	offsetX := (m = 1) ? "15" : "+15"
+	offsetX := (m = 1) ? "15" : "+10"
 	offsetY := (m = 1) ? "20" : "+0"
 	iLvlCheckState := ""
 	iLvlValue		:= ""
@@ -3285,13 +3337,16 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			iLvlCheckState := "Checked"
 		}
 	}
-	Gui, SelectModsGui:Add, CheckBox, x%offsetX% yp%offsetY% vTradeAdvancedSelectedILvl %iLvlCheckState%, % "Item Level (min)"
-	Gui, SelectModsGui:Add, Edit    , x+5 yp-3 w30 vTradeAdvancedMinILvl , % iLvlValue
+	Gui, SelectModsGui:Add, CheckBox, x%offsetX% yp%offsetY% vTradeAdvancedSelectedILvl %iLvlCheckState%, % "iLvl (min)"
+	Gui, SelectModsGui:Add, Edit    , x+1 yp-3 w30 vTradeAdvancedMinILvl , % iLvlValue
 
 	; item base
 	baseCheckState := TradeOpts.AdvancedSearchCheckBase ? "Checked" : ""
-	Gui, SelectModsGui:Add, CheckBox, x+15 yp+3 vTradeAdvancedSelectedItemBase %baseCheckState%, % "Include Item Base"
+	Gui, SelectModsGui:Add, CheckBox, x+15 yp+3 vTradeAdvancedSelectedItemBase %baseCheckState%, % "Use Item Base"
 
+	If (advItem.specialBase) {
+		Gui, SelectModsGui:Add, CheckBox, x+15 yp+0 vTradeAdvancedSelectedSpecialBase Checked, % advItem.specialBase 
+	}
 
 	Item.UsedInSearch.SearchType := "Advanced"
 	; closes this window and starts the search
@@ -3452,6 +3507,7 @@ TradeFunc_ResetGUI() {
 	TradeAdvancedSelectedILvl		:=
 	TradeAdvancedMinILvl			:=
 	TradeAdvancedSelectedItemBase		:=
+	TradeAdvancedSelectedSpecialBase	:=
 	TradeAdvancedSelectedCheckAllMods	:=
 	TradeAdvancedImplicitCount		:=
 	TradeAdvancedNormalModCount		:=
@@ -3517,6 +3573,7 @@ TradeFunc_HandleGuiSubmit() {
 	newItem.useIlvl			:= TradeAdvancedSelectedILvl
 	newItem.minIlvl			:= TradeAdvancedMinILvl
 	newItem.useBase			:= TradeAdvancedSelectedItemBase
+	newItem.useSpecialBase		:= TradeAdvancedSelectedSpecialBase
 	newItem.onlineOverride		:= TradeAdvancedOverrideOnlineState
 
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)
