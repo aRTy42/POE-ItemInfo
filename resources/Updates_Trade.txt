@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.6.2
+================================================================================================
+Added the new mods available on poe.trade.
+Fixed some issues with those new mods (abyss jewels/elder/shaper items).
+Updated data files (enchantments/corruptions/uniques.
+
 2.6.1
 ================================================================================================
 Added parsing for the new bases (elder/shaper items and abyss jewels/Stygian Vise belt).

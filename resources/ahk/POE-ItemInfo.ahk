@@ -7880,6 +7880,10 @@ GetNegativeAffixOffset(Item)
 		; And corrupted items
 		NegativeAffixOffset := NegativeAffixOffset + 1
 	}
+	If (Item.IsElderBase or Item.IsShaperBase)		
+	{
+		NegativeAffixOffset := NegativeAffixOffset + 1
+	}
 	If (Item.IsMirrored)
 	{
 		; And mirrored items

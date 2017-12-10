@@ -2449,6 +2449,15 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
 		}
 		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["shaped"], _item.mods[k])
+		}
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["elder"], _item.mods[k])
+		}
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["abyss jewels"], _item.mods[k])
+		}
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
 		}
 		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
@@ -2485,6 +2494,9 @@ TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
 		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], _item.mods[k])
 		}
+		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["abyss jewels"], _item.mods[k])
+		}
 		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["map mods"], _item.mods[k])
 		}
@@ -2497,19 +2509,23 @@ TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
 }
 
 ; find mod in modgroup and return its name
-TradeFunc_FindInModGroup(modgroup, needle) {
+TradeFunc_FindInModGroup(modgroup, needle, simpleRange = true, recurse = true) {
 	matches := []
 	editedNeedle := ""
 
 	For j, mod in modgroup {
 		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)|\(leaguestone\)", ""))
-		s  := RegExReplace(s, "# ?to ? #", "#")
+		If (simpleRange) {
+			s  := RegExReplace(s, "# ?to ? #", "#")
+		}
 		s  := TradeUtils.CleanUp(s)
 		ss := TradeUtils.CleanUp(needle.name)
 		st := TradeUtils.CleanUp(needle.name_orig)
 		
-		; matches "1 to" in for example "adds 1 to (20-40) lightning damage"
-		ss := RegExReplace(ss, "\d+ ?to ?#", "#")
+		If (simpleRange) {
+			; matches "1 to" in for example "adds 1 to (20-40) lightning damage"
+			ss := RegExReplace(ss, "\d+ ?to ?#", "#")
+		}		
 		;ss := RegExReplace(ss, "Monsters' skills Chain # additional times", "Monsters' skills Chain 2 additional times")
 		;ss := RegExReplace(ss, "Has # socket", "Has 1 socket")
 		editedNeedle := ss
@@ -2537,8 +2553,12 @@ TradeFunc_FindInModGroup(modgroup, needle) {
 			}
 		}
 	}
-
-	Return ""
+	
+	If (not matches[1] and recurse = true) {
+		TradeFunc_FindInModGroup(modgroup, needle, false, false)
+	} Else {
+		Return ""
+	}
 }
 
 TradeFunc_GetCorruption(_item) {

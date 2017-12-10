@@ -33,7 +33,6 @@ Arc has +#% chance to Shock
 #% increased Barrage Attack Speed
 #% increased Barrage Damage
 # additional Barrage Projectile
-# additional Barrage Projectiles
 #% increased Bear Trap Cooldown Recovery Speed
 #% increased Bear Trap Damage
 #% increased Blade Vortex Spell Damage
@@ -53,6 +52,9 @@ Blink Arrow and Blink Arrow Clones have #% increased Attack Speed
 Blink Arrow and Blink Arrow Clones have #% increased Damage
 Blood Rage grants additional #% increased Attack Speed
 Blood Rage grants additional #% chance to gain a Frenzy Charge on Kill
+#% increased Unearth cast speed
+Unearth Creates Corpses with +# Level
+#% increased Unearth damage
 Bone Offering grants an additional +#% Block Chance
 #% increased Bone Offering Duration
 #% increased Burning Arrow Damage
@@ -68,7 +70,7 @@ Burning Arrow has +#% chance to Ignite
 #% increased Blade Flurry Area of Effect
 #% increased Charged Dash Damage
 #% chance to Dodge Attacks if you have finished Channelling Charged Dash Recently
-#% Area of Effect of Charged Dash's final Damage Area
++# Radius of Charged Dash's final Damage Area
 #% reduced Clarity Mana Reservation
 #% increased Cleave Attack Speed
 #% increased Cleave Damage
@@ -85,6 +87,9 @@ Burning Arrow has +#% chance to Ignite
 Converted Enemies have #% increased Damage
 #% increased Convocation Cooldown Recovery Speed
 #% increased Convocation Buff Effect
+#% increased Corpse Cremation cast speed
+#% increased Corpse Cremation damage
+Cremation can have up to # additional Geyser at a time
 #% increased Cyclone Attack Speed
 #% increased Cyclone Damage
 #% increased Dark Pact Cast Speed
@@ -191,7 +196,7 @@ Frostbolt has +#% chance to Freeze
 #% increased Frostbite Curse Effect
 #% increased Frostbite Duration
 #% increased Glacial Cascade Damage
-#% of Glacial Cascade Physical Damage converted to Cold Damage
+#% of Glacial Cascade Physical Damage Converted to Cold Damage
 #% increased Glacial Cascade Area of Effect
 #% increased Glacial Hammer Damage
 Glacial Hammer has +#% chance to Freeze
@@ -303,7 +308,7 @@ Zombies deal #% increased Damage
 #% increased Reckoning Cooldown Recovery Speed
 #% increased Reckoning Damage
 #% increased Rejuvenation Totem Aura Effect
-#% of Rejuvenation Totem Life Regeneration added as Mana Regeneration
+Gain #% of Rejuvenation Totem Life Regeneration as extra Mana Regeneration
 #% increased Righteous Fire Damage
 #% increased Righteous Fire Area of Effect
 Righteous Fire grants #% increased Spell Damage
@@ -388,6 +393,9 @@ Tempest Shield chains an additional # times
 #% increased Viper Strike Damage
 #% increased Viper Strike Duration
 #% reduced Vitality Mana Reservation
+#% increased Volatile Dead cast speed
+#% increased Volatile Dead damage
+Volatile Dead destroys up to # additional Corpses
 #% increased Vortex Damage
 #% increased Vortex Duration
 #% increased Vortex Area of Effect

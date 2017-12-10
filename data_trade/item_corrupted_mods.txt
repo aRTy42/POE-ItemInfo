@@ -1,11 +1,11 @@
 
 Adds # to # Chaos Damage to Attacks
-#% increased Area of Effect of Area Skills
+#% increased Area of Effect
 Adds an additional Arrow
 Enemies can have # additional Curse
 Arrows Pierce an additional Target
 Can have up to # additional Trap placed at a time
-Grants level # Anger Skill
+Grants Level # Anger Skill
 #% increased Attack Speed
 #% chance to Avoid being Shocked
 #% Chance to Block
@@ -18,43 +18,43 @@ Enemies Cannot Leech Life From You
 #% additional Chance to receive a Critical Strike
 #% chance to Dodge Attacks
 #% chance to Cause Monsters to Flee
-#% increased Chaos Damage per equipped Corrupted Item
+#% increased Chaos Damage for each Equipped Corrupted Item
 +#% to Chaos Resistance
-Grants level # Clarity Skill
+Grants Level # Clarity Skill
 #% of Cold Damage Leeched as Life
-Grants level # Conductivity Skill
-Grants level # Assassin's Mark Skill
+Grants Level # Conductivity Skill
+Grants Level # Assassin's Mark Skill
 Culling Strike
-Curse Enemies with level # Elemental Weakness on Hit
-Curse Enemies with level # Temporal Chains on Hit
-Curse Enemies with level # Vulnerability on Hit
+Curse Enemies with Level # Elemental Weakness on Hit
+Curse Enemies with Level # Temporal Chains on Hit
+Curse Enemies with Level # Vulnerability on Hit
 #% of Physical Damage Converted to Cold Damage
 #% of Physical Damage Converted to Fire Damage
 #% of Physical Damage Converted to Lightning Damage
 -# Physical Damage taken from Attacks
 #% of Damage is taken from Mana before Life
 #% increased Damage while Dead
-Grants level # Determination Skill
-Grants level # Discipline Skill
+Grants Level # Determination Skill
+Grants Level # Discipline Skill
 #% additional Block Chance while Dual Wielding
-Grants level # Elemental Weakness Skill
+Grants Level # Elemental Weakness Skill
 #% of Fire Damage Leeched as Life
 #% increased Quantity of Fish Caught
 #% increased Rarity of Fish Caught
-Grants level # Flammability Skill
-Grants level # Frostbite Skill
+Grants Level # Flammability Skill
+Grants Level # Frostbite Skill
 +# to Level of Socketed Gems
 #% increased Projectile Speed
-Grants level # Grace Skill
-Grants level # Haste Skill
-Grants level # Hatred Skill
+Grants Level # Grace Skill
+Grants Level # Haste Skill
+Grants Level # Hatred Skill
 #% increased Endurance, Frenzy and Power Charge Duration
 #% increased Skill Effect Duration
-#% increased Life Leeched per second per equipped Corrupted Item
+#% increased Life Leeched per second for each Equipped Corrupted Item
 #% of Lightning Damage Leeched as Life
 Adds # to # Chaos Damage
 +# to Weapon range
-#% increased Mana Leeched per second per equipped Corrupted Item
+#% increased Mana Leeched per second for each Equipped Corrupted Item
 +# Mana gained for each Enemy hit by your Attacks
 #% of Damage taken gained as Mana over 4 seconds when Hit
 +# to Maximum Frenzy Charges
@@ -63,11 +63,11 @@ Adds # to # Chaos Damage
 +#% to all maximum Resistances
 Minions deal #% increased Damage
 #% increased Movement Speed
-Grants level # Projectile Weakness Skill
-Grants level # Purity of Ice Skill
-Grants level # Purity of Fire Skill
-Grants level # Purity of Lightning Skill
-Grants level # Purity of Elements Skill
+Grants Level # Projectile Weakness Skill
+Grants Level # Purity of Ice Skill
+Grants Level # Purity of Fire Skill
+Grants Level # Purity of Lightning Skill
+Grants Level # Purity of Elements Skill
 #% reduced Character Size
 #% reduced Chill Duration on You
 #% reduced Freeze Duration on You
@@ -77,23 +77,23 @@ You cannot be Cursed with Silence
 Socketed Skill Gems get a #% Mana Multiplier
 +# to Level of Socketed Vaal Gems
 #% Chance to Block Spells
-Socketed Gems are supported by level # Additional Accuracy
-Socketed Gems are Supported by level # Added Fire Damage
-Socketed Gems are Supported by level # Increased Area of Effect
-Socketed Gems are supported by level # Cast On Crit
-Socketed Gems are supported by level # Cast when Stunned
-Socketed Gems are supported by level # Increased Critical Damage
-Socketed Gems are Supported by level # Elemental Proliferation
+Socketed Gems are supported by Level # Additional Accuracy
+Socketed Gems are Supported by Level # Added Fire Damage
+Socketed Gems are Supported by Level # Increased Area of Effect
+Socketed Gems are supported by Level # Cast On Critical Strike
+Socketed Gems are supported by Level # Cast when Stunned
+Socketed Gems are supported by Level # Increased Critical Damage
+Socketed Gems are Supported by Level # Elemental Proliferation
 Socketed Gems are Supported by Level # Faster Casting
-Socketed Gems are supported by level # Fork
-Socketed Gems are supported by level # Life Leech
-Socketed Gems are supported by level # Melee Splash
-Socketed Gems are supported by level # Multistrike
-Socketed Gems are supported by level # Stun
-Socketed Gems are supported by level # Weapon Elemental Damage
-Grants level # Temporal Chains Skill
+Socketed Gems are supported by Level # Fork
+Socketed Gems are supported by Level # Life Leech
+Socketed Gems are supported by Level # Melee Splash
+Socketed Gems are supported by Level # Multistrike
+Socketed Gems are supported by Level # Stun
+Socketed Gems are supported by Level # Elemental Damage with Attacks
+Grants Level # Temporal Chains Skill
 #% increased Vaal Skill Damage
-Grants level # Vitality Skill
-Grants level # Vulnerability Skill
+Grants Level # Vitality Skill
+Grants Level # Vulnerability Skill
 #% increased Elemental Damage with Attack Skills
-Grants level # Wrath Skill
+Grants Level # Wrath Skill
