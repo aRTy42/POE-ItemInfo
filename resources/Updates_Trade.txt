@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.6.3
+================================================================================================
+Fixed an issue that caused the new maps not being searched correctly.
+
 2.6.2
 ================================================================================================
 Added the new mods available on poe.trade.

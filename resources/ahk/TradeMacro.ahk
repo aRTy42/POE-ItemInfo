@@ -199,6 +199,13 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	Item.xtype		:= ""
 	Item.UsedInSearch	:= {}
 	Item.UsedInSearch.iLvl	:= {}
+	For key, val in Item.UsedInSearch {
+		If (isObject(val)) {
+			Item[key] := {}
+		} Else {
+			Item[key] := 
+		}
+	}
 
 	RequestParams			:= new RequestParams_()
 	RequestParams.league	:= LeagueName
@@ -638,17 +645,19 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 
 	If (Item.IsMap) {
 		; add Item.subtype to make sure to only find maps
-		If (not RegExMatch(Item.Name, "i)The Beachhead.*", isHarbingerMap)) {
+		RegExMatch(Item.Name, "i)The Beachhead.*", isHarbingerMap)
+		RegExMatch(Item.SubType, "i)Unknown Map", isUnknownMap)
+		If (not isHarbingerMap and not isUnknownMap) {
 			RequestParams.xbase := Item.SubType
 		} Else {
 			RequestParams.xbase := ""
 		}
+		
 		RequestParams.xtype := ""
 		If (not Item.IsUnique) {
-			console.log(isHarbingerMap)
 			If (StrLen(isHarbingerMap)) {
 				; Beachhead Map workaround (unique but not flagged as such on poe.trade)
-				RequestParams.name := Item.Name
+				RequestParams.name := Item.Name				
 			} Else {
 				RequestParams.name := ""
 			}
@@ -657,6 +666,11 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		; Ivory Temple fix, not sure why it's not recognized and if there are more cases like it
 		If (InStr(Name, "Ivory Temple")){
 			RequestParams.xbase  := "Ivory Temple Map"
+		}
+		
+		If (StrLen(isUnknownMap)) {
+			RequestParams.xbase := Item.BaseName
+			Item.UsedInSearch.type := Item.BaseName
 		}
 	}
 
@@ -748,7 +762,6 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	If (TradeOpts.Debug) {
 		;console.log(RequestParams)
 	}
-
 	Payload := RequestParams.ToPayload()
 
 	If (openSearchInBrowser) {
