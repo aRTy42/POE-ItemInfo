@@ -9886,7 +9886,12 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 				If (broadTerms) {
 					terms.push(" Map")
 				} Else {
-					terms.push(Item.SubType)
+					RegExMatch(Item.SubType, "i)Unknown Map", isUnknownMap)
+					If (StrLen(isUnknownMap)) {
+						terms.push(Item.BaseName) 
+					} Else {
+						terms.push(Item.SubType) 
+					}
 					terms.push("tier:" Item.MapTier)
 				}
 			}
