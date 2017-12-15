@@ -2255,7 +2255,7 @@ TradeFunc_ParsePoePricesInfoData(response) {
 	lines.push(["~~ Predicted item pricing (via machine-learning) ~~", "center", true])
 	lines.push([headLine, "left",  true])
 	lines.push(["", "left"])
-	lines.push(["   Price range: " Trim(response.min) " ~ " Trim(response.max) " " Trim(response.currency), "left"])
+	lines.push(["   Price range: " Round(Trim(response.min), 2) " ~ " Round(Trim(response.max), 2) " " Trim(response.currency), "left"])
 	lines.push(["", "left", true])
 	lines.push(["", "left"])
 	lines.push(["Please consider supporting POEPRICES.INFO.", "left"])
@@ -3135,15 +3135,15 @@ TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	Gui, PredictedPricing:Font, norm bold, Consolas
 	Gui, PredictedPricing:Add, Text, x20 w90 y+10 BackgroundTrans, % "Price range: "
 	Gui, PredictedPricing:Font, norm, Consolas
-	Gui, PredictedPricing:Add, Text, x+5 yp+0 BackgroundTrans, % Trim(data.min) " ~ " Trim(data.max) " " Trim(data.currency)	
+	Gui, PredictedPricing:Add, Text, x+5 yp+0 BackgroundTrans, % Round(Trim(data.min), 2) " ~ " Round(Trim(data.max), 2) " " Trim(data.currency)	
 	_url := data.added.browserUrl
 	Gui, PredictedPricing:Add, Link, x245 y99 cBlue BackgroundTrans, <a href="%_url%">Open on poeprices.info</a>
 	
 	Gui, PredictedPricing:Font, norm s8 italic, Verdana
-	Gui, PredictedPricing:Add, Text, BackgroundTrans x15 y135 w400, % "You can disable this GUI in favour of a simple result tooltip. Settings menu -> under 'Search' group."
+	Gui, PredictedPricing:Add, Text, BackgroundTrans x15 y135 w390, % "You can disable this GUI in favour of a simple result tooltip. Settings menu -> under 'Search' group. Or even disable this predicted search entirely."
 	
 	Gui, PredictedPricing:Font, bold s8, Verdana
-	Gui, PredictedPricing:Add, GroupBox, w400 h230 y175 x10, Feedback
+	Gui, PredictedPricing:Add, GroupBox, w400 h230 y180 x10, Feedback
 	Gui, PredictedPricing:Font, norm, Verdana
 	
 	Gui, PredictedPricing:Add, Text, x20 yp+25 BackgroundTrans, You think the predicted price range is?
@@ -3164,7 +3164,7 @@ TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	Gui, PredictedPricing:Font, bold s8, Verdana
 	Gui, PredictedPricing:Add, Text, x15 y+20 cGreen BackgroundTrans, % "This feature is powered by poeprices.info!"
 	Gui, PredictedPricing:Font, norm, Verdana
-	Gui, PredictedPricing:Add, Link, x15 y+5 cBlue BackgroundTrans, <a href="https://www.paypal.com/donate/?token=SLVAHGXJABSFTgfcUEB8tieDYwl-oGJwpq0GOInCEcH4a9pDOgO5b-F4MdSWgm9PZXoKzm">Support them via PayPal</a>
+	Gui, PredictedPricing:Add, Link, x15 y+5 cBlue BackgroundTrans, <a href="https://www.paypal.me/poeprices/5">Support them via PayPal</a>
 	Gui, PredictedPricing:Add, Text, x+5 yp+0 cDefault BackgroundTrans, % "or"
 	Gui, PredictedPricing:Add, Link, x+5 yp+0 cBlue BackgroundTrans, <a href="https://www.patreon.com/bePatron?u=5966037">Patreon</a>
 	
