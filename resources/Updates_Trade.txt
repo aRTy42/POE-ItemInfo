@@ -1,5 +1,15 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.7.0
+================================================================================================
+Implemented a predicted item pricing/search using machine learning algorithms:
+	This feature uses the ML pricing from poeprices.info.
+	For the moment it will only work with rare items, magic items will likely be enabled in the near future.
+	This feature replaces the default search (ctrl + d) but is optional and can be disabled again in the settings.
+	Be aware that this feature could return correct prices, but also be completely off the mark, improving it needs the help of the community.
+Added poedb.tw as an alternative to the PoE Wiki (open item on wiki hoteky). This is a toggle option and has to be enabled in the settings ("general" section).
+Fixed the new maps not working with the stash highlight hotkey.
+ 
 2.6.3
 ================================================================================================
 Fixed an issue that caused the new maps not being searched correctly.

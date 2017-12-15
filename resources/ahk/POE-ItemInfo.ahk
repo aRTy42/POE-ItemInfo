@@ -6441,8 +6441,7 @@ ParseClipBoardChanges(debug = false)
 	/*
 		;Item Data Translation, won't be used for now.
 		CBContents := PoEScripts_TranslateItemData(CBContents, translationData, currentLocale, retObj, retCode)
-	*/	
-	
+	*/
 	Globals.Set("ItemText", CBContents)
 	
 	ParsedData := ParseItemData(CBContents)
@@ -10030,21 +10029,31 @@ AdvancedItemInfoExt() {
 		Globals.Set("ItemText", CBContents)
 		ParsedData := ParseItemData(CBContents)
 
-		If (Item.Name) {
-			itemTextBase64 := ""
-			FileDelete, %A_ScriptDir%\temp\itemText.txt
-			FileAppend, %CBContents%, %A_ScriptDir%\temp\itemText.txt, utf-8
-			command		:= "certutil -encode -f ""%cd%\temp\itemText.txt"" ""%cd%\temp\base64ItemText.txt"" & type ""%cd%\temp\base64ItemText.txt"""
-			itemTextBase64	:= ReadConsoleOutputFromFile(command, "encodeToBase64.txt")
-			itemTextBase64	:= Trim(RegExReplace(itemTextBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))
-			itemTextBase64	:= UriEncode(itemTextBase64)
-			itemTextBase64	:= RegExReplace(itemTextBase64, "i)^(%0D)?(%0A)?|((%0D)?(%0A)?)+$", "")
-			url 			:= "http://pathof.info/?item=" itemTextBase64
+		If (Item.Name) {			
+			url 	:= "http://pathof.info/?item=" StringToBase64UriEncoded(CBContents)
 			openWith := AssociatedProgram("html")
 			OpenWebPageWith(openWith, Url)
 		}
 		SuspendPOEItemScript = 0
 	}
+}
+
+StringToBase64UriEncoded(stringIn, noUriEncode = false) {
+	stringBase64 := ""
+	FileDelete, %A_ScriptDir%\temp\itemText.txt
+	FileAppend, %stringIn%, %A_ScriptDir%\temp\itemText.txt, utf-8
+	command		:= "certutil -encode -f ""%cd%\temp\itemText.txt"" ""%cd%\temp\base64ItemText.txt"" & type ""%cd%\temp\base64ItemText.txt"""
+	stringBase64	:= ReadConsoleOutputFromFile(command, "encodeToBase64.txt")
+	stringBase64	:= Trim(RegExReplace(stringBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))
+	
+	If (not noUriEncode) {
+		stringBase64	:= UriEncode(stringBase64)
+		stringBase64	:= RegExReplace(stringBase64, "i)^(%0D)?(%0A)?|((%0D)?(%0A)?)+$", "")
+	} Else {
+		stringBase64 := RegExReplace(stringBase64, "i)\r|\n", "") 
+	}	
+	
+	Return stringBase64
 }
 
 OpenWebPageWith(application, url) {
@@ -10653,6 +10662,26 @@ ShowAssignedHotkeys:
 	Gui, 3:Cancel
 	return
 
+GuiEscape: 
+	; settings 
+	Gui, Cancel
+Return
+
+AboutGuiEscape:
+	Gui, About:Cancel
+Return
+
+ShowHotkeysGuiEscape:
+	Gui, ShowHotkeys:Cancel
+Return
+
+TranslateGuiEscape:
+	Gui, Translate:Cancel
+Return
+
+UpdateNotesGuiEscape:
+	Gui, UpdateNotes:Cancel
+Return
 
 CheckForUpdates:
 	If (not globalUpdateInfo.repo) {

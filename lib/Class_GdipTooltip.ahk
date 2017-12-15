@@ -83,7 +83,8 @@ class GdipTooltip
 		this.CalculateToolTipDimensions(String, fontSize, ttWidth, ttLineHeight, ttheight)
 		
 		renderingOffset := this.renderingHack ? 0.3999 : 0	
-		textAreaWidth	:= ttWidth  + (2 * this.padding.width)  + renderingOffset
+		;textAreaWidth	:= ttWidth  + (Floor(this.padding.width / 2))  + renderingOffset
+		textAreaWidth	:= ttWidth  + renderingOffset
 		textAreaHeight	:= ttHeight + (2 * this.padding.height) + renderingOffset
 
 		this.window.Clear()
@@ -192,12 +193,12 @@ class GdipTooltip
 		StringArray := StrSplit(String, "`n")
 		Loop % StringArray.MaxIndex()
 		{
-			element := StringArray[a_index]
+			element := StringArray[A_Index]
 			dim	:= this.MeasureText(element, fontSize + 1, "Consolas")
 			len	:= dim["W"] * (fontSize / 10)
 			hi	:= dim["H"] * ((fontSize - 1) / 10)
 			
-			if (len > ttWidth)
+			If (len > ttWidth)
 			{
 				ttWidth := len
 			}

@@ -47,6 +47,10 @@ DebugPrintArray(Array, Display=1, Level=0, guiWidth=800, guiHeight=900)
 	DebugPrintArrayGuiClose:
 		Gui, DebugPrintArray:Destroy
 	Return
+	
+	DebugPrintArrayGuiEscape:
+		Gui, DebugPrintArray:Destroy
+	Return
 }
 
 /*

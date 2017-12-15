@@ -36,16 +36,31 @@
 		redirect := "L"
 		PreventErrorMsg := false
 		If (StrLen(options)) {
-			If (RegExMatch(options, "i)SaveAs:[ \t]*\K[^\r\n]+", SavePath)) {
-				commandData	.= " " options " "
-				commandHdr	.= ""	
-			}
-			If (RegExMatch(options, "i)Redirect:\sFalse")) {
-				redirect := ""
-			}
-			If (RegExMatch(options, "i)PreventErrorMsg")) {
-				PreventErrorMsg := true
-			}
+			Loop, Parse, options, `n 
+			{
+				If (RegExMatch(A_LoopField, "i)SaveAs:[ \t]*\K[^\r\n]+", SavePath)) {
+					commandData	.= " " A_LoopField " "
+					commandHdr	.= ""	
+				}
+				If (RegExMatch(A_LoopField, "i)Redirect:\sFalse")) {
+					redirect := ""
+				}
+				If (RegExMatch(A_LoopField, "i)PreventErrorMsg")) {
+					PreventErrorMsg := true
+				}
+				If (RegExMatch(A_LoopField, "i)RequestType:(.*)", match)) {
+					requestType := Trim(match1)
+				}
+				If (RegExMatch(A_LoopField, "i)ReturnHeaders:(.*skip.*)")) {
+					skipRetHeaders := true
+				}
+				If (RegExMatch(A_LoopField, "i)TimeOut:(.*)", match)) {
+					timeout := Trim(match1)
+				}	
+			}			
+		}
+		If (not timeout) {
+			timeout := 30
 		}
 
 		e := {}
@@ -58,40 +73,49 @@
 					commandData .= "-o """ SavePath """ "	; set target destination and name
 				}
 			} Else {
-				commandData .= " -" redirect "ks --compressed "			
-				commandHdr  .= " -I" redirect "ks "
-			}
+				commandData .= " -" redirect "ks --compressed "
+				If (requestType = "GET") {
+					commandHdr  .= " -k" redirect "s "
+				} Else {
+					commandHdr  .= " -I" redirect "ks "
+				}
+			}			
+			
 			If (StrLen(headers)) {
-				commandData .= headers
-				commandHdr  .= headers
+				If (not requestType = "GET") {
+					commandData .= headers
+					commandHdr  .= headers	
+				}				
 				If (StrLen(cookies)) {
 					commandData .= cookies
 					commandHdr  .= cookies
 				}
 			}
-			If (StrLen(ioData)) {
+			If (StrLen(ioData) and not requestType = "GET") {
+				If (requestType = "POST") {
+					commandData .= "-X POST "
+				}
 				commandData .= "--data """ ioData """ "
+			} Else If (StrLen(ioData)) {
+				url := url "?" ioData
 			}
 			
 			If (binaryDL) {
-				commandData	.= "--connect-timeout 30 "
-				commandData	.= "--connect-timeout 30 "
+				commandData	.= "--connect-timeout " timeout " "
+				commandData	.= "--connect-timeout " timeout " "
 			} Else {				
-				commandData	.= "--max-time 30 "
-				commandHdr	.= "--max-time 30 "
+				commandData	.= "--max-time " timeout " "
+				commandHdr	.= "--max-time " timeout " "
 			}
 
 			; get data
 			html	:= StdOutStream(curl """" url """" commandData)
-			if (instr(url, "cdn")) {
-				;msgbox % curl """" url """" commandData
-			}
 			;html := ReadConsoleOutputFromFile(commandData """" url """", "commandData") ; alternative function
 
 			; get return headers in seperate request
-			If (not binaryDL) {
-				If (StrLen(ioData)) {
-					commandHdr := curl """" url "?" ioData """" commandHdr		; add payload to url since you can't use the -I argument with POST requests
+			If (not binaryDL and not skipRetHeaders) {
+				If (StrLen(ioData) and not requestType = "GET") {
+					commandHdr := curl """" url "?" ioData """" commandHdr		; add payload to url since you can't use the -I argument with POST requests					
 				} Else {
 					commandHdr := curl """" url """" commandHdr
 				}
@@ -100,6 +124,7 @@
 			} Else {
 				ioHdr := html
 			}
+			
 			reqHeadersCurl := commandHdr
 		} Catch e {
 
