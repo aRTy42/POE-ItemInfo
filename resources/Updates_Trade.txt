@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.7.2
+================================================================================================
+Fixed an issue with the poeprices.info logger.
+Fixed the poeprices paypal link.
+
 2.7.1
 ================================================================================================
 Added a log file "<TradeMacroFolder>\temp\poeprices_log.txt" for failed requests to poeprices.info.

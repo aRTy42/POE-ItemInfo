@@ -1404,7 +1404,7 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 	options	:= "RequestType: GET"
 	options	.= "`n" "ReturnHeaders: skip"
 	options	.= "`n" "TimeOut: 20"
-	reqHeaders	:= []
+	reqHeaders := []
 	
 	reqHeaders.push("Host: www.poeprices.info")
 	reqHeaders.push("Connection: keep-alive")
@@ -1420,19 +1420,29 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 		FileDelete, %A_ScriptDir%\temp\DebugSearchOutput.html
 		FileAppend, %response%, %A_ScriptDir%\temp\DebugSearchOutput.html
 	}
-	
+
+	responseObj := {}
 	Try {
-		response := JSON.Load(response)
-		response.added := {}
-		response.added.encodedData := EncodedItemData
-		response.added.league := TradeGlobals.Get("LeagueName")
-		response.added.requestUrl := url "?" postData
-		response.added.browserUrl := url "?" postData "&w=1"
+		responseObj := JSON.Load(response)
 	} Catch e {
-		response := "ERROR: Parsing response failed, invalid JSON! "
+		responseObj.failed := "ERROR: Parsing response failed, invalid JSON! "
 	}
 	
-	Return response
+	If (not isObject(responseObj)) {		
+		responseObj := {}
+	}
+	
+	If (not StrLen(response)) {
+		responseObj.failed := "ERROR: Parsing response failed, empty response! "
+	}
+
+	responseObj.added := {}
+	responseObj.added.encodedData := EncodedItemData
+	responseObj.added.league := TradeGlobals.Get("LeagueName")
+	responseObj.added.requestUrl := url "?" postData
+	responseObj.added.browserUrl := url "?" postData "&w=1"
+
+	Return responseObj
 }
 
 TradeFunc_MapCurrencyNameToID(name) {
@@ -3154,7 +3164,7 @@ TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	Gui, PredictedPricing:Font, bold s8, Verdana
 	Gui, PredictedPricing:Add, Text, x15 y+20 cGreen BackgroundTrans, % "This feature is powered by poeprices.info!"
 	Gui, PredictedPricing:Font, norm, Verdana
-	Gui, PredictedPricing:Add, Link, x15 y+5 cBlue BackgroundTrans, <a href="https://www.paypal.com/donate/?token=x154t12a0L0CE7BOpfpu9CcwpTa__7fOZ9rg1BECyXchYYt33Kbt5Gfj0rsDeg5WF6IhWG&country.x=US&locale.x=US">Support them via PayPal</a>
+	Gui, PredictedPricing:Add, Link, x15 y+5 cBlue BackgroundTrans, <a href="https://www.paypal.com/donate/?token=SLVAHGXJABSFTgfcUEB8tieDYwl-oGJwpq0GOInCEcH4a9pDOgO5b-F4MdSWgm9PZXoKzm">Support them via PayPal</a>
 	Gui, PredictedPricing:Add, Text, x+5 yp+0 cDefault BackgroundTrans, % "or"
 	Gui, PredictedPricing:Add, Link, x+5 yp+0 cBlue BackgroundTrans, <a href="https://www.patreon.com/bePatron?u=5966037">Patreon</a>
 	
