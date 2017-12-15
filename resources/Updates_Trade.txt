@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.7.1
+================================================================================================
+Fixed an issue with the send feedback request to poeprices.info.
+
 2.7.0
 ================================================================================================
 Implemented a predicted item pricing/search using machine learning algorithms:

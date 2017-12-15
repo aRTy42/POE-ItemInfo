@@ -1422,7 +1422,7 @@ TradeFunc_DoPoePricesRequest(RawItemData) {
 	Try {
 		response := JSON.Load(response)
 		response.added := {}
-		response.added.encodedData := postData
+		response.added.encodedData := EncodedItemData
 		response.added.league := TradeGlobals.Get("LeagueName")
 		response.added.requestUrl := url "?" postData
 		response.added.browserUrl := url "?" postData "&w=1"
@@ -4579,7 +4579,7 @@ TradeFunc_PredictedPricingSendFeedback(selector, comment, encodedData, league, p
 		postData := postData "debug=1" "&"	
 	}
 	postData := RegExReplace(postData, "(\&)$")
-	
+
 	payLength	:= StrLen(postData)
 	url 		:= "https://www.poeprices.info/send_feedback"
 	options	:= "ReturnHeaders: skip"
