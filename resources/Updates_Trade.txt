@@ -2,6 +2,8 @@ The following is a list of what has been updated, starting with 1.1.0
 
 2.7.1
 ================================================================================================
+Added a log file "<TradeMacroFolder>\temp\poeprices_log.txt" for failed requests to poeprices.info.
+	Instructions were to report those issues are inside.
 Fixed an issue with the send feedback request to poeprices.info.
 
 2.7.0

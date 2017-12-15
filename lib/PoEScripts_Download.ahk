@@ -1,4 +1,4 @@
-﻿PoEScripts_Download(url, ioData, ByRef ioHdr, options, useFallback = true, critical = false, binaryDL = false, errorMsg = "", ByRef reqHeadersCurl = "", handleAccessForbidden = true) {
+﻿PoEScripts_Download(url, ioData, ByRef ioHdr, options, useFallback = true, critical = false, binaryDL = false, errorMsg = "", ByRef reqHeadersCurl = "", handleAccessForbidden = true, ByRef returnCurl = false) {
 	/*
 		url		= download url
 		ioData	= uri encoded postData 
@@ -111,7 +111,11 @@
 			; get data
 			html	:= StdOutStream(curl """" url """" commandData)
 			;html := ReadConsoleOutputFromFile(commandData """" url """", "commandData") ; alternative function
-
+			
+			If (returnCurl) {
+				returnCurl := "curl " """" url """" commandData
+			}
+			
 			; get return headers in seperate request
 			If (not binaryDL and not skipRetHeaders) {
 				If (StrLen(ioData) and not requestType = "GET") {

@@ -837,7 +837,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 	Else If (not openSearchInBrowser and TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing) {
-		Html := TradeFunc_DoPoePricesRequest(ItemData.FullText)
+		requestCurl := ""
+		Html := TradeFunc_DoPoePricesRequest(ItemData.FullText, requestCurl)
 	}
 	Else If (not openSearchInBrowser) {
 		Html := TradeFunc_DoPostRequest(Payload, openSearchInBrowser)
@@ -881,7 +882,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	Else If (TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing) {		
 		SetClipboardContents("")
 	
-		If (TradeFunc_ParsePoePricesInfoErrorCode(Html)) {		
+		If (TradeFunc_ParsePoePricesInfoErrorCode(Html, requestCurl)) {
 			If (TradeOpts.UsePredictedItemPricingGui) {
 				TradeFunc_ShowPredictedPricingFeedbackUI(Html)
 			} Else {
@@ -1393,7 +1394,7 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	Return, html
 }
 
-TradeFunc_DoPoePricesRequest(RawItemData) {
+TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 	EncodedItemData := StringToBase64UriEncoded(RawItemData, true)
 	
 	postData 	:= "l=" TradeGlobals.Get("LeagueName") "&i=" EncodedItemData
@@ -1402,7 +1403,7 @@ TradeFunc_DoPoePricesRequest(RawItemData) {
 
 	options	:= "RequestType: GET"
 	options	.= "`n" "ReturnHeaders: skip"
-	options	.= "`n" "TimeOut: 15"
+	options	.= "`n" "TimeOut: 20"
 	reqHeaders	:= []
 	
 	reqHeaders.push("Host: www.poeprices.info")
@@ -1412,7 +1413,8 @@ TradeFunc_DoPoePricesRequest(RawItemData) {
 	reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
 	
 	ShowToolTip("Getting price prediction... ")
-	response := PoEScripts_Download(url, postData, reqHeaders, options, false)
+	retCurl := true
+	response := PoEScripts_Download(url, postData, reqHeaders, options, false, false, false, "", "", true, retCurl)
 	
 	If (TradeOpts.Debug) {
 		FileDelete, %A_ScriptDir%\temp\DebugSearchOutput.html
@@ -2150,10 +2152,11 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	Return, Title
 }
 
-TradeFunc_ParsePoePricesInfoErrorCode(response) {	
+TradeFunc_ParsePoePricesInfoErrorCode(response, request) {
 	If (not response or not response.HasKey("error")) {
 		ShowToolTip("")
 		ShowTooltip("ERROR: Request to poeprices.info timed out or`nreturned an invalid response! ")
+		TradeFunc_LogPoePricesRequest(response, request)
 		Return 0
 	}
 	Else If (response.error = "1") {
@@ -2163,7 +2166,8 @@ TradeFunc_ParsePoePricesInfoErrorCode(response) {
 	}
 	Else If (response.error = "2") {
 		ShowToolTip("")
-		ShowTooltip("ERROR: Predicted search has encountered an unknown error! ")	
+		ShowTooltip("ERROR: Predicted search has encountered an unknown error! ")
+		TradeFunc_LogPoePricesRequest(response, request)
 		Return 0
 	}	
 	Else If (response.error = "0") {
@@ -2182,12 +2186,31 @@ TradeFunc_ParsePoePricesInfoErrorCode(response) {
 		} Else If (not StrLen(min_value) and not StrLen(max_value)) {
 			ShowToolTip("")
 			ShowTooltip("ERROR: Request to poeprices.info failed,`nno prices were returned! ")
+			TradeFunc_LogPoePricesRequest(response, request)
 			Return 0
 		}
 		
 		Return 1
 	}
 	Return 0
+}
+
+TradeFunc_LogPoePricesRequest(response, request) {
+	text := "#####"
+	text .= "`n### " "Please post this log file to https://www.pathofexile.com/forum/view-thread/1216141/."	
+	text .= "`n#####"	
+	
+	text .= "`n`n"
+	text .= "Request and response:`n"
+	Try {
+		text .= JSON.Dump(response, "", 4)
+	} Catch e {
+		text .= response
+	}	
+	FileDelete, %A_ScriptDir%\temp\poeprices_log.txt	
+	FileAppend, %text%, %A_ScriptDir%\temp\poeprices_log.txt
+	
+	Return
 }
 	
 TradeFunc_ParsePoePricesInfoData(response) {
