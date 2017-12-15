@@ -836,7 +836,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			}
 		}
 	}
-	Else If (not openSearchInBrowser and TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing) {
+	Else If (not openSearchInBrowser and TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing and not isAdvancedPriceCheckRedirect) {
 		requestCurl := ""
 		Html := TradeFunc_DoPoePricesRequest(ItemData.FullText, requestCurl)
 	}
@@ -879,7 +879,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}
-	Else If (TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing) {		
+	Else If (TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing and not isAdvancedPriceCheckRedirect) {		
 		SetClipboardContents("")
 	
 		If (TradeFunc_ParsePoePricesInfoErrorCode(Html, requestCurl)) {
