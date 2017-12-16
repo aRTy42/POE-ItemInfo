@@ -1,6 +1,19 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy (GitHub/PoE Account: aRTy42, Reddit: -aRTy-)
 
+3.1.00
+================================
+from aRTy, Eruyome
+
+* Included updates from the TradeMacro. Most importantly the "AdditionalMacros" now have a tab in the settings menu.
+* Updates for certain 3.1 content:
+** All new general item mods should be included (mostly new T1 mods)
+** Full support for Abyss Jewels
+** NO (!) support for Elder/Shaper mods yet
+** Updated Gem Quality
+** Included some of the new uniques. More will follow once the wiki situation is sorted out or at least better.
+** NO (!) new map/divination card info yet. Also waiting for the wiki here.
+
 3.0.06-beta
 ================================
 from aRTy, Eruyome
