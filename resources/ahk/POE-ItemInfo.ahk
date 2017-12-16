@@ -3986,10 +3986,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			IfInString, A_LoopField, increased Armour and Evasion	; it's indeed "Evasion" and not "Evasion Rating" here
 			{
 				If(HasIncrDefences){
-					HasIncrDefencesCraftType := "ArmourAndEvasion"
+					HasIncrDefencesCraftType := "Defences_HybridBase"
 					HasIncrDefencesCraft := A_Index
 				}Else{
-					HasIncrDefencesType := "ArmourAndEvasion"
+					HasIncrDefencesType := "Defences_HybridBase"
 					HasIncrDefences := A_Index
 				}
 				Continue
@@ -3997,10 +3997,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			IfInString, A_LoopField, increased Armour and Energy Shield
 			{
 				If(HasIncrDefences){
-					HasIncrDefencesCraftType := "ArmourAndEnergyShield"
+					HasIncrDefencesCraftType := "Defences_HybridBase"
 					HasIncrDefencesCraft := A_Index
 				}Else{
-					HasIncrDefencesType := "ArmourAndEnergyShield"
+					HasIncrDefencesType := "Defences_HybridBase"
 					HasIncrDefences := A_Index
 				}
 				Continue
@@ -4008,10 +4008,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			IfInString, A_LoopField, increased Evasion and Energy Shield	; again "Evasion" and not "Evasion Rating"
 			{
 				If(HasIncrDefences){
-					HasIncrDefencesCraftType := "EvasionAndEnergyShield"
+					HasIncrDefencesCraftType := "Defences_HybridBase"
 					HasIncrDefencesCraft := A_Index
 				}Else{
-					HasIncrDefencesType := "EvasionAndEnergyShield"
+					HasIncrDefencesType := "Defences_HybridBase"
 					HasIncrDefences := A_Index
 				}
 				Continue
@@ -6143,15 +6143,15 @@ ParseAffixes(ItemDataAffixes, Item)
 	
 	If (HasStunBlockRecovery or HasIncrDefences)
 	{
+		If (ItemSubType = "BodyArmour" or ItemSubType = "Shield"){
+			BodyArmourShieldOrNot := "_BodyArmourShield"
+		}
+		Else{
+			BodyArmourShieldOrNot := ""
+		}
+		
 		If (HasStunBlockRecovery and HasIncrDefences and (ItemBaseType = "Armour") )
 		{
-			If (ItemSubType = "BodyArmour" or ItemSubType = "Shield"){
-				BodyArmourShieldOrNot = "BodyArmourShield"
-			}
-			Else{
-				BodyArmourShieldOrNot = ""
-			}
-			
 			If (HasChanceToBlockStrShield)
 			{
 				; TODO: UNHANDLED CASE. Special case: 5 mods can combine into 3 lines here. Implementing this later, because it is so rare.
@@ -6164,13 +6164,13 @@ ParseAffixes(ItemDataAffixes, Item)
 				If (HasIncrDefencesType = "Armour" or HasIncrDefencesType = "Evasion" or HasIncrDefencesType = "EnergyShield"){
 					FileHybDef  := "data\Incr" . HasIncrDefencesType . "_StunRecovery.txt"
 					FileHybStun := "data\StunBlockRecovery_" . HasIncrDefencesType . ".txt"
-					FileCraft   := "data\Incr" . HasIncrDefencesCraftType . BodyArmourShieldOrNot . ".txt"
 				}
 				Else{
 					FileHybDef  := "data\IncrDefences_HybridBase_StunRecovery.txt"
 					FileHybStun := "data\StunBlockRecovery_HybridBase.txt"
-					FileCraft   := "data\IncrDefences_HybridBase" . BodyArmourShieldOrNot . ".txt"
 				}
+				
+				FileCraft   := "data\Incr" . HasIncrDefencesCraftType . BodyArmourShieldOrNot . ".txt"
 				
 				LineNum := HasIncrDefencesCraft
 				LineTxt := Itemdata.AffixTextLines[LineNum].Text
@@ -6184,20 +6184,18 @@ ParseAffixes(ItemDataAffixes, Item)
 				Value2   := Itemdata.AffixTextLines[LineNum2].Value
 				SolveAffixes_Mod1Mod2Hyb("IncrDefStunBlock", LineNum1, LineNum2, Value1, Value2, "Prefix", "Suffix", "Hybrid Prefix", False, False, FileHybDef, FileHybStun, ItemLevel)
 			}
-			
 			Else
 			{
 				If (HasIncrDefencesType = "Armour" or HasIncrDefencesType = "Evasion" or HasIncrDefencesType = "EnergyShield"){
-					FileDef     := "data\Incr" . HasIncrDefencesType . BodyArmourShieldOrNot . ".txt"
 					FileHybDef  := "data\Incr" . HasIncrDefencesType . "_StunRecovery.txt"
 					FileHybStun := "data\StunBlockRecovery_" . HasIncrDefencesType . ".txt"
 				}
 				Else{
-					FileDef     := "data\IncrDefences_HybridBase" . BodyArmourShieldOrNot . ".txt"
 					FileHybDef  := "data\IncrDefences_HybridBase_StunRecovery.txt"
 					FileHybStun := "data\StunBlockRecovery_HybridBase.txt"
 				}
 				
+				FileDef  := "data\Incr" . HasIncrDefencesType . BodyArmourShieldOrNot . ".txt"
 				FileStun := "data\StunBlockRecovery_Suffix.txt"
 				
 				LineNum1 := HasIncrDefences
@@ -6227,7 +6225,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Else
 				{
-					File := "data\Incr" . HasIncrDefencesType . ".txt"
+					File := "data\Incr" . HasIncrDefencesType . BodyArmourShieldOrNot . ".txt"
 				}
 				
 				LineNum := HasIncrDefences
