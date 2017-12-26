@@ -4318,13 +4318,11 @@ ParseAffixes(ItemDataAffixes, Item)
 					LookupAffixAndSetInfoLine(["1|10-14"], "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
-				
 				IfInString, A_LoopField, to Accuracy Rating
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\AccuracyRating.txt", "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				
 				IfInString, A_LoopField, Minion
 				{
 					If RegExMatch(A_LoopField, "Minions deal \d+? to \d+? additional (Physical|Fire|Cold|Lightning|Chaos) Damage", match)
@@ -4367,7 +4365,7 @@ ParseAffixes(ItemDataAffixes, Item)
 						LookupAffixAndSetInfoLine(["1|0.4-0.8"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions Leech \d+% of Damage as Life")
+					If RegExMatch(A_LoopField, "Minions Leech [\d\.]+% of Damage as Life")
 					{
 						LookupAffixAndSetInfoLine(["1|0.3-0.5"], "Suffix", ItemLevel, CurrValue)
 						Continue
@@ -4403,13 +4401,22 @@ ParseAffixes(ItemDataAffixes, Item)
 						Continue
 					}					
 				}
-				
+				IfInString, A_LoopField, to Accuracy Rating
+				{
+					LookupAffixAndSetInfoLine("data\abyss_jewel\AccuracyRating.txt", "Suffix", ItemLevel, CurrValue)
+					Continue
+				}
 				IfInString, A_LoopField, chance to Blind Enemies on Hit with Attacks
 				{
 					LookupAffixAndSetInfoLine(["32|3-4","65|5-6"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
 				IfInString, A_LoopField, chance to Taunt Enemies on Hit with Attacks
+				{
+					LookupAffixAndSetInfoLine(["32|3-5","65|6-8"], "Suffix", ItemLevel, CurrValue)
+					Continue
+				}
+				If RegExMatch(A_LoopField, "chance to Hinder Enemies on Hit with Spells, with 30% reduced Movement Speed")
 				{
 					LookupAffixAndSetInfoLine(["32|3-5","65|6-8"], "Suffix", ItemLevel, CurrValue)
 					Continue
@@ -4424,7 +4431,7 @@ ParseAffixes(ItemDataAffixes, Item)
 					LookupAffixAndSetInfoLine(["1|6-8","30|9-10"], "Hybrid Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				If RegExMatch(A_LoopField, "chance to Avoid (being Poisioned|Bleeding)")
+				If RegExMatch(A_LoopField, "chance to [Aa]void (being Poisoned|Bleeding)")
 				{
 					LookupAffixAndSetInfoLine(["20|6-8","50|9-10"], "Suffix", ItemLevel, CurrValue)
 					Continue
@@ -4547,6 +4554,11 @@ ParseAffixes(ItemDataAffixes, Item)
 					Continue
 				}
 				IfInString, A_LoopField, chance to gain Onslaught for 4 seconds on Kill
+				{
+					LookupAffixAndSetInfoLine(["10|3-5","50|6-8"], "Suffix", ItemLevel, CurrValue)
+					Continue
+				}
+				IfInString, A_LoopField, chance to gain Phasing for 4 seconds on Kill
 				{
 					LookupAffixAndSetInfoLine(["10|3-5","50|6-8"], "Suffix", ItemLevel, CurrValue)
 					Continue
@@ -9138,6 +9150,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 			{
 				ToolTip, %String%, XCoord, YCoord
 				Fonts.SetFixedFont()
+				Sleep, 10	
 				ToolTip, %String%, XCoord, YCoord
 			}
 		}
@@ -9145,7 +9158,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 		{
 			XCoord := (X - 135 >= 0) ? X - 135 : 0
 			YCoord := (Y +  35 >= 0) ? Y +  35 : 0
-			
+
 			If (Opts.UseGDI) 
 			{
 				ChangeTooltipColorByItem(conditionalColors)
@@ -9155,6 +9168,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 			{
 				ToolTip, %String%, XCoord, YCoord
 				Fonts.SetFixedFont()
+				Sleep, 10	
 				ToolTip, %String%, XCoord, YCoord
 			}
 		}
@@ -9177,6 +9191,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 		{
 			ToolTip, %String%, XCoord, YCoord
 			Fonts.SetFixedFont()
+			Sleep, 10
 			ToolTip, %String%, XCoord, YCoord
 		}
 	}

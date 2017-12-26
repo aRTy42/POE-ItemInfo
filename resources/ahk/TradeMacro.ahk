@@ -562,7 +562,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Item.UsedInSearch.CorruptedMod := true
 		} Else {
 			RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
-			Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType
+			Item.UsedInSearch.Type := (Item.xtype) ? Item.xtype : Item.SubType
 		}
 		
 		If (Item.IsShaperBase) {
@@ -836,7 +836,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			}
 		}
 	}
-	Else If (not openSearchInBrowser and TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing and not isAdvancedPriceCheckRedirect) {
+	Else If (not openSearchInBrowser and TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing and not isAdvancedPriceCheckRedirect and not isItemAgeRequest) {
 		requestCurl := ""
 		Html := TradeFunc_DoPoePricesRequest(ItemData.FullText, requestCurl)
 	}
@@ -879,7 +879,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		ShowToolTip("")
 		ShowToolTip(ParsedData)
 	}
-	Else If (TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing and not isAdvancedPriceCheckRedirect) {		
+	Else If (TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing and not isAdvancedPriceCheckRedirect and not isItemAgeRequest) {		
 		SetClipboardContents("")
 	
 		If (TradeFunc_ParsePoePricesInfoErrorCode(Html, requestCurl)) {
@@ -3067,12 +3067,16 @@ TradeFunc_CustomSearchGui() {
 	Gui, CustomSearch:Add, Edit, x+0 yp-4 w30 vCustomSearchItemLevelMax
 
 	; Buttons
-	Gui, CustomSearch:Add, Button, x10 gSubmitCustomSearch, &Search
+	Gui, CustomSearch:Add, Button, x10 gSubmitCustomSearch hwndCSearchBtnHwnd, &Search
 	Gui, CustomSearch:Add, Button, x+10 yp+0 gOpenCustomSearchOnPoeTrade, Op&en on poe.trade
 	Gui, CustomSearch:Add, Button, x+10 yp+0 gCloseCustomSearch, &Close
 	Gui, CustomSearch:Add, Text, x+10 yp+4 cGray, (Use Alt + S/C to submit a button)
 
 	Gui, CustomSearch:Show, w500 , Custom Search
+	ControlFocus, , ahk_id %CSearchBtnHwnd%
+	; the search button is somewhat focused, but can't be "clicked" by pressing "Enter", using the arrow keys, correctly selects it.
+	SendInput, {Right}
+	SendInput, {Left}
 }
 
 TradeFunc_CreateItemPricingTestGUI() {
@@ -3188,7 +3192,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	;prevent advanced gui in certain cases
 	If (not advItem.mods.Length() and not ChangedImplicit) {
 		ShowTooltip("Advanced search not available for this item.")
-		return
+		Return
 	}
 
 	TradeFunc_ResetGUI()
@@ -3713,7 +3717,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	Item.UsedInSearch.SearchType := "Advanced"
 	; closes this window and starts the search
 	offset := (m > 1) ? "+25" : "+15"
-	Gui, SelectModsGui:Add, Button, x10 y%offset% gAdvancedPriceCheckSearch, &Search
+	Gui, SelectModsGui:Add, Button, x10 y%offset% gAdvancedPriceCheckSearch hwndSearchBtnHwnd, &Search
 
 	; open search on poe.trade instead
 	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Op&en on poe.trade
@@ -3740,6 +3744,10 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	windowWidth := (windowWidth > 510) ? windowWidth : 510
 	AdvancedSearchLeagueDisplay := TradeGlobals.Get("LeagueName")
 	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search - %AdvancedSearchLeagueDisplay%
+	ControlFocus, , ahk_id %SearchBtnHwnd%
+	; the search button is somewhat focused, but can't be "clicked" by pressing "Enter", using the arrow keys, correctly selects it.
+	SendInput, {Right}
+	SendInput, {Left}
 }
 
 TradeFunc_DetermineAdvancedSearchPreSelectedMods(advItem, ByRef Stats) {
