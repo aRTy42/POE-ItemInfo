@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.7.4
+================================================================================================
+Fixed the predicted pricing request for the hardcore abyss league.
+
 2.7.3
 ================================================================================================
 Fixed an issue that caused the predicted pricing being used for the advanced search and item age check.

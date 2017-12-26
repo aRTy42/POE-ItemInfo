@@ -1397,7 +1397,7 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 	EncodedItemData := StringToBase64UriEncoded(RawItemData, true)
 	
-	postData 	:= "l=" TradeGlobals.Get("LeagueName") "&i=" EncodedItemData
+	postData 	:= "l=" UriEncode(TradeGlobals.Get("LeagueName")) "&i=" EncodedItemData
 	payLength	:= StrLen(postData)
 	url 		:= "https://www.poeprices.info/api"
 
@@ -2271,7 +2271,6 @@ TradeFunc_ParsePoePricesInfoData(response) {
 		If (RegExMatch(line[2], "i)center")) {
 			diff := maxWidth - StrLen(line[1])			
 			line[1] := StrPad(line[1], maxWidth - Floor(diff / 2), "left")
-			console.log(maxWidth - Floor(diff / 2))
 		}
 		If (RegExMatch(line[2], "i)right")) {
 			line[1] := StrPad(line[1], maxWidth, "left")
