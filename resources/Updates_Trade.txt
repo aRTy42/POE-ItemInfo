@@ -1,5 +1,17 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.7.3
+================================================================================================
+Fixed an issue that caused the predicted pricing being used for the advanced search and item age check.
+
+ItemInfo:
+	Included updates from the TradeMacro. Most importantly the "AdditionalMacros" now have a tab in the settings menu.
+	Updates for certain 3.1 content:
+		All new general item mods should be included (mostly new T1 mods)
+		Full support for Abyss Jewels
+		Updated Gem Quality
+		Included some of the new uniques. More will follow once the wiki situation is sorted out or at least better.
+
 2.7.2
 ================================================================================================
 Fixed an issue with the poeprices.info logger.
