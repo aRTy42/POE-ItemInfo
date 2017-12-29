@@ -734,10 +734,12 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 		
 		; experiment with values and maybe add an option
-		If (Item.Experience > 70 and Item.Level >= 19) {			
-			RequestParams.progress_min := Item.Experience
-			RequestParams.progress_max := ""
-			Item.UsedInSearch.ItemXP := Item.Experience
+		If ((RegExMatch(Item.Name, "i)Empower|Enhance|Enlighten") or Item.Level >= 19) and TradeOpts.UseGemXP) {
+			If (Item.Experience >= TradeOpts.GemXPThreshold) {			
+				RequestParams.progress_min := Item.Experience
+				RequestParams.progress_max := ""
+				Item.UsedInSearch.ItemXP := Item.Experience
+			}
 		}	
 	}
 

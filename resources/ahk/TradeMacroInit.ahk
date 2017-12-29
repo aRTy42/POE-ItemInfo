@@ -566,6 +566,15 @@ CreateTradeSettingsUI()
 	AddToolTip(LblGemQualityRangeH, "Use this to set a range to quality Gem searches. For example a range of 1`n searches 14% - 16% when you have a 15% Quality Gem.`nSetting it to 0 (default) uses your Gems quality as min_quality`nwithout max_quality in your search.")
 	GuiAddEdit(TradeOpts.GemQualityRange, "x+1 yp-2 w33 h20", "GemQualityRange", "GemQualityRangeH")
 	; gem section end
+	
+	; gem xp section start
+	GuiAddCheckbox("Use Gem XP", "x337 yp+24 w100 h30 0x0100", TradeOpts.UseGemXP, "UseGemXP", "UseGemXPH")
+	AddToolTip(UseGemXP, "Use gem experience in the search.`n`nWorks for gems with a level of 19 and higher or`nEnhance, Empower and Enlighten.")
+	
+	GuiAddText("Gem XP threshold:", "x467 yp+8 w115 h20 0x0100", "LblGemXPThreshold", "LblGemXPThresholdH")
+	AddToolTip(LblGemXPThresholdH, "Gem experience won't be used in the search if`nlower than this value.")
+	GuiAddEdit(TradeOpts.GemXPThreshold, "x+10 yp-2 w35 h20", "GemXPThreshold", "GemXPThresholdH")
+	; gem xp section end
 
 	GuiAddText("Mod Range Modifier (%):", "x337 yp+32 w190 h20 0x0100", "LblAdvancedSearchModValueRange", "LblAdvancedSearchModValueRangeH")
 	AddToolTip(LblAdvancedSearchModValueRangeH, "Advanced search lets you select the items mods to include in your`nsearch and lets you set their min/max values.`n`nThese min/max values are pre-filled, to calculate them we look at`nthe difference between the mods theoretical max and min value and`ntreat it as 100%.`n`nWe then use this modifier as a percentage of this differences to`ncreate a range (min/max value) to search in. ")
@@ -657,8 +666,8 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("Item Base", "x482 yp0 w135 h40", TradeOpts.AdvancedSearchCheckBase, "AdvancedSearchCheckBase", "AdvancedSearchCheckBaseH")
 	AddToolTip(AdvancedSearchCheckBaseH, "Selects the item base`nwhen creating the advanced search GUI.")
 
-
-	Gui, Add, Link, x337 yp+43 w280 cBlue BackgroundTrans, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
+	;Gui, Add, Link, x337 yp+43 w280 cBlue BackgroundTrans, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
+	
 
 	; Hotkeys
 

@@ -11137,8 +11137,6 @@ CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", pr
 	errorMsg := "Parsing the currency data (json) from poe.ninja failed.`n"
 	errorMsg .= "This should only happen when the servers are down / unavailable."
 	errorMsg .= "`n`n"
-	errorMsg .= "Using archived data from a fallback file. League: """ league """."
-	errorMsg .= "`n`n"
 	errorMsg .= "This can fix itself when the servers are up again and the data gets updated automatically or if you restart the script at such a time."
 
 	errors := 0
@@ -11162,13 +11160,24 @@ CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", pr
 		}
 	}
 
-	If (errors and critical and not sampleValue) {
-		MsgBox, 16, %project% - Error, %errorMsg%
-		FileRead, JSONFile, %fallbackDir%\currencyData_Fallback_%league%.json
-		parsedJSON := JSON.Load(JSONFile)
-		usedFallback := true
-	} Else {
+	Try {
 		parsedJSON := JSON.Load(parsedJSON)
+	} Catch e {
+		parsingError := true
+	}
+	
+	If ((errors and critical and not sampleValue) or parsingError) {
+		FileRead, JSONFile, %fallbackDir%\currencyData_Fallback_%league%.json
+		Try {
+			parsedJSON := JSON.Load(JSONFile)
+			errorMsg .= "Using archived data from a fallback file. League: """ league """."
+			errorMsg .= "`n`n"
+		} Catch e {
+			errorMsg .= "Using archived fallback data failed (JSON parse error)."
+			errorMsg .= "`n`n"
+		}
+		MsgBox, 16, %project% - Error, %errorMsg%
+		usedFallback := true
 	}
 
 	Return parsedJSON

@@ -3,6 +3,7 @@ The following is a list of what has been updated, starting with 1.1.0
 2.7.4
 ================================================================================================
 Fixed the predicted pricing request for the hardcore abyss league.
+Added some options to use and set Gem XP in searches.
 
 2.7.3
 ================================================================================================
