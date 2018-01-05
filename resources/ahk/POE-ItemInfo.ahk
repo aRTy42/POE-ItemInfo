@@ -10055,7 +10055,7 @@ StdOutStream(sCmd, Callback = "") {
 }
 
 ReadConsoleOutputFromFile(command, fileName) {
-	file := "temp\" fileName ".txt"
+	file := "temp\" fileName
 	RunWait %comspec% /c "chcp 1251 /f >nul 2>&1 & %command% > %file%", , Hide
 	FileRead, io, %file%
 

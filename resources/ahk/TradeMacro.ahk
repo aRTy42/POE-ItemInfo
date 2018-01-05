@@ -2412,6 +2412,7 @@ class RequestParams_ {
 	sockets_a_max	:= ""
 	shaper		:= ""
 	elder		:= ""
+	map_series 	:= ""
 
 	ToPayload() {
 		modGroupStr := ""
@@ -2514,13 +2515,14 @@ class _ParamMod {
 	mod_name	:= ""
 	mod_min	:= ""
 	mod_max	:= ""
+	mod_weight := ""
+	
 	ToPayload()
 	{
-		;this.mod_name	:= TradeUtils.UriEncode(this.mod_name)
-		;p := "&mod_name=" this.mod_name "&mod_min=" this.mod_min "&mod_max=" this.mod_max
 		If (StrLen(this.mod_name)) {
 			p .= "&mod_name=" TradeUtils.UriEncode(this.mod_name)
-			p .= "&mod_min="  TradeUtils.UriEncode(this.mod_min) "&mod_max="   TradeUtils.UriEncode(this.mod_max)
+			p .= "&mod_min="  TradeUtils.UriEncode(this.mod_min) "&mod_max=" TradeUtils.UriEncode(this.mod_max)
+			p .= "&mod_weight=" TradeUtils.UriEncode(this.mod_weight)
 		}
 
 		Return p
@@ -3069,15 +3071,11 @@ TradeFunc_CustomSearchGui() {
 
 	; Buttons
 	Gui, CustomSearch:Add, Button, x10 gSubmitCustomSearch hwndCSearchBtnHwnd, &Search
-	Gui, CustomSearch:Add, Button, x+10 yp+0 gOpenCustomSearchOnPoeTrade, Op&en on poe.trade
+	Gui, CustomSearch:Add, Button, x+10 yp+0 gOpenCustomSearchOnPoeTrade Default, Op&en on poe.trade
 	Gui, CustomSearch:Add, Button, x+10 yp+0 gCloseCustomSearch, &Close
 	Gui, CustomSearch:Add, Text, x+10 yp+4 cGray, (Use Alt + S/C to submit a button)
 
 	Gui, CustomSearch:Show, w500 , Custom Search
-	ControlFocus, , ahk_id %CSearchBtnHwnd%
-	; the search button is somewhat focused, but can't be "clicked" by pressing "Enter", using the arrow keys, correctly selects it.
-	SendInput, {Right}
-	SendInput, {Left}
 }
 
 TradeFunc_CreateItemPricingTestGUI() {
@@ -3538,9 +3536,9 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			modValueMax := modValue + (modValue * valueRangeMax)
 		}
 
-		; floor values only if greater than 2, in case of leech/regen mods, use Abs() to support negative numbers
+		; floor/Ceil values only if greater than 2, in case of leech/regen mods, use Abs() to support negative numbers
 		modValueMin := (Abs(modValueMin) > 2) ? Floor(modValueMin) : modValueMin
-		modValueMax := (Abs(modValueMax) > 2) ? Floor(modValueMax) : modValueMax
+		modValueMax := (Abs(modValueMax) > 2) ? Ceil(modValueMax) : modValueMax
 
 		; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
 		If (advItem.mods[A_Index].ranges[1]) {
@@ -3562,7 +3560,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			maxLF := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][2]) ")"
 		}
 
-		; make sure that the lower vaule is always min (reduced mana cost of minion skills)
+		; make sure that the lower value is always min (reduced mana cost of minion skills)
 		If (not StrLen(switchValue)) {
 			minLabelFirst	:= minLF
 			maxLabelFirst	:= maxLF
@@ -3718,7 +3716,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	Item.UsedInSearch.SearchType := "Advanced"
 	; closes this window and starts the search
 	offset := (m > 1) ? "+25" : "+15"
-	Gui, SelectModsGui:Add, Button, x10 y%offset% gAdvancedPriceCheckSearch hwndSearchBtnHwnd, &Search
+	Gui, SelectModsGui:Add, Button, x10 y%offset% gAdvancedPriceCheckSearch hwndSearchBtnHwnd Default, &Search
 
 	; open search on poe.trade instead
 	Gui, SelectModsGui:Add, Button, x+10 yp+0 gAdvancedOpenSearchOnPoeTrade, Op&en on poe.trade
@@ -3745,10 +3743,6 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	windowWidth := (windowWidth > 510) ? windowWidth : 510
 	AdvancedSearchLeagueDisplay := TradeGlobals.Get("LeagueName")
 	Gui, SelectModsGui:Show, w%windowWidth% , Select Mods to include in Search - %AdvancedSearchLeagueDisplay%
-	ControlFocus, , ahk_id %SearchBtnHwnd%
-	; the search button is somewhat focused, but can't be "clicked" by pressing "Enter", using the arrow keys, correctly selects it.
-	SendInput, {Right}
-	SendInput, {Left}
 }
 
 TradeFunc_DetermineAdvancedSearchPreSelectedMods(advItem, ByRef Stats) {

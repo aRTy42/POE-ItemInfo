@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.7.5
+================================================================================================
+Fixed a rare cURL requests issue.
+The windows for the advanced search and custom search can now be sumbitted (starting the search) by pressing "Enter".
+Fixed a small (graphical) UI issues.
+
 2.7.4
 ================================================================================================
 Fixed the predicted pricing request for the hardcore abyss league.
