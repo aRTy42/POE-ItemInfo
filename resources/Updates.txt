@@ -1,6 +1,14 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy (GitHub/PoE Account: aRTy42, Reddit: -aRTy-)
 
+3.1.01
+================================
+from aRTy
+
+* Updated and rewritten information for maps.
+* Updated Uniques and Divination Cards with wiki information.
+* NO (!) support for Elder/Shaper mods. Waiting on GGG's advanced tier info for the clipboard, for now.
+
 3.1.00
 ================================
 from aRTy, Eruyome
