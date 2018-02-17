@@ -1535,7 +1535,7 @@ ParseItemLevel(ItemDataText)
 }
 
 ;;hixxie fixed. Shows MapLevel for any map base.
-ParseMapLevel(ItemDataText)
+ParseMapTier(ItemDataText)
 {
 	ItemDataChunk := GetItemDataChunk(ItemDataText, "MapTier:")
 	If (StrLen(ItemDataChunk) <= 0)
@@ -1543,7 +1543,7 @@ ParseMapLevel(ItemDataText)
 		ItemDataChunk := GetItemDataChunk(ItemDataText, "Map Tier:")
 	}
 
-	Assert(StrLen(ItemDataChunk) > 0, "ParseMapLevel: couldn't parse item data chunk")
+	Assert(StrLen(ItemDataChunk) > 0, "ParseMapTier: couldn't parse item data chunk")
 
 	Loop, Parse, ItemDataChunk, `n, `r
 	{
@@ -1556,7 +1556,7 @@ ParseMapLevel(ItemDataText)
 		IfInString, A_LoopField, Map Tier:
 		{
 			StringSplit, MapLevelParts, A_LoopField, %A_Space%
-			Result := StrTrimWhitespace(MapLevelParts3) + 67
+			Result := StrTrimWhitespace(MapLevelParts3)
 			return Result
 		}
 	}
@@ -6886,7 +6886,7 @@ ParseClipBoardChanges(debug = false)
 	ParsedData := ParseItemData(CBContents)
 	ParsedData := PostProcessData(ParsedData)
 	
-	If (Opts.PutResultsOnClipboard > 0)
+	If (Opts.PutResultsOnClipboard && ParsedData)
 	{
 		SetClipboardContents(ParsedData)
 	}
@@ -8071,20 +8071,29 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	If (Item.IsMap)
 	{
-		Item.MapLevel := ParseMapLevel(ItemDataText)
-		Item.MapTier  := Item.MapLevel - 67
+		Item.MapTier  := ParseMapTier(ItemDataText)
+		Item.MapLevel := Item.MapTier + 67
+		
+		MapDescription := " (Tier: " Item.MapTier ", Level: " Item.MapLevel ")`n`n"
 		
 		If (Item.IsUnique)
 		{
-			MapDescription := uniqueMapList[uniqueMapNameFromBase[Item.SubType]]
+			MapDescription .= uniqueMapList[uniqueMapNameFromBase[Item.SubType]]
 		}
 		Else
 		{
-			MapDescription := mapList[Item.SubType]
+			If (RegExMatch(Item.SubType, "Shaped (.+ Map)", match))
+			{
+				MapDescription .= "Infos from non-shaped version:`n" mapList[match1]
+			}
+			Else
+			{
+				MapDescription .= mapList[Item.SubType]
+			}
 		}
 		If(MapDescription)
 		{
-			TT := TT "`n" MapDescription
+			TT .= MapDescription
 		}
 		
 		If (RarityLevel > 1 and RarityLevel < 4 and Not Item.IsUnidentified)
@@ -9147,6 +9156,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 			{
 				ToolTip, %String%, XCoord, YCoord
 				Fonts.SetFixedFont()
+				Sleep, 10	
 				ToolTip, %String%, XCoord, YCoord
 			}
 		}
@@ -9154,7 +9164,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 		{
 			XCoord := (X - 135 >= 0) ? X - 135 : 0
 			YCoord := (Y +  35 >= 0) ? Y +  35 : 0
-			
+
 			If (Opts.UseGDI) 
 			{
 				ChangeTooltipColorByItem(conditionalColors)
@@ -9164,6 +9174,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 			{
 				ToolTip, %String%, XCoord, YCoord
 				Fonts.SetFixedFont()
+				Sleep, 10	
 				ToolTip, %String%, XCoord, YCoord
 			}
 		}
@@ -9186,6 +9197,7 @@ ShowToolTip(String, Centered = false, conditionalColors = false)
 		{
 			ToolTip, %String%, XCoord, YCoord
 			Fonts.SetFixedFont()
+			Sleep, 10
 			ToolTip, %String%, XCoord, YCoord
 		}
 	}
@@ -10049,7 +10061,7 @@ StdOutStream(sCmd, Callback = "") {
 }
 
 ReadConsoleOutputFromFile(command, fileName) {
-	file := "temp\" fileName ".txt"
+	file := "temp\" fileName
 	RunWait %comspec% /c "chcp 1251 /f >nul 2>&1 & %command% > %file%", , Hide
 	FileRead, io, %file%
 
@@ -11131,8 +11143,6 @@ CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", pr
 	errorMsg := "Parsing the currency data (json) from poe.ninja failed.`n"
 	errorMsg .= "This should only happen when the servers are down / unavailable."
 	errorMsg .= "`n`n"
-	errorMsg .= "Using archived data from a fallback file. League: """ league """."
-	errorMsg .= "`n`n"
 	errorMsg .= "This can fix itself when the servers are up again and the data gets updated automatically or if you restart the script at such a time."
 
 	errors := 0
@@ -11156,13 +11166,24 @@ CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", pr
 		}
 	}
 
-	If (errors and critical and not sampleValue) {
-		MsgBox, 16, %project% - Error, %errorMsg%
-		FileRead, JSONFile, %fallbackDir%\currencyData_Fallback_%league%.json
-		parsedJSON := JSON.Load(JSONFile)
-		usedFallback := true
-	} Else {
+	Try {
 		parsedJSON := JSON.Load(parsedJSON)
+	} Catch e {
+		parsingError := true
+	}
+	
+	If ((errors and critical and not sampleValue) or parsingError) {
+		FileRead, JSONFile, %fallbackDir%\currencyData_Fallback_%league%.json
+		Try {
+			parsedJSON := JSON.Load(JSONFile)
+			errorMsg .= "Using archived data from a fallback file. League: """ league """."
+			errorMsg .= "`n`n"
+		} Catch e {
+			errorMsg .= "Using archived fallback data failed (JSON parse error)."
+			errorMsg .= "`n`n"
+		}
+		MsgBox, 16, %project% - Error, %errorMsg%
+		usedFallback := true
 	}
 
 	Return parsedJSON
