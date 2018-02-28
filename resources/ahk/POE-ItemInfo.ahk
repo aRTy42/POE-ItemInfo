@@ -4528,16 +4528,9 @@ ParseAffixes(ItemDataAffixes, Item)
 					LookupAffixAndSetInfoLine(["1|20-30"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, chance to Dodge Attacks and Spells if you've
+				IfInString, A_LoopField, chance to Dodge Attacks and Spells if you've been Hit Recently
 				{
 					LookupAffixAndSetInfoLine(["1|2"], "Suffix", ItemLevel, CurrValue)
-					Continue
-				}
-				If RegExMatch(A_LoopField, "^been Hit Recently$")
-				{
-					; mod above has a linebreak for some reason
-					Itemdata.LastAffixLineNumber := HasLastLineNumber -1
-					AffixLines.RemoveAt(A_Index)
 					Continue
 				}
 				IfInString, A_LoopField, increased Movement Speed if you've Killed Recently
@@ -7523,7 +7516,6 @@ ParseUnique(ItemName)
 		{
 			StringSplit, LineParts, ALine, |
 			NumLineParts := LineParts0
-			NumAffixLines := NumLineParts-1 ; exclude item name at first pos
 			UniqueFound := True
 			AppendImplicitSep := False
 			Idx := 1
@@ -7881,7 +7873,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	If (Item.IsLeagueStone) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
-	ItemData.Affixes := ItemDataParts%ItemDataIndexAffixes%
+	ItemData.Affixes := RegExReplace(ItemDataParts%ItemDataIndexAffixes%, "[\r\n]+([a-z])", " $1")
 	ItemData.IndexAffixes := ItemDataIndexAffixes
 	
 	; Retrieve items implicit mod if it has one
@@ -8286,42 +8278,44 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
 GetNegativeAffixOffset(Item)
 {
+	; Certain item types have descriptive text lines at the end,
+	; so decrement item index to get to the affix lines.
 	NegativeAffixOffset := 0
-	If (Item.IsFlask or Item.IsUnique or Item.IsTalisman)
+	If (Item.IsFlask)
 	{
-		; Uniques as well as flasks have descriptive text as last item,
-		; so decrement item index to get to the item before last one
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
+	}
+	If (Item.IsUnique)
+	{
+		NegativeAffixOffset += 1
+	}
+	If (Item.IsTalisman)
+	{
+		NegativeAffixOffset += 1
 	}
 	If (Item.IsMap)
 	{
-		; Maps have a descriptive text as the last item
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	If (Item.IsJewel)
 	{
-		; Jewels, like maps and flask, have a descriptive text as the last item
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	If (Item.HasEffect)
 	{
-		; Same with weapon skins or other effects
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	If (Item.IsCorrupted)
 	{
-		; And corrupted items
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	If (Item.IsElderBase or Item.IsShaperBase)
 	{
-		; And Elder/Shaper items
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	If (Item.IsMirrored)
 	{
-		; And mirrored items
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	return NegativeAffixOffset
 }
