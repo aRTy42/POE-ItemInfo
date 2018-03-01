@@ -11,6 +11,34 @@ uniqueMapList["Unknown Map"] := "Map not recognised or not supported"
 
 mapMatchList := ["Maze of the Minotaur Map","Forge of the Phoenix Map","Pit of the Chimera Map","Underground River Map","Defiled Cathedral Map","Lair of the Hydra Map","Overgrown Shrine Map","Burial Chambers Map","Haunted Mansion Map","Underground Sea Map","Infested Valley Map","Tropical Island Map","Primordial Pool Map","Torture Chamber Map","Relic Chambers Map","Phantasmagoria Map","Overgrown Ruin Map","Crimson Temple Map","Sulphur Vents Map","Jungle Valley Map","Arachnid Nest Map","Mineral Pools Map","Arachnid Tomb Map","Spider Forest Map","Desert Spring Map","Flooded Mine Map","Conservatory Map","Ancient City Map","Ivory Temple Map","Lava Chamber Map","Vaal Pyramid Map","Cursed Crypt Map","Castle Ruins Map","Malformation Map","City Square Map","Toxic Sewer Map","Spider Lair Map","Coral Ruins Map","Moon Temple Map","Scriptorium Map","Crystal Ore Map","Dark Forest Map","Sunken City Map","Vaal Temple Map","Excavation Map","Courthouse Map","Lighthouse Map","Ashen Wood Map","Bone Crypt Map","Laboratory Map","Mud Geyser Map","Waste Pool Map","Necropolis Map","Racecourse Map","Acid Lakes Map","Graveyard Map","Alleyways Map","Arid Lake Map","Peninsula Map","Mausoleum Map","Residence Map","Courtyard Map","Sepulchre Map","Wasteland Map","Promenade Map","Colonnade Map","Waterways Map","Colosseum Map","Lava Lake Map","Cemetery Map","Tribunal Map","Ramparts Map","Shipyard Map","Precinct Map","Basilica Map","Lookout Map","Dungeon Map","Marshes Map","Iceberg Map","Springs Map","Leyline Map","Chateau Map","Volcano Map","Channel Map","Barrows Map","Academy Map","Thicket Map","Gardens Map","Armoury Map","Plateau Map","Estuary Map","Orchard Map","Factory Map","Caldera Map","Terrace Map","Arsenal Map","Carcass Map","Desert Map","Arcade Map","Strand Map","Grotto Map","Canyon Map","Fields Map","Bazaar Map","Temple Map","Museum Map","Belfry Map","Summit Map","Ghetto Map","Shrine Map","Palace Map","Beach Map","Cells Map","Gorge Map","Wharf Map","Atoll Map","Dunes Map","Geode Map","Shore Map","Tower Map","Vault Map","Arena Map","Siege Map","Coves Map","Villa Map","Plaza Map","Cage Map","Port Map","Maze Map","Pier Map","Lair Map","Mesa Map","Park Map","Core Map","Reef Map","Pen Map","Bog Map","Pit Map","Dig Map"]
 
+uniqueMapNameFromBase := Object()
+
+uniqueMapNameFromBase["Chateau Map"] := "The Perandus Manor"
+uniqueMapNameFromBase["Strand Map"] := "Whakawairua Tuahu"
+uniqueMapNameFromBase["Graveyard Map"] := "Hallowed Ground"
+uniqueMapNameFromBase["Cemetery Map"] := "Hallowed Ground"
+uniqueMapNameFromBase["Atoll Map"] := "Maelström of Chaos"
+uniqueMapNameFromBase["Underground River Map"] := "Caer Blaidd, Wolfpack's Den"
+uniqueMapNameFromBase["Underground Sea Map"] := "Caer Blaidd, Wolfpack's Den"
+uniqueMapNameFromBase["Bone Crypt Map"] := "Olmec's Sanctum"
+uniqueMapNameFromBase["Catacombs Map"] := "Olmec's Sanctum"
+uniqueMapNameFromBase["Maze Map"] := "Olmec's Sanctum"
+uniqueMapNameFromBase["Dunes Map"] := "Pillars of Arun"
+uniqueMapNameFromBase["Overgrown Shrine Map"] := "Acton's Nightmare"
+uniqueMapNameFromBase["Necropolis Map"] := "Death and Taxes"
+uniqueMapNameFromBase["Promenade Map"] := "Hall of Grandmasters"
+uniqueMapNameFromBase["Shore Map"] := "Mao Kun"
+uniqueMapNameFromBase["Reef Map"] := "Mao Kun"
+uniqueMapNameFromBase["Torture Chamber Map"] := "Oba's Cursed Trove"
+uniqueMapNameFromBase["Temple Map"] := "Poorjoy's Asylum"
+uniqueMapNameFromBase["Harbinger Map"] := "The Beachhead"
+uniqueMapNameFromBase["Cursed Crypt Map"] := "The Coward's Trial"
+uniqueMapNameFromBase["Crypt Map"] := "The Coward's Trial"
+uniqueMapNameFromBase["Museum Map"] := "The Putrid Cloister"
+uniqueMapNameFromBase["Moon Temple Map"] := "The Twilight Temple"
+uniqueMapNameFromBase["Courtyard Map"] := "The Vinktar Square"
+uniqueMapNameFromBase["Vaal Pyramid Map"] := "Vaults of Atziri"
+
 mapList["Lookout Map"] := "3 to 1 vendor recipe:`n Produced by: none`n Upgrades to: Alleyways`n`nDivination cards:`n Hope`n The Gambler`n Her Mask`n`nBoss: The Grey Plague (based on: Plaguewing/Kitava's Herald; Act 10 Cathedral Rooftop)`n`nDifficulty: 2/5, Layout: A, Boss Arena: Yes"
 
 mapList["Beach Map"] := "3 to 1 vendor recipe:`n Produced by: none`n Upgrades to: Desert`n`nDivination cards:`n Hope`n The Gambler`n Her Mask`n`nBoss: Glace (based on: Hailrake)`nIce Spear, Glacial Cascade`n`nDifficulty: 2/5, Layout: A, Boss Arena: Yes"
