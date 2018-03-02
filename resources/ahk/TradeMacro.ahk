@@ -67,13 +67,48 @@ TradeFunc_OpenSearchOnPoeTradeHotkey(priceCheckTest = false, itemData = "") {
 	; simulate clipboard change to test item pricing
 	If (priceCheckTest) {
 		Clipboard :=
-		CLipboard := itemData
+		Clipboard := itemData
 	} Else {
 		Send ^{sc02E}
 	}
 	Sleep 250
 	TradeFunc_Main(true)
-	SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	SuspendPOEItemScript = 0 ; Allow ItemInfo to handle clipboard change event
+}
+
+OpenSearchOnPoEApp:
+	IfWinActive, ahk_group PoEWindowGrp
+	{
+		TradeFunc_OpenSearchOnPoeAppHotkey()
+	}
+Return
+
+TradeFunc_OpenSearchOnPoeAppHotkey(priceCheckTest = false, itemData = "") {
+	Global TradeOpts, Item
+
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+	TradeFunc_PreventClipboardGarbageAfterInit()
+	
+	clipPrev :=
+	; simulate clipboard change to test item pricing
+	If (priceCheckTest) {
+		Clipboard :=
+		Clipboard := itemData
+	} Else {
+		clipPrev := Clipboard
+		Send ^{sc02E}
+	}
+	Sleep 250
+	
+	TradeFunc_DoParseClipboard()
+	
+	If (Item.Name or Item.BaseName) {
+		itemContents := TradeUtils.UriEncode(Clipboard)
+		url := "https://poeapp.com?utm_source=poe-trademacro#/item-import/" + itemContents
+		Clipboard := clipPrev
+		TradeFunc_OpenUrlInBrowser(url)	
+	}
+	SuspendPOEItemScript = 0 ; Allow ItemInfo to handle clipboard change event
 }
 
 ShowItemAge:
@@ -116,7 +151,7 @@ TradeFunc_OpenWikiHotkey(priceCheckTest = false, itemData = "") {
 	TradeFunc_DoParseClipboard()
 
 	If (!Item.Name and TradeOpts.OpenUrlsOnEmptyItem) {
-		If (TradeOpts.WIkiAlternative) {
+		If (TradeOpts.WikiAlternative) {
 			;http://poedb.tw/us/item.php?n=The+Doctor
 			TradeFunc_OpenUrlInBrowser("http://poedb.tw/us/")
 		} Else {
@@ -192,7 +227,7 @@ ChangeLeague:
 	}
 Return
 
-; Prepare Reqeust Parametes and send Post Request
+; Prepare Request Parameters and send Post Request
 ; openSearchInBrowser : set to true to open the search on poe.trade instead of showing the tooltip
 ; isAdvancedPriceCheck : set to true If the GUI to select mods should be openend
 ; isAdvancedPriceCheckRedirect : set to true If the search is triggered from the GUI
@@ -242,7 +277,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 
 	RequestParams			:= new RequestParams_()
 	RequestParams.league	:= LeagueName
-	RequestParams.buyout	:= "1"
+	RequestParams.has_buyout	:= "1"
 
 	; ignore item name in certain cases
 	If (!Item.IsJewel and !Item.IsLeaguestone and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask or (Item.IsJewel and isAdvancedPriceCheckRedirect)) {
@@ -315,7 +350,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
 		uniqueWithVariableMods :=
 		uniqueWithVariableMods := TradeFunc_FindUniqueItemIfItHasVariableRolls(Name, Item.IsRelic)
-
+		
 		; Return if the advanced search was used but the checked item doesn't have variable mods
 		If (!uniqueWithVariableMods and isAdvancedPriceCheck and not Enchantment and not Corruption) {
 			ShowToolTip("Advanced search not available for this item (no variable mods)`nor item is new and the necessary data is not yet available/updated.")
@@ -773,7 +808,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	; show item age
 	If (isItemAgeRequest) {
 		RequestParams.name        := Item.Name
-		RequestParams.buyout      := ""
+		RequestParams.has_buyout      := ""
 		RequestParams.seller      := TradeOpts.AccountName
 		RequestParams.q_min       := Item.Quality
 		RequestParams.q_max       := Item.Quality
@@ -805,7 +840,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 
 	If (openSearchInBrowser) {
 		If (!TradeOpts.BuyoutOnly) {
-			RequestParams.buyout := ""
+			RequestParams.has_buyout := ""
 		}
 	}
 	If (TradeOpts.Debug) {
@@ -2398,7 +2433,7 @@ class RequestParams_ {
 	identified 	:= ""
 	corrupted		:= "0"
 	online 		:= (TradeOpts.OnlineOnly == 0) ? "" : "x"
-	buyout 		:= ""
+	has_buyout 	:= ""
 	altart 		:= ""
 	capquality 	:= "x"
 	buyout_min 	:= ""
@@ -2540,7 +2575,7 @@ TradeFunc_FindModInRequestParams(RequestParams, name) {
 	Return False
 }
 
-; Return unique item with its variable mods and mod ranges If it has any
+; Return unique item with its variable mods and mod ranges if it has any
 TradeFunc_FindUniqueItemIfItHasVariableRolls(name, isRelic = false)
 {
 	data := isRelic ? TradeGlobals.Get("VariableRelicData") : TradeGlobals.Get("VariableUniqueData")
@@ -2551,6 +2586,10 @@ TradeFunc_FindUniqueItemIfItHasVariableRolls(name, isRelic = false)
 					uitem.IsUnique := true
 					Return uitem
 				}
+			}
+			If (uitem.hasVariant) {
+				uitem.IsUnique := true
+				Return uitem
 			}
 		}
 	}
@@ -2567,7 +2606,8 @@ TradeFunc_RemoveAlternativeVersionsMods(Item, Affixes) {
 		For key, val in Affixes {
 			; remove negative sign also
 			t := TradeUtils.CleanUp(RegExReplace(val, "i)-?[\d\.]+", "#"))
-			n := TradeUtils.CleanUp(v.param)
+			n := TradeUtils.CleanUp(RegExReplace(v.param, "i)-?[\d\.]+", "#"))
+			n := TradeUtils.CleanUp(n)
 			; match with optional positive sign to match for example "-7% to cold resist" with "+#% to cold resist"
 			RegExMatch(n, "i)(\+?" . t . ")", match)
 			If (match) {
@@ -2579,7 +2619,7 @@ TradeFunc_RemoveAlternativeVersionsMods(Item, Affixes) {
 			tempMods.push(v)
 		}
 	}
-
+	
 	Item.mods := tempMods
 
 	return Item
@@ -2740,7 +2780,7 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 }
 
 ; Add poe.trades mod names to the items mods to use as POST parameter
-TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
+TradeFunc_GetItemsPoeTradeUniqueMods(_item) {	
 	mods := TradeGlobals.Get("ModsData")
 	For k, imod in _item.mods {
 		_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
@@ -2933,16 +2973,20 @@ TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 		ErrorMsg := "Mod not found on poe.trade!"
 		Return ErrorMsg
 	}
+	poeTradeMod_ValueTypes := TradeFunc_CountValuesAndReplacedValues(poeTradeMod)
+
 	Loop, Parse, itemModifiers, `n, `r
-	{
+	{		
 		If StrLen(A_LoopField) = 0
 		{
 			Continue ; Not interested in blank lines
-		}
-		CurrValue := ""
+		}		
+		
+		ModStr := ""
 		CurrValues := []
-		CurrValue := GetActualValue(A_LoopField)
-
+		CurrLine_ValueTypes := TradeFunc_CountValuesAndReplacedValues(A_LoopField)		
+		CurrValue := TradeFunc_GetActualValue(A_LoopField, poeTradeMod_ValueTypes)
+		
 		If (CurrValue ~= "\d+") {
 			; handle value range
 			RegExMatch(CurrValue, "(\d+) ?(-|to) ?(\d+)", values)
@@ -2957,19 +3001,78 @@ TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 				CurrValues.Push(CurrValue)
 				ModStr := StrReplace(A_LoopField, CurrValue, "#")
 			}
-
+			
 			; remove negative sign since poe.trade mods are always positive
 			ModStr := RegExReplace(ModStr, "^-#", "#")
 			ModStr := StrReplace(ModStr, "+")
 			; replace multi spaces with a single one
 			ModStr := RegExReplace(ModStr, " +", " ")
-
+			
 			If (RegExMatch(poeTradeMod, "i).*" ModStr "$")) {
 				Return CurrValues
 			}
 		}
+		
 	}
 }
+
+; Get value while being able to ignore some, depending on their position
+; ValueTypes = ["value", "replaced"]
+TradeFunc_GetActualValue(ActualValueLine, ValueTypes)
+{
+	returnValue 	:= ""	
+	Pos		:= 0
+	Count 	:= 0
+	; Leaves "-" in for negative values, example: "Ventor's Gamble"
+	While Pos	:= RegExMatch(ActualValueLine, "\+?(-?\d+(?: to -?\d+|\.\d+)?)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
+		Count++		
+		If (InStr(ValueTypes[Count], "Replaced", 0)) {			
+			; Formats "1 to 2" as "1-2"
+			StringReplace, Result, value1, %A_SPACE%to%A_SPACE%, -
+			returnValue := Trim(RegExReplace(Result, ""))	
+		}
+	}
+	
+	return returnValue
+}
+
+; Get actual values from a line of the ingame tooltip as numbers
+; that can be used in calculations.
+TradeFunc_GetActualValues(ActualValueLine)
+{
+	values := []
+	
+	Pos		:= 0
+	; Leaves "-" in for negative values, example: "Ventor's Gamble"
+	While Pos	:= RegExMatch(ActualValueLine, "\+?(-?\d+(?: to -?\d+|\.\d+)?)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
+		; Formats "1 to 2" as "1-2"
+		StringReplace, Result, value1, %A_SPACE%to%A_SPACE%, -
+		values.push(Trim(RegExReplace(Result, "")))
+	}
+	
+	return values
+}
+
+TradeFunc_CountValuesAndReplacedValues(ActualValueLine)
+{
+	values := []
+	
+	Pos		:= 0
+	Count	:= 0
+	; Leaves "-" in for negative values, example: "Ventor's Gamble"
+	While Pos	:= RegExMatch(ActualValueLine, "\+?(-?\d+(?: to -?\d+|\.\d+)?)|\+?(-?#(?: to -?#)?)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
+		Count++
+		If (value1) {
+			values.push("value")
+		}
+		Else If (value2) {
+			values.push("replaced")
+		}
+	}
+
+	return values
+}
+
 
 TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod, ByRef keepOrigModName = false) {
 	If (StrLen(poeTradeMod) < 1) {
@@ -3256,7 +3359,8 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	modLengthMax	:= 0
 	modGroupBox	:= 0
 	Loop % advItem.mods.Length() {
-		If (!advItem.mods[A_Index].isVariable and advItem.IsUnique) {
+		invalidUnique := (not advItem.mods[A_Index].isVariable and not advItem.hasVariant and advItem.IsUnique)
+		If (invalidUnique) {
 			continue
 		}
 		tempValue := StrLen(advItem.mods[A_Index].name)
@@ -3452,9 +3556,12 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	TradeAdvancedNormalModCount := 0
 	ModNotFound := false
 	PreCheckNormalMods := TradeOpts.AdvancedSearchCheckMods ? "Checked" : ""
+	
 	Loop % advItem.mods.Length() {
 		hidePseudo := advItem.mods[A_Index].hideForTradeMacro ? true : false
-		If ((!advItem.mods[A_Index].isVariable and advItem.IsUnique) or hidePseudo or not StrLen(advItem.mods[A_Index].name)) {
+		; allow non-variable mods if the item has variants to better identify the specific version/variant
+		invalidUnique := (not advItem.mods[A_Index].isVariable and not advItem.hasVariant and advItem.IsUnique)
+		If (invalidUnique or hidePseudo or not StrLen(advItem.mods[A_Index].name)) {
 			continue
 		}
 		xPosMin := modGroupBox + 25
@@ -3486,17 +3593,18 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			}
 		}
 
+		
 		SetFormat, FloatFast, 5.2
 		ErrorMsg :=
 		If (advItem.IsUnique) {
-			modValues := TradeFunc_GetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)
+			modValues := TradeFunc_GetModValueGivenPoeTradeMod(ItemData.Affixes, advItem.mods[A_Index].param)			
 		}
 		Else {
 			useOriginalModName := false
 			modValues := TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(advItem.mods[A_Index], advItem.mods[A_Index].param, useOriginalModName)
 			If (useOriginalModName) {
 				displayName := advItem.mods[A_Index].name_orig
-			}
+			}			
 		}
 		
 		If (modValues.Length() > 1) {
@@ -3510,7 +3618,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			}
 			modValue := modValues[1]
 		}
-
+		
 		switchValue :=
 		; make sure that the lower vaule is always min (reduced mana cost of minion skills)
 		If (StrLen(theoreticalMinValue) and StrLen(theoreticalMaxValue)) {
@@ -3520,53 +3628,59 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 				theoreticalMaxValue := switchValue
 			}
 		}
-
-		; calculate values to prefill min/max fields
-		; assume the difference between the theoretical max and min value as 100%
-		If (advItem.mods[A_Index].ranges[1]) {
-			If (not StrLen(switchValue)) {
-				modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMin)
-				modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMax)
+		
+		If (advItem.mods[A_Index].isVariable or not advItem.IsUnique) {	
+			; calculate values to prefill min/max fields
+			; assume the difference between the theoretical max and min value as 100%
+			If (advItem.mods[A_Index].ranges[1]) {
+				If (not StrLen(switchValue)) {
+					modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMin)
+					modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMax)
+				} Else {
+					modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMin)
+					modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMax)
+				}
 			} Else {
-				modValueMin := modValue - ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMin)
-				modValueMax := modValue + ((theoreticalMaxValue - theoreticalMinValue) * valueRangeMax)
+				modValueMin := modValue - (modValue * valueRangeMin)
+				modValueMax := modValue + (modValue * valueRangeMax)
 			}
-		} Else {
-			modValueMin := modValue - (modValue * valueRangeMin)
-			modValueMax := modValue + (modValue * valueRangeMax)
-		}
 
-		; floor/Ceil values only if greater than 2, in case of leech/regen mods, use Abs() to support negative numbers
-		modValueMin := (Abs(modValueMin) > 2) ? Floor(modValueMin) : modValueMin
-		modValueMax := (Abs(modValueMax) > 2) ? Ceil(modValueMax) : modValueMax
+			; floor/Ceil values only if greater than 2, in case of leech/regen mods, use Abs() to support negative numbers
+			modValueMin := (Abs(modValueMin) > 2) ? Floor(modValueMin) : modValueMin
+			modValueMax := (Abs(modValueMax) > 2) ? Ceil(modValueMax) : modValueMax
 
-		; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
-		If (advItem.mods[A_Index].ranges[1]) {
-			modValueMin := TradeUtils.ZeroTrim((modValueMin < theoreticalMinValue and not staticValue) ? theoreticalMinValue : modValueMin)
-			modValueMax := TradeUtils.ZeroTrim((modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax)
-		}
+			; prevent calculated values being smaller than the lowest possible min value or being higher than the highest max values
+			If (advItem.mods[A_Index].ranges[1]) {
+				modValueMin := TradeUtils.ZeroTrim((modValueMin < theoreticalMinValue and not staticValue) ? theoreticalMinValue : modValueMin)
+				modValueMax := TradeUtils.ZeroTrim((modValueMax > theoreticalMaxValue) ? theoreticalMaxValue : modValueMax)
+			}
 
-		; create Labels to show unique items min/max rolls
-		If (advItem.mods[A_Index].ranges[2][1]) {
-			minLF := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[1][1] + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
-			maxLF := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[2][1] + advItem.mods[A_Index].ranges[2][2]) / 2) ")"
-		}
-		Else If (staticValue) {
-			minLF := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][1]) / 2) ")"
-			maxLF := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
+			; create Labels to show unique items min/max rolls
+			If (advItem.mods[A_Index].ranges[2][1]) {
+				minLF := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[1][1] + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
+				maxLF := "(" TradeUtils.ZeroTrim((advItem.mods[A_Index].ranges[2][1] + advItem.mods[A_Index].ranges[2][2]) / 2) ")"
+			}
+			Else If (staticValue) {
+				minLF := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][1]) / 2) ")"
+				maxLF := "(" TradeUtils.ZeroTrim((staticValue + advItem.mods[A_Index].ranges[1][2]) / 2) ")"
+			}
+			Else {
+				minLF := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][1]) ")"
+				maxLF := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][2]) ")"
+			}
+			
+			; make sure that the lower value is always min (reduced mana cost of minion skills)
+			If (not StrLen(switchValue)) {
+				minLabelFirst	:= minLF
+				maxLabelFirst	:= maxLF
+			} Else {
+				minLabelFirst	:= maxLF
+				maxLabelFirst	:= minLF
+			}
 		}
 		Else {
-			minLF := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][1]) ")"
-			maxLF := "(" TradeUtils.ZeroTrim(advItem.mods[A_Index].ranges[1][2]) ")"
-		}
-
-		; make sure that the lower value is always min (reduced mana cost of minion skills)
-		If (not StrLen(switchValue)) {
-			minLabelFirst	:= minLF
-			maxLabelFirst	:= maxLF
-		} Else {
-			minLabelFirst	:= maxLF
-			maxLabelFirst	:= minLF
+			modValueMin := ""
+			modValueMax := ""
 		}
 
 		If (not TradeOpts.PrefillMinValue or ErrorMsg) {
@@ -3595,7 +3709,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			TradeAdvancedNormalModCount++
 		}
 
-		state := modValue ? 0 : 1
+		state := modValue and (advItem.mods[A_Index].isVariable or not advItem.IsUnique) ? 0 : 1
 
 		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%  %color% vTradeAdvancedModName%index%			, % isPseudo ? "(pseudo) " . displayName : displayName
 		Gui, SelectModsGui:Add, Edit, x%xPosMin% yp-3 w40 vTradeAdvancedModMin%index% r1 Disabled%state% 	, % modValueMin
@@ -3604,9 +3718,10 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		Gui, SelectModsGui:Add, Edit, x+10 yp-3       w40 vTradeAdvancedModMax%index% r1 Disabled%state% 	, % modValueMax
 		Gui, SelectModsGui:Add, Text, x+5  yp+3       w45 cGreen 			                       		, % (advItem.mods[A_Index].ranges[1]) ? maxLabelFirst : ""
 		checkEnabled := ErrorMsg ? 0 : 1
+		
 		; pre-select mods according to the options in the settings menu
 		If (checkEnabled) {
-			checkedState := (advItem.mods[A_Index].PreSelected or TradeOpts.AdvancedSearchCheckMods) ? "Checked" : ""
+			checkedState := (advItem.mods[A_Index].PreSelected or TradeOpts.AdvancedSearchCheckMods or (not advItem.mods[A_Index].isVariable and advItem.IsUnique)) ? "Checked" : ""
 			Gui, SelectModsGui:Add, CheckBox, x+10 yp+1 %checkedState% vTradeAdvancedSelected%index%
 		}
 		Else {
@@ -4619,7 +4734,8 @@ TradeFunc_PredictedPricingSendFeedback(selector, comment, encodedData, league, p
 	payLength	:= StrLen(postData)
 	url 		:= "https://www.poeprices.info/send_feedback"
 	options	:= "ReturnHeaders: skip"
-
+	options	.= "`n" "ValidateResponse: false"
+	
 	reqHeaders	:= []
 	reqHeaders.push("Host: www.poeprices.info")
 	reqHeaders.push("Connection: keep-alive")

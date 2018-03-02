@@ -1,6 +1,23 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy (GitHub/PoE Account: aRTy42, Reddit: -aRTy-)
 
+3.2.00
+================================
+from aRTy
+
+* Fixed most cases where long mods with linebreaks would cause issues.
+* Added Gem Quality information for the three new v3.2 gems.
+* Updated Uniques according to v3.2 patch notes and preview information.
+* Updated Divination Card locations with wiki information.
+
+3.1.01
+================================
+from aRTy
+
+* Updated and rewritten information for maps.
+* Updated Uniques and Divination Cards with wiki information.
+* NO (!) support for Elder/Shaper mods. Waiting on GGG's advanced tier info for the clipboard, for now.
+
 3.1.00
 ================================
 from aRTy, Eruyome

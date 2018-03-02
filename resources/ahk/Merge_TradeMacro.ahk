@@ -136,7 +136,8 @@ RunAsAdmin(arguments)
 }
 
 StartSplashScreen() {
-    SplashTextOn, , 20, PoE-TradeMacro, Merging and starting Scripts...
+    ;SplashTextOn, , 20, PoE-TradeMacro, Merging and starting Scripts...
+    SplashTextOn, , 20, PoE-TradeMacro, Collecting Poké Balls...
 }
 
 AppendCustomMacros(userDirectory)

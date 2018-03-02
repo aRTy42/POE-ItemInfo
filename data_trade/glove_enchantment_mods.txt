@@ -1,4 +1,3 @@
-
 Trigger Word of Blades on Hit
 Trigger Edict of Blades on Hit
 Trigger Decree of Blades on Hit
@@ -12,7 +11,6 @@ Trigger Edict of Force on Hit
 Trigger Decree of Force on Hit
 Trigger Commandment of Force on Hit
 Trigger Word of Frost on Kill
-Cast Edict of Frost on Kill
 Trigger Edict of Frost on Kill
 Trigger Decree of Frost on Kill
 Trigger Commandment of Frost on Kill
@@ -23,7 +21,6 @@ Trigger Commandment of Fury on Hit
 Trigger Word of Inferno on Kill
 Trigger Edict of Inferno on Kill
 Trigger Decree of Inferno on Kill
-Cast Commandment of Inferno on Kill
 Trigger Commandment of Inferno on Kill
 Trigger Word of Ire when Hit
 Trigger Edict of Ire when Hit
@@ -38,7 +35,6 @@ Trigger Edict of Reflection when Hit
 Trigger Decree of Reflection when Hit
 Trigger Commandment of Reflection when Hit
 Trigger Word of Spite when Hit
-Attack with Edict of Spite when Hit
 Trigger Edict of Spite when Hit
 Trigger Decree of Spite when Hit
 Trigger Commandment of Spite when Hit
@@ -56,7 +52,6 @@ Trigger Decree of Thunder on Kill
 Trigger Commandment of Thunder on Kill
 Trigger Word of War on Kill
 Trigger Edict of War on Kill
-Cast Decree of War on Kill
 Trigger Decree of War on Kill
 Trigger Commandment of War on Kill
 Trigger Word of Winter when Hit

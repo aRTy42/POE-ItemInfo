@@ -1,4 +1,3 @@
-
 Adds # to # Chaos Damage to Attacks
 #% increased Area of Effect
 Adds an additional Arrow
@@ -58,9 +57,9 @@ Adds # to # Chaos Damage
 +# Mana gained for each Enemy hit by your Attacks
 #% of Damage taken gained as Mana over 4 seconds when Hit
 +# to Maximum Frenzy Charges
-+# to Maximum Power Charges
 +# to Maximum Endurance Charges
 +#% to all maximum Resistances
++# to Maximum Power Charges
 Minions deal #% increased Damage
 #% increased Movement Speed
 Grants Level # Projectile Weakness Skill

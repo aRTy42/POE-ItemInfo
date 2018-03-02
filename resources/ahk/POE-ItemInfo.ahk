@@ -1535,7 +1535,7 @@ ParseItemLevel(ItemDataText)
 }
 
 ;;hixxie fixed. Shows MapLevel for any map base.
-ParseMapLevel(ItemDataText)
+ParseMapTier(ItemDataText)
 {
 	ItemDataChunk := GetItemDataChunk(ItemDataText, "MapTier:")
 	If (StrLen(ItemDataChunk) <= 0)
@@ -1543,7 +1543,7 @@ ParseMapLevel(ItemDataText)
 		ItemDataChunk := GetItemDataChunk(ItemDataText, "Map Tier:")
 	}
 
-	Assert(StrLen(ItemDataChunk) > 0, "ParseMapLevel: couldn't parse item data chunk")
+	Assert(StrLen(ItemDataChunk) > 0, "ParseMapTier: couldn't parse item data chunk")
 
 	Loop, Parse, ItemDataChunk, `n, `r
 	{
@@ -1556,7 +1556,7 @@ ParseMapLevel(ItemDataText)
 		IfInString, A_LoopField, Map Tier:
 		{
 			StringSplit, MapLevelParts, A_LoopField, %A_Space%
-			Result := StrTrimWhitespace(MapLevelParts3) + 67
+			Result := StrTrimWhitespace(MapLevelParts3)
 			return Result
 		}
 	}
@@ -4318,11 +4318,7 @@ ParseAffixes(ItemDataAffixes, Item)
 					LookupAffixAndSetInfoLine(["1|10-14"], "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, to Accuracy Rating
-				{
-					LookupAffixAndSetInfoLine("data\abyss_jewel\AccuracyRating.txt", "Suffix", ItemLevel, CurrValue)
-					Continue
-				}
+				
 				IfInString, A_LoopField, Minion
 				{
 					If RegExMatch(A_LoopField, "Minions deal \d+? to \d+? additional (Physical|Fire|Cold|Lightning|Chaos) Damage", match)
@@ -4401,6 +4397,7 @@ ParseAffixes(ItemDataAffixes, Item)
 						Continue
 					}					
 				}
+				
 				IfInString, A_LoopField, to Accuracy Rating
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\AccuracyRating.txt", "Suffix", ItemLevel, CurrValue)
@@ -4531,16 +4528,9 @@ ParseAffixes(ItemDataAffixes, Item)
 					LookupAffixAndSetInfoLine(["1|20-30"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, chance to Dodge Attacks and Spells if you've
+				IfInString, A_LoopField, chance to Dodge Attacks and Spells if you've been Hit Recently
 				{
 					LookupAffixAndSetInfoLine(["1|2"], "Suffix", ItemLevel, CurrValue)
-					Continue
-				}
-				If RegExMatch(A_LoopField, "^been Hit Recently$")
-				{
-					; mod above has a linebreak for some reason
-					Itemdata.LastAffixLineNumber := HasLastLineNumber -1
-					AffixLines.RemoveAt(A_Index)
 					Continue
 				}
 				IfInString, A_LoopField, increased Movement Speed if you've Killed Recently
@@ -4925,7 +4915,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				LookupAffixAndSetInfoLine("data\jewel\IncrPhysDamageWith1H2HMelee.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Physical Damage
+			IfInString, A_LoopField, increased Global Physical Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrPhysDamage_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
@@ -5663,7 +5653,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			Continue
 		}
 		If (ItemSubType = "Shield"){
-			IfInString, A_LoopField, increased Physical Damage
+			IfInString, A_LoopField, increased Global Physical Damage
 			{
 				HasIncrPhysDmg := False	; No worries about hybrid here.
 				LookupAffixAndSetInfoLine("data\IncrPhysDamage_Shield.txt", "Prefix", ItemLevel, CurrValue)
@@ -6070,36 +6060,36 @@ ParseAffixes(ItemDataAffixes, Item)
 					LineNum := HasToArmour
 					LineTxt := Itemdata.AffixTextLines[LineNum].Text
 					Value   := Itemdata.AffixTextLines[LineNum].Value
-					LookupAffixAndSetInfoLine(FileToArmourHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+					LookupAffixAndSetInfoLine(FileToArmourHyb, "Hybrid Defence Prefix", ItemLevel, Value, LineTxt, LineNum)
 					
 					LineNum := HasToEvasion
 					LineTxt := Itemdata.AffixTextLines[LineNum].Text
 					Value   := Itemdata.AffixTextLines[LineNum].Value
-					LookupAffixAndSetInfoLine(FileToEvasionHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+					LookupAffixAndSetInfoLine(FileToEvasionHyb, "Hybrid Defence Prefix", ItemLevel, Value, LineTxt, LineNum)
 				}
 				Else If (HasToArmour and HasToMaxES)
 				{
 					LineNum := HasToArmour
 					LineTxt := Itemdata.AffixTextLines[LineNum].Text
 					Value   := Itemdata.AffixTextLines[LineNum].Value
-					LookupAffixAndSetInfoLine(FileToArmourHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+					LookupAffixAndSetInfoLine(FileToArmourHyb, "Hybrid Defence Prefix", ItemLevel, Value, LineTxt, LineNum)
 					
 					LineNum := HasToMaxES
 					LineTxt := Itemdata.AffixTextLines[LineNum].Text
 					Value   := Itemdata.AffixTextLines[LineNum].Value
-					LookupAffixAndSetInfoLine(FileToMaxESHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+					LookupAffixAndSetInfoLine(FileToMaxESHyb, "Hybrid Defence Prefix", ItemLevel, Value, LineTxt, LineNum)
 				}
 				Else If (HasToEvasion and HasToMaxES)
 				{
 					LineNum := HasToEvasion
 					LineTxt := Itemdata.AffixTextLines[LineNum].Text
 					Value   := Itemdata.AffixTextLines[LineNum].Value
-					LookupAffixAndSetInfoLine(FileToEvasionHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+					LookupAffixAndSetInfoLine(FileToEvasionHyb, "Hybrid Defence Prefix", ItemLevel, Value, LineTxt, LineNum)
 					
 					LineNum := HasToMaxES
 					LineTxt := Itemdata.AffixTextLines[LineNum].Text
 					Value   := Itemdata.AffixTextLines[LineNum].Value
-					LookupAffixAndSetInfoLine(FileToMaxESHyb, "Hybrid Prefix", ItemLevel, Value, LineTxt, LineNum)
+					LookupAffixAndSetInfoLine(FileToMaxESHyb, "Hybrid Defence Prefix", ItemLevel, Value, LineTxt, LineNum)
 				}
 				Else If (HasToArmour)
 				{
@@ -6889,7 +6879,7 @@ ParseClipBoardChanges(debug = false)
 	ParsedData := ParseItemData(CBContents)
 	ParsedData := PostProcessData(ParsedData)
 	
-	If (Opts.PutResultsOnClipboard > 0)
+	If (Opts.PutResultsOnClipboard && ParsedData)
 	{
 		SetClipboardContents(ParsedData)
 	}
@@ -7526,7 +7516,6 @@ ParseUnique(ItemName)
 		{
 			StringSplit, LineParts, ALine, |
 			NumLineParts := LineParts0
-			NumAffixLines := NumLineParts-1 ; exclude item name at first pos
 			UniqueFound := True
 			AppendImplicitSep := False
 			Idx := 1
@@ -7636,7 +7625,7 @@ ParseClipBoardChanges()
 */
 ParseItemData(ItemDataText, ByRef RarityLevel="")
 {
-	Global Opts, AffixTotals, uniqueMapList, mapList, mapMatchList, shapedMapMatchList, divinationCardList, gemQualityList
+	Global Opts, AffixTotals, mapList, mapMatchList, uniqueMapList, uniqueMapNameFromBase, divinationCardList, gemQualityList
 	
 	ItemDataPartsIndexLast =
 	ItemDataPartsIndexAffixes =
@@ -7884,7 +7873,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	If (Item.IsLeagueStone) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
-	ItemData.Affixes := ItemDataParts%ItemDataIndexAffixes%
+	ItemData.Affixes := RegExReplace(ItemDataParts%ItemDataIndexAffixes%, "[\r\n]+([a-z])", " $1")
 	ItemData.IndexAffixes := ItemDataIndexAffixes
 	
 	; Retrieve items implicit mod if it has one
@@ -8054,7 +8043,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		If (divinationCardList[Item.Name] != "")
 		{
-			CardDescription := "`nPOTENTIALLY OUTDATED 3.0 INFORMATION:`n`n" divinationCardList[Item.Name]
+			CardDescription := divinationCardList[Item.Name]
 		}
 		Else
 		{
@@ -8074,27 +8063,36 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	If (Item.IsMap)
 	{
-		Item.MapLevel := ParseMapLevel(ItemDataText)
-		Item.MapTier  := Item.MapLevel - 67
+		Item.MapTier  := ParseMapTier(ItemDataText)
+		Item.MapLevel := Item.MapTier + 67
+		
+		MapDescription := " (Tier: " Item.MapTier ", Level: " Item.MapLevel ")`n`n"
 		
 		If (Item.IsUnique)
 		{
-			MapDescription := uniqueMapList[Item.SubType]
+			MapDescription .= uniqueMapList[uniqueMapNameFromBase[Item.SubType]]
 		}
 		Else
 		{
-			MapDescription := mapList[Item.SubType]
+			If (RegExMatch(Item.SubType, "Shaped (.+ Map)", match))
+			{
+				MapDescription .= "Infos from non-shaped version:`n" mapList[match1]
+			}
+			Else
+			{
+				MapDescription .= mapList[Item.SubType]
+			}
 		}
 		If(MapDescription)
 		{
-			TT := TT "`n" "`nOUTDATED 3.0 INFORMATION:`n`n" MapDescription
+			TT .= MapDescription
 		}
 		
 		If (RarityLevel > 1 and RarityLevel < 4 and Not Item.IsUnidentified)
 		{
 			AffixDetails := AssembleMapAffixes()
 			MapAffixCount := AffixTotals.NumPrefixes + AffixTotals.NumSuffixes
-			TT = %TT%`n`n-----------`nMods (%MapAffixCount%):%AffixDetails%
+			TT = %TT%`n`nMods (%MapAffixCount%):%AffixDetails%
 			
 			If (MapModWarnings)
 			{
@@ -8280,42 +8278,44 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 
 GetNegativeAffixOffset(Item)
 {
+	; Certain item types have descriptive text lines at the end,
+	; so decrement item index to get to the affix lines.
 	NegativeAffixOffset := 0
-	If (Item.IsFlask or Item.IsUnique or Item.IsTalisman)
+	If (Item.IsFlask)
 	{
-		; Uniques as well as flasks have descriptive text as last item,
-		; so decrement item index to get to the item before last one
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
+	}
+	If (Item.IsUnique)
+	{
+		NegativeAffixOffset += 1
+	}
+	If (Item.IsTalisman)
+	{
+		NegativeAffixOffset += 1
 	}
 	If (Item.IsMap)
 	{
-		; Maps have a descriptive text as the last item
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	If (Item.IsJewel)
 	{
-		; Jewels, like maps and flask, have a descriptive text as the last item
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	If (Item.HasEffect)
 	{
-		; Same with weapon skins or other effects
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	If (Item.IsCorrupted)
 	{
-		; And corrupted items
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	If (Item.IsElderBase or Item.IsShaperBase)
 	{
-		; And Elder/Shaper items
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	If (Item.IsMirrored)
 	{
-		; And mirrored items
-		NegativeAffixOffset := NegativeAffixOffset + 1
+		NegativeAffixOffset += 1
 	}
 	return NegativeAffixOffset
 }

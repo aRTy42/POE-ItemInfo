@@ -1,12 +1,13 @@
 ﻿#Include, %A_ScriptDir%\lib\JSON.ahk
 #Include, %A_ScriptDir%\lib\zip.ahk
 
-PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "") {
-	status := GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle)
+PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "", debugState = false) {
+	debug := (debugState) ? 1 : 0
+	status := GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle, debug)
 	Return status
 }
 
-GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "") {
+GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "", debug = 0) {
 	If (ShowUpdateNotification = 0) {
 		return
 	}
@@ -80,6 +81,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 		global updateWindow_skipSelection	:= skipSelection
 		global updateWindow_skipBackup	:= skipBackup
 		global updateWindow_userDirectory	:= userDirectory
+		global updateWindow_debug		:= debug
 
 		isPrerelease:= LatestRelease.prerelease
 		releaseTag  := LatestRelease.tag_name
@@ -92,8 +94,12 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 		
 		newRelease := CompareVersions(versions.latest, versions.current)
 		If (newRelease) {
-			If(SplashScreenTitle) {
-				WinSet, AlwaysOnTop, Off, %SplashScreenTitle%
+			If (SplashScreenTitle) {
+				Try {
+					WinSet, AlwaysOnTop, Off, %SplashScreenTitle%
+				} Catch er {
+					
+				}
 			}
 			Gui, UpdateNotification:Font,, Consolas
 
@@ -284,7 +290,7 @@ GetVersionIdentifierPriority(identifier) {
 	}
 }
 
-UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, userDirectory) {	
+UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, userDirectory, debug) {	
 	DriveSpaceFree, freeSpace, %A_Temp%
 	If (freeSpace < 30) {
 		MsgBox You don't have enough free space available on your system drive (at least 30MB). Update will be cancelled. 
@@ -389,8 +395,8 @@ UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, 
 		
 		savePath := "" ; ByRef
 		If (DownloadRelease(url, project, savePath)) {
-			folderName := ExtractRelease(savePath, project)			
-			If (StrLen(folderName)) {
+			folderName := ExtractRelease(savePath, project)
+			If (StrLen(folderName) and not isEmpty(folderName)) {
 				; successfully downloaded and extracted release.zip to %A_Temp%\%Project%\ext
 				; copy script to %A_Temp%\%Project%
 				SplitPath, savePath, , saveDir				
@@ -401,7 +407,7 @@ UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, 
 				; try to run the script and exit the app
 				; this needs to be done so that we can overwrite the current scripts directory
 				If (FileExist(externalScript)) {
-					Run "%A_AhkPath%" "%externalScript%" "%A_ScriptDir%" "%folderName%" "%InstallPath%" "%project%" "%A_ScriptName%"
+					Run "%A_AhkPath%" "%externalScript%" "%A_ScriptDir%" "%folderName%" "%InstallPath%" "%project%" "%A_ScriptName%" "%debug%"
 					If (ErrorLevel) {
 						MsgBox Update failed, couldn't launch 'FinishUpdate' script. File not found.
 					}
@@ -410,6 +416,12 @@ UpdateScript(url, project, defaultDir, isDevVersion, skipSelection, skipBackup, 
 					MsgBox Update failed, couldn't launch 'FinishUpdate' script.
 				}				
 				ExitApp
+			}
+			Else If (StrLen(folderName)) {
+				MsgBox % "Update failed, temporary folder containing the extracted update files doesn't exist." "`n`n" folderName
+			} 
+			Else {
+				MsgBox % "Update failed, temporary folder containing the extracted update files is empty." "`n`n" folderName
 			}
 		}		
 	}
@@ -549,7 +561,7 @@ ExtractRelease(file, project) {
 	If (Number > 1) {
 		folderName := sUnz
 	}
-	
+
 	Return folderName
 }
 
@@ -610,5 +622,5 @@ CloseUpdateWindow:
 Return
 
 UpdateScript:
-	UpdateScript(updateWindow_downloadURL, updateWindow_Project, updateWindow_DefaultFolder, updateWindow_isDevVersion, updateWindow_skipSelection, updateWindow_skipBackup, updateWindow_userDirectory)	
+	UpdateScript(updateWindow_downloadURL, updateWindow_Project, updateWindow_DefaultFolder, updateWindow_isDevVersion, updateWindow_skipSelection, updateWindow_skipBackup, updateWindow_userDirectory, updateWindow_debug)	
 Return

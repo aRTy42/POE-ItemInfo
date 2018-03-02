@@ -1,5 +1,24 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.7.6
+================================================================================================
+Added simple support for opening an item on poeapp.com, the default hotkey is ctrl + alt + q and can be changed in the settings menu.
+Updated all data files (uniques etc.), since that data comes from the wiki and the wiki was broken a while ago there where some issues updating these files.
+Fixed a few issues with unique flasks and certain mods on other uniqe items not working with the advanced search.
+Added full support for unique items having variations. You can now use the advanced search on items like Vessel of Vinktar and search for the specific version that you have.
+Fixed the buyout only option not working anymore because of changes on poe.trades side.
+Improved the script updater and it's error handling; fixed a few uncommon issues.
+Small improvements to the requests to poeprices.info.
+
+ItemInfo:
+	Updated and rewritten information for maps.
+	Updated Uniques and Divination Cards with wiki information.
+	NO (!) support for Elder/Shaper mods. Waiting on GGG's advanced tier info for the clipboard, for now.
+	Slight parsing and display changes.
+	Parsing fix for shaped maps.
+	Fixed most cases where long mods with linebreaks would cause issues.
+	Added Gem Quality information for the three new v3.2 gems.	
+	
 2.7.5
 ================================================================================================
 Fixed a rare cURL request issue.
