@@ -31,7 +31,7 @@ Arc has +#% chance to Shock
 #% increased Ball Lightning Area of Effect
 #% increased Barrage Attack Speed
 #% increased Barrage Damage
-# additional Barrage Projectile
+Barrage fires an additional Projectile
 #% increased Bear Trap Cooldown Recovery Speed
 #% increased Bear Trap Damage
 #% increased Bladefall Critical Strike Chance
@@ -51,9 +51,11 @@ Blink Arrow and Blink Arrow Clones have #% increased Attack Speed
 Blink Arrow and Blink Arrow Clones have #% increased Damage
 Blood Rage grants additional #% increased Attack Speed
 Blood Rage grants additional #% chance to gain a Frenzy Charge on Kill
-#% increased Unearth cast speed
+#% increased Bodyswap Cast Speed
+#% increased Bodyswap Damage
+#% increased Unearth Cast Speed
 Unearth Creates Corpses with +# Level
-#% increased Unearth damage
+#% increased Unearth Damage
 Bone Offering grants an additional +#% Block Chance
 #% increased Bone Offering Duration
 #% increased Burning Arrow Damage
@@ -86,8 +88,8 @@ Burning Arrow has +#% chance to Ignite
 Converted Enemies have #% increased Damage
 #% increased Convocation Cooldown Recovery Speed
 #% increased Convocation Buff Effect
-#% increased Corpse Cremation cast speed
-#% increased Corpse Cremation damage
+#% increased Cremation Cast Speed
+#% increased Cremation Damage
 Cremation can have up to # additional Geyser at a time
 #% increased Cyclone Attack Speed
 #% increased Cyclone Damage
@@ -97,6 +99,8 @@ Cremation can have up to # additional Geyser at a time
 #% increased Decoy Totem Area of Effect
 Desecrate summons # additional corpses
 #% increased Desecrate Cooldown Recovery Speed
+#% increased Despair Duration
+#% increased Despair Curse Effect
 #% reduced Determination Mana Reservation
 #% increased Detonate Dead Damage
 Detonate Dead has a #% chance to detonate an additional Corpse
@@ -164,8 +168,8 @@ Fire Nova Mine repeats an additional # times
 #% increased Flame Surge Damage
 #% increased Flame Surge Damage against Burning Enemies
 #% increased Flame Totem Damage
-# additional Flame Totem Projectile
-# additional Flame Totem Projectiles
+Flame Totem fires an additional Projectile
+Flame Totem fires # additional Projectiles
 #% increased Flame Totem Projectile Speed
 #% increased Flammability Curse Effect
 #% increased Flammability Duration
@@ -254,7 +258,7 @@ Lightning Arrow hits # additional Enemies
 #% increased Effect of the Buff granted by your Lightning Golems
 Lightning Strike pierces # additional Targets
 #% increased Lightning Strike Damage
-# additional Lightning Strike Projectiles
+Lightning Strike fires # additional Projectiles
 #% increased Lightning Tendrils Critical Strike Chance
 #% increased Lightning Tendrils Damage
 #% increased Lightning Tendrils Area of Effect
@@ -274,7 +278,7 @@ Mirror Arrow and Mirror Arrow Clones deal #% increased Damage
 #% increased Molten Shell Buff Effect
 #% increased Molten Shell Damage
 #% increased Molten Strike Damage
-# additional Molten Strike Projectiles
+Molten Strike fires # additional Projectiles
 #% increased Molten Strike Area of Effect
 #% increased Orb of Storms Damage
 #% increased Phase Run Duration
@@ -335,8 +339,11 @@ Shock Nova ring deals #% increased Damage
 #% increased Smoke Mine Duration
 Smoke Mine grants additional #% increased Movement Speed
 #% increased Spark Damage
-# additional Spark Projectiles
+Spark fires # additional Projectiles
 #% increased Spark Projectile Speed
+#% increased Spectral Shield Throw Damage
+Spectral Shield Throw fires # additional Shard Projectiles
+#% increased Spectral Shield Throw Projectile Speed
 #% increased Spectral Throw Damage
 #% reduced Spectral Throw Projectile Deceleration
 #% increased Spectral Throw Projectile Speed
@@ -346,7 +353,7 @@ Spectres have #% increased Attack and Cast Speed
 Spirit Offering grants +#% of Physical Damage as Extra Chaos Damage
 #% increased Split Arrow Critical Strike Chance
 #% increased Split Arrow Damage
-# additional Split Arrow Projectiles
+Split Arrow fires # additional Projectiles
 #% increased Static Strike Damage
 #% reduced Static Strike Duration
 #% increased Static Strike Area of Effect
@@ -376,14 +383,17 @@ Chaos Golems deal #% increased Damage
 #% increased Sweep Damage
 +#% Sweep Knockback Chance
 #% increased Sweep Area of Effect
+#% increased Tectonic Slam Area of Effect
+#% chance for Tectonic Slam to not consume an Endurance Charge
+#% increased Tectonic Slam Damage
 #% increased Tempest Shield Damage
 Tempest Shield chains an additional # times
 #% increased Temporal Chains Curse Effect
 #% increased Temporal Chains Duration
 #% increased Tornado Shot Critical Strike Chance
 #% increased Tornado Shot Damage
-# secondary Tornado Shot Projectile
-# secondary Tornado Shot Projectiles
+Tornado Shot fires an additional secondary Projectile
+Tornado Shot fires # additional secondary Projectiles
 #% increased Vengeance Cooldown Recovery Speed
 #% increased Vengeance Damage
 #% increased Vigilant Strike Damage
@@ -392,9 +402,9 @@ Tempest Shield chains an additional # times
 #% increased Viper Strike Damage
 #% increased Viper Strike Duration
 #% reduced Vitality Mana Reservation
-#% increased Volatile Dead cast speed
-#% increased Volatile Dead damage
-Volatile Dead destroys up to # additional Corpses
+#% increased Volatile Dead Cast Speed
+#% increased Volatile Dead Damage
+Volatile Dead destroys up to # additional Corpse
 #% increased Vortex Damage
 #% increased Vortex Duration
 #% increased Vortex Area of Effect
