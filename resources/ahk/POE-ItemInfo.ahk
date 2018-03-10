@@ -311,6 +311,7 @@ class Item_ {
 		This.Implicit		:= []
 		This.Charges		:= []
 		This.AreaMonsterLevelReq := []
+		This.BeastData 	:= {}
 		
 		This.HasImplicit	:= False
 		This.HasEffect		:= False
@@ -346,6 +347,7 @@ class Item_ {
 		This.IsElderBase	:= False
 		This.IsShaperBase	:= False
 		This.IsAbyssJewel	:= False
+		This.IsBeast		:= False
 	}
 }
 Global Item := new Item_
@@ -1071,7 +1073,7 @@ Each array element is an object with 8 keys:
 */
 ArrayFromDatafile(Filename, AffixMode="Native")
 {
-	If(Filename = False)
+	If (Filename = False)
 	{
 		return False
 	}
@@ -1090,7 +1092,7 @@ ArrayFromDatafile(Filename, AffixMode="Native")
 		maxLo	:= ""
 		maxHi	:= ""
 		
-		If(A_LoopReadLine ~= "--Essence--")
+		If (A_LoopReadLine ~= "--Essence--")
 		{
 			ReadType := "Essence"
 			Continue
@@ -1142,7 +1144,7 @@ ArrayFromDatafile(Filename, AffixMode="Native")
 		ModDataArray_%ReadType%.InsertAt(1, element)
 	}
 	
-	If(AffixMode = "essence" or AffixMode = "ess")
+	If (AffixMode = "essence" or AffixMode = "ess")
 	{
 		return ModDataArray_Essence
 	}
@@ -7335,6 +7337,19 @@ ParseCharges(stats)
 	return charges
 }
 
+ParseBeastData(data) {
+	a := {}
+	
+	parts := data.parts[2]
+	Loop,  Parse, parts, `n, `r
+	{
+		RegExMatch(A_LoopField, "i)(Genus|Family|Group):\s+?(.*)", match)
+		a[match1] := Trim(match2)
+	}
+	
+	return a
+}
+
 ParseAreaMonsterLevelRequirement(stats)
 {
 	requirements := {}
@@ -7745,6 +7760,14 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		; Item.DifficultyRestriction := Difficulty
 	}
 	
+	; Beast detection
+	If (RegExMatch(ItemData.Parts[2], "i)Genus|Family"))
+	{
+		Item.IsBeast := True
+		Item.BeastData := ParseBeastData(ItemData)
+		Item.BaseType := "Beast"
+	}
+	
 	Item.IsGem	:= (InStr(ItemData.Rarity, "Gem"))
 	Item.IsCurrency:= (InStr(ItemData.Rarity, "Currency"))
 	
@@ -7803,10 +7826,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			RarityLevel	:= CheckRarityLevel(ItemData.Rarity)
 			Item.Level	:= ParseItemLevel(ItemDataText)
 			ItemLevelWord	:= "Item Level:"
-			ParseItemType(ItemData.Stats, ItemData.NamePlate, ItemBaseType, ItemSubType, ItemGripType, Item.IsMapFragment, RarityLevel)
-			Item.BaseType	:= ItemBaseType
-			Item.SubType	:= ItemSubType
-			Item.GripType	:= ItemGripType
+			If (Not Item.IsBeast) {
+				ParseItemType(ItemData.Stats, ItemData.NamePlate, ItemBaseType, ItemSubType, ItemGripType, Item.IsMapFragment, RarityLevel)
+				Item.BaseType	:= ItemBaseType
+				Item.SubType	:= ItemSubType
+				Item.GripType	:= ItemGripType
+			}			
 		}
 	}
 	

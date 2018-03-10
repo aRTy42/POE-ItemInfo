@@ -1,5 +1,13 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.7.7
+================================================================================================
+Fixed sceptres using their base type "one handed maces" on poe.trade instead of "sceptres" as type.
+Fixed an issue where some shaper/elder mods where falsely identified as "implicit mods" on poe.trade.
+Changed the default hotkey for the function to open items on peoapp to "ctrl + shift + q" to since using "ctrl + alt + q" prevented typing the @ character on some keyboard layouts. You have to manually change your hotkey in the settings though if you have that issue currently.
+Fixed some searches falsely including unique items in their results when the searched item is non-unique.
+Fixed a rare issue that caused the cURL requests to fail for some people. 
+
 2.7.6
 ================================================================================================
 Added simple support for opening an item on poeapp.com, the default hotkey is ctrl + alt + q and can be changed in the settings menu.

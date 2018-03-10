@@ -709,7 +709,7 @@ CreateTradeSettingsUI()
 	AddToolTip(ShowItemAgeHotkeyH, "Press key/key combination.`nDefault: ctrl + e")
 	
 	GuiAddCheckbox("Change League:", "x657 yp+32 w165 h20 0x0100", TradeOpts.ChangeLeagueEnabled, "ChangeLeagueEnabled", "ChangeLeagueEnabledH")
-	AddToolTip(ChangeLeagueEnabledH, "Checks your item's age.")
+	AddToolTip(ChangeLeagueEnabledH, "Changes the league you're searching for the item in.")
 	GuiAddHotkey(TradeOpts.ChangeLeagueHotkey, "x+1 yp-2 w124 h20", "ChangeLeagueHotkey", "ChangeLeagueHotkeyH")
 	AddToolTip(ChangeLeagueHotkeyH, "Press key/key combination.`nDefault: ctrl + l")
 

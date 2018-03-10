@@ -35,6 +35,7 @@
 		
 		redirect := "L"
 		PreventErrorMsg := false
+		validateResponse := 1
 		If (StrLen(options)) {
 			Loop, Parse, options, `n 
 			{
@@ -60,10 +61,7 @@
 				If (RegExMatch(A_LoopField, "i)ValidateResponse:(.*)", match)) {
 					If (Trim(match1) = "false") {
 						validateResponse := 0
-					}
-					Else {
-						validateResponse := 1	
-					}					
+					}				
 				}	
 			}			
 		}
@@ -149,8 +147,8 @@
 		} Catch er {
 			
 		}
-
-		If ((Strlen(ioHdr) and goodStatusCode) or (StrLen(ioHdr) and isJSON) or not validateResponse) {			
+		
+		If ((Strlen(ioHdr) and goodStatusCode) or (StrLen(ioHdr) and isJSON) or not validateResponse) {		
 			Break	; only go into the second loop if the respone is empty or has a bad status code (possible problem with the added host header)
 		}
 	}
