@@ -134,8 +134,12 @@ class Gdip
 		}
 		
 		Dispose()
-		{
-			return DllCall("gdiplus\GdipDeleteBrush", "uptr", this.Pointer)
+		{			
+			try {
+				return DllCall("gdiplus\GdipDeleteBrush", "uptr", this.Pointer)	
+			} catch e {
+				return
+			}
 		}
 		
 		CreateSolid(ARGB)

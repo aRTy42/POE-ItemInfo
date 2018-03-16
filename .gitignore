@@ -72,3 +72,5 @@ _TradeMacroMain.ahk
 _ItemInfoMain.ahk
 resources/tests/tempOutput/*
 data/lang/lang.json
+test2.ahk
+test3.ahk

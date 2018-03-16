@@ -286,8 +286,15 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	If (Item.RarityLevel > 0 and Item.RarityLevel < 4 and (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet)) {
 		IgnoreName := true
 	}
-	If (Item.IsRelic or Item.IsBeast) {
+	If (Item.IsRelic) {
 		IgnoreName := false
+	}
+	If (Item.IsBeast) {
+		If (Item.IsUnique) {
+			IgnoreName := false
+		} Else {
+			IgnoreName := true
+		}		
 	}
 
 	If (Item.IsLeagueStone) {
@@ -303,7 +310,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Corruption  := Item.IsCorrupted ? TradeFunc_GetCorruption(Item) : false
 	}
 
-	If (Item.IsWeapon or Item.IsQuiver or Item.IsArmour or Item.IsLeagueStone or (Item.IsFlask and Item.RarityLevel > 1) or Item.IsJewel or (Item.IsMap and Item.RarityLevel > 1) of Item.IsBelt or Item.IsRing or Item.IsAmulet)
+	If (Item.IsWeapon or Item.IsQuiver or Item.IsArmour or Item.IsLeagueStone or Item.IsBeast or (Item.IsFlask and Item.RarityLevel > 1) or Item.IsJewel or (Item.IsMap and Item.RarityLevel > 1) of Item.IsBelt or Item.IsRing or Item.IsAmulet)
 	{
 		hasAdvancedSearch := true
 	}
@@ -314,12 +321,21 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 
 	If (!Item.IsUnique or Item.IsBeast) {
-		preparedItem  := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap)
+		; TODO: improve this
+		If (Item.IsBeast) {
+			Item.BeastData.GenusMod 		:= {}
+			Item.BeastData.GenusMod.name_orig	:= "(beast) Genus: " Item.BeastData.Genus
+			Item.BeastData.GenusMod.name		:= RegExReplace(Item.BeastData.GenusMod.name_orig, "i)\d+", "#")
+			Item.BeastData.GenusMod.param		:= TradeFunc_FindInModGroup(TradeGlobals.Get("ModsData")["bestiary"], Item.BeastData.GenusMod)
+		}
+		
+		preparedItem  := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap, Item.IsBeast)
 		preparedItem.maxSockets	:= Item.maxSockets
 		preparedItem.iLvl		:= Item.level
 		preparedItem.Name		:= Item.Name
 		preparedItem.BaseName	:= Item.BaseName
 		preparedItem.Rarity		:= Item.RarityLevel
+		preparedItem.BeastData	:= Item.BeastData
 		If (Item.isShaperBase or Item.isElderBase or Item.IsAbyssJewel) {
 			preparedItem.specialBase	:= Item.isShaperBase ? "Shaper Base" : ""
 			preparedItem.specialBase	:= Item.isElderBase ? "Elder Base" : preparedItem.specialBase
@@ -521,8 +537,16 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 
 		If (s.useBase) {
-			RequestParams.xbase := Item.BaseName
-			Item.UsedInSearch.ItemBase := Item.BaseName
+			If (Item.IsBeast) {
+				modParam := new _ParamMod()
+				modParam.mod_name := Item.BeastData.GenusMod.param
+				modParam.mod_min := ""
+				RequestParams.modGroups[1].AddMod(modParam)
+				Item.UsedInSearch.Type := Item.BaseType ", " Item.BeastData.Genus
+			} Else {
+				RequestParams.xbase := Item.BaseName
+				Item.UsedInSearch.ItemBase := Item.BaseName
+			}			
 		}
 
 		If (s.onlineOverride) {
@@ -539,7 +563,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			}
 		}		
 	}
-	
+
 	; prepend the item.subtype to match the options used on poe.trade
 	If (RegExMatch(Item.SubType, "i)Mace|Axe|Sword")) {
 		If (Item.IsThreeSocket) {
@@ -604,7 +628,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 		Else {
 			RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
-			Item.UsedInSearch.Type := (Item.xtype) ? Item.xtype : Item.SubType
+			If (not Item.IsBeast) {
+				Item.UsedInSearch.Type := (Item.xtype) ? Item.xtype : Item.SubType
+			}
 		}
 		
 		If (Item.IsShaperBase) {
@@ -625,22 +651,55 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	} 
 	Else {
 		RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
-		Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType
+		If (not Item.IsBeast) {
+			Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType	
+		}		
 	}
-	
+
 	; make sure to not look for unique items when searching rare/white/magic items
 	If (!Item.IsUnique) {
 		RequestParams.rarity := "non_unique"
 	}
 	
+	; handle beasts
 	If (Item.IsBeast) {
 		If (!Item.IsUnique) {
 			RequestParams.Name := ""
 		}
-		RequestParams.xbase := Item.BaseType
+		
+		RequestParams.xtype := Item.BaseType
+		If (not isAdvancedPriceCheckRedirect) {
+			Item.UsedInSearch.Type := Item.BaseType ", " Item.BeastData.Genus
+		}
+		
+		/*
+			add genus
+			*/		
+		If (not isAdvancedPriceCheckRedirect) {
+			modParam := new _ParamMod()
+			modParam.mod_name := TradeFunc_FindInModGroup(TradeGlobals.Get("ModsData")["bestiary"], Item.BeastData.GenusMod)
+			modParam.mod_min  := ""
+			RequestParams.modGroups[1].AddMod(modParam)	
+		}		
+		
+		/* 
+			add beastiary mods
+			*/
+		If (not isAdvancedPriceCheckRedirect) {			
+			If (not isAdvancedPriceCheck) {
+				For key, imod in preparedItem.mods {
+					If (imod.param) {	; exists on poe.trade
+						modParam := new _ParamMod()
+						modParam.mod_name := imod.param
+						modParam.mod_min  := ""
+						RequestParams.modGroups[1].AddMod(modParam)	
+					}				
+				}
+			}			
+		}
+		
 		; ilevel?
 		; group ?
-		; genus ?
 		; family ?
 	}
 	
@@ -741,27 +800,31 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		; add Item.subtype to make sure to only find maps
 		RegExMatch(Item.Name, "i)The Beachhead.*", isHarbingerMap)
 		RegExMatch(Item.SubType, "i)Unknown Map", isUnknownMap)
-		If (not isHarbingerMap and not isUnknownMap) {
+		
+		mapTypes := TradeGlobals.Get("ItemTypeList")["Map"]
+		typeFound := TradeUtils.IsInArray(Item.SubType, mapTypes)
+		
+		If (not isHarbingerMap and not isUnknownMap and typeFound) {
 			RequestParams.xbase := Item.SubType
+			RequestParams.xtype := ""
 		} Else {
 			RequestParams.xbase := ""
-		}
-		
-		RequestParams.xtype := ""
+			RequestParams.xtype := "Map"
+		}		
+
 		If (not Item.IsUnique) {
 			If (StrLen(isHarbingerMap)) {
 				; Beachhead Map workaround (unique but not flagged as such on poe.trade)
-				RequestParams.name := Item.Name				
+				RequestParams.name := Item.Name			
+			} Else If (not typeFound) {
+				RequestParams.name := Item.Name
+				RequestParams.level_min := Item.MapTier
+				RequestParams.level_max := Item.MapTier
 			} Else {
 				RequestParams.name := ""
 			}
 		}
-
-		; Ivory Temple fix, not sure why it's not recognized and if there are more cases like it
-		If (InStr(Name, "Ivory Temple")){
-			RequestParams.xbase  := "Ivory Temple Map"
-		}
-		
+	
 		If (StrLen(isUnknownMap)) {
 			RequestParams.xbase := Item.BaseName
 			Item.UsedInSearch.type := Item.BaseName
@@ -818,7 +881,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 
 	; predicted pricing (poeprices.info - machine learning)
-	If (Item.RarityLevel > 2 and Item.RarityLevel < 4 and not (Item.IsCurrency or Item.IsDivinationCard or Item.IsEssence or Item.IsProphecy or Item.IsMap or Item.IsMapFragment or Item.IsGem)) {		
+	If (Item.RarityLevel > 2 and Item.RarityLevel < 4 and not (Item.IsCurrency or Item.IsDivinationCard or Item.IsEssence or Item.IsProphecy or Item.IsMap or Item.IsMapFragment or Item.IsGem or Item.IsBeast)) {		
 		If ((Item.IsJewel or Item.IsFlask or Item.IsLeaguestone)) {
 			If (Item.RarityLevel = 2) {
 				itemEligibleForPredictedPricing := false	
@@ -872,6 +935,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	If (TradeOpts.Debug) {
 		;console.log(RequestParams)
 	}
+
 	Payload := RequestParams.ToPayload()
 	
 	If (openSearchInBrowser) {
@@ -2068,8 +2132,12 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 			Title .= (Item.UsedInSearch.specialBase) ? "| " . Item.UsedInSearch.specialBase . " Base " : ""
 			Title .= (Item.UsedInSearch.Charges) ? "`n" . Item.UsedInSearch.Charges . " " : ""
 			Title .= (Item.UsedInSearch.AreaMonsterLvl) ? "| " . Item.UsedInSearch.AreaMonsterLvl . " " : ""
-
-			Title .= (Item.UsedInSearch.SearchType = "Default") ? "`n" . "!! Mod rolls are being ignored !!" : ""
+			
+			If (Item.IsBeast and not Item.IsUnique) {
+				Title .= (Item.UsedInSearch.SearchType = "Default") ? "`n" . "!! Added special bestiary mods to the search !!" : ""	
+			} Else {
+				Title .= (Item.UsedInSearch.SearchType = "Default") ? "`n" . "!! Mod rolls are being ignored !!" : ""
+			}			
 		}
 		Title .= seperatorBig
 	}
@@ -2653,7 +2721,7 @@ TradeFunc_RemoveAlternativeVersionsMods(Item, Affixes) {
 }
 
 ; Return items mods and ranges
-TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = false, Corruption = false, isMap = false) {
+TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = false, Corruption = false, isMap = false, isBeast = false) {
 	Affixes	:= StrSplit(Affixes, "`n")
 	mods		:= []
 	i		:= 0
@@ -2733,6 +2801,7 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 	tempItem		:= {}
 	tempItem.mods	:= []
 	tempItem.mods	:= mods
+	tempItem.isBeast := isBeast
 	temp			:= TradeFunc_GetItemsPoeTradeMods(tempItem, isMap)
 	tempItem.mods	:= temp.mods
 	tempItem.IsUnique := false
@@ -2755,54 +2824,58 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 
 	; use this to control search order (which group is more important)
 	For k, imod in _item.mods {
-		; check total and then implicits first if mod is implicit, otherwise check later
-		If (_item.mods[k].type == "implicit" and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])
+		If (_item.isBeast) {			
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["bestiary"], _item.mods[k])
+			}		
+		}
+		Else {
+			; check total and then implicits first if mod is implicit, otherwise check later
+			If (_item.mods[k].type == "implicit" and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])
+				If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+					_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
+				}
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["shaped"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["elder"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["abyss jewels"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["crafted"], _item.mods[k])
+			}		
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
 			}
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[total] mods"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["[pseudo] mods"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["explicit"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["shaped"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["elder"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["abyss jewels"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["crafted"], _item.mods[k])
-		}		
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["enchantments"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["map mods"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["prophecies"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["leaguestone"], _item.mods[k])
-		}
-		If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["bestiary"], _item.mods[k])
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["enchantments"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["map mods"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["prophecies"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["leaguestone"], _item.mods[k])
+			}
 		}
 	}
 
@@ -2841,12 +2914,13 @@ TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
 TradeFunc_FindInModGroup(modgroup, needle, simpleRange = true, recurse = true) {
 	matches := []
 	editedNeedle := ""
-
+	
 	For j, mod in modgroup {
-		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)|\(leaguestone\)", ""))
+		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)|\(leaguestone\)|\(beastiary\)", ""))
 		If (simpleRange) {
 			s  := RegExReplace(s, "# ?to ? #", "#")
 		}
+		
 		s  := TradeUtils.CleanUp(s)
 		ss := TradeUtils.CleanUp(needle.name)
 		st := TradeUtils.CleanUp(needle.name_orig)
@@ -3113,6 +3187,7 @@ TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod, ByRef
 	CurrValue	:= ""
 	CurrValues:= []
 	CurrValue := GetActualValue(itemModifiers.name_orig)
+	
 	If (CurrValue ~= "\d+") {
 		; handle value range
 		RegExMatch(CurrValue, "(\d+) ?(-|to) ?(\d+)", values)
@@ -3133,6 +3208,7 @@ TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod, ByRef
 		; replace multi spaces with a single one
 		ModStr := RegExReplace(ModStr, " +", " ")
 		poeTradeMod := RegExReplace(poeTradeMod, "# ?to ? #", "#")
+		poeTradeMod := StrReplace(poeTradeMod, "+")
 		
 		If (RegExMatch(poeTradeMod, "i).*" ModStr "$")) {
 			Return CurrValues
@@ -3622,7 +3698,6 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 				theoreticalMaxValue := advItem.mods[A_Index].ranges[1][2] ? advItem.mods[A_Index].ranges[1][2] : 0
 			}
 		}
-
 		
 		SetFormat, FloatFast, 5.2
 		ErrorMsg :=
@@ -3851,8 +3926,13 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	Gui, SelectModsGui:Add, Edit    , x+1 yp-3 w30 vTradeAdvancedMinILvl , % iLvlValue
 
 	; item base
-	baseCheckState := TradeOpts.AdvancedSearchCheckBase ? "Checked" : ""
-	Gui, SelectModsGui:Add, CheckBox, x+15 yp+3 vTradeAdvancedSelectedItemBase %baseCheckState%, % "Use Item Base"
+	If (advItem.IsBeast) {
+		baseCheckState := "Checked"
+		Gui, SelectModsGui:Add, CheckBox, x+15 yp+3 vTradeAdvancedSelectedItemBase %baseCheckState%, % "Use Genus (" advItem.BeastData.Genus ")"
+	} Else {
+		baseCheckState := TradeOpts.AdvancedSearchCheckBase ? "Checked" : ""
+		Gui, SelectModsGui:Add, CheckBox, x+15 yp+3 vTradeAdvancedSelectedItemBase %baseCheckState%, % "Use Item Base"
+	}	
 
 	If (advItem.specialBase) {
 		Gui, SelectModsGui:Add, CheckBox, x+15 yp+0 vTradeAdvancedSelectedSpecialBase Checked, % advItem.specialBase 

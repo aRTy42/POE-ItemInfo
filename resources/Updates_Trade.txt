@@ -1,5 +1,15 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.8.0
+================================================================================================
+Added support for Beast Trading. This initial implementation may be lacking but it's late in the night and it's still not quite sure how all aspects of this should be handled. Feel free to give suggestions for improvements.
+Fixed an issue with pseudomods where totem and minion resitances where added as player resistances (jewels).
+Fixed an issue where Shaped Vault maps weren't found since their base doesn't exist on poe.trade.
+
+ItemInfo:
+	"Adds # to # damage" mods now have an additional line that displays the average values of the damage ranges.
+	The "total" column of added damage mods has been changed. Suppose there is a mod with three brackets: 1-3 to 7-9, 11-13 to 17-19, 21-23 to 27-29. It used to display as "1-3|27-29", the worst lower range and the best upper range. It now displays "1-23|7-29", the range over all lower values and the range over all upper values.
+
 2.7.7
 ================================================================================================
 Fixed sceptres using their base type "one handed maces" on poe.trade instead of "sceptres" as type.

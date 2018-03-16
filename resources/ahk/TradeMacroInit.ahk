@@ -1154,7 +1154,7 @@ TradeFunc_ReadCookieData() {
 				Gui, CookieWindow:Add, Text, , The connection test sometimes fails while using the correct user-agent/cookies. `nJust try it again to be sure.
 				Gui, CookieWindow:Add, Text, , You can also try setting the cookies manually in the settings menu.
 
-				text := "It's very likely that you need valid cookies to access the requested page, which you don't have.`n"
+				text := "It's likely that you need valid cookies to access the requested page, which you don't have.`n"
 				text .= "A possible reason for this is that the requested page is protected not only by a Javascript challenge but also by`n"
 				text .= "a Captcha challenge which cannot be solved by the macro.`n"
 				text .= "You can either read your browsers cookies manually and add them to the settings menu under 'Manual cookie `n"
@@ -1199,6 +1199,7 @@ TradeFunc_ReadCookieData() {
 		}
 
 		Gui, CookieWindow:Add, Text, cRed x10, Make sure that no file in the PoE-TradeMacro folder is blocked by your antivirus software/firewall, `nnotably the file "lib\curl.exe".
+		Gui, CookieWindow:Add, Text, cRed x10, Using a cellular hotspot via your mobile phone can also be the cause of this issue, try avoiding it!
 		Gui, CookieWindow:Add, Link, cBlue, Take a look at the <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/FAQ">FAQ</a> first, especially the parts mentioning "cURL".
 		Gui, CookieWindow:Add, Link, cBlue, Report on <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues/149#issuecomment-268639184">Github</a>, <a href="https://discord.gg/taKZqWw">Discord</a>, <a href="https://www.pathofexile.com/forum/view-thread/1757730/">the forum</a>.
 		Gui, CookieWindow:Add, Text, , Please also provide this information in your report.
