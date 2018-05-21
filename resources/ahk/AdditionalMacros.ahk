@@ -131,8 +131,8 @@ AM_SetAfkMessage_HKey:
 	setAfkMessage()						; Pastes afk message to your chat and marks "X" so you can type in the estimated time.
 Return
 
-AM_AdvancedItemInfo_HKey:
-	AdvancedItemInfoExt()					; Opens an item on pathof.info for an advanced affix breakdown.
+AM_OpenPoEAntiquary_HKey:
+	OpenItemOnPoEAntiquary()					; Opens an item on http://poe-antiquary.xyz to lookup a price history from last leagues.
 Return
 
 AM_WhoisLastWhisper_HKey:

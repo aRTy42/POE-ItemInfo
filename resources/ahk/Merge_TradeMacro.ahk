@@ -1,4 +1,4 @@
-; #####################################################################################################################
+ï»¿; #####################################################################################################################
 ; # This script merges TradeMacro, TradeMacroInit, PoE-ItemInfo and AdditionalMacros into one script and executes it.
 ; # We also have to set some global variables and pass them to the ItemInfo/TradeMacroInit scripts.
 ; # This is to support using ItemInfo as dependancy for TradeMacro.
@@ -136,8 +136,7 @@ RunAsAdmin(arguments)
 }
 
 StartSplashScreen() {
-    ;SplashTextOn, , 20, PoE-TradeMacro, Merging and starting Scripts...
-    SplashTextOn, , 20, PoE-TradeMacro, Collecting Poké Balls...
+	SplashTextOn, , 20, PoE-TradeMacro, Merging and starting Scripts...	
 }
 
 AppendCustomMacros(userDirectory)

@@ -7364,6 +7364,33 @@ ParseCharges(stats)
 ParseBeastData(data) {
 	a := {}
 	
+	legendaryBeastsList := ["Farric Wolf Alpha", "Fenumal Scorpion", "Fenumal Plaqued Arachnid", "Farric Frost Hellion Alpha", "Farric Lynx ALpha", "Saqawine Vulture", "Craicic Chimeral", "Saqawine Cobra", "Craicic Maw", "Farric Ape", "Farric Magma Hound", "Craicic Vassal", "Farric Pit Hound", "Craicic Squid" 
+	, "Farric Taurus", "Fenumal Scrabbler", "Farric Goliath", "Fenumal Queen", "Saqawine Blood Viper", "Fenumal Devourer", "Farric Ursa", "Fenumal Widow", "Farric Gargantuan", "Farric Chieftain", "Farric Ape", "Farrci Flame Hellion Alpha", "Farrci Goatman", "Craicic Watcher", "Saqawine Retch"
+	, "Saqawine Chimeral", "Craicic Shield Crab", "Craicic Sand Spitter", "Craicic Savage Crab", "Saqawine Rhoa"]
+	
+	portalBeastsList := ["Farric Tiger Alpha", "Craicic Spider Crab", "Fenumal Hybrid Arachnid", "Saqawine Rhex"]
+	aspectBeastsList := ["Farrul, First of the Plains", "Craiceann, First of the Deep", "Fenumus, First of the Night", "Saqawal, First of the Sky"]
+	
+	nameplate := data.nameplate
+	Loop, Parse, nameplate, `n, `r
+	{
+		If (A_Index = 2 and IsInArray(Trim(A_LoopField), aspectBeastsList)) {
+			a.IsAspectBeast := true
+			a.BeastName := Trim(A_LoopField)
+		}	
+		
+		If (A_Index = 3) {
+			a.BeastBase := Trim(A_LoopField)
+			If (IsInArray(Trim(A_LoopField), portalBeastsList)) {
+				a.IsPortalbeast := true
+			}
+			Else If (IsInArray(Trim(A_LoopField), legendaryBeastsList)) {
+				a.IsLegendaryBeast := true
+			}
+			
+		}		
+	}
+	
 	parts := data.parts[2]
 	Loop, Parse, parts, `n, `r
 	{
@@ -7380,7 +7407,7 @@ ParseBeastData(data) {
 			a["Mods"].Push(match1)
 		}
 	}
-	
+
 	return a
 }
 
@@ -10536,6 +10563,150 @@ AdvancedItemInfoExt() {
 	}
 }
 
+OpenItemOnPoEAntiquary() {
+	IfWinActive, ahk_group PoEWindowGrp
+	{
+		Global Item, Opts, Globals, ItemData
+
+		ClipBoardTemp := Clipboard
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+
+		Clipboard :=
+		Send ^{sc02E}	; ^{c}
+		Sleep 100
+
+		CBContents := GetClipboardContents()
+		CBContents := PreProcessContents(CBContents)
+		Globals.Set("ItemText", CBContents)
+		ParsedData := ParseItemData(CBContents)
+		
+		If (Item.Name) {			
+			global AntiquaryData := []
+			global AntiquaryType := AntiquaryGetType(Item)
+			
+			If (AntiquaryType) {
+				If (AntiquaryType = "Map") {
+					name := Item.BaseName
+				} Else {
+					name := Item.Name
+				}
+
+				url := "http://poe-antiquary.xyz/api/macro/" UriEncode(AntiquaryType) "/" UriEncode(Item.Name)			
+				
+				postData 	:= ""					
+				options	:= "RequestType: GET"
+				options	.= "`n" "TimeOut: 15"
+				reqHeaders := []
+				
+				reqHeaders.push("Connection: keep-alive")
+				reqHeaders.push("Cache-Control: max-age=0")
+				reqHeaders.push("Upgrade-Insecure-Requests: 1")
+				reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+				
+				data := PoEScripts_Download(url, postData, reqHeaders, "", true)
+
+				Try {
+					AntiquaryData := JSON.Load(data)
+				} Catch error {
+					errorMsg := error.Message
+					Msgbox, %errorMsg%
+				}
+
+				name := AntiquaryData["name"]
+				lastLeague := AntiquaryData["league"]
+				itemType := AntiquaryData["itemType"]
+				items := AntiquaryData.items
+				length := items.Length()
+				
+				If (length == 0) {
+					ShowToolTip("Item not available on http://poe-antiquary.xyz.")
+				}
+				Else If (length == 1) {
+					id := items[1].id
+					AntiquaryOpenInBrowser(itemType, name, id, lastLeague)
+				}
+				Else If (length > 1) {
+					AntiquaryOpenInBrowser(itemType, name, id, lastLeague, length)
+				}
+			}
+		}
+		Else {			
+			ShowToolTip("Item parsing failed, no name recognized.")
+		}
+		SuspendPOEItemScript = 0
+	}
+}
+
+AntiquaryOpenInBrowser(type, name, id, lastLeague, multiItems = false) {
+	league := TradeGlobals.Get("LeagueName")
+	If (RegExMatch(league, "Hardcore.*")) {
+		league := lastLeague "HC"
+	} Else {
+		league := lastLeague
+	}
+	
+	league	:= UriEncode(league)
+	type		:= UriEncode(type)
+	name		:= UriEncode(name)
+	id		:= UriEncode(id)
+	utm		:= UriEncode("trade macro")
+	
+	If (multiItems) {
+		url := "http://poe-antiquary.xyz/" league "/" type "?name=" name ;"?utm_source=" utm "&utm_medium=" utm "&utm_campaign=" utm		
+	}
+	Else {
+		url := "http://poe-antiquary.xyz/" league "/" type "/" name "/" id ;"?utm_source=" utm "&utm_medium=" utm "&utm_campaign=" utm	
+	}
+	openWith := AssociatedProgram("html")
+	OpenWebPageWith(openWith, url)
+}
+
+AntiquaryGetType(Item) {
+	If (Item.IsUnique) {
+		If (Item.IsWeapon) {
+			return "Weapon"
+		}
+		If (Item.IsArmour) {
+			return "Armour"
+		}
+		If (Item.IsFlask) {
+			return "Flask"
+		}
+		If (Item.IsJewel) {
+			return "Jewel"
+		}
+		If (Item.IsBelt or Item.IsRing or Item.IsAmulet) {
+			return "Accessory"
+		}
+	}
+	If (Item.IsEssence) {
+		return "Essence"
+	}
+	If (Item.IsDivinationCard) {
+		return "Divination"
+	}
+	If (Item.IsProphecy) {
+		return "Prophecy"
+	}
+	If (Item.IsMapFragment) {
+		return "Fragment"
+	}
+	If (Item.IsMap) {
+		If (Item.IsUnique) {
+			return "Unique Map"
+		} Else {
+			return "Map"	
+		}		
+	}
+	If (RegExMatch(Item.Name, "(Sacrifice|Mortal|Fragment).*|Offering to the Goddess|Divine Vesse|.*(Breachstone|s Key)")) {
+		return "Fragment"
+	}
+	If (Item.IsCurrency) {
+		return "Currency"
+	}
+}
+
+
 StringToBase64UriEncoded(stringIn, noUriEncode = false) {
 	stringBase64 := ""
 	FileDelete, %A_ScriptDir%\temp\itemText.txt
@@ -11330,6 +11501,18 @@ ZeroTrim(number) {
 		number := (StrLen(trail) > 0) ? match1 "." trail : match1
 		Return number
 	}
+}
+
+IsInArray(el, array) {
+	For i, element in array {
+		If (el = "") {
+			Return false
+		}
+		If (element = el) {
+			Return true
+		}
+	}
+	Return false
 }
 
 TogglePOEItemScript()

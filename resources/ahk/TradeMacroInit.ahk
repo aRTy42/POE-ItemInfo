@@ -132,6 +132,7 @@ If (TradeOpts.AlternativeCurrencySearch) {
 TradeGlobals.Set("VariableUniqueData", TradeUniqueData)
 TradeGlobals.Set("VariableRelicData",  TradeRelicData)
 TradeGlobals.Set("ModsData", TradeModsData)
+TradeGlobals.Set("CurrencyTags", TradeCurrencyTags)
 
 TradeGlobals.Set("CraftingData", TradeFunc_ReadCraftingBases())
 TradeGlobals.Set("EnchantmentData", TradeFunc_ReadEnchantments())
@@ -495,7 +496,9 @@ CreateTradeSettingsUI()
 	StringTrimRight, TabNames, TabNames, 1
 	Gui, Add, Tab3, Choose1 h660 x0, %TabNames%
 
-    ; General
+	/* 
+		General
+	*/
 
 	GuiAddGroupBox("[TradeMacro] General", "x7 y+7 w310 h380")
 
@@ -540,7 +543,9 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("Use poedb.tw instead of the wiki.", "x17 yp+27 w260 h30 0x0100", TradeOpts.WikiAlternative, "WikiAlternative", "WikiAlternativeH")
 	AddToolTip(WikiAlternativeH, "Use poedb.tw to open a page with information`nabout your item/item base.")
 
-    ; Search
+	/* 
+		Search
+	*/
 
 	GuiAddGroupBox("[TradeMacro] Search", "x327 y35 w310 h625")
 
@@ -667,11 +672,12 @@ CreateTradeSettingsUI()
 	AddToolTip(AdvancedSearchCheckBaseH, "Selects the item base`nwhen creating the advanced search GUI.")
 
 	;Gui, Add, Link, x337 yp+43 w280 cBlue BackgroundTrans, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
-	
 
-	; Hotkeys
+	/* 
+		Hotkeys 
+	*/
 
-	GuiAddGroupBox("[TradeMacro] Hotkeys", "x647 y35 w310 h265")
+	GuiAddGroupBox("[TradeMacro] Hotkeys", "x647 y35 w310 h295")
 
 	GuiAddCheckbox("Price Check:", "x657 yp+26 w165 h20 0x0100", TradeOpts.PriceCheckEnabled, "PriceCheckEnabled", "PriceCheckEnabledH")
 	AddToolTip(PriceCheckEnabledH, "Check item prices.")
@@ -712,10 +718,17 @@ CreateTradeSettingsUI()
 	AddToolTip(ChangeLeagueEnabledH, "Changes the league you're searching for the item in.")
 	GuiAddHotkey(TradeOpts.ChangeLeagueHotkey, "x+1 yp-2 w124 h20", "ChangeLeagueHotkey", "ChangeLeagueHotkeyH")
 	AddToolTip(ChangeLeagueHotkeyH, "Press key/key combination.`nDefault: ctrl + l")
+	
+	GuiAddCheckbox("Get currency ratio note:", "x657 yp+32 w165 h20 0x0100", TradeOpts.SetCurrencyRatio, "SetCurrencyRatio", "SetCurrencyRatioH")
+	AddToolTip(SetCurrencyRatioH, "Copies an item note for premium tabs to your clipboard`nthat creates a valid currency ratio on all trade sites.")
+	GuiAddHotkey(TradeOpts.SetCurrencyRatioHotkey, "x+1 yp-2 w124 h20", "SetCurrencyRatioHotkey", "SetCurrencyRatioHotkeyH")
+	AddToolTip(SetCurrencyRatioHotkeyH, "Press key/key combination.`nDefault: ctrl + r")
 
 	Gui, Add, Link, x657 yp+35 w210 h20 cBlue BackgroundTrans, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
 
-	; Cookies
+	/* 
+		Cookies
+	*/
 
 	GuiAddGroupBox("[TradeMacro] Manual cookie selection", "x647 yp+40 w310 h160")
 
@@ -736,7 +749,9 @@ CreateTradeSettingsUI()
 
 	Gui, Add, Link, x657 yp+28 w210 h20 cBlue BackgroundTrans, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Cookie-retrieval">How to</a>
 	
-	; Buttons	
+	/* 
+		Buttons
+	*/
 	
 	GuiAddText("Mouse over settings to see a detailed description.", "x657 yp+40 w300 h30")
 
@@ -1465,8 +1480,10 @@ TradeFunc_GetOSInfo() {
 ;----------------------- SplashScreens ---------------------------------------
 TradeFunc_StartSplashScreen() {
 	;SplashTextOn, , 20, PoE-TradeMacro, Initializing script...
-	SplashTextOn, , 20, PoE-TradeMacro, Initializing Pokédex...
+	welcome := chr(27426)chr(36814)	; 欢迎
+	SplashTextOn, 300, 20, PoE-TradeMacro, % "Welcoming the new overlords (" welcome ")..."
 }
+
 TradeFunc_StopSplashScreen() {
 	SplashTextOff
 

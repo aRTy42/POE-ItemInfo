@@ -1,5 +1,16 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.9.0
+================================================================================================
+Changed behaviour of advanced searchs ilvl handling for shaper/elder items, the ilvl is now always filled and selected.
+Replaced the hotkey to open an advanced affix lookup on http://pathof.info (ctrl + alt +c) with a hotkey to open items on http://poe-antiquary.xyz, if available.
+Added a new hotkey (ctrl + r when hovering over currency) to open a dialog to create notes for premium stash tabs. This dialog let's you set sell/receive amount and currency type or a ratio and uses the currency short-hands/IDs used by all trade sites to parse currency trade ratios/prices. Just give it a try to see what it does.
+Properly supported Abyssal Sockets on items, especially unique items (advanced search). Items like Bubonic Trail will now have a checkbox to include the number of sockets, already selected. This didn't work before because the item mod wasn't supported on poe.trade as a mod but as a seperate option instead.
+
+Fixed searching Elder maps not working. 
+Fixed the broken parsing for average/median values (price results).
+Various other small fixes.
+
 2.8.0
 ================================================================================================
 Added support for Beast Trading. This initial implementation may be lacking but it's late in the night and it's still not quite sure how all aspects of this should be handled. Feel free to give suggestions for improvements.
