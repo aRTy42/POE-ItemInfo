@@ -19,7 +19,8 @@ TradeFunc_PriceCheckHotkey(priceCheckTest = false, itemData = "") {
 		Clipboard :=
 		Clipboard := itemData
 	} Else {
-		Send ^{sc02E}
+		scancode_c := Globals.Get("Scancodes").c
+		Send ^{%scancode_c%}
 	}
 	Sleep 250
 	TradeFunc_Main()
@@ -44,7 +45,8 @@ TradeFunc_AdvancedPriceCheckHotkey(priceCheckTest = false, itemData = "") {
 		Clipboard :=
 		CLipboard := itemData
 	} Else {
-		Send ^{sc02E}
+		scancode_c := Globals.Get("Scancodes").c
+		Send ^{%scancode_c%}
 	}
 	Sleep 250
 	TradeFunc_Main(false, true)
@@ -69,7 +71,8 @@ TradeFunc_OpenSearchOnPoeTradeHotkey(priceCheckTest = false, itemData = "") {
 		Clipboard :=
 		Clipboard := itemData
 	} Else {
-		Send ^{sc02E}
+		scancode_c := Globals.Get("Scancodes").c
+		Send ^{%scancode_c%}
 	}
 	Sleep 250
 	TradeFunc_Main(true)
@@ -96,12 +99,12 @@ TradeFunc_OpenSearchOnPoeAppHotkey(priceCheckTest = false, itemData = "") {
 		Clipboard := itemData
 	} Else {
 		clipPrev := Clipboard
-		Send ^{sc02E}
+		scancode_c := Globals.Get("Scancodes").c
+		Send ^{%scancode_c%}
 	}
 	Sleep 250
 	
 	TradeFunc_DoParseClipboard()
-	
 	If (Item.Name or Item.BaseName) {
 		itemContents := TradeUtils.UriEncode(Clipboard)
 		url := "https://poeapp.com?utm_source=poe-trademacro#/item-import/" + itemContents
@@ -122,7 +125,8 @@ ShowItemAge:
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		TradeFunc_PreventClipboardGarbageAfterInit()
 		
-		Send ^{sc02E}
+		scancode_c := Globals.Get("Scancodes").c
+		Send ^{%scancode_c%}
 		Sleep 250
 		TradeFunc_Main(false, false, false, true)
 		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
@@ -145,7 +149,8 @@ TradeFunc_OpenWikiHotkey(priceCheckTest = false, itemData = "") {
 		Clipboard :=
 		CLipboard := itemData
 	} Else {
-		Send ^{sc02E}
+		scancode_c := Globals.Get("Scancodes").c
+		Send ^{%scancode_c%}
 	}
 	Sleep 250
 	TradeFunc_DoParseClipboard()
@@ -225,7 +230,8 @@ TradeFunc_SetCurrencyRatio() {
 	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 
 	TradeFunc_PreventClipboardGarbageAfterInit()
-	Send ^{sc02E}
+	scancode_c := Globals.Get("Scancodes").c
+	Send ^{%scancode_c%}
 	Sleep 250
 	TradeFunc_DoParseClipboard()
 	
@@ -241,16 +247,18 @@ TradeFunc_SetCurrencyRatio() {
 	windowPosX := Round(A_ScreenWidth / 2)
 	windowTitle := "Set currency ratio"
 	
+	color := "000000"
+	
 	Gui, CurrencyRatio:Destroy
 	Gui, CurrencyRatio:New, +hwndCurrencyRatioHwnd
-	Gui, CurrencyRatio:Font, s8, Verdana
-	Gui, CurrencyRatio:Color, ffffff
+	Gui, CurrencyRatio:Font, s8 c%color%, Verdana
+	Gui, CurrencyRatio:Color, ffffff, ffffff
 	
 	Gui, CurrencyRatio:Add, Text, x10, % "You want to sell your"
 	Gui, CurrencyRatio:Font, cGreen bold
 	itemName := Item.BaseName ? Item.name " " Item.BaseName "." : Item.Name "(s)."
 	Gui, CurrencyRatio:Add, Text, x+5 yp+0, % itemName
-	Gui, CurrencyRatio:Font, cDefault norm
+	Gui, CurrencyRatio:Font, c%color% norm
 	
 	;Gui, CurrencyRatio:Add, Text, x10, % "Select what you want to receive for the amount of currency that you want to sell."	
 	Gui, CurrencyRatio:Add, Text, x10 y+10, % "Input the "
@@ -297,14 +305,14 @@ TradeFunc_SetCurrencyRatio() {
 	
 	Gui, CurrencyRatio:Font, bold
 	Gui, CurrencyRatio:Add, Text, x15 y+15 w60, % "Sell:"
-	Gui, CurrencyRatio:Font, cDefault norm
+	Gui, CurrencyRatio:Font, c%color% norm
 	Gui, CurrencyRatio:Add, Edit, x+10 yp-3 w55 vSelectCurrencyRatioSellAmount
 	Gui, CurrencyRatio:Add, Text, x+14 yp+3 w276, % Item.name
 	
 	Gui, CurrencyRatio:Add, GroupBox, x7 y+10 w485 h83,
 	Gui, CurrencyRatio:Font, bold
 	Gui, CurrencyRatio:Add, Text, x15 yp+15 w60, % "Receive:"
-	Gui, CurrencyRatio:Font, cDefault norm
+	Gui, CurrencyRatio:Font, c%color% norm
 	Gui, CurrencyRatio:Add, Edit, x+10 yp-3 w55 vSelectCurrencyRatioReceiveAmount
 	Gui, CurrencyRatio:Add, DropDownList, x+10 yp+0 w280 vSelectCurrencyRatioReceiveCurrency, % delimitedListString
 	
@@ -375,7 +383,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	iLvl     := Item.Level
 
-	; cancel search If Item is empty
+	; cancel search if Item is empty
 	If (!Item.Name) {
 		If (TradeOpts.OpenUrlsOnEmptyItem and openSearchInBrowser) {
 			TradeFunc_OpenUrlInBrowser("https://poe.trade")
@@ -411,7 +419,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	RequestParams.league	:= LeagueName
 	RequestParams.has_buyout	:= "1"
 
-	; ignore item name in certain cases
+	/*
+		ignore item name in certain cases
+		*/ 
 	If (!Item.IsJewel and !Item.IsLeaguestone and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask or (Item.IsJewel and isAdvancedPriceCheckRedirect)) {
 		IgnoreName := true
 	}
@@ -433,7 +443,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		ItemData.Affixes := TradeFunc_AddCustomModsToLeaguestone(ItemData.Affixes, Item.Charges)
 	}
 
-	; check if the item implicit mod is an enchantment or corrupted. retrieve this mods data.
+	/*
+		check if the item implicit mod is an enchantment or corrupted. retrieve this mods data.
+		*/	
 	Enchantment := false
 	Corruption  := false
 
@@ -452,6 +464,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Item.IsUnique 	:= false
 	}
 
+	/*
+		further item parsing and preparation
+		*/	
 	If (!Item.IsUnique or Item.IsBeast) {
 		; TODO: improve this
 		If (Item.IsBeast) {
@@ -584,7 +599,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 
-	; ignore mod rolls unless the TradeFunc_AdvancedPriceCheckGui is used to search
+	/*
+		ignore mod rolls unless the TradeFunc_AdvancedPriceCheckGui is used to search
+		*/
 	AdvancedPriceCheckItem := TradeGlobals.Get("AdvancedPriceCheckItem")
 	If (isAdvancedPriceCheckRedirect) {
 		; submitting the AdvancedPriceCheck Gui sets TradeOpts.Set("AdvancedPriceCheckItem") with the edited item (selected mods and their min/max values)
@@ -702,7 +719,10 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 
-	; prepend the item.subtype to match the options used on poe.trade
+	
+	/*
+		prepend the item.subtype to match the options used on poe.trade
+		*/	
 	If (RegExMatch(Item.SubType, "i)Mace|Axe|Sword")) {
 		If (Item.IsThreeSocket) {
 			If (RegExMatch(Item.BaseName, "i)Sceptre")) {
@@ -716,12 +736,16 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 
-	; Fix Body Armour subtype
+	/*
+		Fix Body Armour subtype
+		*/	
 	If (RegExMatch(Item.SubType, "i)BodyArmour")) {
 		Item.xtype := "Body Armour"
 	}
 
-	; remove "Superior" from item name to exclude it from name search
+	/*
+		remove "Superior" from item name to exclude it from name search
+		*/
 	If (!IgnoreName) {
 		RequestParams.name   := Trim(StrReplace(Name, "Superior", ""))
 		If (Item.IsRelic) {
@@ -794,12 +818,16 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}		
 	}
 
-	; make sure to not look for unique items when searching rare/white/magic items
+	/*
+		make sure to not look for unique items when searching rare/white/magic items
+		*/
 	If (!Item.IsUnique) {
 		RequestParams.rarity := "non_unique"
 	}
 	
-	; handle beasts
+	/*
+		handle beasts
+		*/
 	If (Item.IsBeast) {
 		If (!Item.IsUnique) {
 			RequestParams.Name := ""
@@ -885,7 +913,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 	
-	; league stones
+	/*
+		league stones
+		*/
 	If (Item.IsLeagueStone) {
 		; only manually add these mods if they don't already exist (created by advanced search)
 		temp_name := "(leaguestone) Can only be used in Areas with Monster Level # or below"
@@ -931,7 +961,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 
-	; don't overwrite advancedItemPriceChecks decision to include/exclude sockets/links
+	/*
+		don't overwrite advancedItemPriceChecks decision to include/exclude sockets/links
+		*/ 
 	If (not isAdvancedPriceCheckRedirect) {
 		; handle item sockets
 		; maybe don't use this for unique-items as default
@@ -950,7 +982,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 
-	; handle corruption
+	/*
+		handle corruption
+		*/
 	If (Item.IsCorrupted and TradeOpts.CorruptedOverride and not Item.IsDivinationCard) {
 		If (TradeOpts.Corrupted = "Either") {
 			RequestParams.corrupted := ""
@@ -978,6 +1012,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Item.UsedInSearch.Corruption := "No"
 	}
 
+	/*
+		maps
+		*/
 	If (Item.IsMap) {		
 		; add Item.subtype to make sure to only find maps
 		RegExMatch(Item.Name, "i)The Beachhead.*", isHarbingerMap)
@@ -1017,7 +1054,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 
-	; handle gems
+	/*
+		gems
+		*/
 	If (Item.IsGem) {
 		RequestParams.xtype := Item.BaseType
 		RequestParams.xbase := TradeFunc_CompareGemNames(Trim(RegExReplace(Item.Name, "i)support|superior", "")))
@@ -1053,7 +1092,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}	
 	}
 
-	; handle divination cards and jewels
+	/*
+		divination cards and jewels
+		*/
 	If (Item.IsDivinationCard or Item.IsJewel) {
 		RequestParams.xtype := Item.BaseType
 		If (Item.IsJewel and Item.IsUnique) {
@@ -1066,7 +1107,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 	}
 
-	; predicted pricing (poeprices.info - machine learning)
+	/*
+		predicted pricing (poeprices.info - machine learning)
+		*/
 	If (Item.RarityLevel > 2 and Item.RarityLevel < 4 and not (Item.IsCurrency or Item.IsDivinationCard or Item.IsEssence or Item.IsProphecy or Item.IsMap or Item.IsMapFragment or Item.IsGem or Item.IsBeast)) {		
 		If ((Item.IsJewel or Item.IsFlask or Item.IsLeaguestone)) {
 			If (Item.RarityLevel = 2) {
@@ -1080,7 +1123,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}		
 	}
 
-	; show item age
+	/*
+		show item age
+		*/
 	If (isItemAgeRequest) {
 		RequestParams.name        := Item.Name
 		RequestParams.has_buyout      := ""
@@ -1118,12 +1163,31 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RequestParams.has_buyout := ""
 		}
 	}
-	If (TradeOpts.Debug) {
-		;console.log(RequestParams)
-	}
 
+	/*
+		create payload
+		*/
 	Payload := RequestParams.ToPayload()
 	
+	/*
+		Create second payload for exact currency search (backup search if no results were found with primary currency)
+		*/		
+	If (not Item.IsCurrency and TradeOpts.ExactCurrencySearch) {
+		Payload_alt := Payload
+		Item.UsedInSearch.ExactCurrency := true
+		
+		ExactCurrencySearchOptions := TradeGlobals.Get("ExactCurrencySearchOptions").poetrade
+		If (buyout_currency := ExactCurrencySearchOptions[TradeOpts.CurrencySearchHave]) {
+			Payload .= "&buyout_currency=" TradeUtils.UriEncode(buyout_currency)
+		}
+		If (buyout_currency := ExactCurrencySearchOptions[TradeOpts.CurrencySearchHave2]) {
+			Payload_alt .= "&buyout_currency=" TradeUtils.UriEncode(buyout_currency)
+		}
+	}	
+	
+	/*
+		decide how to handle the request (open in browser on a specific site or make a POST/GET request to parse the results)
+		*/		
 	If (openSearchInBrowser) {
 		ShowToolTip("Opening search in your browser... ")
 	} Else If (not (TradeOpts.UsePredictedItemPricing and itemEligibleForPredictedPricing)) {
@@ -1131,7 +1195,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 
 	ParsingError	:= ""
-	currencyUrl	:= ""
+	currencyUrl	:= ""	
 	If (Item.IsCurrency and not Item.IsEssence and TradeFunc_CurrencyFoundOnCurrencySearch(Item.Name)) {
 		If (!TradeOpts.AlternativeCurrencySearch) {
 			Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser, 0, currencyUrl, error)
@@ -1158,25 +1222,32 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 
 	If (openSearchInBrowser) {
-		If (Item.isCurrency and !Item.IsEssence and TradeFunc_CurrencyFoundOnCurrencySearch(Item.Name)) {
-			ParsedUrl1 := currencyUrl
-		}
-		Else {
-			; using GET request instead of preventing the POST request redirect and parsing the url
-			parsedUrl1 := "http://poe.trade/search?" Payload
-			; redirect was prevented to get the url and open the search on poe.trade instead
-			;RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
-		}
-
-		If (StrLen(ParsingError)) {
-			ShowToolTip("")
-			ShowToolTip(ParsingError)
-		} Else {
-			TradeFunc_OpenUrlInBrowser(ParsedUrl1)
+		If (TradeOpts.PoENinjaSearch and (url := TradeFunc_GetPoENinjaItemUrl(TradeOpts.SearchLeague, Item))) {
+			TradeFunc_OpenUrlInBrowser(url)
 			If (not TradeOpts.CopyUrlToClipboard) {
 				SetClipboardContents("")	
 			}
-		}
+		} Else {
+			If (Item.IsCurrency and !Item.IsEssence and TradeFunc_CurrencyFoundOnCurrencySearch(Item.Name)) {
+				ParsedUrl1 := currencyUrl
+			}
+			Else {
+				; using GET request instead of preventing the POST request redirect and parsing the url
+				parsedUrl1 := "http://poe.trade/search?" Payload
+				; redirect was prevented to get the url and open the search on poe.trade instead
+				;RegExMatch(Html, "i)href=""(https?:\/\/.*?)""", ParsedUrl)
+			}
+
+			If (StrLen(ParsingError)) {
+				ShowToolTip("")
+				ShowToolTip(ParsingError)
+			} Else {
+				TradeFunc_OpenUrlInBrowser(ParsedUrl1)
+				If (not TradeOpts.CopyUrlToClipboard) {
+					SetClipboardContents("")	
+				}
+			}
+		}	
 	}
 	Else If (Item.isCurrency and !Item.IsEssence and TradeFunc_CurrencyFoundOnCurrencySearch(Item.Name)) {
 		; Default currency search
@@ -1216,7 +1287,16 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Else {
 			Item.UsedInSearch.SearchType := "Default"
 		}
-		ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest, isAdvancedPriceCheckRedirect)
+		
+		; add second request for payload_alt (exact currency search fallback request)		
+		searchResults := TradeFunc_ParseHtmlToObj(Html, Payload, iLvl, Enchantment, isItemAgeRequest, isAdvancedPriceCheckRedirect)
+		If (not searchResults.results and StrLen(Payload_alt)) {
+			Html := TradeFunc_DoPostRequest(Payload_alt, openSearchInBrowser)
+			ParsedData := TradeFunc_ParseHtml(Html, Payload_alt, iLvl, Enchantment, isItemAgeRequest, isAdvancedPriceCheckRedirect)
+		}
+		Else {
+			ParsedData := TradeFunc_ParseHtml(Html, Payload, iLvl, Enchantment, isItemAgeRequest, isAdvancedPriceCheckRedirect)	
+		}		
 
 		SetClipboardContents("")
 		ShowToolTip("")
@@ -1224,6 +1304,85 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 
 	TradeGlobals.Set("AdvancedPriceCheckItem", {})
+}
+
+TradeFunc_GetPoENinjaItemUrl(league, item) {	
+	url := "http://poe.ninja/"
+
+	If (league = "tmpstandard") {
+		url .= "challenge/"
+	} Else If (league = "tmphardcore") {
+		url .= "challengehc/"
+	} Else If (league = "standard") {
+		url .= "standard/"
+	} Else If (league = "hardcore") {
+		url .= "hardcore/"
+	} Else If (RegExMatch(league, "i)hc") and RegExMatch(league, "i)event")) {
+		url .= "eventhc/"
+	} Else If (RegExMatch(league, "i)event")) {
+		url .= "event/"
+	}
+	
+	If (Item.hasImplicit) {
+		Enchantment := TradeFunc_GetEnchantment(Item, Item.SubType)
+	}
+	
+	url_suffix := ""
+	If (item.IsDivinationCard) {
+		url_suffix := "divinationcards"
+	} Else If (item.IsProphecy) {
+		url_suffix := "prophecies"
+	} Else If (item.IsFragment) {
+		;url_suffix := "fragments"	; currently not supported (no filter)
+	} Else If (item.IsGem) {
+		;url_suffix := "skill-gems"	; supported but using poe.trade for this may be the better choice
+	} Else If (item.IsEssence) {
+		url_suffix := "essences"
+	} Else If (item.SubType = "Helmet" and Enchantment.name) {
+		url_suffix := "helmet-enchants"
+	} Else If (item.IsUnique) {
+		If (item.IsMap) {
+			url_suffix := "unique-maps"
+		} Else If (item.IsJewel) {
+			url_suffix := "unique-jewels"
+		} Else If (item.IsFlask) {
+			url_suffix := "unique-flasks"
+		} Else If (item.IsWeapon or item.IsQuiver) {
+			url_suffix := "unique-weapons"
+		} Else If (item.IsArmour) {
+			url_suffix := "unique-armours"
+		} Else If (item.IsRing or Item.IsBelt or Item.IsAmulet) {
+			url_suffix := "unique-accessories"
+		}
+	} Else If (item.IsMap) {
+		url_suffix := "maps"
+	}
+	
+	; filters
+	url_params := "?"
+	url_param_1 := "filter="
+	url_param_2 := "&tier="
+	
+	If (item.IsMap) {
+		url_param_arg_1 := TradeUtils.UriEncode(Item.BaseName)
+		url_param_arg_2 := TradeUtils.UriEncode(Item.MapTier)
+		url_params .= url_param_1 . url_param_arg_1 . url_param_2 . url_param_arg_2
+	}
+	Else If (item.SubType = "Helmet" and Enchantment) {
+		url_param_arg_1 := TradeUtils.UriEncode(Enchantment.name)
+		url_params .= url_param_1 . url_param_arg_1
+	}
+	Else {
+		url_param_arg_1 := TradeUtils.UriEncode(Item.Name)
+		url_params .= url_param_1 . url_param_arg_1
+	}
+	
+	If (url_suffix) {
+		console.log(url . url_suffix . url_params)
+		Return url . url_suffix . url_params
+	} Else {
+		Return false
+	}
 }
 
 TradeFunc_AddCustomModsToLeaguestone(ItemAffixes, Charges) {
@@ -1782,13 +1941,16 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 		LeagueName := TradeGlobals.Get("LeagueName")
 		IDs := TradeGlobals.Get("CurrencyIDs")
 		Have:= TradeOpts.CurrencySearchHave
+		If (Have = currencyName) {
+			Have := TradeOpts.CurrencySearchHave2
+		}
 
 		; currently not necessary
 		; idWant := TradeFunc_MapCurrencyNameToID(currencyName)
 		; idHave := TradeFunc_MapCurrencyNameToID(TradeOpts.CurrencySearchHave)
 
-		idWant := TradeGlobals.Get("CurrencyIDs")[currencyName]
-		idHave := TradeGlobals.Get("CurrencyIDs")[TradeOpts.CurrencySearchHave]
+		idWant := IDs[currencyName]
+		idHave := IDs[Have]
 
 		If (idWant and idHave) {
 			Url := "http://currency.poe.trade/search?league=" . TradeUtils.UriEncode(LeagueName) . "&online=x&want=" . idWant . "&have=" . idHave
@@ -2230,6 +2392,113 @@ TradeFunc_MapCurrencyPoeTradeNameToIngameName(CurrencyName) {
 	Return mappedCurrencyName
 }
 
+; Parse poe.trade search result html to object
+TradeFunc_ParseHtmlToObj(html, payload, iLvl = "", ench = "", isItemAgeRequest = false, isAdvancedSearch = false) {
+	Global Item, ItemData, TradeOpts
+	LeagueName := TradeGlobals.Get("LeagueName")
+	
+	;median_average := TradeFunc_GetMeanMedianPrice(html, payload, error)	
+	
+	; Target HTML Looks like the ff:
+     ; <tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008"
+	; data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe"
+	; data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
+	
+
+	NoOfItemsToShow := TradeOpts.ShowItemResults
+	results := []
+	accounts := {}
+	
+	While A_Index < NoOfItemsToShow {
+		result := {}
+		
+		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index - 1 """(.*?)<\/tbody>", html)
+		AccountName 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-seller=""(.*?)""")
+		AccountName	:= RegexReplace(AccountName, "i)^\+", "")
+		Buyout 		:= TradeUtils.HtmlParseItemData(ItemBlock, "data-buyout=""(.*?)""")
+		IGN			:= TradeUtils.HtmlParseItemData(ItemBlock, "data-ign=""(.*?)""")
+		AFK			:= TradeUtils.HtmlParseItemData(ItemBlock, "class="".*?(label-afk).*?"".*?>")
+
+		If (not AccountName) {
+			continue
+		}
+		Else {
+			itemsListed++
+		}
+
+		; skip multiple results from the same account
+		If (TradeOpts.RemoveMultipleListingsFromSameAccount and not isItemAgeRequest) {
+			If (accounts[AccountName]) {
+				NoOfItemsToShow += 1
+				accounts[AccountName] += 1
+				continue
+			} Else {
+				accounts[AccountName] := 1
+			}
+		}
+		result.accountName := AccountName
+		result.ign := IGN
+		result.afk := StrLen(AFK) ? true : false
+
+		; get item age
+		Pos := RegExMatch(ItemBlock, "i)class=""found-time-ago"">(.*?)<", Age)
+		result.age := Age1
+		
+		Pos := RegExMatch(ItemBlock, "i)data-name=""ilvl"">.*: ?(\d+?)<", iLvl, Pos)
+		result.itemLevel := iLvl1
+		
+		If (Item.IsGem) {
+			; get gem quality, level and xp
+			RegExMatch(ItemBlock, "i)data-name=""progress"".*<b>\s?(\d+)\/(\d+)\s?<\/b>", GemXP_Flat)
+			RegExMatch(ItemBlock, "i)data-name=""progress"">\s*?Experience:.*?([0-9.]+)\s?%", GemXP_Percent)
+			Pos := RegExMatch(ItemBlock, "i)data-name=""q"".*?data-value=""(.*?)""", Q, Pos)
+			Pos := RegExMatch(ItemBlock, "i)data-name=""level"".*?data-value=""(.*?)""", LVL, Pos)
+			
+			result.gemData := {}
+			result.gemData.xpFlat := GemXP_Flat1
+			result.gemData.xpPercent := GemXP_Percent1
+			result.gemData.quality := Q1
+			result.gemData.level := LVL1
+		}
+
+		; buyout price
+		RegExMatch(Buyout, "i)([-.0-9]+) (.*)", BuyoutText)
+		RegExMatch(BuyoutText1, "i)(\d+)(.\d+)?", BuyoutPrice)
+		
+		If (TradeOpts.ShowPricesAsChaosEquiv and not TradeOpts.ExactCurrencySearch) {
+			; translate buyout to chaos equivalent
+			RegExMatch(Buyout, "i)\d+(\.|,?\d+)?(.*)", match)
+			CurrencyName := TradeUtils.Cleanup(match2)
+
+			mappedCurrencyName		:= TradeFunc_MapCurrencyPoeTradeNameToIngameName(CurrencyName)
+			chaosEquivalentSingle	:= ChaosEquivalents[mappedCurrencyName]
+			chaosEquivalent		:= BuyoutPrice * chaosEquivalentSingle
+			RegExMatch(chaosEquivalent, "i)(\d+)(.\d+)?", BuyoutPrice)
+
+			If (chaosEquivalentSingle) {
+				BuyoutPrice    := (BuyoutPrice2) ? BuyoutPrice1 . BuyoutPrice2 : BuyoutPrice1
+				BuyoutCurrency := "chaos"
+			}
+		}
+		Else {
+			BuyoutPrice    := (BuyoutPrice2) ? BuyoutPrice1 . BuyoutPrice2 : BuyoutPrice1
+			BuyoutCurrency := BuyoutText2
+		}
+		
+		result.buyoutPrice := BuyoutPrice
+		result.buyoutCurrency := BuyoutCurrency	
+
+		results.push(result)
+	}
+	
+	data := {}
+	data.results := results
+	data.accounts := accounts
+
+	Return data
+}
+
+
 ; Parse poe.trade html to display the search result tooltip with X listings
 TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false, isAdvancedSearch = false) {
 	Global Item, ItemData, TradeOpts
@@ -2324,7 +2593,10 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 				Title .= (Item.UsedInSearch.SearchType = "Default") ? "`n" . "!! Added special bestiary mods to the search !!" : ""	
 			} Else {
 				Title .= (Item.UsedInSearch.SearchType = "Default") ? "`n" . "!! Mod rolls are being ignored !!" : ""
-			}			
+				If (Item.UsedInSearch.ExactCurrency) {
+					Title .= "`n" . "!! Using exact currency option !!"
+				}
+			}
 		}
 		Title .= seperatorBig
 	}
@@ -2720,6 +2992,7 @@ class RequestParams_ {
 	buyout_min 	:= ""
 	buyout_max 	:= ""
 	buyout_currency:= ""
+	exact_currency	:= (TradeOpts.ExactCurrencySearch == 0) ? "" : "x"
 	crafted		:= ""
 	enchanted 	:= ""
 	progress_min	:= ""
@@ -2729,7 +3002,6 @@ class RequestParams_ {
 	shaper		:= ""
 	elder		:= ""
 	map_series 	:= ""
-	exact_currency := ""
 
 	ToPayload() {
 		modGroupStr := ""
@@ -3423,6 +3695,7 @@ TradeFunc_GetNonUniqueModValueGivenPoeTradeMod(itemModifiers, poeTradeMod, ByRef
 TradeFunc_CustomSearchGui() {
 	Global
 	Gui, CustomSearch:Destroy
+	Gui, CustomSearch:Color, ffffff, ffffff
 	customSearchItemTypes := TradeGlobals.Get("ItemTypeList")
 
 	CustomSearchTypeList := ""
@@ -3490,6 +3763,7 @@ TradeFunc_CustomSearchGui() {
 TradeFunc_CreateItemPricingTestGUI() {
 	Global
 	Gui, PricingTest:Destroy
+	Gui, PricingTest:Color, ffffff, ffffff
 
 	Gui, PricingTest:Add, Text, x10 y10 w480, Input item information/data
 	Gui, PricingTest:Add, Edit, x10 w480 y+10 R30 vPricingTestItemInput
@@ -3534,6 +3808,7 @@ TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	
 	
 	Gui, PredictedPricing:Destroy
+	Gui, PredictedPricing:Color, ffffff, ffffff
 	
 	Gui, PredictedPricing:Margin, 10, 10
 
@@ -3610,6 +3885,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	ValueRangeMax := advItem.IsUnique ? TradeOpts.AdvancedSearchModValueRangeMax : TradeOpts.AdvancedSearchModValueRangeMax / 2
 
 	Gui, SelectModsGui:Destroy
+	Gui, SelectModsGui:Color, ffffff, ffffff
 	Gui, SelectModsGui:Add, Text, x10 y12, Percentage to pre-calculate min/max values (halved for non-unique items):
 	Gui, SelectModsGui:Add, Text, x+5 yp+0 cGreen, % ValueRangeMin "`% / " ValueRangeMax "`%"
 	Gui, SelectModsGui:Add, Text, x10 y+8, This calculation considers the (unique) item's mods difference between their min and max value as 100`%.
@@ -4420,6 +4696,17 @@ class TradeUtils {
 	IsArray(obj) {
 		Return !!obj.MaxIndex()
 	}
+	
+	; careful : circular references crash the script.
+	; https://autohotkey.com/board/topic/69542-objectclone-doesnt-create-a-copy-keeps-references/#entry440561
+	ObjFullyClone(obj)
+	{
+		nobj := obj.Clone()
+		for k,v in nobj
+			if IsObject(v)
+				nobj[k] := A_ThisFunc.(v)
+		return nobj
+	}
 
 	; Trim trailing zeros from numbers
 	ZeroTrim(number) {
@@ -4684,6 +4971,7 @@ Return
 ReadPoeNinjaCurrencyData:
 	; Disable hotkey until currency data was parsed
 	key := TradeOpts.ChangeLeagueHotKey
+
 	If (TempChangingLeagueInProgress) {
 		ShowToolTip("Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ")...", true)
 	}

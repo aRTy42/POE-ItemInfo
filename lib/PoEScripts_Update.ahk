@@ -101,6 +101,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 					
 				}
 			}
+			Gui, UpdateNotification:Color, ffffff, ffffff
 			Gui, UpdateNotification:Font,, Consolas
 
 			Gui, UpdateNotification:Add, GroupBox, w630 h80 cGreen, Update available!			

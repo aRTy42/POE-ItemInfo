@@ -62,8 +62,9 @@ TradeOpts_New := class_EasyIni(A_ScriptDir "\resources\default_UserFiles\config_
 MakeOldTradeOptsAndVars(TradeOpts_New)
 
 
-; Check If Temp-Leagues are active and set defaultLeague accordingly
+; Check if Temp-Leagues are active and set defaultLeague accordingly
 TradeGlobals.Set("TempLeagueIsRunning", TradeFunc_CheckIfTempLeagueIsRunning())
+TradeGlobals.Set("EventLeagueIsRunning", TradeFunc_CheckIfTempLeagueIsRunning("event"))
 TradeGlobals.Set("DefaultLeague", (TradeFunc_CheckIfTempLeagueIsRunning() > 0) ? "tmpstandard" : "standard")
 TradeGlobals.Set("GithubUser", "POE-TradeMacro")
 TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
@@ -113,8 +114,11 @@ global overwrittenUserFiles	:= argumentOverwrittenFiles
 ; }
 
 TradeFunc_CheckIfCloudFlareBypassNeeded()
+
+TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
 Sleep, 200
-ReadTradeConfig()
+ReadTradeConfig("", "config_trade.ini", _updateConfigWrite)
+TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[SearchLeague])
 
 ; set this variable to skip the update check in "PoE-ItemInfo.ahk"
 SkipItemInfoUpdateCall := 1
@@ -122,9 +126,6 @@ firstUpdateCheck := true
 TradeFunc_ScriptUpdate()
 
 firstUpdateCheck := false
-
-TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
-TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[SearchLeague])
 
 If (TradeOpts.AlternativeCurrencySearch) {
 	GoSub, ReadPoeNinjaCurrencyData
@@ -147,29 +148,35 @@ If (TradeOpts.DownloadDataFiles and not TradeOpts.Debug) {
 }
 
 CreateTradeSettingsUI()
+If (_updateConfigWrite) {
+	; some value needs to be written to config because it was invalid and was therefore changed
+	WriteTradeConfig()
+}
 TradeFunc_StopSplashScreen()
 
 ; ----------------------------------------------------------- Functions ----------------------------------------------------------------
 
 ; TODO: rewrite/remove after refactoring UI
-ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
+ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini", ByRef updateWriteConfig = false)
 {
 	Global
+
 	If (StrLen(TradeConfigDir) < 1) {
 		TradeConfigDir := userDirectory
 	}
 	TradeConfigPath := StrLen(TradeConfigDir) > 0 ? TradeConfigDir . "\" . TradeConfigFile : TradeConfigFile
-	if (FileExist(TradeConfigPath)) {
+	If (FileExist(TradeConfigPath)) {
 		TradeOpts_New := class_EasyIni(TradeConfigPath)
 		TradeOpts_New.Update(A_ScriptDir "\resources\default_UserFiles\config_trade.ini")
+		_temp_SearchLeague := TradeOpts_New.Search.SearchLeague
 	}
-	if (!TradeFunc_CheckBrowserPath(TradeOpts_New.General.BrowserPath, false)) {
+	If (!TradeFunc_CheckBrowserPath(TradeOpts_New.General.BrowserPath, false)) {
 		TradeOpts_New.General.BrowserPath := ""
 	}
-	if (!TradeFunc_CheckLeague(TradeOpts_New.Search.SearchLeague)) {
+	If (!TradeFunc_CheckLeague(TradeOpts_New.Search.SearchLeague)) {
 		TradeOpts_New.Search.SearchLeague := TradeGlobals.Get("DefaultLeague")
 	}
-	else {
+	Else {
 		TradeOpts_New.Search.SearchLeague := TradeFunc_CheckIfLeagueIsActive(Format("{:L}", TradeOpts_New.Search.SearchLeague))
 	}
 
@@ -178,21 +185,25 @@ ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini")
 	MakeOldTradeOptsAndVars(TradeOpts_New)
 	TradeFunc_SyncUpdateSettings()
 	TradeFunc_AssignAllHotkeys()
-	return
+	If (_temp_SearchLeague != TradeOpts_New.Search.SearchLeague) {
+		updateWriteConfig := true
+	}
+	
+	Return
 }
 
 TradeFunc_AssignAllHotkeys()
 {
 	Global
-	for keyName, keyVal in TradeOpts_New.Hotkeys {
-		if (TradeOpts_New.HotkeyStates[keyName]) {
+	For keyName, keyVal in TradeOpts_New.Hotkeys {
+		If (TradeOpts_New.HotkeyStates[keyName]) {
 			TradeFunc_AssignHotkey(keyVal, keyName)
 		}
-		else {
+		Else {
 			Hotkey, %keyVal%, off, UseErrorLevel
 		}
 	}
-	return
+	Return
 }
 
 ; TODO: rewrite/remove after refactoring UI
@@ -204,7 +215,7 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 	TradeConfigPath := StrLen(TradeConfigDir) > 0 ? TradeConfigDir . "\" . TradeConfigFile : TradeConfigFile
 
 
-	if (!TradeFunc_CheckBrowserPath(BrowserPath, true)) {
+	If (!TradeFunc_CheckBrowserPath(BrowserPath, true)) {
 		BrowserPath := ""
 	}
 	oldLeague := TradeOpts.SearchLeague
@@ -229,7 +240,8 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 	TradeFunc_SyncUpdateSettings()
 	TradeFunc_AssignAllHotkeys()
 	TradeOpts_New.Save(TradeConfigPath)
-	return
+	
+	Return
 }
 
 ; NB: this is temporary hack
@@ -289,17 +301,18 @@ UpdateOldTradeOptsFromVars()
 
 TradeFunc_CheckLeague(LeagueName)
 {
-	LeagueName := Format("{:L}", LeagueName)
-	for key, val in TradeGlobals.Get("AvailableLeagues") {
+	LeagueName := Format("{:L}", LeagueName)	
+	For key, val in TradeGlobals.Get("Leagues") {
 		temp_LeagueName := Format("{:L}",  RegExReplace(val, "i)\s", ""))
-		if (LeagueName == temp_LeagueName) {
-			return true
+		If (LeagueName == temp_LeagueName) {
+			Return true
 		}
 	}
-	if (RegExMatch(LeagueName, "i)Standard|Hardcore|TmpStandard|TmpHardcore")) {
-		return true
+	
+	If (RegExMatch(LeagueName, "i)Standard|Hardcore|TmpStandard|TmpHardcore")) {
+		Return true
 	}
-	return false
+	Return false
 }
 
 CopyDefaultTradeConfig() {
@@ -319,10 +332,14 @@ CreateDefaultTradeConfig() {
 
 TradeFunc_CheckIfLeagueIsActive(LeagueName) {
 	; Check if league from Ini is set to an inactive league and change it to the corresponding active one, for example tmpstandard to standard
-	; Leagues not supported with any API (beta leagues) and events (week races) are being removed while reading the config when they are not supported by poe.trade anymore
+	; Leagues not supported with any API (beta leagues) and events (some races and SSF events) are being removed while reading the config when they are not supported by poe.trade anymore
 	If (RegExMatch(LeagueName, "i)tmp(standard)|tmp(hardcore)", match) and not TradeGlobals.Get("TempLeagueIsRunning")) {
 		LeagueName := match1 ? "standard" : "hardcore"
+	} 
+	If (RegExMatch(LeagueName, "i)(hc|hardcore).*event|(event)", match) and not RegExMatch(LeagueName, "i)ssf") and not TradeGlobals.Get("EventLeagueIsRunning")) {
+		LeagueName := match1 ? "hardcore" : "standard"
 	}
+	
 	return LeagueName
 }
 
@@ -390,7 +407,7 @@ TradeFunc_GetLeagues() {
 	}
 
 	; add additional supported leagues like beta leagues (no league API for them)
-	; make sure there are no deuplicate temp leagues (hardcoded keys)
+	; make sure there are no duplicate temp leagues (hardcoded keys)
 	For j, value in poeTradeLeagues {
 		trimmedValue := Format("{:L}", RegExReplace(value, "i)\s", ""))
 		If (not leagues[trimmedValue]) {
@@ -405,16 +422,18 @@ TradeFunc_GetLeagues() {
 			}
 		}
 	}
-
+	
 	Return leagues
 }
 
 ; ------------------ CHECK IF A TEMP-LEAGUE IS ACTIVE ------------------
-TradeFunc_CheckIfTempLeagueIsRunning() {
-	tempLeagueDates := TradeFunc_GetTempLeagueDates()
+; ltype : event for flashback and similiar events, "" otherwise
+TradeFunc_CheckIfTempLeagueIsRunning(ltype = "") {
+	tempLeagueDates := TradeFunc_GetTempLeagueDates(ltype)
 
 	If (!tempLeagueDates) {
-		defaultLeague := (InStr(TradeOpts.SearchLeague, "standard")) ? "standard" : "hardcore"
+		hcEvent := RegExMatch(TradeOpts.SearchLeague, "i)(hardcore|hc).*event")
+		defaultLeague := (RegExMatch(TradeOpts.SearchLeague, "i)standard|event") and not hcEvent) ? "standard" : "hardcore"
 		Return 0
 	}
 
@@ -426,8 +445,8 @@ TradeFunc_CheckIfTempLeagueIsRunning() {
 	timeDiffEnd   := TradeFunc_DateParse(TimeStr) - TradeFunc_DateParse(tempLeagueDates["end"])
 
 	If (timeDiffStart > 0 && timeDiffEnd < 0) {
-        ; Current datetime is between temp league start and end date
-		defaultLeague := "tmpstandard"
+		; Current datetime is between temp league start and end date
+		defaultLeague := (not RegExMatch(TradeOpts.SearchLeague, "i)event")) ? "tmpstandard" : "event"
 		Return 1
 	}
 	Else {
@@ -454,14 +473,30 @@ TradeFunc_DateParse(str) {
 	Return str
 }
 
-TradeFunc_GetTempLeagueDates() {
+TradeFunc_GetTempLeagueDates(ltype = "") {
 	tempLeagueDates := []
 
 	For key, val in LeaguesData {
-		If (val.endAt and val.startAt and not val.event) {
-			tempLeagueDates["start"] := val.startAt
-			tempLeagueDates["end"] := val.endAt
-			Return tempLeagueDates
+		If (val.endAt and val.startAt) {
+			If (not val.event and (not ltype or ltype != "event")) {
+				tempLeagueDates["start"] := val.startAt
+				tempLeagueDates["end"] := val.endAt
+				Return tempLeagueDates	
+			}
+			Else If (ltype = "event") {
+				ssf := false
+				Loop, % val.rules.Length() {
+					If (val.rules[A_Index].name = "Solo" or InStr(val.id, "SSF ")) {
+						ssf := true
+					}
+				}
+				
+				If (not ssf) {
+					tempLeagueDates["start"] := val.startAt
+					tempLeagueDates["end"] := val.endAt
+					Return tempLeagueDates
+				}
+			}			
 		}
 	}
 	Return 0
@@ -599,41 +634,46 @@ CreateTradeSettingsUI()
 	AddToolTip(LblCurrencySearchHaveH, "This settings sets the currency that you`nwant to use as ""have"" for the currency search.")
 	GuiAddDropDownList(CurrencyList, "x+10 yp-4", TradeOpts.CurrencySearchHave, "CurrencySearchHave", "CurrencySearchHaveH")
 
-	; option group start
-	GuiAddCheckbox("Online only", "x337 yp+27 w145 h30 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
+	GuiAddText("Secondary Currency:", "x337 yp+30 w160 h20 0x0100", "LblCurrencySearchHave2", "LblCurrencySearchHave2H")
+	AddToolTip(LblCurrencySearchHave2H, "This setting sets the currency that you`nwant to use as ""have"" when searching for`nthe above selected currency.")
+	GuiAddDropDownList(CurrencyList, "x+10 yp-4", TradeOpts.CurrencySearchHave2, "CurrencySearchHave2", "CurrencySearchHave2H")
 
-	GuiAddCheckbox("Buyout only", "x482 yp0 w145 h30 0x0100", TradeOpts.BuyoutOnly, "BuyoutOnly", "BuyoutOnlyH")
+	; option group start
+	GuiAddCheckbox("Use the ""exact currency"" option.", "x337 yp+27 w280 h20", TradeOpts.ExactCurrencySearch, "ExactCurrencySearch", "ExactCurrencySearchH")
+	AddToolTip(ExactCurrencySearchH, "Searches for exact currencies, will ignore results not listed as these.`nOnly applicable to searches using poe.trade.`n`nUses the selected currencies from the ""Currency Search"" and ""Secondary Search"" option.`nSecondary currency will be used for a second search if no results are found.")
+	
+	; option group start
+	GuiAddCheckbox("Show prices as chaos equivalent.", "x337 yp+25 w280 h20", TradeOpts.ShowPricesAsChaosEquiv, "ShowPricesAsChaosEquiv", "ShowPricesAsChaosEquivH")
+	AddToolTip(ShowPricesAsChaosEquivH, "Shows all prices as their chaos equivalent.")
+
+	; option group start
+	GuiAddCheckbox("Online only", "x337 yp+25 w145 h20 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
+
+	GuiAddCheckbox("Buyout only", "x482 yp0 w145 h20 0x0100", TradeOpts.BuyoutOnly, "BuyoutOnly", "BuyoutOnlyH")
 	AddToolTip(BuyoutOnlyH, "This option only takes affect when opening the search on poe.trade.")
 
 	; option group start
-	GuiAddCheckbox("Pre-Fill Min-Values", "x337 yp+25 w145 h40", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
-	AddToolTip(PrefillMinValueH, "Automatically fill the min-values in the advanced search GUI.")
-
-	GuiAddCheckbox("Pre-Fill Max-Values", "x482 yp0 w145 h40", TradeOpts.PrefillMaxValue, "PrefillMaxValue", "PrefillMaxValueH")
-	AddToolTip(PrefillMaxValueH, "Automatically fill the max-values in the advanced search GUI.")
-
-	; option group start
-	GuiAddCheckbox("Force max links (certain corrupted items).", "x337 yp+30 w280 h40", TradeOpts.ForceMaxLinks, "ForceMaxLinks", "ForceMaxLinksH")
+	GuiAddCheckbox("Force max links (certain corrupted items).", "x337 yp+25 w280 h20", TradeOpts.ForceMaxLinks, "ForceMaxLinks", "ForceMaxLinksH")
 	AddToolTip(ForceMaxLinksH, "Searches for corrupted 3/4 max-socket unique items always use`nthe maximum amount of links if your item is fully linked.")
 	
 	; option group start
-	GuiAddCheckbox("Remove multiple Listings from same Account.", "x337 yp+30 w280 h40", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
+	GuiAddCheckbox("Remove multiple Listings from same Account.", "x337 yp+25 w280 h20", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
 	AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
-
-	; option group start
-	GuiAddCheckbox("Show prices as chaos equivalent.", "x337 yp+30 w280 h40", TradeOpts.ShowPricesAsChaosEquiv, "ShowPricesAsChaosEquiv", "ShowPricesAsChaosEquivH")
-	AddToolTip(ShowPricesAsChaosEquivH, "Shows all prices as their chaos equivalent.")
 	
 	; option group start
-	GuiAddCheckbox("Alternative currency search.", "x337 yp+30 w280 h40", TradeOpts.AlternativeCurrencySearch, "AlternativeCurrencySearch", "AlternativeCurrencySearchH")
+	GuiAddCheckbox("Alternative currency search.", "x337 yp+25 w280 h20", TradeOpts.AlternativeCurrencySearch, "AlternativeCurrencySearch", "AlternativeCurrencySearchH")
 	AddToolTip(AlternativeCurrencySearchH, "Shows historical data of the searched currency.`nProvided by poe.ninja.")
 	
 	; option group start
-	GuiAddCheckbox("Use predicted item pricing (experimental).", "x337 yp+30 w280 h40", TradeOpts.UsePredictedItemPricing, "UsePredictedItemPricing", "UsePredictedItemPricingH")
+	GuiAddCheckbox("Open items on poe.ninja.", "x337 yp+25 w280 h20", TradeOpts.PoENinjaSearch, "PoENinjaSearch", "PoENinjaSearchH")
+	AddToolTip(PoENinjaSearchH, "Opens items on poe.ninja instead of poe.trade when using the ""Search (poe.trade)"" hotkey.`n`nOnly works on certain supported item types:`nDiv cards, prophecies, maps, uniques, essences, helmet enchants (have priority over item).")
+	
+	; option group start
+	GuiAddCheckbox("Use predicted pricing.", "x337 yp+25 w145 h20", TradeOpts.UsePredictedItemPricing, "UsePredictedItemPricing", "UsePredictedItemPricingH")
 	AddToolTip(UsePredictedItemPricingH, "Use predicted item pricing via machine-learning algorithms.`nReplaces the default search, works with magic/rare/unique items.`n`nProvided by poeprices.info.")
 
 	; option group start
-	GuiAddCheckbox("Predicted item pricing: Use feedback Gui.", "x337 yp+30 w280 h40", TradeOpts.UsePredictedItemPricingGui, "UsePredictedItemPricingGui", "UsePredictedItemPricingGuiH")
+	GuiAddCheckbox("Use feedback Gui.", "x482 yp+0 w120 h20", TradeOpts.UsePredictedItemPricingGui, "UsePredictedItemPricingGui", "UsePredictedItemPricingGuiH")
 	AddToolTip(UsePredictedItemPricingGuiH, "Use a Gui instead of the default tooltip to display results.`nYou can send some feedback to improve this feature.")
 
 	; header
@@ -641,34 +681,41 @@ CreateTradeSettingsUI()
 	GuiAddText("-------------------------------------------------------------", "x337 yp+6 w280 h20 0x0100 cDA4F49", "", "")
 
 	; option group start
-	GuiAddCheckbox("Normal mods", "x337 yp+11 w135 h30", TradeOpts.AdvancedSearchCheckMods, "AdvancedSearchCheckMods", "AdvancedSearchCheckModsH")
+	GuiAddCheckbox("Pre-Fill Min-Values", "x337 yp+16 w145 h20", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
+	AddToolTip(PrefillMinValueH, "Automatically fill the min-values in the advanced search GUI.")
+
+	GuiAddCheckbox("Pre-Fill Max-Values", "x482 yp0 w145 h20", TradeOpts.PrefillMaxValue, "PrefillMaxValue", "PrefillMaxValueH")
+	AddToolTip(PrefillMaxValueH, "Automatically fill the max-values in the advanced search GUI.")
+
+	; option group start
+	GuiAddCheckbox("Normal mods", "x337 yp+20 w135 h20", TradeOpts.AdvancedSearchCheckMods, "AdvancedSearchCheckMods", "AdvancedSearchCheckModsH")
 	AddToolTip(AdvancedSearchCheckModsH, "Selects all normal mods (no pseudo mods)`nwhen creating the advanced search GUI.")
 
-	GuiAddCheckbox("Total Ele Resistances", "x482 yp0 w145 h30", TradeOpts.AdvancedSearchCheckTotalEleRes, "AdvancedSearchCheckTotalEleRes", "AdvancedSearchCheckTotalEleResH")
+	GuiAddCheckbox("Total Ele Resistances", "x482 yp0 w145 h20", TradeOpts.AdvancedSearchCheckTotalEleRes, "AdvancedSearchCheckTotalEleRes", "AdvancedSearchCheckTotalEleResH")
 	AddToolTip(AdvancedSearchCheckTotalEleResH, "Selects the total elemental resistances pseudo mod`nwhen creating the advanced search GUI.")
 
 	; option group start
-	GuiAddCheckbox("Life", "x337 yp+30 w50 h30", TradeOpts.AdvancedSearchCheckTotalLife, "AdvancedSearchCheckTotalLife", "AdvancedSearchCheckTotalLifeH")
+	GuiAddCheckbox("Life", "x337 yp+20 w50 h20", TradeOpts.AdvancedSearchCheckTotalLife, "AdvancedSearchCheckTotalLife", "AdvancedSearchCheckTotalLifeH")
 	AddToolTip(AdvancedSearchCheckTotalLifeH, "Selects the total flat life pseudo mod or flat life mod and`n percent maximum increased life mod when creating the advanced search GUI.")
 
-	GuiAddCheckbox("ES Mod", "x390 yp0 w60 h30", TradeOpts.AdvancedSearchCheckES, "AdvancedSearchCheckES", "AdvancedSearchCheckESH")
+	GuiAddCheckbox("ES Mod", "x390 yp0 w60 h20", TradeOpts.AdvancedSearchCheckES, "AdvancedSearchCheckES", "AdvancedSearchCheckESH")
 	AddToolTip(AdvancedSearchCheckESH, "Selects the flat energy shield mod and percent maximum increased `nenergy shield mod when creating the advanced search GUI.")
 
-	GuiAddCheckbox("ES Defense Total", "x482 yp0 w135 h30", TradeOpts.AdvancedSearchCheckTotalES, "AdvancedSearchCheckTotalES", "AdvancedSearchCheckTotalESH")
+	GuiAddCheckbox("ES Defense Total", "x482 yp0 w135 h20", TradeOpts.AdvancedSearchCheckTotalES, "AdvancedSearchCheckTotalES", "AdvancedSearchCheckTotalESH")
 	AddToolTip(AdvancedSearchCheckTotalESH, "Selects the energy shield total defense, for example on `narmour pieces when creating the advanced search GUI.")
 
 	; option group start
-	GuiAddCheckbox("Elemental DPS", "x337 yp+30 w135 h30", TradeOpts.AdvancedSearchCheckEDPS, "AdvancedSearchCheckEDPS", "AdvancedSearchCheckEDPSH")
+	GuiAddCheckbox("Elemental DPS", "x337 yp+20 w135 h20", TradeOpts.AdvancedSearchCheckEDPS, "AdvancedSearchCheckEDPS", "AdvancedSearchCheckEDPSH")
 	AddToolTip(AdvancedSearchCheckEDPSH, "Selects elemental damage per second`nwhen creating the advanced search GUI.")
 
-	GuiAddCheckbox("Physical DPS", "x482 yp0 w135 h30", TradeOpts.AdvancedSearchCheckPDPS, "AdvancedSearchCheckPDPS", "AdvancedSearchCheckPDPSH")
+	GuiAddCheckbox("Physical DPS", "x482 yp0 w135 h20", TradeOpts.AdvancedSearchCheckPDPS, "AdvancedSearchCheckPDPS", "AdvancedSearchCheckPDPSH")
 	AddToolTip(AdvancedSearchCheckPDPSH, "Selects physical damage per second`nwhen creating the advanced search GUI.")
 
 	; option group start
-	GuiAddCheckbox("Minimum Item Level", "x337 yp+30 w135 h30", TradeOpts.AdvancedSearchCheckILVL, "AdvancedSearchCheckILVL", "AdvancedSearchCheckILVLH")
+	GuiAddCheckbox("Minimum Item Level", "x337 yp+20 w135 h20", TradeOpts.AdvancedSearchCheckILVL, "AdvancedSearchCheckILVL", "AdvancedSearchCheckILVLH")
 	AddToolTip(AdvancedSearchCheckILVLH, "Selects the items itemlevel as minimum itemlevel`nwhen creating the advanced search GUI.")
 
-	GuiAddCheckbox("Item Base", "x482 yp0 w135 h30", TradeOpts.AdvancedSearchCheckBase, "AdvancedSearchCheckBase", "AdvancedSearchCheckBaseH")
+	GuiAddCheckbox("Item Base", "x482 yp0 w135 h20", TradeOpts.AdvancedSearchCheckBase, "AdvancedSearchCheckBase", "AdvancedSearchCheckBaseH")
 	AddToolTip(AdvancedSearchCheckBaseH, "Selects the item base`nwhen creating the advanced search GUI.")
 
 	;Gui, Add, Link, x337 yp+43 w280 cBlue BackgroundTrans, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
@@ -809,7 +856,7 @@ UpdateTradeSettingsUI()
 		else if (keyName == "SearchLeague") {
 			GuiUpdateDropdownList(TradeFunc_GetDelimitedLeagueList(), keyVal, keyName)
 		}
-		else if (keyName == "CurrencySearchHave") {
+		else if (keyName == "CurrencySearchHave" || keyName == "CurrencySearchHave2") {
 			GuiUpdateDropdownList(TradeFunc_GetDelimitedCurrencyListString(), keyVal, keyName)
 		}
 		else {
@@ -942,20 +989,31 @@ TradeFunc_CheckBrowserPath(path, showMsg) {
 TradeFunc_ParseSearchFormOptions() {
 	FileRead, html, %A_ScriptDir%\temp\poe_trade_search_form_options.txt
 
-	RegExMatch(html, "i)(var)?\s*(items_types\s*=\s*{.*?})", match)
-	itemTypes := RegExReplace(match2, "i)items_types\s*=", "{""items_types"" :")
+	RegExMatch(html, "i)(var)?\s*(items_types\s*=\s*{.*?})", types)
+	itemTypes := RegExReplace(types2, "i)items_types\s*=", "{""items_types"" :")
 	itemTypes .= "}"
 	parsedJSON := JSON.Load(itemTypes)
 
 	availableLeagues := []
-	RegExMatch(html, "isU)select.*name=""league"".*<\/select>", match)
+	RegExMatch(html, "isU)<select.*name=""league"".*<\/select>", leagues)
 	Pos := 0
-	While Pos := RegExMatch(match, "iU)option.*value=""(.*)"".*>", option, Pos + (StrLen(option) ? StrLen(option) : 1)) {
+	While Pos := RegExMatch(leagues, "iU)option.*value=""(.*)"".*>", option, Pos + (StrLen(option) ? StrLen(option) : 1)) {
 		availableLeagues.push(option1)
 	}
+	
+	exactCurrencyOptions := {}
+	exactCurrencyOptions.poetrade := {}
+	RegExMatch(html, "i)(<select.*?name=""buyout_currency"".*<\/select>)", currencies)
+	Pos := 0
+	While Pos := RegExMatch(currencies1, "iU)option.*value=""(.*)"".*>(.*)<\/option>", option, Pos + (StrLen(option) ? StrLen(option) : 1)) {
+		If (not RegExMatch(option1, "i)^(1|0)$") and option1) {
+			exactCurrencyOptions.poetrade[RegExReplace(option2, "i)&#39;", "'")] := option1	
+		}		
+	}	
 
 	TradeGlobals.Set("ItemTypeList", parsedJSON.items_types)
 	TradeGlobals.Set("GemNameList", parsedJSON.items_types.gem)
+	TradeGlobals.Set("ExactCurrencySearchOptions", exactCurrencyOptions)
 	TradeGlobals.Set("AvailableLeagues", availableLeagues)
 	itemTypes :=
 	availableLeagues :=
@@ -1481,7 +1539,8 @@ TradeFunc_GetOSInfo() {
 TradeFunc_StartSplashScreen() {
 	;SplashTextOn, , 20, PoE-TradeMacro, Initializing script...
 	welcome := chr(27426)chr(36814)	; 欢迎
-	SplashTextOn, 300, 20, PoE-TradeMacro, % "Welcoming the new overlords (" welcome ")..."
+	;SplashTextOn, 300, 20, PoE-TradeMacro, % "Welcoming the new overlords (" welcome ")..."
+	SplashTextOn, 300, 20, PoE-TradeMacro, % "Paying respects to the Cynical Brit..."
 }
 
 TradeFunc_StopSplashScreen() {

@@ -1,111 +1,123 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.10.0
+================================================================================================
+* Fixed an issue with event leagues, where these leagues not being available anymore would fail to cause the macro to automatically fall back to the permanent/challenge leagues without user interaction.
+* Made some preparations to parse the new Vaal Gems in 3.3.0.
+* Reverted the change of removing the pathof.info hotkey (ctrl + alt + c), some of you wanted it back. The poe-antiquary hotkey introduced in the last update was changed to ctrl + alt + a because it took the removed hotkeys place.
+* Added an option to open supported items on poe.ninja instead of poe.trade (ctrl + q).
+* Implemented a secondary "have" currency, used when "want" equals primary "have". This refers to the "Currency Search" and "Secondary Currency" dropdowns in the settings menu, used for currency searches. For example, if chaos is selected as the "have" currency, when searching for chaos price ("want"), a useless chaos:chaos listing is produced. With this patch, a secondary "have" currency can be defined, which is used when "want" currency equals the primary "have" currency.
+* Added an option to use "exact currency search" on poe.trade, this only works when using the default or advanced search and uses the "Currency Search" and "Secondary Currency" dropdowns in the settings menu to select the primaray and fallback currency for this search. If the primary search returns no results, the search gets repeated with the fallback currency.
+* Added ItemInfo details for prophecies. Unfortunately this still only works for sealed prophecies, not the ones on the prophecy screen/menu. These details include the seal cost, objective and reward, basically what you can find on the wiki.
+* Added Dvorak keyboard layout support.
+* Improved support for windows high-contrast/custom themes (Gui window colors).
+
 2.9.0
 ================================================================================================
-Changed behaviour of advanced searchs ilvl handling for shaper/elder items, the ilvl is now always filled and selected.
-Replaced the hotkey to open an advanced affix lookup on http://pathof.info (ctrl + alt +c) with a hotkey to open items on http://poe-antiquary.xyz, if available.
-Added a new hotkey (ctrl + r when hovering over currency) to open a dialog to create notes for premium stash tabs. This dialog let's you set sell/receive amount and currency type or a ratio and uses the currency short-hands/IDs used by all trade sites to parse currency trade ratios/prices. Just give it a try to see what it does.
-Properly supported Abyssal Sockets on items, especially unique items (advanced search). Items like Bubonic Trail will now have a checkbox to include the number of sockets, already selected. This didn't work before because the item mod wasn't supported on poe.trade as a mod but as a seperate option instead.
+* Changed behaviour of advanced searchs ilvl handling for shaper/elder items, the ilvl is now always filled and selected.
+* Replaced the hotkey to open an advanced affix lookup on http://pathof.info (ctrl + alt +c) with a hotkey to open items on http://poe-antiquary.xyz, if available.
+* Added a new hotkey (ctrl + r when hovering over currency) to open a dialog to create notes for premium stash tabs. This dialog let's you set sell/receive amount and currency type or a ratio and uses the currency short-hands/IDs used by all trade sites to parse currency trade ratios/prices. Just give it a try to see what it does.
+* Properly supported Abyssal Sockets on items, especially unique items (advanced search). Items like Bubonic Trail will now have a checkbox to include the number of sockets, already selected. This didn't work before because the item mod wasn't supported on poe.trade as a mod but as a seperate option instead.
 
-Fixed searching Elder maps not working. 
-Fixed the broken parsing for average/median values (price results).
-Various other small fixes.
+* Fixed searching Elder maps not working. 
+* Fixed the broken parsing for average/median values (price results).
+* Various other small fixes.
 
 2.8.0
 ================================================================================================
-Added support for Beast Trading. This initial implementation may be lacking but it's late in the night and it's still not quite sure how all aspects of this should be handled. Feel free to give suggestions for improvements.
-Fixed an issue with pseudomods where totem and minion resitances where added as player resistances (jewels).
-Fixed an issue where Shaped Vault maps weren't found since their base doesn't exist on poe.trade.
+* Added support for Beast Trading. This initial implementation may be lacking but it's late in the night and it's still not quite sure how all aspects of this should be handled. Feel free to give suggestions for improvements.
+* Fixed an issue with pseudomods where totem and minion resitances where added as player resistances (jewels).
+* Fixed an issue where Shaped Vault maps weren't found since their base doesn't exist on poe.trade.
 
-ItemInfo:
-	"Adds # to # damage" mods now have an additional line that displays the average values of the damage ranges.
-	The "total" column of added damage mods has been changed. Suppose there is a mod with three brackets: 1-3 to 7-9, 11-13 to 17-19, 21-23 to 27-29. It used to display as "1-3|27-29", the worst lower range and the best upper range. It now displays "1-23|7-29", the range over all lower values and the range over all upper values.
+* ItemInfo:
+** "Adds # to # damage" mods now have an additional line that displays the average values of the damage ranges.
+** The "total" column of added damage mods has been changed. Suppose there is a mod with three brackets: 1-3 to 7-9, 11-13 to 17-19, 21-23 to 27-29. It used to display as "1-3|27-29", the worst lower range and the best upper range. It now displays "1-23|7-29", the range over all lower values and the range over all upper values.
 
 2.7.7
 ================================================================================================
-Fixed sceptres using their base type "one handed maces" on poe.trade instead of "sceptres" as type.
-Fixed an issue where some shaper/elder mods where falsely identified as "implicit mods" on poe.trade.
-Changed the default hotkey for the function to open items on peoapp to "ctrl + shift + q" to since using "ctrl + alt + q" prevented typing the @ character on some keyboard layouts. You have to manually change your hotkey in the settings though if you have that issue currently.
-Fixed some searches falsely including unique items in their results when the searched item is non-unique.
-Fixed a rare issue that caused the cURL requests to fail for some people. 
+* Fixed sceptres using their base type "one handed maces" on poe.trade instead of "sceptres" as type.
+* Fixed an issue where some shaper/elder mods where falsely identified as "implicit mods" on poe.trade.
+* Changed the default hotkey for the function to open items on peoapp to "ctrl + shift + q" to since using "ctrl + alt + q" prevented typing the @ character on some keyboard layouts. You have to manually change your hotkey in the settings though if you have that issue currently.
+* Fixed some searches falsely including unique items in their results when the searched item is non-unique.
+* Fixed a rare issue that caused the cURL requests to fail for some people. 
 
 2.7.6
 ================================================================================================
-Added simple support for opening an item on poeapp.com, the default hotkey is ctrl + alt + q and can be changed in the settings menu.
-Updated all data files (uniques etc.), since that data comes from the wiki and the wiki was broken a while ago there where some issues updating these files.
-Fixed a few issues with unique flasks and certain mods on other uniqe items not working with the advanced search.
-Added full support for unique items having variations. You can now use the advanced search on items like Vessel of Vinktar and search for the specific version that you have.
-Fixed the buyout only option not working anymore because of changes on poe.trades side.
-Improved the script updater and it's error handling; fixed a few uncommon issues.
-Small improvements to the requests to poeprices.info.
+* Added simple support for opening an item on poeapp.com, the default hotkey is ctrl + alt + q and can be changed in the settings menu.
+* Updated all data files (uniques etc.), since that data comes from the wiki and the wiki was broken a while ago there where some issues updating these files.
+* Fixed a few issues with unique flasks and certain mods on other uniqe items not working with the advanced search.
+* Added full support for unique items having variations. You can now use the advanced search on items like Vessel of Vinktar and search for the specific version that you have.
+* Fixed the buyout only option not working anymore because of changes on poe.trades side.
+* Improved the script updater and it's error handling; fixed a few uncommon issues.
+* Small improvements to the requests to poeprices.info.
 
-ItemInfo:
-	Updated and rewritten information for maps.
-	Updated Uniques and Divination Cards with wiki information.
-	NO (!) support for Elder/Shaper mods. Waiting on GGG's advanced tier info for the clipboard, for now.
-	Slight parsing and display changes.
-	Parsing fix for shaped maps.
-	Fixed most cases where long mods with linebreaks would cause issues.
-	Added Gem Quality information for the three new v3.2 gems.	
+* ItemInfo:
+** Updated and rewritten information for maps.
+** Updated Uniques and Divination Cards with wiki information.
+** NO (!) support for Elder/Shaper mods. Waiting on GGG's advanced tier info for the clipboard, for now.
+** Slight parsing and display changes.
+** Parsing fix for shaped maps.
+** Fixed most cases where long mods with linebreaks would cause issues.
+** Added Gem Quality information for the three new v3.2 gems.	
 	
 2.7.5
 ================================================================================================
-Fixed a rare cURL request issue.
-The windows for the advanced search and custom search can now be submitted (starting the search) by pressing "Enter".
-Fixed a small (graphical) UI issues.
+* Fixed a rare cURL request issue.
+* The windows for the advanced search and custom search can now be submitted (starting the search) by pressing "Enter".
+* Fixed a small (graphical) UI issues.
 
 2.7.4
 ================================================================================================
-Fixed the predicted pricing request for the hardcore abyss league.
-Added some options to use and set Gem XP in searches.
+* Fixed the predicted pricing request for the hardcore abyss league.
+* Added some options to use and set Gem XP in searches.
 
 2.7.3
 ================================================================================================
-Fixed an issue that caused the predicted pricing being used for the advanced search and item age check.
+* Fixed an issue that caused the predicted pricing being used for the advanced search and item age check.
 
-ItemInfo:
-	Included updates from the TradeMacro. Most importantly the "AdditionalMacros" now have a tab in the settings menu.
-	Updates for certain 3.1 content:
-		All new general item mods should be included (mostly new T1 mods)
-		Full support for Abyss Jewels
-		Updated Gem Quality
-		Included some of the new uniques. More will follow once the wiki situation is sorted out or at least better.
+* ItemInfo:
+** Included updates from the TradeMacro. Most importantly the "AdditionalMacros" now have a tab in the settings menu.
+** Updates for certain 3.1 content:
+***  All new general item mods should be included (mostly new T1 mods)
+***  Full support for Abyss Jewels
+***  Updated Gem Quality
+***  Included some of the new uniques. More will follow once the wiki situation is sorted out or at least better.
 
 2.7.2
 ================================================================================================
-Fixed an issue with the poeprices.info logger.
-Fixed the poeprices paypal link.
+* Fixed an issue with the poeprices.info logger.
+* Fixed the poeprices paypal link.
 
 2.7.1
 ================================================================================================
-Added a log file "<TradeMacroFolder>\temp\poeprices_log.txt" for failed requests to poeprices.info.
-	Instructions were to report those issues are inside.
-Fixed an issue with the send feedback request to poeprices.info.
+* Added a log file "<TradeMacroFolder>\temp\poeprices_log.txt" for failed requests to poeprices.info.
+** Instructions were to report those issues are inside.
+*Fixed an issue with the send feedback request to poeprices.info.
 
 2.7.0
 ================================================================================================
-Implemented a predicted item pricing/search using machine learning algorithms:
-	This feature uses the ML pricing from poeprices.info.
-	For the moment it will only work with rare items, magic items will likely be enabled in the near future.
-	This feature replaces the default search (ctrl + d) but is optional and can be disabled again in the settings.
-	Be aware that this feature could return correct prices, but also be completely off the mark, improving it needs the help of the community.
-Added poedb.tw as an alternative to the PoE Wiki (open item on wiki hoteky). This is a toggle option and has to be enabled in the settings ("general" section).
-Fixed the new maps not working with the stash highlight hotkey.
+* Implemented a predicted item pricing/search using machine learning algorithms:
+** This feature uses the ML pricing from poeprices.info.
+** For the moment it will only work with rare items, magic items will likely be enabled in the near future.
+** This feature replaces the default search (ctrl + d) but is optional and can be disabled again in the settings.
+** Be aware that this feature could return correct prices, but also be completely off the mark, improving it needs the help of the community.
+* Added poedb.tw as an alternative to the PoE Wiki (open item on wiki hoteky). This is a toggle option and has to be enabled in the settings ("general" section).
+* Fixed the new maps not working with the stash highlight hotkey.
  
 2.6.3
 ================================================================================================
-Fixed an issue that caused the new maps not being searched correctly.
+* Fixed an issue that caused the new maps not being searched correctly.
 
 2.6.2
 ================================================================================================
-Added the new mods available on poe.trade.
-Fixed some issues with those new mods (abyss jewels/elder/shaper items).
-Updated data files (enchantments/corruptions/uniques.
+* Added the new mods available on poe.trade.
+* Fixed some issues with those new mods (abyss jewels/elder/shaper items).
+* Updated data files (enchantments/corruptions/uniques.
 
 2.6.1
 ================================================================================================
-Added parsing for the new bases (elder/shaper items and abyss jewels/Stygian Vise belt).
-The search options/parameters for these bases should work, may need some fixing though when the new patch is live. Be careful at the start when pricing these bases.
+* Added parsing for the new bases (elder/shaper items and abyss jewels/Stygian Vise belt).
+* The search options/parameters for these bases should work, may need some fixing though when the new patch is live. Be careful at the start when pricing these bases.
 
 2.6.0
 ================================================================================================

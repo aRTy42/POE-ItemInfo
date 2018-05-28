@@ -1,7 +1,6 @@
 /*
-	Custom macro main file. Don't delete it. Using and including this file is important. If you don't want to edit the 
-	technical AdditionalMacro.txt file, you need this file and the already defined hotkey label. 
-	Epsecially if you want to execute any personal code outside of hotkey labels.
+	Custom macro main file. Don't delete it. Using and including this file is important. 
+	You need this file and the already defined hotkey label, especially if you want to execute any personal code outside of hotkey labels.
 	
 	**TLDR**:
 		You can add your own code below, use the existing Label.
