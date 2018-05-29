@@ -194,10 +194,9 @@ TradeFunc_OpenWikiHotkey(priceCheckTest = false, itemData = "") {
 			} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
 				UrlAffix := Item.Name
 			} Else {
-				UrlAffix := Item.BaseType
+				UrlAffix := Item.BaseName
 			}
-		}
-		
+		}		
 
 		If (StrLen(UrlAffix) > 0) {
 			If (TradeOpts.WikiAlternative) {
@@ -2271,7 +2270,7 @@ TradeFunc_ParseAlternativeCurrencySearch(name, payload) {
 }
 
 ; Calculate average and median price of X listings
-TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = ""){
+TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = "") {
 	itemCount := 1
 	prices := []
 	average := 0
@@ -2334,12 +2333,28 @@ TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = ""){
 		errorMsg := "Couldn't find the chaos equiv. value for " error " item(s). Please report this."
 	}
 
-	; calculate average and median prices
+	; calculate average and median prices (truncated median, too)	
 	If (prices.MaxIndex() > 0) {
 		; average
 		average := average / (itemCount - 1)
-
-		; median
+		
+		; truncated mean
+		trimPercent := 20
+		topTrim	:= prices.MaxIndex() - prices.MaxIndex() * (trimPercent / 100)
+		bottomTrim:= prices.MaxIndex() * (trimPercent / 100)
+		avg := 0
+		avgCount := 0
+		
+		Loop, % prices.MaxIndex() {
+			If (A_Index <= bottomTrim or A_Index >= topTrim) {
+				continue
+			}
+			avg += prices[A_Index]
+			avgCount++
+		}
+		truncMean := Round(avg / avgCount, 2)
+		
+		; median		
 		If (prices.MaxIndex()&1) {
 			; results count is odd
 			index1 := Floor(prices.MaxIndex()/2)
@@ -2359,14 +2374,25 @@ TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = ""){
 		}
 
 		length := (StrLen(average) > StrLen(median)) ? StrLen(average) : StrLen(median)
-		Title .= "Average price in chaos: " StrPad(average, length, "left") " (" prices.MaxIndex() " results"
+		desc1 := "Average price: "
+		desc2 := "Trimmed Mean (" trimPercent "%):"
+		desc3 := "Median price: "
+		dlength := (dlength > StrLen(desc2)) ? StrLen(desc1) : StrLen(desc2)
+		dlength := (dlength > StrLen(desc3)) ? dlength : StrLen(desc3)		
+		
+		Title .= StrPad(desc1, dlength, "right") StrPad(average, length, "left") " chaos (" prices.MaxIndex() " results"
+		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed by Acc. Filter" : ""
+		Title .= ") `n"
+		
+		Title .= StrPad(desc2, dlength, "right") StrPad(truncMean, length, "left") " chaos (" prices.MaxIndex() " results"
 		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed by Acc. Filter" : ""
 		Title .= ") `n"
 
-		Title .= "Median  price in chaos: " StrPad(median, length, "left") " (" prices.MaxIndex() " results"
+		Title .= StrPad(desc3, dlength, "right") StrPad(median, length, "left") " chaos (" prices.MaxIndex() " results"
 		Title .= (NoOfItemsSkipped > 0) ? ", " NoOfItemsSkipped " removed by Acc. Filter" : ""
 		Title .= ") `n`n"
 	}
+	
 	Return Title
 }
 
@@ -2504,7 +2530,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
 
-	seperatorBig := "`n---------------------------------------------------------------------`n"
+	seperatorBig := "`n-----------------------------------------------------------------------`n"
 
 	; Target HTML Looks like the ff:
      ; <tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008"
@@ -2613,7 +2639,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 
 	NoOfItemsToShow := TradeOpts.ShowItemResults
 	; add table headers to tooltip
-	Title .= TradeFunc_ShowAcc(StrPad("Account",10), "|")
+	Title .= TradeFunc_ShowAcc(StrPad("Account",12), "|")
 	Title .= StrPad("IGN",20)
 	Title .= StrPad(StrPad("| Price ", 19, "right") . "|",20,"left")
 
@@ -2631,7 +2657,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	Title .= "`n"
 
 	; add table head underline
-	Title .= TradeFunc_ShowAcc(StrPad("----------",10), "-")
+	Title .= TradeFunc_ShowAcc(StrPad("------------",12), "-")
 	Title .= StrPad("--------------------",20)
 	Title .= StrPad("--------------------",19,"left")
 	If (Item.IsGem) {
@@ -2688,10 +2714,10 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 		}
 
 		; trim account and ign
-		subAcc := TradeFunc_TrimNames(AccountName, 10, true)
+		subAcc := TradeFunc_TrimNames(AccountName, 12, true)
 		subIGN := TradeFunc_TrimNames(IGN, 20, true)
 
-		Title .= TradeFunc_ShowAcc(StrPad(subAcc,10), "|")
+		Title .= TradeFunc_ShowAcc(StrPad(subAcc,12), "|")
 		Title .= StrPad(subIGN,20)
 
 		; buyout price

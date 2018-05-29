@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.10.1
+================================================================================================
+Hotfixed an issue introduced with the last update where numbers where incorrectly formatted as hexadecimal instead of integer, breaking the item parsing.
+Added a trimmed mean value in addition to the average and median values to the pricing result tooltip.
+Fixed wiki urls for item bases.  
+
 2.10.0
 ================================================================================================
 * Fixed an issue with event leagues, where these leagues not being available anymore would fail to cause the macro to automatically fall back to the permanent/challenge leagues without user interaction.

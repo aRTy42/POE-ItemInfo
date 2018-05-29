@@ -749,7 +749,7 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("Search (poeapp.com):", "x657 yp+32 w165 h20 0x0100", TradeOpts.OpenSearchOnPoEAppEnabled, "OpenSearchOnPoEAppEnabled", "OpenSearchOnPoEAppEnabledH")
 	AddToolTip(OpenSearchOnPoEAppEnabledH, "Open your search on poeapp.com instead of showing`na tooltip with results.")
 	GuiAddHotkey(TradeOpts.OpenSearchOnPoEAppHotKey, "x+1 yp-2 w124 h20", "OpenSearchOnPoEAppHotKey", "OpenSearchOnPoEAppHotKeyH")
-	AddToolTip(OpenSearchOnPoEAppHotKeyH, "Press key/key combination.`nDefault: ctrl + alt + q")
+	AddToolTip(OpenSearchOnPoEAppHotKeyH, "Press key/key combination.`nDefault: ctrl + shift + q")
 
 	GuiAddCheckbox("Open Item (Wiki):", "x657 yp+32 w165 h20 0x0100", TradeOpts.OpenWikiEnabled, "OpenWikiEnabled", "OpenWikiEnabledH")
 	AddToolTip(OpenWikiEnabledH, "Open your items page on the PoE-Wiki.")

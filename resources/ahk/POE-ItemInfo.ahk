@@ -11597,11 +11597,13 @@ TogglePOEItemScript()
 }
 
 GetScanCodes() {
+	f := A_FormatInteger
 	SetFormat, Integer, H
 	WinGet, WinID,, A
 	ThreadID:=DllCall("GetWindowThreadProcessId", "UInt", WinID, "UInt", 0)
 	InputLocaleID:=DllCall("GetKeyboardLayout", "UInt", ThreadID, "UInt")	
-	
+	SetFormat, Integer, %f%
+
 	; example results: 0xF0020809/0xF01B0809/0xF01A0809
 	; 0809 is for "English United Kingdom"
 	; 0xF002 = "Dvorak"
@@ -11614,7 +11616,6 @@ GetScanCodes() {
 		project := Globals.Set("ProjectName")
 		msg := "Using Dvorak keyboard layout mode!`n`nMsgBox closes after 15s."
 		MsgBox, 0, %project%, %msg%, 15
-		
 		Return sc
 	} Else {
 		; default
