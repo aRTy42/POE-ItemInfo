@@ -33,14 +33,16 @@ Never completely trust any price checking tool. Inform yourself about what this 
 
 |Shortcut|Description|
 |---	|---	|
-| ctrl+c      | See item info (via PoE-ItemInfo). 
-| ctrl+d      | Search item on poe.trade.
-| ctrl+alt+d  | Advanced item search. 
-| ctrl+i      | Opens a text input where you can type an item name to search for.
-| ctrl+w      | Open the items wiki page. 
-| ctrl+q      | Open the item search on poe.trade instead of showing a tooltip with results.
-| ctrl+e      | Show item age (own listed items).
-| ctrl+l      | Switch leagues.
+| `ctrl+c`      | See item info (via PoE-ItemInfo). 
+| `ctrl+d`      | Search item on poe.trade.
+| `ctrl+alt+d`  | Advanced item search (select mods). 
+| `ctrl+i`      | Opens a text input where you can type an item name to search for.
+| `ctrl+w`      | Open the items wiki page. 
+| `ctrl+q`      | Open the item search on poe.trade instead of showing a tooltip with results.
+| `ctrl+shift+d`  | Open an item on poeapp.com.
+| `ctrl+e`      | Show item age (own listed items if account name is specified in settings).
+| `ctrl+l`      | Switch leagues.
+| `ctrl+r`      | Copies an item note for premium tabs to your clipboard that creates a valid currency ratio on all trade sites.
 
 #### Additional Macros ####
 
