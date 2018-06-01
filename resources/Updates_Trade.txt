@@ -2,7 +2,7 @@ The following is a list of what has been updated, starting with 1.1.0
 
 2.10.2
 ================================================================================================
-* Changed the default hotkey for the currency ration funtion to "alt + r" since the current "ctrl + r" overwrites the hideout decoration rotate hotkey. This won't change the hotkey for already installed scripts.
+* Changed the default hotkey for the currency ratio function to "alt + r" since the current "ctrl + r" overwrites the hideout decoration rotate hotkey. This won't change the hotkey for already installed scripts.
 * The currency ratio GUI can now also be closed by pressing escape.
 
 * ItemInfo:
