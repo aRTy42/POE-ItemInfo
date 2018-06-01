@@ -7,6 +7,8 @@ from aRTy, Eruyome
 
 * Updated Uniques, Divination Cards, Maps and Gem Quality info
 * Bugfix: Quantity on shaper amulets is no longer mistaken for a legacy quantity roll.
+* Added AdditionalMacro for http://poe-antiquary.xyz, default: Ctrl + Alt + A
+* Included technical changes from the TradeMacro
 
 3.2.00
 ================================
