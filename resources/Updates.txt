@@ -1,6 +1,13 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy (GitHub/PoE Account: aRTy42, Reddit: -aRTy-)
 
+3.3.00
+================================
+from aRTy, Eruyome
+
+* Updated Uniques, Divination Cards, Maps and Gem Quality info
+* Bugfix: Quantity on shaper amulets is no longer mistaken for a legacy quantity roll.
+
 3.2.00
 ================================
 from aRTy
