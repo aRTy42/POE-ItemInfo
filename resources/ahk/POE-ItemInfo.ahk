@@ -5219,7 +5219,15 @@ ParseAffixes(ItemDataAffixes, Item)
 		
 		IfInString, A_LoopField, increased Quantity of Items found
 		{
-			LookupAffixAndSetInfoLine("data\IncrQuantity.txt", "Suffix", ItemLevel, CurrValue)
+			If (Item.IsShaperBase)
+			{
+				File := ["75|4-7","85|8-10"]
+			}
+			Else
+			{
+				File := "data\IncrQuantity.txt"
+			}
+			LookupAffixAndSetInfoLine(File, "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
 		IfInString, A_LoopField, Life gained on Kill

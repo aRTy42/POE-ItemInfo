@@ -1,10 +1,19 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.10.2
+================================================================================================
+* Changed the default hotkey for the currency ration funtion to "alt + r" since the current "ctrl + r" overwrites the hideout decoration rotate hotkey. This won't change the hotkey for already installed scripts.
+* The currency ratio GUI can now also be closed by pressing escape.
+
+* ItemInfo:
+** Updated Uniques, Divination Cards, Maps and Gem Quality info
+** Bugfix: Quantity on shaper amulets is no longer mistaken for a legacy quantity roll.
+
 2.10.1
 ================================================================================================
-Hotfixed an issue introduced with the last update where numbers where incorrectly formatted as hexadecimal instead of integer, breaking the item parsing.
-Added a trimmed mean value in addition to the average and median values to the pricing result tooltip.
-Fixed wiki urls for item bases.  
+* Hotfixed an issue introduced with the last update where numbers where incorrectly formatted as hexadecimal instead of integer, breaking the item parsing.
+* Added a trimmed mean value in addition to the average and median values to the pricing result tooltip.
+* Fixed wiki urls for item bases.  
 
 2.10.0
 ================================================================================================

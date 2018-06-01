@@ -10,12 +10,12 @@ Grants Level # Anger Skill
 #% Chance to Block
 You can catch Corrupted Fish
 Cannot be Knocked Back
-Enemies Cannot Leech Life From You
+Enemies Cannot Leech Life From you
 #% increased Cast Speed
 #% chance to Avoid being Frozen
 #% chance to Avoid being Ignited
 #% additional Chance to receive a Critical Strike
-#% chance to Dodge Attacks
+#% chance to Dodge Attack Hits
 #% chance to Cause Monsters to Flee
 #% increased Chaos Damage for each Equipped Corrupted Item
 +#% to Chaos Resistance
@@ -68,10 +68,10 @@ Grants Level # Purity of Fire Skill
 Grants Level # Purity of Lightning Skill
 Grants Level # Purity of Elements Skill
 #% reduced Character Size
-#% reduced Chill Duration on You
-#% reduced Freeze Duration on You
-#% reduced Ignite Duration on You
-#% reduced Shock Duration on You
+#% reduced Chill Duration on you
+#% reduced Freeze Duration on you
+#% reduced Ignite Duration on you
+#% reduced Shock Duration on you
 You cannot be Cursed with Silence
 Socketed Skill Gems get a #% Mana Multiplier
 +# to Level of Socketed Vaal Gems
@@ -91,8 +91,119 @@ Socketed Gems are supported by Level # Multistrike
 Socketed Gems are supported by Level # Stun
 Socketed Gems are supported by Level # Elemental Damage with Attacks
 Grants Level # Temporal Chains Skill
++# Armour while stationary
+Adds # to # Cold Damage to Spells and Attacks
+Adds # to # Cold Damage to Bow Attacks
++# to Global Evasion Rating while moving
+Adds # to # Fire Damage to Spells and Attacks
+Adds # to # Fire Damage to Bow Attacks
+Adds # to # Lightning Damage to Spells and Attacks
+Adds # to # Lightning Damage to Bow Attacks
+Skills Chain +# times
++#% to Critical Strike Multiplier during any Flask Effect
+#% additional Physical Damage Reduction while stationary
+Skills fire an additional Projectile
++#% to all Elemental Resistances
+Cannot be Ignited
+Cannot be Blinded
+Cannot be Poisoned
+Bleeding cannot be inflicted on you
+20% chance to cause Bleeding on Hit #% increased Attack Damage against Bleeding Enemies
+#% chance to gain an Endurance Charge when you Stun an Enemy
+#% chance to Fortify on Melee hit
+#% chance to gain a Frenzy Charge on Kill
+#% chance to gain Onslaught for 4 seconds on Kill
+#% chance to gain a Power Charge on Critical Strike
+#% chance to Dodge Spell Hits
+Corrupted Blood cannot be inflicted on you
+Curse Enemies with Level # Despair on Hit
+Curse Enemies with Level # Enfeeble on Hit
+Grants Level # Despair Skill
+#% chance to Dodge Attack Hits while moving
+#% chance to Dodge Spell Hits while moving
+Damage Penetrates #% Elemental Resistances
+Gain a Frenzy Charge after Spending a total of # Mana
++#% to Global Critical Strike Multiplier
+You cannot be Hindered
+#% increased Effect of non-Damaging Ailments on Enemies
+Attacks have +#% to Critical Strike Chance
+#% increased Attack Speed during any Flask Effect
+Anger has #% increased Aura Effect
+Determination has #% increased Aura Effect
+Discipline has #% increased Aura Effect
+Grace has #% increased Aura Effect
+Hatred has #% increased Aura Effect
+Wrath has #% increased Aura Effect
+#% increased Burning Damage
+#% increased Cast Speed during any Flask Effect
+#% increased Effect of Chill
+#% increased Global Critical Strike Chance
+#% increased Critical Strike Chance during any Flask Effect
+#% increased Damage
+#% increased Damage over Time
+#% increased Dexterity (4-6)% increased Strength
+#% increased maximum Energy Shield
+#% increased Global Physical Damage
+#% increased Intelligence (4-6)% increased Dexterity
+#% increased maximum Life
+#% of Life Regenerated per second
+#% increased Movement Speed during any Flask Effect
+Projectiles deal #% increased Damage for each time they have Chained
+Projectiles deal #% increased Damage for each Enemy Pierced
+#% increased Effect of Shock
+Spells have +#% to Critical Strike Chance
+#% increased Spell Damage
+#% increased Strength (4-6)% increased Intelligence
+#% increased Quantity of Items found
+#% increased Rarity of Items found
++# to Level of Socketed Cold Gems
++# to Level of Socketed Fire Gems
++# to Level of Socketed Lightning Gems
+Adds # to # Cold Damage
+Adds # to # Fire Damage
+Adds # to # Lightning Damage
+Adds # to # Physical Damage
++#% Chance to Block
+#% increased Critical Strike Chance
+#% increased Physical Damage
+You cannot be Maimed
++#% to maximum Block Chance
+#% of Block Chance applied to Spells
+Gain #% of Physical Damage as Extra Cold Damage
+Gain #% of Physical Damage as Extra Fire Damage
+Gain #% of Physical Damage as Extra Lightning Damage
+#% of Physical Damage from Hits taken as Chaos Damage
+#% of Physical Damage from Hits taken as Cold Damage
+#% of Physical Damage from Hits taken as Fire Damage
+#% of Physical Damage from Hits taken as Lightning Damage
+Point Blank
+#% reduced Chaos Damage taken
+#% reduced Cold Damage taken
+#% reduced Area Damage taken from Hits
+#% reduced Damage taken from Projectiles
+You take #% reduced Extra Damage from Critical Strikes
+#% reduced Fire Damage taken
+#% reduced Lightning Damage taken
+#% reduced Mana Reserved
+# Life Regenerated per second while moving
+Resolute Technique
++# to Level of Socketed AoE Gems
++# to Level of Socketed Aura Gems
++# to Level of Socketed Curse Gems
++# to Level of Socketed Duration Gems
++# to Level of Socketed Projectile Gems
++# to Level of Socketed Trap or Mine Gems
++# to Level of Socketed Warcry Gems
+Socketed Gems are supported by Level # Blind
+Socketed Gems are Supported by Level # Blood Magic
+Socketed Gems are supported by Level # Faster Projectiles
+Socketed Gems are Supported by Level # Fortify
+Socketed Gems are Supported by Level # Life Gain On Hit
+Socketed Gems are Supported by Level # Onslaught
+Socketed Gems are Supported by Level # Reduced Mana
+#% chance to gain Unholy Might for 3 seconds on Kill
+#% increased Elemental Damage with Attack Skills
+Grants Level # Wrath Skill
 #% increased Vaal Skill Damage
 Grants Level # Vitality Skill
 Grants Level # Vulnerability Skill
-#% increased Elemental Damage with Attack Skills
-Grants Level # Wrath Skill

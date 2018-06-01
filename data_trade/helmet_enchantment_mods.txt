@@ -17,7 +17,8 @@ Animated Guardians deal #% increased Damage
 Animated Weapons deal #% increased Damage
 #% increased Animate Weapon Duration
 #% increased Arc Damage
-Arc Chains an additional # times
+Arc deals #% increased Damage for each time it has Chained
+Arc Chains an additional time
 Arc has +#% chance to Shock
 #% increased Arctic Armour Buff Effect
 #% reduced Arctic Armour Mana Reservation
@@ -26,6 +27,7 @@ Arc has +#% chance to Shock
 #% increased Arctic Breath Area of Effect
 #% increased Assassin's Mark Curse Effect
 #% increased Assassin's Mark Duration
+Ball Lightning fires an additional Projectile
 #% increased Ball Lightning Damage
 #% reduced Ball Lightning Projectile Speed
 #% increased Ball Lightning Area of Effect
@@ -34,9 +36,12 @@ Arc has +#% chance to Shock
 Barrage fires an additional Projectile
 #% increased Bear Trap Cooldown Recovery Speed
 #% increased Bear Trap Damage
+Enemies affected by Bear Trap take #% increased Damage from Trap or Mine Hits
+Bladefall has an additional Volley
 #% increased Bladefall Critical Strike Chance
 #% increased Bladefall Damage
 #% increased Bladefall Area of Effect
+Blade Vortex has +#% to Critical Strike Multiplier for each blade
 #% increased Blade Vortex Spell Damage
 #% increased Blade Vortex Duration
 #% increased Blade Vortex Area of Effect
@@ -67,11 +72,12 @@ Burning Arrow has +#% chance to Ignite
 +#% to Chaos Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Chaos Golems
 #% increased Blade Flurry Damage
-#% chance to Dodge Attacks at Maximum Blade Flurry stages
+#% chance to Dodge Attack Hits while at maximum Blade Flurry stages
 #% increased Blade Flurry Area of Effect
 #% increased Charged Dash Damage
-#% chance to Dodge Attacks if you have finished Channelling Charged Dash Recently
-+# Radius of Charged Dash's final Damage Area
+#% chance to Dodge Attack Hits if you have finished Channelling Charged Dash Recently
+Charged Dash has #% more Movement Speed
+Charged Dash has +# to Radius of each Wave's last damage Area
 #% reduced Clarity Mana Reservation
 #% increased Cleave Attack Speed
 #% increased Cleave Damage
@@ -114,12 +120,14 @@ Detonate Dead has a #% chance to detonate an additional Corpse
 #% increased Dominating Blow Damage
 #% increased Dominating Blow Duration
 Dominated Minions deal #% increased Damage
+Lacerate deals (#-#) to (#-#) added Physical Damage against Bleeding Enemies
 #% increased Lacerate Critical Strike Chance
 #% increased Lacerate Damage
 #% increased Lacerate Area of Effect
 #% increased Double Strike Attack Speed
 #% increased Double Strike Critical Strike Chance
 #% increased Double Strike Damage
+Double Strike has a #% chance to deal Double Damage to Bleeding Enemies
 #% increased Dual Strike Attack Speed
 #% increased Dual Strike Critical Strike Chance
 #% increased Dual Strike Damage
@@ -128,7 +136,7 @@ Dominated Minions deal #% increased Damage
 #% increased Earthquake Area of Effect
 #% increased Elemental Hit Attack Speed
 Elemental Hit has +#% chance to Freeze, Shock and Ignite
-#% increased Elemental Hit Damage
+Elemental Hit deals #% increased Damage
 #% increased Elemental Weakness Curse Effect
 #% increased Elemental Weakness Duration
 #% increased Enduring Cry Cooldown Recovery Speed
@@ -138,6 +146,7 @@ Elemental Hit has +#% chance to Freeze, Shock and Ignite
 #% increased Essence Drain Damage
 #% increased Essence Drain Duration
 #% increased Ethereal Knives Damage
+Ethereal Knives Pierces an additional Target
 #% increased Ethereal Knives Projectile Speed
 #% increased Explosive Arrow Attack Speed
 #% increased Explosive Arrow Damage
@@ -155,7 +164,7 @@ Fire Nova Mine repeats an additional # times
 #% increased Firestorm Duration
 #% increased Firestorm explosion Area of Effect
 #% increased Fire Trap Burning Damage
-#% increased Fire Trap Cooldown Recovery Speed
+#% increased Fire Trap Burning Ground Duration
 #% increased Fire Trap Damage
 #% increased Flameblast Critical Strike Chance
 #% increased Flameblast Damage
@@ -167,6 +176,12 @@ Fire Nova Mine repeats an additional # times
 #% increased Flame Surge Critical Strike Chance
 #% increased Flame Surge Damage
 #% increased Flame Surge Damage against Burning Enemies
+Flamethrower Trap has an additional Flame
+Flamethrower Trap has # additional Flames
+Flamethrower Trap has #% increased Cast Speed
+Flamethrower Trap has #% increased Cooldown Recovery Speed
+Flamethrower Trap deals #% increased Damage
+Flamethrower Trap has #% increased Skill Effect Duration
 #% increased Flame Totem Damage
 Flame Totem fires an additional Projectile
 Flame Totem fires # additional Projectiles
@@ -195,6 +210,7 @@ Freeze Mine causes Enemies to lose an additional #% Cold Resistance while Frozen
 Frostbolt has +#% chance to Freeze
 #% increased Frost Bomb Cooldown Recovery Speed
 #% increased Frost Bomb Damage
+Frost Bomb has #% increased Debuff Duration
 #% increased Frost Bomb Area of Effect
 #% increased Frost Wall Cooldown Recovery Speed
 #% increased Frost Wall Duration
@@ -230,18 +246,24 @@ Ice Nova has +#% chance to Freeze
 #% increased Ice Shot Damage
 #% increased Ice Shot Duration
 #% increased Ice Shot Area of Effect
+Siphoning Trap has #% increased Chill Effect
+Siphoning Trap deals #% increased Damage
+Siphoning Trap's beam to you grants #% reduced Damage taken for each other beam
+Siphoning Trap has #% increased Skill Effect Duration
 #% increased Ice Spear Damage
 #% Chance to gain a Power Charge on Critical Strike with Ice Spear
 #% increased Ice Spear Critical Strike Chance in second form
-#% increased Ice Trap Cooldown Recovery Speed
+Ice Trap Damage Penetrates #% Cold Resistance
 #% increased Ice Trap Damage
 #% increased Ice Trap Area of Effect
 #% increased Immortal Call Duration
 #% chance for Immortal Call to not consume Endurance Charges
+Incinerate has #% increased Area of Effect
 #% increased Incinerate Damage
 #% increased Incinerate Damage for each stage
-#% increased Incinerate Projectile Speed
+Incinerate has +# to maximum stages
 #% increased Infernal Blow Damage
+Infernal Blow Debuff deals an additional #% of Damage per Charge
 #% of Infernal Blow Physical Damage gained as Extra Fire Damage
 #% increased Infernal Blow Area of Effect
 #% increased Kinetic Blast Damage
@@ -262,9 +284,15 @@ Lightning Strike fires # additional Projectiles
 #% increased Lightning Tendrils Critical Strike Chance
 #% increased Lightning Tendrils Damage
 #% increased Lightning Tendrils Area of Effect
+Lightning Spire Trap strikes an additional area
+Lightning Spire Trap has #% increased Cast Speed
+Lightning Spire Trap has #% increased Cooldown Recovery Speed
+Lightning Spire Trap deals #% increased Damage
+Lightning Spire Trap has #% increased Skill Effect Duration
 Lightning Trap pierces # additional Targets
-#% increased Lightning Trap Cooldown Recovery Speed
 #% increased Lightning Trap Damage
+Lightning Trap Damage Penetrates #% Lightning Resistance
+#% increased Lightning Trap Shock Effect
 #% increased Lightning Warp Cast Speed
 #% increased Lightning Warp Damage
 #% reduced Lightning Warp Duration
@@ -280,11 +308,18 @@ Mirror Arrow and Mirror Arrow Clones deal #% increased Damage
 #% increased Molten Strike Damage
 Molten Strike fires # additional Projectiles
 #% increased Molten Strike Area of Effect
+Orb of Storms has #% increased Cast Speed
 #% increased Orb of Storms Damage
 #% increased Phase Run Duration
 #% chance for Phase Run to not consume Frenzy Charges
+Seismic Trap releases an additional Wave
+Seismic Trap has #% increased Cooldown Recovery Speed
+Seismic Trap deals #% increased Damage
+Seismic Trap has #% increased Skill Effect Duration
 #% increased Poacher's Mark Curse Effect
 #% increased Poacher's Mark Duration
+Power Siphon fires an additional Projectile
+Power Siphon fires # additional Projectiles
 #% increased Power Siphon Attack Speed
 #% increased Power Siphon Damage
 #% Chance to gain an additional Power Charge on Kill with Power Siphon
@@ -302,6 +337,7 @@ Molten Strike fires # additional Projectiles
 #% increased Rain of Arrows Attack Speed
 #% increased Rain of Arrows Damage
 #% increased Rain of Arrows Area of Effect
+Rain of Arrows has #% chance to fire an additional sequence of arrows
 Spectres have #% increased Damage
 Zombies deal #% increased Damage
 #% increased Rallying Cry Buff Effect
@@ -332,6 +368,10 @@ Shock Nova ring deals #% increased Damage
 #% increased Shrapnel Shot Damage
 #% of Shrapnel Shot Physical Damage gained as extra Lightning Damage
 #% increased Shrapnel Shot Area of Effect
+Explosive Trap deals #% increased Damage
+Explosive Trap has #% increased Area of Effect
+Explosive Trap causes an additional smaller explosion
+Explosive Trap causes # additional smaller explosions
 #% increased Siege Ballista Attack Speed
 #% increased Siege Ballista Damage
 #% increased Siege Ballista Totem Placement Speed
@@ -405,6 +445,7 @@ Tornado Shot fires # additional secondary Projectiles
 #% increased Volatile Dead Cast Speed
 #% increased Volatile Dead Damage
 Volatile Dead destroys up to # additional Corpse
+Vortex has #% increased Area of Effect when Cast on Frostbolt
 #% increased Vortex Damage
 #% increased Vortex Duration
 #% increased Vortex Area of Effect

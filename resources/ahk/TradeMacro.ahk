@@ -5332,6 +5332,11 @@ CustomSearchGuiEscape:
 	TradeFunc_ActivatePoeWindow()
 Return
 
+CurrencyRatioGuiEscape:
+	Gui, CurrencyRatio:Cancel
+	TradeFunc_ActivatePoeWindow()
+Return
+
 PricingTestGuiEscape:
 	Gui, PricingTest:Cancel
 	TradeFunc_ActivatePoeWindow()
