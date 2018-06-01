@@ -205,6 +205,10 @@ class ColorPicker
 			GuiControl, % ( showImage ) ? "hide" : "show", Pbg
 			showImage := showImage ? false : true
 		Return
+		
+		GDIColorPickerPreviewGuiEscape:
+			Gui, GDIColorPickerPreview:Destroy
+		Return
 	}
 	
 	rgbaToARGBHex(r, g, b, a) {
