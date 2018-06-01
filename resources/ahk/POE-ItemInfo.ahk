@@ -56,6 +56,7 @@ Globals.Set("GithubUser", "aRTy42")
 Globals.Set("ScriptList", [A_ScriptDir "\POE-ItemInfo"])
 Globals.Set("UpdateNoteFileList", [[A_ScriptDir "\resources\updates.txt","ItemInfo"]])
 Globals.Set("SettingsScriptList", ["ItemInfo", "Additional Macros"])
+Globals.Set("ScanCodes", GetScanCodes())
 argumentProjectName		= %1%
 argumentUserDirectory	= %2%
 argumentIsDevVersion	= %3%
@@ -486,7 +487,7 @@ Menu, Tray, Add, About..., MenuTray_About
 Menu, Tray, Add, Show all assigned Hotkeys, ShowAssignedHotkeys
 Menu, Tray, Add, % Globals.Get("SettingsUITitle", "PoE ItemInfo Settings"), ShowSettingsUI
 Menu, Tray, Add, Check for updates, CheckForUpdates
-Menu, Tray, Add, Update Notes, ShowUpdateNotes
+Menu, Tray, Add, Show Update Notes, ShowUpdateNotes
 Menu, Tray, Add ; Separator
 Menu, Tray, Add, Edit Files, :TextFiles
 Menu, Tray, Add, Preview Files, :PreviewTextFiles
@@ -5215,7 +5216,6 @@ ParseAffixes(ItemDataAffixes, Item)
 			LookupAffixAndSetInfoLine("data\FlaskDuration.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		
 		IfInString, A_LoopField, increased Quantity of Items found
 		{
 			If (Item.IsShaperBase)
@@ -7203,9 +7203,50 @@ AssembleDamageDetails(FullItemData)
 	return Result
 }
 
+AssembleProphecyDetails(name) {
+	parsedJSON := {}
+	prophecy := {}
+	
+	If (not Globals.Get("ProphecyData")) {
+		Try {
+			FileRead, JSONFile, %A_ScriptDir%\data_trade\prophecy_details.json
+			parsedJSON := JSON.Load(JSONFile)
+			prophecy := parsedJSON.prophecy_details[name]
+			
+			If (not prophecy.text) {
+				Return
+			}
+		} Catch error {
+			Return
+		}
+		
+		Globals.Set("ProphecyData", parsedJSON.prophecy_details)
+	} Else {
+		prophecy := Globals.Get("ProphecyData")[name]
+	}
+	
+	TT := ""
+	If (prophecy.objective) {
+		TT .= "`n" "Objective:" "`n" prophecy.objective "`n"
+	}
+	If (prophecy.reward) {
+		TT .= "`n" "Reward:" "`n" prophecy.reward "`n"
+	}
+	If (StrLen(prophecy["seal cost"])) {
+		TT .= "`n" "Seal Cost:" " " prophecy["seal cost"] "`n"
+	}
+	
+	Return TT
+}
+
 ; ParseItemName fixed by user: uldo_.  Thanks!
-ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemBaseName, AffixCount = "")
+ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemBaseName, AffixCount = "", ItemData = "")
 {
+	isVaalGem := false
+	If (RegExMatch(Trim(ItemData.Parts[1]), "i)^Rarity: Gem") and RegExMatch(Trim(ItemData.Parts[2]), "i)Vaal")) {
+		isVaalGem := true
+	}
+
 	Loop, Parse, ItemDataChunk, `n, `r
 	{
 		If (A_Index == 1)
@@ -7235,6 +7276,9 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemBaseName, AffixCount = ""
 			Else
 			{
 				ItemName := A_LoopField
+				If (isVaalGem and not RegExMatch(ItemName, "i)^Vaal ")) {
+					ItemName := "Vaal " ItemName
+				}
 			}
 			; Normal items don't have a third line and the item name equals the BaseName if we sanitize it ("superior").
 			If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Normal"))
@@ -7479,7 +7523,7 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 	result		:= []
 
 	CurrencyDataRates := Globals.Get("CurrencyDataRates")
-	For idx, league in ["tmpstandard", "tmphardcore", "Standard", "Hardcore"] {
+	For idx, league in ["tmpstandard", "tmphardcore", "Standard", "Hardcore", "eventstandard", "eventhardcore"] {
 		ninjaRates	:= CurrencyDataRates[league]
 		ChaosRatio	:= ninjaRates[ItemName].OwnQuantity ":" ninjaRates[ItemName].ChaosQuantity
 		ChaosMult		:= ninjaRates[ItemName].ChaosQuantity / ninjaRates[ItemName].OwnQuantity
@@ -7487,6 +7531,9 @@ ConvertCurrency(ItemName, ItemStats, ByRef dataSource)
 		
 		If (league == "tmpstandard" or league == "tmphardcore" ) {
 			leagueName := InStr(league, "standard") ? "Challenge Standard" : "Challenge Hardcore"
+		}
+		Else If (league = "eventstandard" or league = "eventhardcore") {
+			leagueName := InStr(league, "standard") ? "Event Standard    " : "Event Hardcore    "
 		}
 		Else {
 			leagueName := "Permanent " . league
@@ -7774,7 +7821,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	; ItemData.Requirements := GetItemDataChunk(ItemDataText, "Requirements:")
 	; ParseRequirements(ItemData.Requirements, RequiredLevel, RequiredAttributes, RequiredAttributeValues)
 	
-	ParseItemName(ItemData.NamePlate, ItemName, ItemBaseName)
+	ParseItemName(ItemData.NamePlate, ItemName, ItemBaseName, "", ItemData)
 	If (Not ItemName)
 	{
 		return
@@ -8029,7 +8076,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	NumTotalAffixesMax	:= NumFormatPointFiveOrInt( (AffixTotals.NumTotalMax > AffixTotals.NumTotal) ? AffixTotals.NumTotalMax : AffixTotals.NumTotal)
 	AffixTotals.NumTotalMax := NumTotalAffixesMax
 	; We need to call this function a second time because now we know the AffixCount.
-	ParseItemName(ItemData.NamePlate, ItemName, ItemBaseName, NumTotalAffixes)
+	ParseItemName(ItemData.NamePlate, ItemName, ItemBaseName, NumTotalAffixes, ItemData)
 	Item.BaseName := ItemBaseName
 	
 	pseudoMods := PreparePseudoModCreation(ItemData.Affixes, Item.Implicit, RarityLevel, Item.isMap)
@@ -8154,13 +8201,14 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		TT := TT . "`n--------`n" . CardDescription
 	}
 
-	/*
 	If (Item.IsProphecy)
 	{
+		/*
 		Restriction := StrLen(Item.DifficultyRestriction) > 0 ? Item.DifficultyRestriction : "None"
 		TT := TT . "`n--------`nDifficulty Restriction: " Restriction
+		*/
+		TT .= AssembleProphecyDetails(Item.Name)
 	}
-	*/
 	
 	If (Item.IsMap)
 	{
@@ -9520,6 +9568,8 @@ CreateSettingsUI()
 {
 	Global
 	
+	Gui, Color, ffffff, ffffff
+	
 	; ItemInfo is not included in other scripts
 	If (not SkipItemInfoUpdateCall) {	
 		Fonts.SetUIFont()
@@ -9741,9 +9791,10 @@ CreateSettingsUI()
 	GuiAddButton("Defaults", "xp-5 y+8 w90 h23", "SettingsUI_AM_BtnDefaults")
 	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK")
 	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")
+	GuiAddText("Any change here currently requires a script restart!", ButtonsShiftX "y+10 w280 h50 cGreen")
 	
 	If (SkipItemInfoUpdateCall) {
-		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+10 w280 h50 cRed")
+		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+5 w280 h50 cRed")
 	}
 	
 	GuiAddText("Experimental Feature!", ButtonsShiftX "y+35 w280 h200 cRed")
@@ -9898,8 +9949,10 @@ ShowUpdateNotes()
 	}
 	ToolTip
 	Gui, UpdateNotes:Destroy
+	Gui, UpdateNotes:Color, ffffff, ffffff
 	Fonts.SetUIFont(9)
-
+	Gui, UpdateNotes:Font, , Verdana
+	
 	Files := Globals.Get("UpdateNoteFileList")
 
 	TabNames := ""
@@ -9915,13 +9968,13 @@ ShowUpdateNotes()
 	Loop, % Files.Length() {
 		file := Files[A_Index][1]
 		FileRead, notes, %file%
-		Gui, UpdateNotes:Add, Edit, r50 ReadOnly w700 BackgroundTrans, %notes%
+		Gui, UpdateNotes:Add, Edit, r50 ReadOnly w900 BackgroundTrans, %notes%
 		NextTab := A_Index + 1
 		Gui, UpdateNotes:Tab, %NextTab%
 	}
 	Gui, UpdateNotes:Tab
 
-	SettingsUIWidth := 745
+	SettingsUIWidth := 945
 	SettingsUIHeight := 710
 	SettingsUITitle := "Update Notes"
 	Gui, UpdateNotes:Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
@@ -9930,6 +9983,7 @@ ShowUpdateNotes()
 ShowChangedUserFiles()
 {
 	Gui, ChangedUserFiles:Destroy
+	Gui, ChangedUserFiles:Color, ffffff, ffffff
 
 	Gui, ChangedUserFiles:Add, Text, , Following user files were changed in the last update and `nwere overwritten (old files were backed up):
 
@@ -10278,6 +10332,7 @@ ShowAssignedHotkeys() {
 		}
 	}
 
+	Gui, ShowHotkeys:Color, ffffff, ffffff
 	Gui, ShowHotkeys:Add, Text, , List of this scripts assigned hotkeys.
 	Gui, ShowHotkeys:Default
 	Gui, Font, , Courier New
@@ -10344,7 +10399,13 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 
 		ClipBoardTemp := Clipboard
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
-
+		
+		scancode_c := Globals.Get("ScanCodes").c
+		scancode_v := Globals.Get("ScanCodes").v
+		scancode_a := Globals.Get("ScanCodes").a
+		scancode_f := Globals.Get("ScanCodes").f
+		scancode_enter := Globals.Get("ScanCodes").enter
+		
 		; Parse the clipboard contents twice.
 		; If the clipboard contains valid item data before we send ctrl + c to try and parse an item via ctrl + f then don't restore that clipboard data later on.
 		; This prevents the highlighting function to fill search fields with data from previous item parsings/manual data copying since
@@ -10352,7 +10413,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		Loop, 2 {
 			If (A_Index = 2) {
 				Clipboard :=
-				Send ^{sc02E}	; ^{c}
+				Send ^{%scancode_c%}	; ^{c}
 				Sleep 100
 			}
 			CBContents := GetClipboardContents()
@@ -10509,7 +10570,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		}
 
 		If (terms.length() > 0) {
-			SendInput ^{sc021} ; sc021 = f
+			SendInput ^{%scancode_f%} ; sc021 = f
 			searchText =
 			For key, val in terms {
 				searchText = %searchText% "%val%"
@@ -10526,15 +10587,15 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 			}
 
 			Clipboard := searchText
-			Sleep 10
-			SendEvent ^{sc02f}		; ctrl + v
+			Sleep 10		
+			SendEvent ^{%scancode_v%}		; ctrl + v
 			If (leaveSearchField) {
-				SendInput {sc01c}	; enter
+				SendInput {%scancode_enter%}	; enter
 			} Else {
-				SendInput ^{sc01e}	; ctrl + a
+				SendInput ^{%scancode_a%}	; ctrl + a
 			}
 		} Else {
-			SendInput ^{sc021}		; send ctrl + f in case we don't have information to input
+			SendInput ^{%scancode_f%}		; send ctrl + f in case we don't have information to input
 		}
 
 		Sleep, 10
@@ -10554,7 +10615,8 @@ AdvancedItemInfoExt() {
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 
 		Clipboard :=
-		Send ^{sc02E}	; ^{c}
+		scancode_c := Globals.Get("Scancodes").c
+		Send ^{%scancode_c%}	; ^{c}
 		Sleep 100
 
 		CBContents := GetClipboardContents()
@@ -10570,6 +10632,151 @@ AdvancedItemInfoExt() {
 		SuspendPOEItemScript = 0
 	}
 }
+
+OpenItemOnPoEAntiquary() {
+	IfWinActive, ahk_group PoEWindowGrp
+	{
+		Global Item, Opts, Globals, ItemData
+
+		ClipBoardTemp := Clipboard
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+
+		Clipboard :=
+		scancode_c := Globals.Get("Scancodes").c
+		Send ^{%scancode_c%}	; ^{c}
+		Sleep 100
+
+		CBContents := GetClipboardContents()
+		CBContents := PreProcessContents(CBContents)
+		Globals.Set("ItemText", CBContents)
+		ParsedData := ParseItemData(CBContents)
+		
+		If (Item.Name) {			
+			global AntiquaryData := []
+			global AntiquaryType := AntiquaryGetType(Item)
+			
+			If (AntiquaryType) {
+				If (AntiquaryType = "Map") {
+					name := Item.BaseName
+				} Else {
+					name := Item.Name
+				}
+
+				url := "http://poe-antiquary.xyz/api/macro/" UriEncode(AntiquaryType) "/" UriEncode(Item.Name)			
+				
+				postData 	:= ""					
+				options	:= "RequestType: GET"
+				options	.= "`n" "TimeOut: 15"
+				reqHeaders := []
+				
+				reqHeaders.push("Connection: keep-alive")
+				reqHeaders.push("Cache-Control: max-age=0")
+				reqHeaders.push("Upgrade-Insecure-Requests: 1")
+				reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+				
+				data := PoEScripts_Download(url, postData, reqHeaders, "", true)
+
+				Try {
+					AntiquaryData := JSON.Load(data)
+				} Catch error {
+					errorMsg := error.Message
+					Msgbox, %errorMsg%
+				}
+
+				name := AntiquaryData["name"]
+				lastLeague := AntiquaryData["league"]
+				itemType := AntiquaryData["itemType"]
+				items := AntiquaryData.items
+				length := items.Length()
+				
+				If (length == 0) {
+					ShowToolTip("Item not available on http://poe-antiquary.xyz.")
+				}
+				Else If (length == 1) {
+					id := items[1].id
+					AntiquaryOpenInBrowser(itemType, name, id, lastLeague)
+				}
+				Else If (length > 1) {
+					AntiquaryOpenInBrowser(itemType, name, id, lastLeague, length)
+				}
+			}
+		}
+		Else {			
+			ShowToolTip("Item parsing failed, no name recognized.")
+		}
+		SuspendPOEItemScript = 0
+	}
+}
+
+AntiquaryOpenInBrowser(type, name, id, lastLeague, multiItems = false) {
+	league := TradeGlobals.Get("LeagueName")
+	If (RegExMatch(league, "Hardcore.*")) {
+		league := lastLeague "HC"
+	} Else {
+		league := lastLeague
+	}
+	
+	league	:= UriEncode(league)
+	type		:= UriEncode(type)
+	name		:= UriEncode(name)
+	id		:= UriEncode(id)
+	utm		:= UriEncode("trade macro")
+	
+	If (multiItems) {
+		url := "http://poe-antiquary.xyz/" league "/" type "?name=" name ;"?utm_source=" utm "&utm_medium=" utm "&utm_campaign=" utm		
+	}
+	Else {
+		url := "http://poe-antiquary.xyz/" league "/" type "/" name "/" id ;"?utm_source=" utm "&utm_medium=" utm "&utm_campaign=" utm	
+	}
+	openWith := AssociatedProgram("html")
+	OpenWebPageWith(openWith, url)
+}
+
+AntiquaryGetType(Item) {
+	If (Item.IsUnique) {
+		If (Item.IsWeapon) {
+			return "Weapon"
+		}
+		If (Item.IsArmour) {
+			return "Armour"
+		}
+		If (Item.IsFlask) {
+			return "Flask"
+		}
+		If (Item.IsJewel) {
+			return "Jewel"
+		}
+		If (Item.IsBelt or Item.IsRing or Item.IsAmulet) {
+			return "Accessory"
+		}
+	}
+	If (Item.IsEssence) {
+		return "Essence"
+	}
+	If (Item.IsDivinationCard) {
+		return "Divination"
+	}
+	If (Item.IsProphecy) {
+		return "Prophecy"
+	}
+	If (Item.IsMapFragment) {
+		return "Fragment"
+	}
+	If (Item.IsMap) {
+		If (Item.IsUnique) {
+			return "Unique Map"
+		} Else {
+			return "Map"	
+		}		
+	}
+	If (RegExMatch(Item.Name, "(Sacrifice|Mortal|Fragment).*|Offering to the Goddess|Divine Vesse|.*(Breachstone|s Key)")) {
+		return "Fragment"
+	}
+	If (Item.IsCurrency) {
+		return "Currency"
+	}
+}
+
 
 StringToBase64UriEncoded(stringIn, noUriEncode = false) {
 	stringBase64 := ""
@@ -10625,7 +10832,8 @@ LookUpAffixes() {
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 
 		Clipboard :=
-		Send ^{sc02E}	; ^{c}
+		scancode_c := Globals.Get("Scancodes").c
+		Send ^{%scancode_c%}	; ^{c}
 		Sleep 100
 
 		CBContents := GetClipboardContents()
@@ -10755,6 +10963,7 @@ ShowTranslationUI() {
 	Global 
 	
 	Gui, Translate:Destroy
+	Gui, Translate:Color, ffffff, ffffff
 	
 	Gui, Translate:Margin, 10 , 10
 	Gui, Translate:Add, Text, , Add your copied item information to translate it to english. The rightmost column shows some debug information. 
@@ -11103,6 +11312,7 @@ MenuTray_About:
 		Authors := GetContributors(0)
 		RelVer := Globals.get("ReleaseVersion")
 		Gui, About:+owner1 -Caption +Border
+		Gui, About:Color, ffffff, ffffff
 		Gui, About:Font, S10 CA03410,verdana
 		Gui, About:Add, Text, x260 y27 w170 h20 Center, Release %RelVer%
 		Gui, About:Add, Button, 0x8000 x316 y300 w70 h21, Close
@@ -11291,7 +11501,7 @@ CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", pr
 
 FetchCurrencyData:
 	_CurrencyDataJSON	:= {}
-	currencyLeagues	:= ["Standard", "Hardcore", "tmpstandard", "tmphardcore"]
+	currencyLeagues	:= ["Standard", "Hardcore", "tmpstandard", "tmphardcore", "eventstandard", "eventhardcore"]
 	sampleValue		:= "ff"
 	
 	Loop, % currencyLeagues.Length() {
@@ -11391,6 +11601,34 @@ TogglePOEItemScript()
 		SuspendPOEItemScript = 0
 		ShowToolTip("Item parsing ENABLED")
 	}
+}
+
+GetScanCodes() {
+	f := A_FormatInteger
+	SetFormat, Integer, H
+	WinGet, WinID,, A
+	ThreadID:=DllCall("GetWindowThreadProcessId", "UInt", WinID, "UInt", 0)
+	InputLocaleID:=DllCall("GetKeyboardLayout", "UInt", ThreadID, "UInt")	
+	SetFormat, Integer, %f%
+
+	; example results: 0xF0020809/0xF01B0809/0xF01A0809
+	; 0809 is for "English United Kingdom"
+	; 0xF002 = "Dvorak"
+	; 0xF01B = "Dvorak right handed"
+	; 0xF01A = "Dvorak left handed"
+	
+	If (RegExMatch(InputLocaleID, "i)^(0xF002|0xF01B|0xF01A).*")) {
+		; dvorak
+		sc := {"c" : "sc017", "v" : "sc034", "f" : "sc015", "a" : "sc01E", "enter" : "sc01C"}
+		project := Globals.Set("ProjectName")
+		msg := "Using Dvorak keyboard layout mode!`n`nMsgBox closes after 15s."
+		MsgBox, 0, %project%, %msg%, 15
+		Return sc
+	} Else {
+		; default
+		sc := {"c" : "sc02E", "v" : "sc02f", "f" : "sc021", "a" : "sc01E", "enter" : "sc01C"}
+		Return sc
+	}	
 }
 
 ; ############ (user) macros #############
