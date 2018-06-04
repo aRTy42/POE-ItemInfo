@@ -7278,7 +7278,17 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemBaseName, AffixCount = ""
 			{
 				ItemName := A_LoopField
 				If (isVaalGem and not RegExMatch(ItemName, "i)^Vaal ")) {
-					ItemName := "Vaal " ItemName
+					; examples of name differences
+					; summon skeleton - vaal summon skeletons
+					; Purity of Lightning - Vaal Impurity of Lightning
+					ItemName := ItemData.Parts[6]	; this may be unsafe, the parts index may change in the future
+
+					For k, part in ItemData.Parts {
+						If (RegExMatch(part, "im)(^Vaal .*?" ItemName ".*)", vaalName)) {	; TODO: make sure this is safer
+							ItemName := vaalName1
+							Break
+						}
+					}
 				}
 			}
 			; Normal items don't have a third line and the item name equals the BaseName if we sanitize it ("superior").
