@@ -709,7 +709,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Else If (Item.IsElderBase) {
 				RequestParams.Elder := 1
 			}
-		}		
+		}
 		
 		; abyssal sockets 
 		If (s.useAbyssalSockets) {
@@ -1058,9 +1058,15 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		*/
 	If (Item.IsGem) {
 		RequestParams.xtype := Item.BaseType
-		RequestParams.xbase := TradeFunc_CompareGemNames(Trim(RegExReplace(Item.Name, "i)support|superior", "")))
-
-		RequestParams.name := ""
+		foundOnPoeTrade := false
+		_xbase := TradeFunc_CompareGemNames(Trim(RegExReplace(Item.Name, "i)support|superior")), foundOnPoeTrade)
+		If (not foundOnPoeTrade) {
+			RequestParams.name := Trim(RegExReplace(Item.Name, "i)support|superior"))
+		} Else {
+			RequestParams.xbase := _xbase
+			RequestParams.name := ""	
+		}
+		
 		If (TradeOpts.GemQualityRange > 0) {
 			RequestParams.q_min := Item.Quality - TradeOpts.GemQualityRange
 			RequestParams.q_max := Item.Quality + TradeOpts.GemQualityRange
@@ -1736,16 +1742,17 @@ TradeFunc_CalculateEleDps(fireLo, fireHi, coldLo, coldHi, lightLo, lightHi, aps)
 	return dps
 }
 
-TradeFunc_CompareGemNames(name) {
+TradeFunc_CompareGemNames(name, ByRef found = false) {
 	poeTradeNames := TradeGlobals.Get("GemNameList")
 
-	If(poeTradeNames.Length() < 1) {
+	If (poeTradeNames.Length() < 1) {
 		return name
 	}
 	Else {
 		Loop, % poeTradeNames.Length() {
 			stack := Trim(RegExReplace(poeTradeNames[A_Index], "i)support", ""))
 			If (stack = name) {
+				found := true
 				return poeTradeNames[A_Index]
 			}
 		}
