@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.10.3
+================================================================================================
+* Fixed some issues with gem searches. Some Vaal Gem names weren't parsed correctly and some new Gems are not available as a "base" option on poe.trade, causing searches in these cases to fail.
+* Updated data files (uniques, mods etc), which was done "silently" before without a need to release an update. Just remember to restart your macro here and there at league start to download these updated files.
+
 2.10.2
 ================================================================================================
 * Changed the default hotkey for the currency ratio function to "alt + r" since the current "ctrl + r" overwrites the hideout decoration rotate hotkey. This won't change the hotkey for already installed scripts.
