@@ -16,6 +16,7 @@
 	; https://curl.haxx.se/download.html -> https://bintray.com/vszakats/generic/curl/
 	Loop, 2 
 	{
+		reqLoops++
 		curl		:= """" A_ScriptDir "\lib\curl.exe"" "	
 		headers	:= ""
 		cookies	:= ""
@@ -26,13 +27,13 @@
 			} Else {
 				headers .= "-H """ val """ "	
 			}		
-			
+
 			If (RegExMatch(val, "i)^Cookie:(.*)", cookie)) {
 				cookies .= cookie1 " "		
 			}
 		}
 		cookies := StrLen(cookies) ? "-b """ Trim(cookies) """ " : ""
-		
+
 		redirect := "L"
 		PreventErrorMsg := false
 		validateResponse := 1
@@ -45,6 +46,9 @@
 				}
 				If (RegExMatch(A_LoopField, "i)Redirect:\sFalse")) {
 					redirect := ""
+				}
+				If (RegExMatch(A_LoopField, "i)parseJSON:\sTrue")) {
+					ignoreRetCodeForJSON := true
 				}
 				If (RegExMatch(A_LoopField, "i)PreventErrorMsg")) {
 					PreventErrorMsg := true
@@ -68,7 +72,7 @@
 		If (not timeout) {
 			timeout := 30
 		}
-
+		
 		e := {}
 		Try {		
 			commandData	:= ""		; console curl command to return data/content 
@@ -81,7 +85,8 @@
 			} Else {
 				commandData .= " -" redirect "ks --compressed "
 				If (requestType = "GET") {
-					commandHdr  .= " -k" redirect "s "
+					;commandHdr  .= " -k" redirect "s "
+					commandHdr  .= " -s" redirect " -D - -o /dev/null " 
 				} Else {
 					commandHdr  .= " -I" redirect "ks "
 				}
@@ -109,19 +114,18 @@
 			If (binaryDL) {
 				commandData	.= "--connect-timeout " timeout " "
 				commandData	.= "--connect-timeout " timeout " "
-			} Else {				
+			} Else {
 				commandData	.= "--max-time " timeout " "
 				commandHdr	.= "--max-time " timeout " "
 			}
-
 			; get data
 			html	:= StdOutStream(curl """" url """" commandData)
-			;html := ReadConsoleOutputFromFile(commandData """" url """", "commandData") ; alternative function
+			;html := ReadConsoleOutputFromFile(curl """" url """" commandData, "commandData") ; alternative function
 			
 			If (returnCurl) {
 				returnCurl := "curl " """" url """" commandData
 			}
-			
+
 			; get return headers in seperate request
 			If (not binaryDL and not skipRetHeaders) {
 				If (StrLen(ioData) and not requestType = "GET") {
@@ -131,6 +135,9 @@
 				}
 				ioHdr := StdOutStream(commandHdr)
 				;ioHrd := ReadConsoleOutputFromFile(commandHdr, "commandHdr") ; alternative function
+			} Else If (skipRetHeaders) {
+				commandHdr := curl """" url """" commandHdr
+				ioHdr := html
 			} Else {
 				ioHdr := html
 			}
@@ -149,7 +156,7 @@
 		}
 		
 		If ((Strlen(ioHdr) and goodStatusCode) or (StrLen(ioHdr) and isJSON) or not validateResponse) {		
-			Break	; only go into the second loop if the respone is empty or has a bad status code (possible problem with the added host header)
+			Break	; only go into the second loop if the response is empty or has a bad status code (possible problem with the added host header)
 		}
 	}
 

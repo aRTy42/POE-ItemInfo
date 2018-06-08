@@ -490,10 +490,10 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		Stats.Offense := TradeFunc_ParseItemOffenseStats(DamageDetails, preparedItem)
 
 		If (isAdvancedPriceCheck and hasAdvancedSearch) {
-			If (Enchantment) {
+			If (Enchantment.Length()) {
 				TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, "", Enchantment)
 			}
-			Else If (Corruption) {
+			Else If (Corruption.Length()) {
 				TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, "", Corruption)
 			}
 			Else {
@@ -511,20 +511,27 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		; returns mods with their ranges of the searched item if it is unique and has variable mods
 		uniqueWithVariableMods :=
 		uniqueWithVariableMods := TradeFunc_FindUniqueItemIfItHasVariableRolls(Name, Item.IsRelic)
-		
+
 		; Return if the advanced search was used but the checked item doesn't have variable mods
-		If (!uniqueWithVariableMods and isAdvancedPriceCheck and not Enchantment and not Corruption) {
+		If (!uniqueWithVariableMods and isAdvancedPriceCheck and not Enchantment.Length() and not Corruption.Length()) {
 			ShowToolTip("Advanced search not available for this item (no variable mods)`nor item is new and the necessary data is not yet available/updated.")
 			return
 		}
-
+		
 		UniqueStats := TradeFunc_GetUniqueStats(Name, Item.IsRelic)
-		If (uniqueWithVariableMods) {
+		If (uniqueWithVariableMods or Corruption.Length() or Enchantment.Length()) {
 			Gui, SelectModsGui:Destroy
 
 			preparedItem :=
 			preparedItem := TradeFunc_GetItemsPoeTradeUniqueMods(uniqueWithVariableMods)
 			preparedItem := TradeFunc_RemoveAlternativeVersionsMods(preparedItem, ItemData.Affixes)
+			If (not preparedItem.Name and not preparedItem.mods.length()) {
+				preparedItem := {}
+				preparedItem.Name := Item.Name
+				preparedItem.maxSockets := Item.maxSockets
+				preparedItem.IsUnique := Item.IsUnique
+				preparedItem.class := Item.SubType
+			}
 			preparedItem.maxSockets 	:= Item.maxSockets
 			preparedItem.isCorrupted	:= Item.isCorrupted
 			preparedItem.isRelic	:= Item.isRelic
@@ -537,10 +544,10 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			If (isAdvancedPriceCheck) {
 				UniqueStats := TradeFunc_GetUniqueStats(Name)
 
-				If (Enchantment) {
+				If (Enchantment.Length()) {
 					TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Enchantment)
 				}
-				Else If (Corruption) {
+				Else If (Corruption.Length()) {
 					TradeFunc_AdvancedPriceCheckGui(preparedItem, Stats, ItemData.Sockets, ItemData.Links, UniqueStats, Corruption)
 				}
 				Else {
@@ -763,7 +770,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		; xbase = Item.BaseName (Eternal Burgonet)
 
 		; If desired crafting base and not isAdvancedPriceCheckRedirect
-		If (isCraftingBase and not Enchantment.param and not Corruption.param and not isAdvancedPriceCheckRedirect) {
+		If (isCraftingBase and not Enchantment.Length() and not Corruption.Length() and not isAdvancedPriceCheckRedirect) {
 			RequestParams.xbase := Item.BaseName
 			Item.UsedInSearch.ItemBase := Item.BaseName
 			; if highest item level needed for crafting
@@ -779,13 +786,29 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			modParam.mod_max  := Enchantment.max
 			RequestParams.modGroups[1].AddMod(modParam)
 			Item.UsedInSearch.Enchantment := true
+		} 		
+		Else If (Enchantment.Length() and not isAdvancedPriceCheckRedirect) {		
+			For key, val in Enchantment {
+				If (val.param) {
+					modParam := new _ParamMod()
+					modParam.mod_name := val.param
+					modParam.mod_min  := val.min
+					modParam.mod_max  := val.max
+					RequestParams.modGroups[key].AddMod(modParam)
+					Item.UsedInSearch.Enchantment := true
+				}			
+			}	
 		} 
-		Else If (Corruption.param and not isAdvancedPriceCheckRedirect) {
-			modParam := new _ParamMod()
-			modParam.mod_name := Corruption.param
-			modParam.mod_min  := (Corruption.min) ? Corruption.min : ""
-			RequestParams.modGroups[1].AddMod(modParam)
-			Item.UsedInSearch.CorruptedMod := true
+		Else If (Corruption.Length() and not isAdvancedPriceCheckRedirect) {
+			For key, val in Corruption {
+				If (val.param) {
+					modParam := new _ParamMod()
+					modParam.mod_name := val.param
+					modParam.mod_min  := (val.min) ? val.min : ""
+					RequestParams.modGroups[key].AddMod(modParam)
+					Item.UsedInSearch.CorruptedMod := true		
+				}			
+			}			
 		}
 		Else {
 			RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
@@ -1144,7 +1167,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		RequestParams.sockets_max := ItemData.Sockets ? ItemData.Sockets : ""
 		RequestParams.identified  := (!Item.IsUnidentified) ? "1" : "0"
 		RequestParams.corrupted   := (Item.IsCorrupted) ? "1" : "0"
-		RequestParams.enchanted   := (Enchantment) ? "1" : "0"
+		RequestParams.enchanted   := (Enchantment.Length()) ? "1" : "0"
 		; change values a bit to accommodate for rounding differences
 		RequestParams.armour_min  := Stats.Defense.TotalArmour.Value - 2
 		RequestParams.armour_max  := Stats.Defense.TotalArmour.Value + 2
@@ -1343,7 +1366,7 @@ TradeFunc_GetPoENinjaItemUrl(league, item) {
 		;url_suffix := "skill-gems"	; supported but using poe.trade for this may be the better choice
 	} Else If (item.IsEssence) {
 		url_suffix := "essences"
-	} Else If (item.SubType = "Helmet" and Enchantment.name) {
+	} Else If (item.SubType = "Helmet" and Enchantment[1].name) {
 		url_suffix := "helmet-enchants"
 	} Else If (item.IsUnique) {
 		If (item.IsMap) {
@@ -1373,8 +1396,8 @@ TradeFunc_GetPoENinjaItemUrl(league, item) {
 		url_param_arg_2 := TradeUtils.UriEncode(Item.MapTier)
 		url_params .= url_param_1 . url_param_arg_1 . url_param_2 . url_param_arg_2
 	}
-	Else If (item.SubType = "Helmet" and Enchantment) {
-		url_param_arg_1 := TradeUtils.UriEncode(Enchantment.name)
+	Else If (item.SubType = "Helmet" and Enchantment.Length()) {
+		url_param_arg_1 := TradeUtils.UriEncode(Enchantment[1].name)
 		url_params .= url_param_1 . url_param_arg_1
 	}
 	Else {
@@ -1383,7 +1406,6 @@ TradeFunc_GetPoENinjaItemUrl(league, item) {
 	}
 	
 	If (url_suffix) {
-		console.log(url . url_suffix . url_params)
 		Return url . url_suffix . url_params
 	} Else {
 		Return false
@@ -1849,7 +1871,6 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	options	:= ""
 
 	reqHeaders	:= []
-	reqHeaders.push("Host: poe.trade")
 	reqHeaders.push("Connection: keep-alive")
 	reqHeaders.push("Cache-Control: max-age=0")
 	reqHeaders.push("Origin: http://poe.trade")
@@ -1883,8 +1904,7 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 	options	.= "`n" "ReturnHeaders: skip"
 	options	.= "`n" "TimeOut: 20"
 	reqHeaders := []
-	
-	reqHeaders.push("Host: www.poeprices.info")
+
 	reqHeaders.push("Connection: keep-alive")
 	reqHeaders.push("Cache-Control: max-age=0")
 	reqHeaders.push("Origin: https://poeprices.info")
@@ -1985,7 +2005,6 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 	reqHeaders.push("Accept-Encoding:gzip, deflate")
 	reqHeaders.push("Accept-Language:de-DE,de;q=0.8,en-US;q=0.6,en;q=0.4")
 	reqHeaders.push("Connection:keep-alive")
-	reqHeaders.push("Host:currency.poe.trade")
 	reqHeaders.push("Referer:http://poe.trade/")
 	reqHeaders.push("Upgrade-Insecure-Requests:1")
 
@@ -3219,7 +3238,7 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 	mods		:= []
 	i		:= 0
 
-	If (Implicit.maxIndex() and not Enchantment and not Corruption) {
+	If (Implicit.maxIndex() and not Enchantment.Length() and not Corruption.Length()) {
 		modStrings := Implicit
 		For i, modString in modStrings {
 			tempMods := ModStringToObject(modString, true)
@@ -3233,7 +3252,7 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 		If (!val or RegExMatch(val, "i)---")) {
 			continue
 		}
-		If (i >= 1 and (Enchantment or Corruption)) {
+		If (i >= 1 and (Enchantment.Length() or Corruption.Length())) {
 			continue
 		}
 		If (i <= 1 and Implicit and Rarity = 1) {
@@ -3472,43 +3491,45 @@ TradeFunc_FindInModGroup(modgroup, needle, simpleRange = true, recurse = true) {
 TradeFunc_GetCorruption(_item) {
 	mods     := TradeGlobals.Get("ModsData")
 	corrMods := TradeGlobals.Get("CorruptedModsData")
+	corrImplicits := []
+	
+	For key, val in _item.Implicit {
+		RegExMatch(_item.Implicit[key], "i)([-.0-9]+)", value)
+		If (RegExMatch(imp, "i)Limited to:")) {
+			;return false
+		}
+		imp      := RegExReplace(_item.Implicit[key], "i)([-.0-9]+)", "#")
 
-	If (_item.implicit.maxIndex() > 1) {
-		; there are no corruptions when the item has multiple implicits
-		Return 0
-	}
-
-	RegExMatch(_item.Implicit[1], "i)([-.0-9]+)", value)
-	If (RegExMatch(imp, "i)Limited to:")) {
-		;return false
-	}
-	imp      := RegExReplace(_item.Implicit[1], "i)([-.0-9]+)", "#")
-
-	corrMod  := {}
-	For i, corr in corrMods {
-		If (imp = corr) {
-			For j, mod in mods["implicit"] {
-				match := Trim(RegExReplace(mod, "i)\(implicit\)", ""))
-				If (match = corr) {
-					corrMod.param := mod
-					corrMod.name  := _item.implicit[1]
+		corrMod  := {}
+		For i, corr in corrMods {
+			If (imp = corr) {
+				For j, mod in mods["implicit"] {
+					match := Trim(RegExReplace(mod, "i)\(implicit\)", ""))
+					If (match = corr) {
+						corrMod.param := mod
+						corrMod.name  := _item.implicit[key]
+					}
 				}
 			}
 		}
-	}
 
-	valueCount := 0
-	Loop {
-		If (!value%A_Index%) {
-			break
+		valueCount := 0
+		Loop {
+			If (!value%A_Index%) {
+				break
+			}
+			valueCount++
 		}
-		valueCount++
+		If (StrLen(corrMod.param)) {
+			If (valueCount = 1) {
+				corrMod.min := value1
+			}
+			corrImplicits.push(corrMod)
+		}
 	}
-	If (StrLen(corrMod.param)) {
-		If (valueCount = 1) {
-			corrMod.min := value1
-		}
-		Return corrMod
+	
+	If (corrImplicits.Length()) {
+		Return corrImplicits
 	}
 	Else {
 		Return false
@@ -3518,6 +3539,7 @@ TradeFunc_GetCorruption(_item) {
 TradeFunc_GetEnchantment(_item, type) {
 	mods     := TradeGlobals.Get("ModsData")
 	enchants := TradeGlobals.Get("EnchantmentData")
+	enchImplicits := []
 
 	group :=
 	If (type = "Boots") {
@@ -3530,50 +3552,51 @@ TradeFunc_GetEnchantment(_item, type) {
 		group := enchants.helmet
 	}
 
-	If (_item.implicit.maxIndex() > 1) {
-		; there are no enchantments when the item has multiple implicits
-		Return 0
-	}
+	For key, val in _item.Implicit {
+		RegExMatch(_item.implicit[key], "i)([.0-9]+)(%? to ([.0-9]+))?", values)
+		imp      := RegExReplace(_item.implicit[key], "i)([.0-9]+)", "#")
 
-	RegExMatch(_item.implicit[1], "i)([.0-9]+)(%? to ([.0-9]+))?", values)
-	imp      := RegExReplace(_item.implicit[1], "i)([.0-9]+)", "#")
-
-	enchantment := {}
-	If (group.length()) {
-		For i, enchant in group {
-			If (TradeUtils.CleanUp(imp) = enchant) {
-				For j, mod in mods["enchantments"] {
-					match := Trim(RegExReplace(mod, "i)\(enchant\)", ""))
-					If (match = enchant) {
-						enchantment.param := mod
-						enchantment.name  := _item.implicit[1]
+		enchantment := {}
+		If (group.length()) {
+			For i, enchant in group {
+				If (TradeUtils.CleanUp(imp) = enchant) {
+					For j, mod in mods["enchantments"] {
+						match := Trim(RegExReplace(mod, "i)\(enchant\)", ""))
+						If (match = enchant) {
+							enchantment.param := mod
+							enchantment.name  := _item.implicit[key]
+						}
 					}
 				}
 			}
 		}
-	}
 
-	valueCount := 0
-	Loop {
-		If (!values%A_Index%) {
-			break
+		valueCount := 0
+		Loop {
+			If (!values%A_Index%) {
+				break
+			}
+			valueCount++
 		}
-		valueCount++
-	}
 
-	If (StrLen(enchantment.param)) {
-		If (valueCount = 1) {
-			enchantment.min := values1
-			enchantment.max := values1
+		If (StrLen(enchantment.param)) {
+			If (valueCount = 1) {
+				enchantment.min := values1
+				enchantment.max := values1
+			}
+			Else If (valueCount = 3) {
+				enchantment.min := values1
+				enchantment.max := values3
+			}
+			enchImplicits.push(enchantment)
 		}
-		Else If (valueCount = 3) {
-			enchantment.min := values1
-			enchantment.max := values3
-		}
-		Return enchantment
+	}
+	
+	If (enchImplicits.Length()) {
+		Return enchImplicits
 	}
 	Else {
-		Return 0
+		Return false
 	}
 }
 
@@ -3906,7 +3929,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	Global
 
 	;prevent advanced gui in certain cases
-	If (not advItem.mods.Length() and not ChangedImplicit) {
+	If (not advItem.mods.Length() and not (ChangedImplicit or ChangedImplicit.Length())) {
 		ShowTooltip("Advanced search not available for this item.")
 		Return
 	}
@@ -3936,19 +3959,23 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		itemName := advItem.name
 		itemType := advItem.BaseName
 		If (advItem.Rarity = 1) {
-			iPic 	:= "bg-normal.png"
+			iPic 	:= "bg-normal"
 			tColor	:= "cc8c8c8"
 		} Else If (advItem.Rarity = 2) {
-			iPic 	:= "bg-magic.png"
+			iPic 	:= "bg-magic"
 			tColor	:= "c8787fe"
 		} Else If (advItem.Rarity = 3) {
-			iPic 	:= "bg-rare.png"
+			iPic 	:= "bg-rare"
 			tColor	:= "cfefe76"
 		} Else If (advItem.isUnique) {
-			iPic 	:= "bg-unique.png"
+			iPic 	:= "bg-unique"
 			tColor	:= "cAF5F1C"
 		}
-		Gui, SelectModsGui:Add, Picture, w700 h30 x0 yp+20, %A_ScriptDir%\resources\images\%iPic%
+		
+		image := A_ScriptDir "\resources\images\" iPic ".png"
+		If (FileExist(image)) {
+			Gui, SelectModsGui:Add, Picture, w800 h30 x0 yp+20, %image%
+		}		
 		Gui, SelectModsGui:Add, Text, x14 yp+9 %tColor% BackgroundTrans, %itemName%
 		If (advItem.Rarity > 2 or advItem.isUnique) {
 			Gui, SelectModsGui:Add, Text, x14 yp+0 x+5 cc8c8c8 BackgroundTrans, %itemType%
@@ -3967,7 +3994,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			Gui, SelectModsGui:Add, Text, x+10 yp+0 cc8c8c8 BackgroundTrans, %tLinksSockets%
 		}
 
-		Gui, SelectModsGui:Add, Text, x0 w700 yp+13 cBlack BackgroundTrans, %line%
+		Gui, SelectModsGui:Add, Text, x0 w800 yp+13 cBlack BackgroundTrans, %line%
 	}
 
 	ValueRangeMin	:= ValueRangeMin / 100
@@ -3984,13 +4011,17 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 			continue
 		}
 		tempValue := StrLen(advItem.mods[A_Index].name)
-		if(modLengthMax < tempValue ) {
+		If (modLengthMax < tempValue ) {
 			modLengthMax := tempValue
 			modGroupBox := modLengthMax * 6
 		}
 	}
-	If (!advItem.mods.Length() and ChangedImplicit) {
-		modGroupBox := StrLen(ChangedImplicit.name) * 6
+	Loop % ChangedImplicit.Length() {
+		tempValue := StrLen(ChangedImplicit[A_Index].param)
+		If (modLengthMax < tempValue ) {
+			modLengthMax := tempValue
+			modGroupBox := modLengthMax * 6
+		}
 	}
 	modGroupBox := modGroupBox + 10
 	modCount := advItem.mods.Length()
@@ -4157,23 +4188,29 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		*/
 		
 	e := 0
-	If (ChangedImplicit) {
-		e := 1
+	If (ChangedImplicit.Length()) {		
 		xPosMin := modGroupBox + 25
-		yPosFirst := ( j > 1 ) ? 20 : 30
-
-		modValueMin := ChangedImplicit.min
-		modValueMax := ChangedImplicit.max
-		displayName := ChangedImplicit.name
-
+		yPosFirst := 20 ; ( j > 1 ) ? 20 : 30
 		xPosMin := xPosMin + 40 + 5 + 45 + 10 + 45 + 10 + 40 + 5 + 45 + 10 ; edit/text field widths and offsets
-		Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%, % displayName
-		Gui, SelectModsGui:Add, CheckBox, x%xPosMin% yp+1 vTradeAdvancedSelected%e%
+		
+		For key, val in ChangedImplicit {
+			e++
+			modValueMin := val.min
+			modValueMax := val.max
+			displayName := val.name			
+			
+			If (key > 1) {
+				yPosFirst := 20
+			}
+			
+			Gui, SelectModsGui:Add, Text, x15 yp+%yPosFirst%, % displayName
+			Gui, SelectModsGui:Add, CheckBox, x%xPosMin% yp+1 vTradeAdvancedSelected%e%
 
-		TradeAdvancedModMin%e% 		:= ChangedImplicit.min
-		TradeAdvancedModMax%e% 		:= ChangedImplicit.max
-		TradeAdvancedParam%e%  		:= ChangedImplicit.param
-		TradeAdvancedIsImplicit%e%	:= true
+			TradeAdvancedModMin%e% 		:= val.min
+			TradeAdvancedModMax%e% 		:= val.max
+			TradeAdvancedParam%e%  		:= val.param
+			TradeAdvancedIsImplicit%e%	:= true	
+		}		
 	}
 	TradeAdvancedImplicitCount := e
 
@@ -5495,7 +5532,6 @@ TradeFunc_PredictedPricingSendFeedback(selector, comment, encodedData, league, p
 	options	.= "`n" "ValidateResponse: false"
 	
 	reqHeaders	:= []
-	reqHeaders.push("Host: www.poeprices.info")
 	reqHeaders.push("Connection: keep-alive")
 	reqHeaders.push("Cache-Control: max-age=0")
 	reqHeaders.push("Origin: https://poeprices.info")

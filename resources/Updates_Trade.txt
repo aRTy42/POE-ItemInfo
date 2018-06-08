@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.10.4
+================================================================================================
+* Fixed an issue where multiple corrupted implicits on items were not supported by the advanced search.
+* Fixed an issue where a Tabula Rasa with a corrupted implicit was not supported by the advanced search.
+* Fixed an issue where requests to poe.trade timed out for some people. A fallback request could still be made but the entire process took up to a minute. Please report if this change cuases your searches to fail completely (should not happen).
+
 2.10.3
 ================================================================================================
 * Fixed some issues with gem searches. Some Vaal Gem names weren't parsed correctly and some new Gems are not available as a "base" option on poe.trade, causing searches in these cases to fail.

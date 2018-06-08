@@ -8482,6 +8482,10 @@ GetNegativeAffixOffset(Item)
 	{
 		NegativeAffixOffset += 1
 	}
+	If (RegExMatch(Item.Name, "i)Tabula Rasa")) ; no mods, no flavour text
+	{
+		NegativeAffixOffset -= 2
+	}
 	return NegativeAffixOffset
 }
 
@@ -10521,7 +10525,11 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 				If (broadTerms) {
 					terms.push(Item.BaseType)
 				} Else {
-					terms.push(Item.BaseName)
+					If (Item.BaseName) {
+						terms.push(Item.BaseName)	
+					} Else {
+						terms.push("Jewel")
+					}					
 					terms.push(rarity)
 				}
 			}
@@ -10574,8 +10582,12 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 							}
 						}
 					}
-				} Else {
-					terms.push(Item.BaseName)
+				} Else {			
+					If (Item.BaseName) {
+						terms.push(Item.BaseName)	
+					} Else {
+						terms.push(Trim(RegExReplace(Item.Name, "Superior")))
+					}
 				}
 			}
 		}
@@ -11468,7 +11480,6 @@ CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", pr
 
 	errors := 0
 	Try {
-		reqHeaders.push("Host: poe.ninja")
 		reqHeaders.push("Connection: keep-alive")
 		reqHeaders.push("Cache-Control: max-age=0")
 		;reqHeaders.push("Content-type: application/x-www-form-urlencoded; charset=UTF-8")
