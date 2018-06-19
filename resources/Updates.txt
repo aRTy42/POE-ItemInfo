@@ -1,7 +1,14 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy (GitHub/PoE Account: aRTy42, Reddit: -aRTy-)
 
-3.3.00
+3.3.03
+================================
+from aRTy, Eruyome
+
+* Updated Uniques, Divination Cards, Maps and Gem Quality info
+* Included changes from and for the TradeMacro (Vaal gem fix, support for multiple corrupted implicits, poe.ninja request to the startuplog)
+
+3.3.02
 ================================
 from aRTy, Eruyome
 
