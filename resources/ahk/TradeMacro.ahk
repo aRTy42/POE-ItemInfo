@@ -1189,7 +1189,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	/*
 		parameter fixes
 	*/
-	If (RequestParams.xtype and RequestParams.base) {
+	If (StrLen(RequestParams.xtype) and StrLen(RequestParams.base)) {
 		; Some type and base combinations on poe.trade are different than the ones in-game (Tyrant's Sekhem for example)
 		; If we have the base we don't need the type though.
 		RequestParams.xtype := ""
@@ -1903,6 +1903,7 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 }
 
 TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
+	RawItemData := RegExReplace(RawItemData, "<<.*?>>|<.*?>")
 	EncodedItemData := StringToBase64UriEncoded(RawItemData, true)
 	
 	postData 	:= "l=" UriEncode(TradeGlobals.Get("LeagueName")) "&i=" EncodedItemData

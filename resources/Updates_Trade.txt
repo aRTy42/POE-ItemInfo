@@ -1,8 +1,13 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.10.6
+================================================================================================
+* Hotfixed an issue introduced in 2.10.5 where soime searches could be missing any type and base parameters.
+* Fixed an issue with using the predicted pricing on items directly from chat. The item data contains some extra characters related to localisations, which are currently not handled by poeprices. 
+
 2.10.5
 ================================================================================================
-* Fixed an issue where searches using the item base of a few sceptres (at least Tyrant's Sekhem) didn't work because theit item type was still classified as "Mace" instead of "Sceptre".
+* Fixed an issue where searches using the item base of a few sceptres (at least Tyrant's Sekhem) didn't work because their item type was still classified as "Mace" instead of "Sceptre".
 * Reduced the request timeout for searches using poeprices.info.
 * Improved the poeprices error tooltip in the hope that issue reports go to them more often. I can't do anything about most issues except forwarding them since they are related to their servers/API.
 * Updated all data files (uniques, supported mods on poe.trade etc). 
