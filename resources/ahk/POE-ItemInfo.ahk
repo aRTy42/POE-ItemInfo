@@ -11472,7 +11472,7 @@ CheckForUpdates:
 	return
 
 ; TODO: use this for trademacro also
-CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", project ="", tmpFileName = "", fallbackDir = "", ByRef usedFallback = false) {
+CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", project ="", tmpFileName = "", fallbackDir = "", ByRef usedFallback = false, ByRef loggedCurrencyRequestAtStartup = false) {	
 	errorMsg := "Parsing the currency data (json) from poe.ninja failed.`n"
 	errorMsg .= "This should only happen when the servers are down / unavailable."
 	errorMsg .= "`n`n"
@@ -11487,6 +11487,10 @@ CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", pr
 		reqHeaders.push("User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36")
 		parsedJSON := PoEScripts_Download(url, postData, reqHeaders, options, true, true, false, "", reqHeadersCurl)
 		
+		If (not loggedCurrencyRequestAtStartup) {
+			TradeFunc_WriteToLogFile("Requesting currency data from poe.ninja...`n`n" "cURL command:`n" reqHeadersCurl "`n`nAnswer: " reqHeaders)
+			loggedCurrencyRequestAtStartup := true
+		}
 		; first currency data parsing (script start)
 		If (critical and not sampleValue or not parsedJSON.lines.length()) {
 			errors++
@@ -11525,6 +11529,7 @@ FetchCurrencyData:
 	_CurrencyDataJSON	:= {}
 	currencyLeagues	:= ["Standard", "Hardcore", "tmpstandard", "tmphardcore", "eventstandard", "eventhardcore"]
 	sampleValue		:= "ff"
+	loggedCurrencyRequestAtStartup := loggedCurrencyRequestAtStartup ? loggedCurrencyRequestAtStartup : false 
 	
 	Loop, % currencyLeagues.Length() {
 		currencyLeague := currencyLeagues[A_Index]
@@ -11533,7 +11538,7 @@ FetchCurrencyData:
 
 		url		:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
 		critical	:= StrLen(Globals.Get("LastCurrencyUpdate")) ? false : true
-		parsedJSON := CurrencyDataDowloadURLtoJSON(url, sampleValue, critical, currencyLeague, "PoE-ItemInfo", file, A_ScriptDir "\data", usedFallback)		
+		parsedJSON := CurrencyDataDowloadURLtoJSON(url, sampleValue, critical, currencyLeague, "PoE-ItemInfo", file, A_ScriptDir "\data", usedFallback, loggedCurrencyRequestAtStartup)		
 
 		Try {
 			If (parsedJSON) {		

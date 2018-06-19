@@ -1185,6 +1185,15 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RequestParams.ilvl_max := Item.Level
 		}
 	}
+	
+	/*
+		parameter fixes
+	*/
+	If (RequestParams.xtype and RequestParams.base) {
+		; Some type and base combinations on poe.trade are different than the ones in-game (Tyrant's Sekhem for example)
+		; If we have the base we don't need the type though.
+		RequestParams.xtype := ""
+	}
 
 	If (openSearchInBrowser) {
 		If (!TradeOpts.BuyoutOnly) {
@@ -1902,7 +1911,7 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 
 	options	:= "RequestType: GET"
 	options	.= "`n" "ReturnHeaders: skip"
-	options	.= "`n" "TimeOut: 20"
+	options	.= "`n" "TimeOut: 10"
 	reqHeaders := []
 
 	reqHeaders.push("Connection: keep-alive")
@@ -2807,7 +2816,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 TradeFunc_ParsePoePricesInfoErrorCode(response, request) {
 	If (not response or not response.HasKey("error")) {
 		ShowToolTip("")
-		ShowTooltip("ERROR: Request to poeprices.info timed out or`nreturned an invalid response! ")
+		ShowTooltip("ERROR: Request to poeprices.info timed out or`nreturned an invalid response! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
 		TradeFunc_LogPoePricesRequest(response, request)
 		Return 0
 	}
@@ -2818,7 +2827,7 @@ TradeFunc_ParsePoePricesInfoErrorCode(response, request) {
 	}
 	Else If (response.error = "2") {
 		ShowToolTip("")
-		ShowTooltip("ERROR: Predicted search has encountered an unknown error! ")
+		ShowTooltip("ERROR: Predicted search has encountered an unknown error! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
 		TradeFunc_LogPoePricesRequest(response, request)
 		Return 0
 	}	
@@ -2837,7 +2846,7 @@ TradeFunc_ParsePoePricesInfoErrorCode(response, request) {
 			}
 		} Else If (not StrLen(min_value) and not StrLen(max_value)) {
 			ShowToolTip("")
-			ShowTooltip("ERROR: Request to poeprices.info failed,`nno prices were returned! ")
+			ShowTooltip("ERROR: Request to poeprices.info failed,`nno prices were returned! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
 			TradeFunc_LogPoePricesRequest(response, request)
 			Return 0
 		}
@@ -2849,7 +2858,8 @@ TradeFunc_ParsePoePricesInfoErrorCode(response, request) {
 
 TradeFunc_LogPoePricesRequest(response, request) {
 	text := "#####"
-	text .= "`n### " "Please post this log file to https://www.pathofexile.com/forum/view-thread/1216141/."	
+	text .= "`n### " "Please post this log file below to https://www.pathofexile.com/forum/view-thread/1216141/."	
+	text .= "`n### " "Try not to ""spam"" their thread if a few other reports with the same error description were posted in the last hours."	
 	text .= "`n#####"	
 	
 	text .= "`n`n"
@@ -5063,7 +5073,7 @@ ReadPoeNinjaCurrencyData:
 
 		url			:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
 		parsedJSON	:= TradeFunc_DowloadURLtoJSON(url, sampleValue, true, league)
-	}
+	}	
 	global CurrencyHistoryData := parsedJSON.lines
 	TradeGlobals.Set("LastAltCurrencyUpdate", A_NowUTC)
 
@@ -5073,7 +5083,7 @@ ReadPoeNinjaCurrencyData:
 		ChaosEquivalents[currencyBaseName] := val.chaosEquivalent
 	}
 	ChaosEquivalents["Chaos Orb"] := 1
-
+	
 	If (TempChangingLeagueInProgress) {
 		msg := "Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ") finished."
 		msg .= "`n- Requested chaos equivalents and currency history from poe.ninja."
