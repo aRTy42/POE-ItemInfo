@@ -1146,7 +1146,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 				itemEligibleForPredictedPricing := true
 			}
 		}
-		Else {
+		Else If (not (Item.RarityLevel = 3 and Item.IsUnidentified)) { ; filter out unid rare items
 			itemEligibleForPredictedPricing := true	
 		}		
 	}
@@ -1188,8 +1188,8 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	
 	/*
 		parameter fixes
-	*/
-	If (StrLen(RequestParams.xtype) and StrLen(RequestParams.base)) {
+		*/
+	If (StrLen(RequestParams.xtype) and StrLen(RequestParams.xbase)) {
 		; Some type and base combinations on poe.trade are different than the ones in-game (Tyrant's Sekhem for example)
 		; If we have the base we don't need the type though.
 		RequestParams.xtype := ""
@@ -1943,6 +1943,15 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 	If (not StrLen(response)) {
 		responseObj.failed := "ERROR: Parsing response failed, empty response! "
 	}
+	
+	; temporary debug log
+	If (true) {
+		arr := {}
+		arr.RawItemData := RawItemData
+		arr.EncodedItemata := EncodedItemData
+		arr.League := TradeGlobals.Get("LeagueName")
+		TradeFunc_LogPoePricesRequest(arr, request, "poe_prices_debug_log.txt")
+	}
 
 	responseObj.added := {}
 	responseObj.added.encodedData := EncodedItemData
@@ -1987,9 +1996,10 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 
 		idWant := IDs[currencyName]
 		idHave := IDs[Have]
+		minStockSize := 0
 
 		If (idWant and idHave) {
-			Url := "http://currency.poe.trade/search?league=" . TradeUtils.UriEncode(LeagueName) . "&online=x&want=" . idWant . "&have=" . idHave
+			Url := "http://currency.poe.trade/search?league=" . TradeUtils.UriEncode(LeagueName) . "&online=x&want=" . idWant . "&have=" . idHave . "&stock=" . minStockSize
 			currencyURL := Url
 		} Else {
 			errorMsg = Couldn't find currency "%currencyname%" on poe.trade's currency search.`n`nThis search needs to know the currency names used on poe.trades currency page.`n`nEither this item doesn't exist on that page or parsing and mapping the poe.trade`nnames to the actual names failed. Please report this issue.
@@ -2831,7 +2841,7 @@ TradeFunc_ParsePoePricesInfoErrorCode(response, request) {
 		ShowTooltip("ERROR: Predicted search has encountered an unknown error! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
 		TradeFunc_LogPoePricesRequest(response, request)
 		Return 0
-	}	
+	}
 	Else If (response.error = "0") {
 		min := response.HasKey("min") or response.HasKey("min_price") ? true : false
 		max := response.HasKey("max") or response.HasKey("max_price") ? true : false		
@@ -2857,7 +2867,7 @@ TradeFunc_ParsePoePricesInfoErrorCode(response, request) {
 	Return 0
 }
 
-TradeFunc_LogPoePricesRequest(response, request) {
+TradeFunc_LogPoePricesRequest(response, request, filename = "poeprices_log.txt") {
 	text := "#####"
 	text .= "`n### " "Please post this log file below to https://www.pathofexile.com/forum/view-thread/1216141/."	
 	text .= "`n### " "Try not to ""spam"" their thread if a few other reports with the same error description were posted in the last hours."	
@@ -2869,9 +2879,10 @@ TradeFunc_LogPoePricesRequest(response, request) {
 		text .= JSON.Dump(response, "", 4)
 	} Catch e {
 		text .= response
-	}	
-	FileDelete, %A_ScriptDir%\temp\poeprices_log.txt	
-	FileAppend, %text%, %A_ScriptDir%\temp\poeprices_log.txt
+	}
+	
+	FileDelete, %A_ScriptDir%\temp\%filename%
+	FileAppend, %text%, %A_ScriptDir%\temp\%filename%
 	
 	Return
 }
@@ -5052,18 +5063,25 @@ Return
 ReadPoeNinjaCurrencyData:
 	; Disable hotkey until currency data was parsed
 	key := TradeOpts.ChangeLeagueHotKey
-
+	loggedCurrencyRequestAtStartup := loggedCurrencyRequestAtStartup ? loggedCurrencyRequestAtStartup : false
+	loggedTempLeagueCurrencyRequest := loggedTempLeagueCurrencyRequest ? loggedTempLeagueCurrencyRequest : false
+	usedFallback := false
+	
 	If (TempChangingLeagueInProgress) {
 		ShowToolTip("Changing league to " . TradeOpts.SearchLeague " (" . TradeGlobals.Get("LeagueName") . ")...", true)
 	}
 	sampleValue	:= ChaosEquivalents["Chaos Orb"]
 	league		:= TradeUtils.UriEncode(TradeGlobals.Get("LeagueName"))
 	fallback		:= ""
+	isFallback	:= false
+	file			:= A_ScriptDir . "\temp\currencyData.json"
+	fallBackDir	:= A_ScriptDir . "\data_trade"
 	url			:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
-	parsedJSON 	:= TradeFunc_DowloadURLtoJSON(url, sampleValue)
+	parsedJSON	:= CurrencyDataDowloadURLtoJSON(url, sampleValue, false, isFallback, league, "PoE-TradeMacro", file, fallBackDir, usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)
 
 	; fallback to Standard and Hardcore league if used league seems to not be available
-	If (!parsedjson.currencyDetails.length()) {
+	If (!parsedJSON.currencyDetails.length()) {
+		isFallback	:= true
 		If (InStr(league, "Hardcore", 0) or RegExMatch(league, "HC")) {
 			league	:= "Hardcore"
 			fallback	:= "Hardcore"
@@ -5073,11 +5091,11 @@ ReadPoeNinjaCurrencyData:
 		}
 
 		url			:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
-		parsedJSON	:= TradeFunc_DowloadURLtoJSON(url, sampleValue, true, league)
+		parsedJSON	:= CurrencyDataDowloadURLtoJSON(url, sampleValue, true, isFallback, league, "PoE-TradeMacro", file, fallBackDir, usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)
 	}	
 	global CurrencyHistoryData := parsedJSON.lines
 	TradeGlobals.Set("LastAltCurrencyUpdate", A_NowUTC)
-
+	
 	global ChaosEquivalents	:= {}
 	For key, val in CurrencyHistoryData {
 		currencyBaseName	:= RegexReplace(val.currencyTypeName, "[^a-z A-Z]", "")

@@ -6968,6 +6968,24 @@ GetTimestampUTC() { ; http://msdn.microsoft.com/en-us/library/ms724390
 	. SubStr("0" . NumGet(ST, 12, "UShort"), -1)     ; second : 2 digits forced
 }
 
+WriteToLogFile(data, file, project) {
+	logFile	:= A_ScriptDir "\temp\" file
+	If (not FileExist(logFile)) {
+		FileAppend, Starting up %project%....`n`n, %logFile%
+	}
+
+	line		:= "----------------------------------------------------------"
+	timeStamp	:= ""
+	UTCTimestamp := GetTimestampUTC()
+	UTCFormatStr := "yyyy-MM-dd'T'HH:mm'Z'"
+	FormatTime, TimeStr, %UTCTimestamp%, %UTCFormatStr%
+
+	entry	:= line "`n" TimeStr "`n" line "`n`n"
+	entry	:= entry . data "`n`n"
+
+	FileAppend, %entry%, %logFile%
+}
+
 ParseAddedDamage(String, DmgType, ByRef DmgLo, ByRef DmgHi)
 {
 	If (RegExMatch(String, "Adds (\d+) to (\d+) " DmgType " Damage", Match))
@@ -11471,53 +11489,72 @@ CheckForUpdates:
 	}
 	return
 
-; TODO: use this for trademacro also
-CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, league = "", project ="", tmpFileName = "", fallbackDir = "", ByRef usedFallback = false, ByRef loggedCurrencyRequestAtStartup = false) {	
+CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, isFallbackRequest = false, league = "", project = "", tmpFileName = "", fallbackDir = "", ByRef usedFallback = false, ByRef loggedCurrencyRequestAtStartup = false, ByRef loggedTempLeagueCurrencyRequest = false) {
 	errorMsg := "Parsing the currency data (json) from poe.ninja failed.`n"
 	errorMsg .= "This should only happen when the servers are down / unavailable."
 	errorMsg .= "`n`n"
 	errorMsg .= "This can fix itself when the servers are up again and the data gets updated automatically or if you restart the script at such a time."
+	errorMsg .= "`n`n"
+	errorMsg .= "You can find a log file with some debug information:"
+	errorMsg .= "`n" """" A_ScriptDir "\temp\StartupLog.txt"""
+	errorMsg .= "`n`n"
 
 	errors := 0
+	parsingError := false	
 	Try {
 		reqHeaders.push("Connection: keep-alive")
 		reqHeaders.push("Cache-Control: max-age=0")
-		;reqHeaders.push("Content-type: application/x-www-form-urlencoded; charset=UTF-8")
 		reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")	
 		reqHeaders.push("User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36")
-		parsedJSON := PoEScripts_Download(url, postData, reqHeaders, options, true, true, false, "", reqHeadersCurl)
+		currencyData := PoEScripts_Download(url, postData, reqHeaders, options, true, true, false, "", reqHeadersCurl)
 		
-		If (not loggedCurrencyRequestAtStartup) {
-			TradeFunc_WriteToLogFile("Requesting currency data from poe.ninja...`n`n" "cURL command:`n" reqHeadersCurl "`n`nAnswer: " reqHeaders)
+		If (FileExist(A_ScriptDir "\temp\currencyHistory_" league ".txt")) {
+			FileDelete, % A_ScriptDir "\temp\currencyHistory_" league ".txt"	
+		}
+		FileAppend, %currencyData%, % A_ScriptDir "\temp\currencyHistory_" league ".txt"
+		
+		Try {
+			parsedJSON := JSON.Load(currencyData)
+		} Catch e {
+			parsingError := true
+		}	
+		
+		isTempLeague := RegExMatch(league, "^(Standard|Hardcore)")
+		If (not loggedCurrencyRequestAtStartup or (not loggedTempLeagueCurrencyRequest and not isTempLeague)) {
+			logMsg := "Requesting currency data from poe.ninja...`n`n" "cURL command:`n" reqHeadersCurl "`n`nAnswer: " reqHeaders
+			WriteToLogFile(logMsg, "StartupLog.txt", project)
+			
 			loggedCurrencyRequestAtStartup := true
+			If (not loggedTempLeagueCurrencyRequest and not isTempLeague) {
+				loggedTempLeagueCurrencyRequest := true
+			}
 		}
 		; first currency data parsing (script start)
-		If (critical and not sampleValue or not parsedJSON.lines.length()) {
+		If ((critical and (not sampleValue or isFallbackRequest)) or not parsedJSON.lines.length()) {
 			errors++
 		}
 	} Catch error {
 		; first currency data parsing (script start)
-		If (critical and not sampleValue) {
+		If (critical and (not sampleValue or isFallbackRequest)) {
 			errors++
 		}
 	}
 
-	Try {
-		parsedJSON := JSON.Load(parsedJSON)
-	} Catch e {
-		parsingError := true
-	}
-	
-	If ((errors and critical and not sampleValue) or parsingError) {
+	If ((errors and critical and (not sampleValue or isFallbackRequest)) or parsingError) {
 		FileRead, JSONFile, %fallbackDir%\currencyData_Fallback_%league%.json
 		Try {
 			parsedJSON := JSON.Load(JSONFile)
-			errorMsg .= "Using archived data from a fallback file. League: """ league """."
+			If (isFallbackRequest) {
+				errorMsg .= "This is a fallback request trying to get data for the """ league """ league since getting data for the currently selected league failed."
+				errorMsg .= "`n`n"
+			}
+			errorMsg .= "The script is now using archived data from a fallback file instead. League: """ league """"
 			errorMsg .= "`n`n"
 		} Catch e {
 			errorMsg .= "Using archived fallback data failed (JSON parse error)."
 			errorMsg .= "`n`n"
 		}
+		
 		MsgBox, 16, %project% - Error, %errorMsg%
 		usedFallback := true
 	}
@@ -11529,7 +11566,8 @@ FetchCurrencyData:
 	_CurrencyDataJSON	:= {}
 	currencyLeagues	:= ["Standard", "Hardcore", "tmpstandard", "tmphardcore", "eventstandard", "eventhardcore"]
 	sampleValue		:= "ff"
-	loggedCurrencyRequestAtStartup := loggedCurrencyRequestAtStartup ? loggedCurrencyRequestAtStartup : false 
+	loggedCurrencyRequestAtStartup := loggedCurrencyRequestAtStartup ? loggedCurrencyRequestAtStartup : false
+	loggedTempLeagueCurrencyRequest := loggedTempLeagueCurrencyRequest ? loggedTempLeagueCurrencyRequest : false
 	
 	Loop, % currencyLeagues.Length() {
 		currencyLeague := currencyLeagues[A_Index]
@@ -11538,7 +11576,7 @@ FetchCurrencyData:
 
 		url		:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
 		critical	:= StrLen(Globals.Get("LastCurrencyUpdate")) ? false : true
-		parsedJSON := CurrencyDataDowloadURLtoJSON(url, sampleValue, critical, currencyLeague, "PoE-ItemInfo", file, A_ScriptDir "\data", usedFallback, loggedCurrencyRequestAtStartup)		
+		parsedJSON := CurrencyDataDowloadURLtoJSON(url, sampleValue, critical, false, currencyLeague, "PoE-ItemInfo", file, A_ScriptDir "\data", usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)		
 
 		Try {
 			If (parsedJSON) {		
