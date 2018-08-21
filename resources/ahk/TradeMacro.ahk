@@ -107,7 +107,7 @@ TradeFunc_OpenSearchOnPoeAppHotkey(priceCheckTest = false, itemData = "") {
 	TradeFunc_DoParseClipboard()
 	If (Item.Name or Item.BaseName) {
 		itemContents := TradeUtils.UriEncode(Clipboard)
-		url := "https://poeapp.com?utm_source=poe-trademacro#/item-import/" + itemContents
+		url := "https://poeapp.com/#/item-import/" + itemContents
 		Clipboard := clipPrev
 		TradeFunc_OpenUrlInBrowser(url)	
 	}
