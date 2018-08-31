@@ -1527,8 +1527,10 @@ TradeFunc_GetOSInfo() {
 
 ;----------------------- SplashScreens ---------------------------------------
 TradeFunc_StartSplashScreen() {
-	;SplashTextOn, , 20, PoE-TradeMacro, Initializing script...	
-	SplashTextOn, 300, 20, PoE-TradeMacro, % "Searching the Temple of Atzoatl..."
+	;SplashTextOn, , 20, PoE-TradeMacro, Initializing script...
+	initArray := ["Sending Einhar to catch some canaries...", "Burying Sunder and KB in the Depths...", "Hiring Keanu Reeves as a cart driver...", "Hiring a wheely good escort...", "Preparing GPU to mine Azurite...",  "Loading spell block... 3%... aborting...", "Exploring reddit's first infinite salt mine...", "Awakening the balrogs...", "Sending the dark elves into some arc delves..."]
+	Random, randomNum, 1, initArray.MaxIndex()
+	SplashTextOn, 300, 20, PoE-TradeMacro, % initArray[randomNum]	
 }
 
 TradeFunc_StopSplashScreen() {

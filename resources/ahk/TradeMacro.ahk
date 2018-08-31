@@ -2922,6 +2922,15 @@ TradeFunc_ParsePoePricesInfoData(response) {
 	lines.push(["   Price range: " Round(Trim(response.min), 2) " ~ " Round(Trim(response.max), 2) " " Trim(response.currency), "left"])
 	lines.push(["", "left", true])
 	lines.push(["", "left"])
+	
+	_details := TradeFunc_PreparePredictedPricingContributionDetails(response.pred_explanation, 40)
+	lines.push(["Contribution to predicted price:", "left"])
+	For _k, _v in _details {
+		_line := _v.percentage " -> " _v.name 
+		lines.push(["  " _line, "left"])
+	}
+	lines.push(["", "left"])
+	
 	lines.push(["Please consider supporting POEPRICES.INFO.", "left"])
 	lines.push(["Financially or via feedback on this feature on their website.", "left"])
 	
@@ -3858,6 +3867,30 @@ TradeFunc_CreateItemPricingTestGUI() {
 	Gui, PricingTest:Show, w500 , Item Pricing Test
 }
 
+TradeFunc_PreparePredictedPricingContributionDetails(details, nameLength) {
+	arr := []
+	longest := 0
+
+	For key, val in details {
+		obj := {}
+		name := val[1]
+		shortened := RegExReplace(Trim(name), "^\(.*?\)")
+		obj.name := shortened
+		obj.name := (StrLen(shortened) > nameLength ) ? Trim(SubStr(obj.name, 1, nameLength) "...") : Trim(StrPad(obj.name, nameLength + 3))
+		obj.contribution := val[2] * 100 
+		obj.percentage := Trim(obj.contribution " %")
+		longest := (longest > StrLen(obj.percentage)) ? longest : StrLen(obj.percentage)
+		
+		arr.push(obj)
+	}
+
+	For key, val in arr {
+		val.percentage := StrPad(val.percentage, longest, "left", " ")
+	}
+
+	Return arr
+}
+
 TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	Global
 	
@@ -3894,21 +3927,39 @@ TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	Gui, PredictedPricing:Add, Text, BackgroundTrans, Priced using machine learning algorithms.
 	Gui, PredictedPricing:Add, Text, BackgroundTrans x+5 yp+0 cRed, (Close with ESC)
 	
-	Gui, PredictedPricing:Add, GroupBox, w400 h90 y+10 x10, Results
+	_details := TradeFunc_PreparePredictedPricingContributionDetails(data.pred_explanation, 40)
+	_contributionOffset := _details.Length() * 24
+	_groupBoxHeight := _contributionOffset + 83
+	
+	Gui, PredictedPricing:Add, GroupBox, w400 h%_groupBoxHeight% y+10 x10, Results
 	Gui, PredictedPricing:Font, norm s10, Consolas
 	Gui, PredictedPricing:Add, Text, yp+25 x20 w380 BackgroundTrans, % _headLine
 	Gui, PredictedPricing:Font, norm bold, Consolas
 	Gui, PredictedPricing:Add, Text, x20 w90 y+10 BackgroundTrans, % "Price range: "
 	Gui, PredictedPricing:Font, norm, Consolas
-	Gui, PredictedPricing:Add, Text, x+5 yp+0 BackgroundTrans, % Round(Trim(data.min), 2) " ~ " Round(Trim(data.max), 2) " " Trim(data.currency)	
+	Gui, PredictedPricing:Add, Text, x+5 yp+0 BackgroundTrans, % Round(Trim(data.min), 2) " ~ " Round(Trim(data.max), 2) " " Trim(data.currency)
+	Gui, PredictedPricing:Add, Text, x20 w300 y+10 BackgroundTrans, % "Contribution to predicted price: "	
+	
+	; mod importance graph
+	Gui, PredictedPricing:Font, s8
+	For _k, _v in _details {
+		If (StrLen(_v.name)) {
+			_line := _v.percentage " -> " _v.name 
+			Gui, PredictedPricing:Add, Text, x30 w350 y+4 BackgroundTrans, % _line	
+		}		
+	}
+	
+	; browser url
 	_url := data.added.browserUrl
-	Gui, PredictedPricing:Add, Link, x245 y99 cBlue BackgroundTrans, <a href="%_url%">Open on poeprices.info</a>
+	Gui, PredictedPricing:Add, Link, x245 y+12 cBlue BackgroundTrans, <a href="%_url%">Open on poeprices.info</a>
 	
 	Gui, PredictedPricing:Font, norm s8 italic, Verdana
-	Gui, PredictedPricing:Add, Text, BackgroundTrans x15 y135 w390, % "You can disable this GUI in favour of a simple result tooltip. Settings menu -> under 'Search' group. Or even disable this predicted search entirely."
+	;Gui, PredictedPricing:Add, Text, BackgroundTrans x15 y135 w390, % "You can disable this GUI in favour of a simple result tooltip. Settings menu -> under 'Search' group. Or even disable this predicted search entirely."
+	Gui, PredictedPricing:Add, Text, BackgroundTrans x15 y+20 w390, % "You can disable this GUI in favour of a simple result tooltip. Settings menu -> under 'Search' group. Or even disable this predicted search entirely."
 	
 	Gui, PredictedPricing:Font, bold s8, Verdana
-	Gui, PredictedPricing:Add, GroupBox, w400 h230 y180 x10, Feedback
+	;Gui, PredictedPricing:Add, GroupBox, w400 h230 y180 x10, Feedback
+	Gui, PredictedPricing:Add, GroupBox, w400 h230 y+20 x10, Feedback
 	Gui, PredictedPricing:Font, norm, Verdana
 	
 	Gui, PredictedPricing:Add, Text, x20 yp+25 BackgroundTrans, You think the predicted price range is?

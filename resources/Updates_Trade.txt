@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.10.8
+================================================================================================
+* Added additional information to the predicted pricing results to show in what way the mods/properties contribute to the predicted price.
+* Small fixes and changes to prepare for the Delve league.
+
 2.10.7
 ================================================================================================
 * Fixed a recently introduced issue with the url used by the currency search (new minimum stock size parameter required).
