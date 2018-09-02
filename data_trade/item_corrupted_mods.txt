@@ -7,7 +7,7 @@ Can have up to # additional Trap placed at a time
 Grants Level # Anger Skill
 #% increased Attack Speed
 #% chance to Avoid being Shocked
-#% Chance to Block
+#% Chance to Block Attack Damage
 You can catch Corrupted Fish
 Cannot be Knocked Back
 Enemies Cannot Leech Life From you
@@ -35,7 +35,7 @@ Curse Enemies with Level # Vulnerability on Hit
 #% increased Damage while Dead
 Grants Level # Determination Skill
 Grants Level # Discipline Skill
-#% additional Block Chance while Dual Wielding
++#% Chance to Block Attack Damage while Dual Wielding
 Grants Level # Elemental Weakness Skill
 #% of Fire Damage Leeched as Life
 #% increased Quantity of Fish Caught
@@ -75,7 +75,7 @@ Grants Level # Purity of Elements Skill
 You cannot be Cursed with Silence
 Socketed Skill Gems get a #% Mana Multiplier
 +# to Level of Socketed Vaal Gems
-#% Chance to Block Spells
+#% Chance to Block Spell Damage
 Socketed Gems are supported by Level # Additional Accuracy
 Socketed Gems are Supported by Level # Added Fire Damage
 Socketed Gems are Supported by Level # Increased Area of Effect
@@ -167,8 +167,7 @@ Adds # to # Physical Damage
 #% increased Critical Strike Chance
 #% increased Physical Damage
 You cannot be Maimed
-+#% to maximum Block Chance
-#% of Block Chance applied to Spells
++#% to maximum Chance to Block Attack Damage
 Gain #% of Physical Damage as Extra Cold Damage
 Gain #% of Physical Damage as Extra Fire Damage
 Gain #% of Physical Damage as Extra Lightning Damage

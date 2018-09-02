@@ -61,7 +61,7 @@ Blood Rage grants additional #% chance to gain a Frenzy Charge on Kill
 #% increased Unearth Cast Speed
 Unearth Creates Corpses with +# Level
 #% increased Unearth Damage
-Bone Offering grants an additional +#% Block Chance
+Bone Offering grants an additional +#% Chance to Block Attack Damage
 #% increased Bone Offering Duration
 #% increased Burning Arrow Damage
 Burning Arrow has +#% chance to Ignite
@@ -69,6 +69,7 @@ Burning Arrow has +#% chance to Ignite
 #% increased Caustic Arrow Damage
 #% increased Caustic Arrow Duration
 #% increased Caustic Arrow Area of Effect
+Caustic Arrow has #% chance to inflict Withered on Hit for # seconds base Duration
 +#% to Chaos Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Chaos Golems
 #% increased Blade Flurry Damage
@@ -87,6 +88,9 @@ Charged Dash has +# to Radius of each Wave's last damage Area
 #% increased Cold Snap Area of Effect
 #% increased Conductivity Curse Effect
 #% increased Conductivity Duration
+Consecrated Path deals #% increased Damage
+Consecrated Path has #% increased Area of Effect
+Consecrated Path has #% increased teleport range
 #% increased Contagion Damage
 #% increased Contagion Duration
 #% increased Contagion Area of Effect
@@ -117,9 +121,11 @@ Detonate Dead has a #% chance to detonate an additional Corpse
 #% increased Discharge Damage
 #% increased Discharge Radius
 #% reduced Discipline Mana Reservation
+Dominating Blow can summon # additional Magic Sentinels of Dominance
+Dominating Blow can summon an additional Rare Sentinel of Dominance
 #% increased Dominating Blow Damage
 #% increased Dominating Blow Duration
-Dominated Minions deal #% increased Damage
+Summoned Sentinels of Dominance deal #% increased Damage
 Lacerate deals (#-#) to (#-#) added Physical Damage against Bleeding Enemies
 #% increased Lacerate Critical Strike Chance
 #% increased Lacerate Damage
@@ -229,12 +235,17 @@ Ground Slam has a #% increased angle
 #% increased Heavy Strike Attack Speed
 #% increased Heavy Strike Damage
 Heavy Strike has a #% chance to deal Double Damage
+Herald of Agony has #% reduced Mana Reservation
+Summoned Agony Crawler fires # additional Projectiles
 #% increased Herald of Ash Damage
 #% reduced Herald of Ash Mana Reservation
 #% increased Herald of Ice Damage
 #% reduced Herald of Ice Mana Reservation
++# to maximum number of Sentinels of Purity
+Herald of Purity has #% reduced Mana Reservation
 #% increased Herald of Thunder Damage
 #% reduced Herald of Thunder Mana Reservation
+Summoned Holy Relic has #% increased Buff Effect
 #% increased Ice Crash Damage
 #% of Ice Crash Physical Damage gained as Extra Cold Damage
 #% increased Ice Crash Area of Effect
@@ -353,6 +364,9 @@ Gain #% of Rejuvenation Totem Life Regeneration as extra Mana Regeneration
 Righteous Fire grants #% increased Spell Damage
 #% increased Riposte Cooldown Recovery Speed
 #% increased Riposte Damage
+Scourge Arrow creates an additional spore pod at Maximum Stages
+Scourge Arrow has #% chance to Poison per Stage
+Scourge Arrow deals #% increased Damage
 #% increased Searing Bond Damage
 #% increased Searing Bond Totem Elemental Resistances
 #% increased Searing Bond Totem Placement Speed
@@ -376,6 +390,9 @@ Explosive Trap causes # additional smaller explosions
 #% increased Siege Ballista Damage
 #% increased Siege Ballista Totem Placement Speed
 #% increased Dark Pact Damage
+Smite has a #% chance for lightning to strike another target
+Smite has #% increased Aura Effect
+Smite deals #% increased Damage
 #% increased Smoke Mine Duration
 Smoke Mine grants additional #% increased Movement Speed
 #% increased Spark Damage
@@ -395,7 +412,8 @@ Spirit Offering grants +#% of Physical Damage as Extra Chaos Damage
 #% increased Split Arrow Damage
 Split Arrow fires # additional Projectiles
 #% increased Static Strike Damage
-#% reduced Static Strike Duration
+#% increased Static Strike Duration
+Static Strike has +# maximum Beam Targets
 #% increased Static Strike Area of Effect
 +#% to Stone Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Stone Golems
@@ -434,6 +452,9 @@ Tempest Shield chains an additional # times
 #% increased Tornado Shot Damage
 Tornado Shot fires an additional secondary Projectile
 Tornado Shot fires # additional secondary Projectiles
+Toxic Rain deals #% increased Damage
+Toxic Rain fires # additional Arrow
+Toxic Rain gains #% of Physical Damage as Extra Chaos Damage
 #% increased Vengeance Cooldown Recovery Speed
 #% increased Vengeance Damage
 #% increased Vigilant Strike Damage
@@ -458,8 +479,8 @@ Vortex has #% increased Area of Effect when Cast on Frostbolt
 #% increased Wild Strike Damage
 Wild Strike Chains an additional # times
 #% increased Wild Strike Area of Effect
-#% increased Wither Duration
-#% increased Wither Area of Effect
+Wither #% increased Duration
+Wither has #% increased Area of Effect
 #% reduced Wrath Mana Reservation
 Zombies have #% increased Attack Speed
 +#% to Raised Zombie Elemental Resistances
