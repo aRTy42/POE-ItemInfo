@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.10.9
+================================================================================================
+* Fixed an issue where the advanced search could ignore/omit the name of unique jewels.
+* Improved support for different keyboard layouts.
+
 2.10.8
 ================================================================================================
 * Added additional information to the predicted pricing results to show in what way the mods/properties contribute to the predicted price.

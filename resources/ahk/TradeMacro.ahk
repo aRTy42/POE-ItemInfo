@@ -161,7 +161,7 @@ TradeFunc_OpenWikiHotkey(priceCheckTest = false, itemData = "") {
 			TradeFunc_OpenUrlInBrowser("http://poedb.tw/us/")
 		} Else {
 			TradeFunc_OpenUrlInBrowser("http://pathofexile.gamepedia.com/")	
-		}		
+		}	
 	}
 	Else {
 		UrlAffix := ""
@@ -421,7 +421,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	/*
 		ignore item name in certain cases
 		*/ 
-	If (!Item.IsJewel and !Item.IsLeaguestone and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask or (Item.IsJewel and isAdvancedPriceCheckRedirect)) {
+	If (!Item.IsJewel and !Item.IsLeaguestone and Item.RarityLevel > 1 and Item.RarityLevel < 4 and !Item.IsFlask or (Item.IsJewel and not Item.RarityLevel = 4 and isAdvancedPriceCheckRedirect)) {
 		IgnoreName := true
 	}
 	If (Item.RarityLevel > 0 and Item.RarityLevel < 4 and (Item.IsWeapon or Item.IsArmour or Item.IsRing or Item.IsBelt or Item.IsAmulet)) {
@@ -435,7 +435,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			IgnoreName := false
 		} Else {
 			IgnoreName := true
-		}		
+		}
 	}
 
 	If (Item.IsLeagueStone) {
@@ -839,7 +839,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Item.UsedInSearch.Type := (Item.xtype) ? Item.GripType . " " . Item.SubType : Item.SubType	
 		}		
 	}
-
+	
 	/*
 		make sure to not look for unique items when searching rare/white/magic items
 		*/
