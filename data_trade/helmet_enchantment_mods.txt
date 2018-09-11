@@ -245,7 +245,9 @@ Summoned Agony Crawler fires # additional Projectiles
 Herald of Purity has #% reduced Mana Reservation
 #% increased Herald of Thunder Damage
 #% reduced Herald of Thunder Mana Reservation
-Summoned Holy Relic has #% increased Buff Effect
+Summoned Holy Relics have #% increased Buff Effect
+Summoned Holy Relics deal #% increased Damage
+Summoned Holy Relics have #% increased Area of Effect
 #% increased Ice Crash Damage
 #% of Ice Crash Physical Damage gained as Extra Cold Damage
 #% increased Ice Crash Area of Effect
