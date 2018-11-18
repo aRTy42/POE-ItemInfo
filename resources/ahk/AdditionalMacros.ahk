@@ -124,7 +124,7 @@ AM_Remaining_HKey:
 Return
 
 AM_JoinChannel_HKey:
-	SendInput {Enter}/%AM_ChannelName%{Enter}		; Join a channel with F10. Default = global 820.
+	SendInput {Enter}/%AM_ChannelName%{Enter}	; Join a channel with F10. Default = global 820.
 Return
 
 AM_SetAfkMessage_HKey:
@@ -135,8 +135,14 @@ AM_OpenOnPoEAntiquary_HKey:
 	OpenItemOnPoEAntiquary()					; Opens an item on http://poe-antiquary.xyz to lookup a price history from last leagues.
 Return
 
+/*
 AM_AdvancedItemInfo_HKey:
 	AdvancedItemInfoExt()					; Opens an item on pathof.info for an advanced affix breakdown.
+Return
+*/
+
+AM_AdvItemFilterPreview_HKey:
+	ShowAdvancedItemFilterFormatting()			; Parses your current loot filter (if a custom filter is being used) and shows a highlighting preview for our item, including information about the mathcing filter rule 
 Return
 
 AM_WhoisLastWhisper_HKey:

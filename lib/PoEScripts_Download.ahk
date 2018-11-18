@@ -79,9 +79,9 @@
 			}
 		} Else {
 			commandData .= " -" redirect "ks --compressed "
-			If (requestType = "GET") {
-				;commandHdr  .= " -k" redirect "s "
-				commandHdr  .= " -s" redirect " -D - -o /dev/null " 
+			If (requestType = "GET") {				
+				;commandHdr  .= " -s" redirect " -D - -o /dev/null " ; unix
+				commandHdr  .= " -s" redirect " -D - -o nul " ; windows
 			} Else {
 				commandHdr  .= " -I" redirect "ks "
 			}

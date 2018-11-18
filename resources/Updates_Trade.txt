@@ -1,5 +1,16 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.11.1
+================================================================================================
+* Removed the hotkey to open an item on pathof.info since it's outdated and kind of obsolete with PoE's advanced mod descriptions.
+* Added a new feature to show your items loot filter highlighting, mostly targeted at newer players.
+	** Default hotkey is `Ctrl + Alt + C`, which previously was used for the pathof.info feature.
+	** Requires a successfully loaded custom loot filter.
+	** This feature is part of `Additional Macros` and can be changed/disabled in the respective settings tab.
+	** Probably not bug-free at this point.
+* Updated all data files, as usual (uniques etc).
+* Changed requests to poe.ninja to use HTTPS instead of HTTP.
+
 2.10.9
 ================================================================================================
 * Fixed an issue where the advanced search could ignore/omit the name of unique jewels.

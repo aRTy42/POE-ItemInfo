@@ -1344,7 +1344,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 }
 
 TradeFunc_GetPoENinjaItemUrl(league, item) {	
-	url := "http://poe.ninja/"
+	url := "https://poe.ninja/"
 
 	If (league = "tmpstandard") {
 		url .= "challenge/"
@@ -5127,7 +5127,7 @@ ReadPoeNinjaCurrencyData:
 	isFallback	:= false
 	file			:= A_ScriptDir . "\temp\currencyData.json"
 	fallBackDir	:= A_ScriptDir . "\data_trade"
-	url			:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
+	url			:= "https://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
 	parsedJSON	:= CurrencyDataDowloadURLtoJSON(url, sampleValue, false, isFallback, league, "PoE-TradeMacro", file, fallBackDir, usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)
 
 	; fallback to Standard and Hardcore league if used league seems to not be available
@@ -5141,7 +5141,7 @@ ReadPoeNinjaCurrencyData:
 			fallback	:= "Standard"
 		}
 
-		url			:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
+		url			:= "https://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
 		parsedJSON	:= CurrencyDataDowloadURLtoJSON(url, sampleValue, true, isFallback, league, "PoE-TradeMacro", file, fallBackDir, usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)
 	}	
 	global CurrencyHistoryData := parsedJSON.lines
