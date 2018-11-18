@@ -8,6 +8,7 @@ The following is a list of what has been updated, starting with 1.1.0
 	** Requires a successfully loaded custom loot filter.
 	** This feature is part of `Additional Macros` and can be changed/disabled in the respective settings tab.
 	** Probably not bug-free at this point.
+* Changed the default search to force the number of Abyssal Sockets if the item has any. So far this was only possible by using the advanced search.
 * Updated all data files, as usual (uniques etc).
 * Changed requests to poe.ninja to use HTTPS instead of HTTP.
 

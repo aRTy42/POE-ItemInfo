@@ -841,6 +841,17 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	
 	/*
+		handle abyssal sockets for the default search
+		*/
+	If (AdvancedPriceCheckItem.mods.length() <= 0) {
+		If (Item.AbyssalSockets > 0) {
+			RequestParams.sockets_a_min := Item.AbyssalSockets
+			RequestParams.sockets_a_max := Item.AbyssalSockets
+			Item.UsedInSearch.AbyssalSockets := (Item.AbyssalSockets > 0) ? Item.AbyssalSockets : ""
+		}	
+	}
+	
+	/*
 		make sure to not look for unique items when searching rare/white/magic items
 		*/
 	If (!Item.IsUnique) {
@@ -862,7 +873,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		
 		/*
 			add genus
-			*/		
+			*/
 		If (not isAdvancedPriceCheckRedirect) {
 			modParam := new _ParamMod()
 			modParam.mod_name := TradeFunc_FindInModGroup(TradeGlobals.Get("ModsData")["bestiary"], Item.BeastData.GenusMod)
@@ -2640,6 +2651,7 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 			Title .= (Item.UsedInSearch.Enchantment)  ? "Enchantment " : ""
 			Title .= (Item.UsedInSearch.CorruptedMod) ? "Corr. Implicit " : ""
 			Title .= (Item.UsedInSearch.Sockets)      ? "| " . Item.UsedInSearch.Sockets . "S " : ""
+			Title .= (Item.UsedInSearch.AbyssalSockets) ? "| " . Item.UsedInSearch.AbyssalSockets . " Abyss Sockets " : ""
 			Title .= (Item.UsedInSearch.Links)        ? "| " . Item.UsedInSearch.Links   . "L " : ""
 			If (Item.UsedInSearch.iLvl.min and Item.UsedInSearch.iLvl.max) {
 				Title .= "| iLvl (" . Item.UsedInSearch.iLvl.min . "-" . Item.UsedInSearch.iLvl.max . ")"

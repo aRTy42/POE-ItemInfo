@@ -330,6 +330,7 @@ class Item_ {
 		This.MapTier		:= ""
 		This.MaxSockets	:= ""
 		This.Sockets		:= ""
+		This.AbyssalSockets	:= ""
 		This.SocketGroups	:= []
 		This.Links		:= ""
 		This.SubType		:= ""		
@@ -7429,7 +7430,7 @@ ParseLinks(ItemDataText)
 	return HighestLink
 }
 
-ParseSockets(ItemDataText)
+ParseSockets(ItemDataText, ByRef AbyssalSockets)
 {
 	SocketsCount := 0
 	
@@ -7438,11 +7439,11 @@ ParseSockets(ItemDataText)
 		If (RegExMatch(A_LoopField, "i)^Sockets\s?+:"))
 		{
 			LinksString	:= GetColonValue(A_LoopField)
-			RegExReplace(LinksString, "i)[RGBWDA]", "", SocketsCount) ; "D" is being used for Resonator sockets, "A" for Abyssal Sockets
+			RegExReplace(LinksString, "i)[RGBWDA]", "", SocketsCount) 	; "D" is being used for Resonator sockets, "A" for Abyssal Sockets
+			RegExReplace(LinksString, "i)[A]", "", AbyssalSockets) 	; "A" for Abyssal Sockets
 			Break
 		}
 	}
-
 	return SocketsCount
 }
 
@@ -7932,9 +7933,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	ItemData.Links		:= ParseLinks(ItemDataText)
 	Item.Links		:= ItemData.Links
-	ItemData.Sockets	:= ParseSockets(ItemDataText)	
+	ItemData.Sockets	:= ParseSockets(ItemDataText, ItemAbyssalSockets)
 	Item.Sockets		:= ItemData.Sockets
-	Item.SocketGroups	:= ParseSocketGroups(ItemDataText)
+	Item.AbyssalSockets := ItemAbyssalSockets
+	Item.SocketGroups	:= ParseSocketGroups(ItemDataText) 
 
 	Item.Charges		:= ParseCharges(ItemData.Stats)
 
