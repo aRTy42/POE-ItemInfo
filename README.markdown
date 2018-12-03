@@ -45,7 +45,7 @@ Never completely trust any price checking tool. Inform yourself about what this 
 | `ctrl+shift+d`  | Open an item on poeapp.com.
 | `ctrl+e`      | Show item age (own listed items if account name is specified in settings).
 | `ctrl+l`      | Switch leagues.
-| `ctrl+r`      | Copies an item note for premium tabs to your clipboard that creates a valid currency ratio on all trade sites.
+| `alt+r`      | Copies an item note for premium tabs to your clipboard that creates a valid currency ratio on all trade sites.
 
 #### Additional Macros ####
 
