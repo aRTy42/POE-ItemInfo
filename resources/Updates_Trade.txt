@@ -3,14 +3,14 @@ The following is a list of what has been updated, starting with 1.1.0
 2.12.1
 ================================================================================================
 * QoL features for the color blind:
-	** `Ctrl + c` now also now has the items socket string added to the tooltip, example "R-G-B B-B-G".
+	** `Ctrl + c` now also has the items socket string added to the tooltip, example "R-G-B B-B-G".
 	** `Ctrl + c` on a Gem now has added its color to the tooltip.
 	** A new hotkey (`Ctrl + alt + c`) shows a tooltip with a graphical/text representation of the items sockets (color, links, position).
 	** This new hotkey also shows a gems color.
 * Lutbot logout macro integration:
 	** LutTools (Lutbot) is a collection of logout, whisper reply and basic price check features.
-	** TradeMacro supports the newly released Lite-Version which only has the TCP logout features.
-	** TradeMacro only help in managing this script by giving you the option to run it on script start and check for hotkey conflicts.
+	** TradeMacro supports the newly released Lite-Version which only has the TCP logout features included.
+	** TradeMacro only helps in managing this script by giving you the option to run it on script start and check for hotkey conflicts.
 	** The Lutbot macro itself stays as a seperate installation with seperated development and maintaining.
 	** This integration is accessible from a new tab "Lutbot" in the settings menu.
 * Hideout decoration stash search:
@@ -19,18 +19,21 @@ The following is a list of what has been updated, starting with 1.1.0
 	** The games `Ctrl + f` hotkey would focus the purchase windows filter field instead, pressing it when not hovering over a decoration still does this.
 	** The hotkey added to the "AdditionalMacros" tab needs the coordinates of your hideout stash filter field to click on it, you may have to edit those settings.
 	** This feature can be disabled independently from the stash highlighting feature.
+	** This allows quickly looking up how many of a specific decoration from the vendor you already own.
+	** Let's hope this doesn't break with the Betrayal update.
 * Advanced Search:
 	** Focusing one of a mods/stats value edit fields now automatically marks the checkbox to include it in the search. This behaviour can be disabled in the settings.
-	** Corrupted Jewels now have a checkbox to not include the corrupted stat in the search, which was previously forced.
+	** Corrupted Jewels now have a checkbox to not include the corrupted state in the search, which was previously forced.
 	** Improved matching of item affixes and mods supported by poe.trade (fixed some issues).
 	** Fixed the issue that the variable/random mods on the Watcher's Eye were missing from the UI.
 * Hotkey Assignment:
 	** Previously TradeMacro didn't detect any hotkey conflicts.
 	** You will now be warned of any conflicts and asked to resolve the issues.
-* Fixed an issue with poedb links for some unique items.
+* Fixed an issue with poedb urls for some unique items.
 * Fixed an issue with the league name in the poe-antiquary url.
 * Improved encoding the item data for poeprices requests which caused exceptions or failed for some users.
 * Small UI improvements.
+* The splashscreen ("Initializing script..." and memes) now stays longer on screen, previously it was disabled too early. If this is too annoying I don't mind reverting this. You can also find how to start without any splashscreen on the github wiki under "Usage Installation".
 
 2.11.2
 ================================================================================================
