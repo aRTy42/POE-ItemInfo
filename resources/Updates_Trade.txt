@@ -5,7 +5,7 @@ The following is a list of what has been updated, starting with 1.1.0
 * QoL features for the color blind:
 	** `Ctrl + c` now also has the items socket string added to the tooltip, example "R-G-B B-B-G".
 	** `Ctrl + c` on a Gem now has added its color to the tooltip.
-	** A new hotkey (`Ctrl + alt + c`) shows a tooltip with a graphical/text representation of the items sockets (color, links, position).
+	** A new hotkey (`Alt + c`) shows a tooltip with a graphical/text representation of the items sockets (color, links, position).
 	** This new hotkey also shows a gems color.
 * Lutbot logout macro integration:
 	** LutTools (Lutbot) is a collection of logout, whisper reply and basic price check features.
