@@ -352,7 +352,7 @@ CheckAndCorrectWindowPosition(GuiID, borderWidth, TTX, TTY, TTW, TTH) {
 	; position the tooltip beside the cursor
 	originalCursorY := mousePosY
 	TTY := mousePosY
-	TTY := TTY - Round(TTH / 3)
+	TTY := TTY - Round(TTH / 3) - 5
 	TTX := TTX + CursorW + 3
 	
 	nTTX := TTX

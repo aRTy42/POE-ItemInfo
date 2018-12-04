@@ -5,10 +5,9 @@
 #Persistent ; Stay open in background
 
 SetWorkingDir, %A_ScriptDir%
-;https://autohotkey.com/boards/viewtopic.php?f=6&t=53
-#Include, %A_ScriptDir%\lib\JSON.ahk
-; Console https://autohotkey.com/boards/viewtopic.php?f=6&t=2116
-#Include, %A_ScriptDir%\lib\Class_Console.ahk
+
+#Include, %A_ScriptDir%\lib\JSON.ahk				; https://autohotkey.com/boards/viewtopic.php?f=6&t=53
+#Include, %A_ScriptDir%\lib\Class_Console.ahk		; Console https://autohotkey.com/boards/viewtopic.php?f=6&t=2116
 #Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
 #Include, %A_ScriptDir%\lib\AssociatedProgram.ahk
 #Include, %A_ScriptDir%\lib\EasyIni.ahk
@@ -20,6 +19,14 @@ TradeMsgWrongAHKVersion := "AutoHotkey v" . TradeAHKVersionRequired . " or later
 If (A_AhkVersion < TradeAHKVersionRequired)
 {
 	MsgBox, 16, Wrong AutoHotkey Version, % TradeMsgWrongAHKVersion
+	ExitApp
+}
+If (not StrLen(A_AhkPath)) {
+	MsgBox, 16, AHK path empty, "The script can't find your AHK installation."
+	ExitApp
+}
+If (not FileExist(A_AhkPath)) {
+	MsgBox, 16, AHK executable missing, "The script can't the AutoHotkey executable in your AHk installation directory.`n`n" A_AhkPath
 	ExitApp
 }
 
@@ -69,6 +76,7 @@ TradeGlobals.Set("DefaultLeague", (TradeFunc_CheckIfTempLeagueIsRunning() > 0) ?
 TradeGlobals.Set("GithubUser", "POE-TradeMacro")
 TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
 TradeGlobals.Set("ReleaseVersion", TradeReleaseVersion)
+Globals.Set("AssignedHotkeys", {})
 global globalUpdateInfo := {}
 globalUpdateInfo.repo := TradeGlobals.Get("GithubRepo")
 globalUpdateInfo.user := TradeGlobals.Get("GithubUser")
@@ -77,7 +85,7 @@ globalUpdateInfo.skipSelection 	:= 0
 globalUpdateInfo.skipBackup 		:= 0
 globalUpdateInfo.skipUpdateCheck 	:= 0
 
-TradeGlobals.Set("SettingsScriptList", ["TradeMacro", "ItemInfo", "Additional Macros"])
+TradeGlobals.Set("SettingsScriptList", ["TradeMacro", "ItemInfo", "Additional Macros", "Lutbot"])
 TradeGlobals.Set("SettingsUITitle", "PoE (Trade) Item Info Settings")
 argumentProjectName		= %1%
 argumentUserDirectory	= %2%
@@ -125,7 +133,7 @@ TradeFunc_CheckIfCloudFlareBypassNeeded()
 TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
 Sleep, 200
 ReadTradeConfig("", "config_trade.ini", _updateConfigWrite)
-TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[SearchLeague])
+TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
 
 ; set this variable to skip the update check in "PoE-ItemInfo.ahk"
 SkipItemInfoUpdateCall := 1
@@ -159,7 +167,13 @@ If (_updateConfigWrite) {
 	; some value needs to be written to config because it was invalid and was therefore changed
 	WriteTradeConfig()
 }
-TradeFunc_StopSplashScreen()
+
+/*
+	Triggers when an edit field on the advanced search gets focus.
+*/
+OnMessage( 0x111, "HandleGuiControlSetFocus" )
+
+TradeFunc_FinishTMInit()
 
 ; ----------------------------------------------------------- Functions ----------------------------------------------------------------
 
@@ -203,12 +217,8 @@ TradeFunc_AssignAllHotkeys()
 {
 	Global
 	For keyName, keyVal in TradeOpts_New.Hotkeys {
-		If (TradeOpts_New.HotkeyStates[keyName]) {
-			TradeFunc_AssignHotkey(keyVal, keyName)
-		}
-		Else {
-			Hotkey, %keyVal%, off, UseErrorLevel
-		}
+		state := TradeOpts_New.HotkeyStates[keyName] ? "on" : "off"
+		TradeFunc_AssignHotkey(keyVal, keyName, state)
 	}
 	Return
 }
@@ -229,8 +239,7 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 	oldAltCurrencySearch := TradeOpts.AlternativeCurrencySearch
 
 	UpdateOldTradeOptsFromVars()
-
-	TradeOpts.SearchLeague := TradeFunc_CheckIfLeagueIsActive(TradeOpts.SearchLeague)
+	TradeOpts.SearchLeague := TradeFunc_CheckIfLeagueIsActive(TradeOpts.SearchLeague, "2")
 	oldLeagueName := TradeGlobals.Get("LeagueName")
 	newLeagueName := TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague]
 	TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
@@ -337,47 +346,31 @@ CreateDefaultTradeConfig() {
 	WriteTradeConfig(path)
 }
 
-TradeFunc_CheckIfLeagueIsActive(LeagueName) {
+TradeFunc_CheckIfLeagueIsActive(LeagueName, debug = "") {
 	; Check if league from Ini is set to an inactive league and change it to the corresponding active one, for example tmpstandard to standard
 	; Leagues not supported with any API (beta leagues) and events (some races and SSF events) are being removed while reading the config when they are not supported by poe.trade anymore
 	If (RegExMatch(LeagueName, "i)tmp(standard)|tmp(hardcore)", match) and not TradeGlobals.Get("TempLeagueIsRunning")) {
 		LeagueName := match1 ? "standard" : "hardcore"
-	} 
-	If (RegExMatch(LeagueName, "i)(hc|hardcore).*event|(event)", match) and not RegExMatch(LeagueName, "i)ssf") and not TradeGlobals.Get("EventLeagueIsRunning")) {
+	}
+	Else If (RegExMatch(LeagueName, "i)(hc|hardcore).*event|(event)", match) and not RegExMatch(LeagueName, "i)ssf") and not TradeGlobals.Get("EventLeagueIsRunning")) {
 		LeagueName := match1 ? "hardcore" : "standard"
+	} 
+	Else {
+		For key, val in TradeGlobals.Get("Leagues") {
+			If (val = LeagueName) {
+				LeagueName := key
+			}
+		}
 	}
 	
 	return LeagueName
 }
 
 ; ------------------ ASSIGN HOTKEY AND HANDLE ERRORS ------------------
-TradeFunc_AssignHotkey(Key, Label) {
-	Key := KeyNameToKeyCode(Key, TradeOpts.KeyToSCState)
-	Hotkey, %Key%, %Label%, UseErrorLevel
-	If (ErrorLevel)	{
-		If (errorlevel = 1)
-			str := str . "`nASCII " . Key . " - 1) The Label parameter specifies a nonexistent label name."
-		Else If (errorlevel = 2)
-			str := str . "`nASCII " . Key . " - 2) The KeyName parameter specifies one or more keys that are either not recognized or not supported by the current keyboard layout/language. Switching to the english layout should solve this for now."
-		Else If (errorlevel = 3)
-			str := str . "`nASCII " . Key . " - 3) Unsupported prefix key. For example, using the mouse wheel as a prefix in a hotkey such as WheelDown & Enter is not supported."
-		Else If (errorlevel = 4)
-			str := str . "`nASCII " . Key . " - 4) The KeyName parameter is not suitable for use with the AltTab or ShiftAltTab actions. A combination of two keys is required. For example: RControl & RShift::AltTab."
-		Else If (errorlevel = 5)
-			str := str . "`nASCII " . Key . " - 5) The command attempted to modify a nonexistent hotkey."
-		Else If (errorlevel = 6)
-			str := str . "`nASCII " . Key . " - 6) The command attempted to modify a nonexistent variant of an existing hotkey. To solve this, use Hotkey IfWin to set the criteria to match those of the hotkey to be modified."
-		Else If (errorlevel = 50)
-			str := str . "`nASCII " . Key . " - 50) Windows 95/98/Me: The command completed successfully but the operating system refused to activate the hotkey. This is usually caused by the hotkey being "" ASCII " . int . " - in use"" by some other script or application (or the OS itself). This occurs only on Windows 95/98/Me because on other operating systems, the program will resort to the keyboard hook to override the refusal."
-		Else If (errorlevel = 51)
-			str := str . "`nASCII " . Key . " - 51) Windows 95/98/Me: The command completed successfully but the hotkey is not supported on Windows 95/98/Me. For example, mouse hotkeys and prefix hotkeys such as a & b are not supported."
-		Else If (errorlevel = 98)
-			str := str . "`nASCII " . Key . " - 98) Creating this hotkey would exceed the 1000-hotkey-per-script limit (however, each hotkey can have an unlimited number of variants, and there is no limit to the number of hotstrings)."
-		Else If (errorlevel = 99)
-			str := str . "`nASCII " . Key . " - 99) Out of memory. This is very rare and usually happens only when the operating system has become unstable."
-
-		MsgBox, %str%
-	}
+TradeFunc_AssignHotkey(Key, Label, state) {
+	VKey := KeyNameToKeyCode(Key, TradeOpts.KeyToSCState)
+	
+	AssignHotKey(Label, key, vkey, state)
 }
 
 ; ------------------ GET LEAGUES ------------------
@@ -537,7 +530,9 @@ CreateTradeSettingsUI()
 
 	StringTrimRight, TabNames, TabNames, 1
 	Gui, Add, Tab3, Choose1 h660 x0, %TabNames%
-
+	
+	topGroupBoxYPos := "y53"
+	
 	/* 
 		General
 	*/
@@ -589,12 +584,18 @@ CreateTradeSettingsUI()
 		Search
 	*/
 
-	GuiAddGroupBox("[TradeMacro] Search", "x327 y35 w310 h625")
-
+	GuiAddGroupBox("[TradeMacro] Search", "x327 " topGroupBoxYPos " w310 h625")
+	
+	; league section
 	GuiAddText("League:", "x337 yp+28 w160 h20 0x0100", "LblSearchLeague", "LblSearchLeagueH")
-	AddToolTip(LblSearchLeagueH, "Defaults to ""Standard"" or ""TmpStandard"" If there is a`nTemp-League active at the time of script execution.`n`n""TmpStandard"" and ""TmpHardcore"" are automatically replaced`nwith their permanent counterparts If no Temp-League is active.")
+	AddToolTip(LblSearchLeagueH, """TmpStandard"" = current softcore challenge league.`n""TmpHardcore"" = current hardcore challenge league.`n`nDefaults are ""Standard"" and ""TempStandard"" depending on league availability.")
+	
+	GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-15 yp+0 w15 h-1 0x0100", "LeagueInfo", "LeagueInfoH", "")
+	
 	LeagueList := TradeFunc_GetDelimitedLeagueList()
 	GuiAddDropDownList(LeagueList, "x+10 yp-4", TradeOpts.SearchLeague, "SearchLeague", "SearchLeagueH")
+	AddToolTip(SearchLeagueH, """TmpStandard"" = current softcore challenge league.`n""TmpHardcore"" = current hardcore challenge league.`n`nDefaults are ""Standard"" and ""TempStandard"" depending on league availability.")
+	; league section end
 
 	GuiAddText("Account Name:", "x337 yp+34 w160 h20 0x0100", "LblAccountName", "LblAccountNameH")
 	AddToolTip(LblAccountNameH, "Your Account Name used to check your item's age.")
@@ -683,8 +684,13 @@ CreateTradeSettingsUI()
 	GuiAddCheckbox("Use feedback Gui.", "x482 yp+0 w120 h20", TradeOpts.UsePredictedItemPricingGui, "UsePredictedItemPricingGui", "UsePredictedItemPricingGuiH")
 	AddToolTip(UsePredictedItemPricingGuiH, "Use a Gui instead of the default tooltip to display results.`nYou can send some feedback to improve this feature.")
 
+	; option group start
+	GuiAddCheckbox("Include search parameter via edit field focus.", "x337 yp+25 w280 h20", TradeOpts.IncludeSearchParamByFocus, "IncludeSearchParamByFocus", "IncludeSearchParamByFocusH")
+	AddToolTip(IncludeSearchParamByFocusH, "Checks a search parameters (mod/stat line) checkbox to include it in the`nadvanced search when any of its edit fields gets focus.")
+
+
 	; header
-	GuiAddText("Pre-Select Options (Advanced Search)", "x337 yp+43 w280 h20 0x0100 cDA4F49", "", "")
+	GuiAddText("Pre-Select Options (Advanced Search)", "x337 yp+35 w280 h20 0x0100 cDA4F49", "", "")
 	GuiAddText("-------------------------------------------------------------", "x337 yp+6 w280 h20 0x0100 cDA4F49", "", "")
 
 	; option group start
@@ -731,7 +737,7 @@ CreateTradeSettingsUI()
 		Hotkeys 
 	*/
 
-	GuiAddGroupBox("[TradeMacro] Hotkeys", "x647 y35 w310 h295")
+	GuiAddGroupBox("[TradeMacro] Hotkeys", "x647 " topGroupBoxYPos " w310 h295")
 
 	GuiAddCheckbox("Price Check:", "x657 yp+26 w165 h20 0x0100", TradeOpts.PriceCheckEnabled, "PriceCheckEnabled", "PriceCheckEnabledH")
 	AddToolTip(PriceCheckEnabledH, "Check item prices.")
@@ -1527,20 +1533,16 @@ TradeFunc_GetOSInfo() {
 
 ;----------------------- SplashScreens ---------------------------------------
 TradeFunc_StartSplashScreen() {
-	;SplashTextOn, , 20, PoE-TradeMacro, Initializing script...
-	/*
-	initArray := ["Sending Einhar to catch some canaries...", "Burying Sunder and KB in the Depths...", "Hiring Keanu Reeves as a cart driver...", "Hiring a wheely good escort...", 
-	"Preparing GPU to mine Azurite...",  "Loading spell block... 3%... aborting...", "Exploring reddit's first infinite salt mine...", "Awakening the balrogs...", 
-	"Sending the dark elves into some arc delves..."]
-	*/
-	initArray := ["Initializing script...", "Preparing Einhars welcoming party...", "Uninstalling Battle.net...", "Investigating the so-called ""Immortals""...", "Starting mobile app...", "Hunting some old friends..."]
-	
+	initArray := ["Initializing script...", "Preparing Einhars welcoming party...", "Uninstalling Battle.net...", "Investigating the so-called ""Immortals""...", "Starting mobile app..."
+		, "Hunting some old friends...", "Interrogating Master Krillson about fishing secrets...", "Trying to open Voricis chest...", "Setting up lab carries for the other 99%..."
+		, "Helping Alva discover the Jungle Hideout...", "Conning EngineeringEternity with the Atlas City Shuffle...", "Vendoring stat-sticks..."]
+
 	Random, randomNum, 1, initArray.MaxIndex()
-	SplashTextOn, 300, 20, PoE-TradeMacro, % initArray[randomNum]
+	SplashTextOn, 370, 20, PoE-TradeMacro, % initArray[randomNum]
 }
 
-TradeFunc_StopSplashScreen() {
-	SplashTextOff
+TradeFunc_FinishTMInit() {
+	; SplashText gets disabled by ItemInfo
 
 	If (TradeOpts.Debug) {
 		Menu, Tray, Add ; Separator
@@ -1552,7 +1554,7 @@ TradeFunc_StopSplashScreen() {
 		SetTimer, BringPoEWindowToFrontAfterInit, 1000
 
 		gemList := TradeGlobals.Get("GemNameList")
-		If(gemList.Length()) {
+		If (gemList.Length()) {
 			console.log("Fetching gem names successful.")
 		}
 		Else {

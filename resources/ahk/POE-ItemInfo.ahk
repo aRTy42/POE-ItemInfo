@@ -55,8 +55,9 @@ Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
 Globals.Set("ScriptList", [A_ScriptDir "\POE-ItemInfo"])
 Globals.Set("UpdateNoteFileList", [[A_ScriptDir "\resources\updates.txt","ItemInfo"]])
-Globals.Set("SettingsScriptList", ["ItemInfo", "Additional Macros"])
+Globals.Set("SettingsScriptList", ["ItemInfo", "Additional Macros", "Lutbot"])
 Globals.Set("ScanCodes", GetScanCodes())
+Globals.Set("AssignedHotkeys", GetObjPropertyCount(Globals.Get("AssignedHotkeys")) ? Globals.Get("AssignedHotkeys") : {})	; initializes the object only if it hasn't any properties already
 argumentProjectName		= %1%
 argumentUserDirectory	= %2%
 argumentIsDevVersion	= %3%
@@ -332,6 +333,7 @@ class Item_ {
 		This.Sockets		:= ""
 		This.AbyssalSockets	:= ""
 		This.SocketGroups	:= []
+		This.SocketString	:= ""
 		This.Links		:= ""
 		This.SubType		:= ""		
 		This.DifficultyRestriction := ""
@@ -339,6 +341,9 @@ class Item_ {
 		This.Charges		:= []
 		This.AreaMonsterLevelReq := []
 		This.BeastData 	:= {}
+		This.GemColor		:= ""
+		This.veiledPrefixCount	:= ""
+		This.veiledSuffixCount	:= ""
 		
 		This.HasImplicit	:= False
 		This.HasEffect		:= False
@@ -362,6 +367,7 @@ class Item_ {
 		This.IsTalisman 	:= False
 		This.IsJewel 		:= False
 		This.IsLeaguestone	:= False
+		This.IsScarab		:= False
 		This.IsDivinationCard := False
 		This.IsProphecy	:= False
 		This.IsUnique 		:= False
@@ -375,6 +381,7 @@ class Item_ {
 		This.IsShaperBase	:= False
 		This.IsAbyssJewel	:= False
 		This.IsBeast		:= False
+		This.IsHideoutObject:= False
 	}
 }
 Global Item := new Item_
@@ -528,6 +535,14 @@ Menu, Tray, Default, % Globals.Get("SettingsUITitle", "PoE ItemInfo Settings")
 #Include %A_ScriptDir%\data\GemQualityList.txt
 
 Fonts := new Fonts(Opts.FontSize, 9)
+
+If (Opts.Lutbot_CheckScript) {	
+	SetTimer, StartLutbot, 2000
+}
+
+SplashTextOff	; init finished
+
+; ----------------------------------------------------------- Functions and Labels ----------------------------------------------------------------
 
 GetAhkExeFilename(Default_="AutoHotkey.exe")
 {
@@ -866,13 +881,13 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			return
 		}
 		
-		; Leaguestones
-		IfInString, LoopField, Leaguestone
+		; Leaguestones and Scarabs
+		If (RegExMatch(Loopfield, "i)Leaguestone|Scarab"))
 		{
-			RegexMatch(LoopField, "i)(.*)Leaguestone", match)
-			RegexMatch(Trim(match1), "i)\b(\w+)\W*$", match) ; match last word
-			BaseType = Leaguestone
-			SubType := Trim(match1) " Leaguestone"
+			RegexMatch(LoopField, "i)(.*)(Leaguestone|Scarab)", typeMatch)
+			RegexMatch(Trim(typeMatch1), "i)\b(\w+)\W*$", match) ; match last word
+			BaseType := Trim(typeMatch2)
+			SubType := Trim(match1) " " Trim(typeMatch2)
 			return
 		}
 
@@ -1599,6 +1614,27 @@ ParseGemLevel(ItemDataText, PartialString="Level:")
 			Result := StrTrimWhitespace(ItemLevelParts2)
 			return Result
 		}
+	}
+}
+
+ParseGemColor(ItemDataText)
+{
+	RegExMatch(ItemDataText, "ims)Requirements.*?(Str\s?:\s?(\d+))", str)
+	RegExMatch(ItemDataText, "ims)Requirements.*?(Dex\s?:\s?(\d+))", dex)
+	RegExMatch(ItemDataText, "ims)Requirements.*?(Int\s?:\s?(\d+))", int)
+	
+	highestRequirement := ""
+	If (not str2 and not dex2 and not int2) {
+		Return "WHITE"
+	}
+	Else If (str2 > dex2 and str2 > int2) {
+		Return "RED"
+	}
+	Else If (dex2 > str2 and dex2 > int2) {
+		Return "GREEN"
+	}
+	Else If (int2 > dex2 and int2 > str2) {
+		Return "BLUE"
 	}
 }
 
@@ -3896,6 +3932,26 @@ SolveAffixes_PreSuf(Keyname, LineNum, Value, Filename1, Filename2, ItemLevel)
 		LineTxt := MakeAffixDetailLine(Itemdata.AffixTextLines[LineNum].Text, ["Prefix", "Suffix"], ValueRange, [[Mod1Mod2Tiers.Mod1Top, Mod1Mod2Tiers.Mod1Btm] , [Mod1Mod2Tiers.Mod2Top, Mod1Mod2Tiers.Mod2Btm]], False)
 		Itemdata.UncertainAffixes[Keyname]["3_PreSuf"] := [1, 1, LineNum, LineTxt]
 	}
+}
+
+GetVeiledModCount(ItemDataAffixes, AffixType) {
+	vCount := 0
+	
+	IfInString, ItemDataAffixes, Unidentified
+	{
+		Return ; Not interested in unidentified items
+	}
+	
+	Loop, Parse, ItemDataAffixes, `n, `r 
+	{
+		If (RegExMatch(A_LoopField, "i)Veiled (Prefix|Suffix)", match)) {
+			If (match1 = AffixType) {
+				vCount := vCount + 1	
+			}			
+		}
+	}
+	
+	Return vCount  
 }
 
 ParseAffixes(ItemDataAffixes, Item)
@@ -7163,8 +7219,7 @@ AssembleDamageDetails(FullItemData)
 		Q20Dps := Q20Dps + EleDps + ChaosDps	
 	}
 	
-	If ( MainHEleDps > 0 or OffHEleDps > 0 or MainHChaosDps > 0 or OffHChaosDps > 0 )
-	{
+	If ( MainHEleDps > 0 or OffHEleDps > 0 or MainHChaosDps > 0 or OffHChaosDps > 0 ) {
 		MainH_OffH_Display	:= true
 		TotalMainHEleDps	:= MainHEleDps + EleDps
 		TotalOffHEleDps	:= OffHEleDps + EleDps
@@ -7447,7 +7502,7 @@ ParseSockets(ItemDataText, ByRef AbyssalSockets)
 	return SocketsCount
 }
 
-ParseSocketGroups(ItemDataText)
+ParseSocketGroups(ItemDataText, ByRef RawSocketString = "")
 {
 	groups := []
 	Loop, Parse, ItemDataText, `n, `r
@@ -7457,6 +7512,9 @@ ParseSocketGroups(ItemDataText)
 			RegExMatch(A_LoopField, "i)Sockets:\s?(.*)", socketString)
 			
 			sockets := socketString1 " "	; add a space at the end for easier regex
+			If (StrLen(socketString1)) {
+				RawSocketString := socketString1
+			}			
 			If (StrLen(sockets)) {
 				Pos		:= 0
 				While Pos	:= RegExMatch(sockets, "i)(.*?)\s+", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
@@ -7469,6 +7527,7 @@ ParseSocketGroups(ItemDataText)
 			}
 		}
 	}
+
 	return groups
 }
 
@@ -7908,12 +7967,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	; ItemData.Requirements := GetItemDataChunk(ItemDataText, "Requirements:")
 	; ParseRequirements(ItemData.Requirements, RequiredLevel, RequiredAttributes, RequiredAttributeValues)
-	
+
 	ParseItemName(ItemData.NamePlate, ItemName, ItemBaseName, "", ItemData)
 	If (Not ItemName)
 	{
 		return
 	}
+
 	Item.Name		:= ItemName
 	Item.BaseName	:= ItemBaseName
 	
@@ -7936,7 +7996,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	ItemData.Sockets	:= ParseSockets(ItemDataText, ItemAbyssalSockets)
 	Item.Sockets		:= ItemData.Sockets
 	Item.AbyssalSockets := ItemAbyssalSockets
-	Item.SocketGroups	:= ParseSocketGroups(ItemDataText) 
+	Item.SocketGroups	:= ParseSocketGroups(ItemDataText, ItemSocketString)
+	Item.SocketString	:= ItemSocketString
 
 	Item.Charges		:= ParseCharges(ItemData.Stats)
 
@@ -7968,6 +8029,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		; Item.DifficultyRestriction := Difficulty
 	}
 	
+	; Hideout doodad detection
+	If (InStr(ItemData.PartsLast, "Creates an object in your hideout"))
+	{
+		Item.IsHideoutObject := True
+	}
+	
 	; Beast detection
 	If (RegExMatch(ItemData.Parts[2], "i)Genus|Family"))
 	{
@@ -7978,6 +8045,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	Item.IsGem	:= (InStr(ItemData.Rarity, "Gem"))
 	Item.IsCurrency:= (InStr(ItemData.Rarity, "Currency"))
+	Item.IsScarab	:= (RegExMatch(ItemData.NamePlate, "i)Scarab$")) ? true : false
 	
 	regex := ["^Sacrifice At", "^Fragment of", "^Mortal ", "^Offering to ", "'s Key$", "Ancient Reliquary Key", "Timeworn Reliquary Key", "Breachstone", "Divine Vessel"]
 	For key, val in regex {
@@ -7987,16 +8055,17 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			Break
 		}
 	}	
-	
-	If (Not (InStr(ItemDataText, "Itemlevel:") or InStr(ItemDataText, "Item Level:")) and not Item.IsGem and not Item.IsCurrency and not Item.IsDivinationCard and not Item.IsProphecy)
+
+	If (Not (InStr(ItemDataText, "Itemlevel:") or InStr(ItemDataText, "Item Level:")) and not Item.IsGem and not Item.IsCurrency and not Item.IsDivinationCard and not Item.IsProphecy and not Item.IsScarab)
 	{
 		return Item.Name
 	}
-	
+
 	If (Item.IsGem)
 	{
 		RarityLevel	:= 0
 		Item.Level	:= ParseGemLevel(ItemDataText, "Level:")
+		Item.GemColor	:= ParseGemColor(ItemDataText)
 		ItemExperienceFlat := ""
 		Item.Experience:= ParseGemXP(ItemDataText, "Experience:", ItemExperienceFlat)
 		Item.ExperienceFlat := ItemExperienceFlat
@@ -8035,8 +8104,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		Else If (Not Item.IsCurrency and Not Item.IsDivinationCard and Not Item.IsProphecy)
 		{
 			RarityLevel	:= CheckRarityLevel(ItemData.Rarity)
-			Item.Level	:= ParseItemLevel(ItemDataText)
-			ItemLevelWord	:= "Item Level:"
+			If (not Item.IsScarab) {
+				Item.Level	:= ParseItemLevel(ItemDataText)
+				ItemLevelWord	:= "Item Level:"	
+			}			
 			If (Not Item.IsBeast) {
 				ParseItemType(ItemData.Stats, ItemData.NamePlate, ItemBaseType, ItemSubType, ItemGripType, RarityLevel)
 				Item.BaseType	:= ItemBaseType
@@ -8045,7 +8116,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			}			
 		}
 	}
-	
+
 	Item.RarityLevel	:= RarityLevel
 	
 	Item.IsBow		:= (Item.SubType == "Bow")
@@ -8106,7 +8177,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		return
 	}
 
-	If (Item.IsLeagueStone) {
+	If (Item.IsLeagueStone or Item.IsScarab) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
 	If (Item.IsBeast) {
@@ -8147,7 +8218,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		; already parsed
 	}
-	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = False and not Item.IsLeaguestone)  ; Code added by Bahnzo to avoid maps showing affixes
+	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = False and not (Item.IsLeaguestone or Item.IsScarab))  ; Code added by Bahnzo to avoid maps showing affixes
 	{
 		ParseAffixes(ItemData.Affixes, Item)
 	}
@@ -8155,11 +8226,16 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		MapModWarnings := ParseMapAffixes(ItemData.Affixes)
 	}
-	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsLeaguestone)
+	Else If (RarityLevel > 1 and RarityLevel < 4 and (Item.IsLeaguestone or Item.IsScarab))
 	{
 		ParseLeagueStoneAffixes(ItemData.Affixes, Item)
 	}
 	
+	If (RarityLevel > 1 and Item.IsMap = False) {
+		Item.veiledPrefixCount := GetVeiledModCount(ItemData.Affixes, "Prefix")
+		Item.veiledSuffixCount := GetVeiledModCount(ItemData.Affixes, "Suffix")
+	}
+
 	AffixTotals.FormatAll()
 	
 	NumPrefixes	:= AffixTotals.NumPrefixes
@@ -8182,6 +8258,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	If (Item.BaseName && (Item.BaseName != Item.Name))
 	{
 		TT := TT . "`n" . Item.BaseName
+	}
+	
+	If (Item.IsGem) {			
+		If (Item.GemColor) {
+			TT := TT . "`nColor: " . Item.GemColor
+		}
 	}
 	
 	If (Item.IsCurrency)
@@ -8275,6 +8357,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 				TT := TT . Item.MaxSockets
 			}
 		}
+		
+		If (Item.SocketString) {			
+			TT := TT . "`n"
+			TT := TT . "Sockets:        " . Item.SocketString
+		}
 	}
 	
 	If (Item.IsWeapon)
@@ -8350,7 +8437,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 	
 	If (Item.IsGem)
-	{
+	{		
 		If (gemQualityList[Item.Name] != "")
 		{
 			GemQualityDescription := gemQualityList[Item.Name]
@@ -8702,7 +8789,24 @@ ModStringToObject(string, isImplicit) {
 		temp.values	:= values
 		; mods with negative values inputted in the value fields are not supported on poe.trade, so searching for "-1 maximum charges/frenzy charges" is not possible
 		; unless there is a mod "-# maximum charges"
-		s			:= RegExReplace(Matches[A_Index], "i)(-?)[.0-9]+", "$1#")
+		
+		; some values shouldn't be replaced because they are fixed, for example "#% chance to gain Onslaught for 4 seconds on Kill"
+		; regex, | delimited
+		exceptionsList := "recovered every 3 seconds|inflicted with this Weapon to deal 100% more Damage|with 30% reduced Movement Speed|chance to Recover 10% of Maximum Mana|"
+		exceptionsList .= "for 3 seconds|for 4 seconds|for 8 seconds|for 10 seconds|over 4 seconds|"
+		exceptionsList .= "per (10|12|15|16|50) (Strength|Dexterity|Intelligence)|"
+		exceptionsList .= "per 200 Accuracy Rating|if you have at least 500 Strength|per 1% Chance to Block Attack Damage|are at least 5 nearby Enemies|a total of 200 Mana"		
+		
+		RegExMatch(Matches[A_Index], "i)(" exceptionsList ")", exception) 
+		
+		s := RegExReplace(Matches[A_Index], "i)(-?)[.0-9]+", "$1#")
+		
+		; restore certain mod line parts if there are exceptions
+		If (exception) {
+			replacer_reg := RegExReplace(exception, "i)(-?)[.0-9]+", "(#)")
+			s := RegExReplace(s, "i)" replacer_reg "", exception)
+		}
+		
 		temp.name		:= RegExReplace(s, "i)# ?to ? #", "#", isRange)
 		temp.isVariable:= false
 		temp.type		:= (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"
@@ -9501,6 +9605,11 @@ GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabe
 	Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Options%, %Contents%
 }
 
+GuiAddPicture(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="")
+{
+	GuiAdd("Picture", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
+}
+
 GuiAddListView(ColumnHeaders, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="")
 {	
 	GuiAdd("ListView", ColumnHeaders, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
@@ -9668,10 +9777,10 @@ CreateSettingsUI()
 	Global
 	
 	Gui, Color, ffffff, ffffff
-	
+
 	; ItemInfo is not included in other scripts
-	If (not SkipItemInfoUpdateCall) {	
-		Fonts.SetUIFont()
+	If (not SkipItemInfoUpdateCall) {
+		Fonts.SetUIFont(8)
 		Scripts := Globals.Get("SettingsScriptList")
 		TabNames := ""
 		Loop, % Scripts.Length() {
@@ -9680,15 +9789,16 @@ CreateSettingsUI()
 		}
 
 		StringTrimRight, TabNames, TabNames, 1
-		Gui, Add, Tab3, Choose1 h660 x0, %TabNames%	
+		Gui, Add, Tab3, Choose1 h660 x0, %TabNames%
 	}
 	
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 	
 	generalHeight := SkipItemInfoUpdateCall ? "150" : "240"		; "180" : "270" with ParseItemHotKey
+	topGroupBoxYPos := SkipItemInfoUpdateCall ? "y53" : "y30"
 	
 	; General
-	GuiAddGroupBox("General", "x7 ym" 30 " w310 h" generalHeight " Section")
+	GuiAddGroupBox("General", "x7 " topGroupBoxYPos " w310 h" generalHeight " Section")
 	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w250 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "When checked the script only activates while you are ingame`n(technically while the game window is the frontmost)")
 	
@@ -9744,7 +9854,7 @@ CreateSettingsUI()
 	GuiAddButton("Preview", "xs210 ys290 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
 
 	; Tooltip
-	GuiAddGroupBox("Tooltip", "x327 ym" 30 " w310 h140 Section")
+	GuiAddGroupBox("Tooltip", "x327 " topGroupBoxYPos " w310 h140 Section")
 
 	GuiAddEdit(Opts.MouseMoveThreshold, "xs250 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
 	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w200 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
@@ -9798,7 +9908,7 @@ CreateSettingsUI()
 
 	; Buttons
 	ButtonsShiftX := "x659 "
-	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX "y40 w290 h30 0x0100")
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX " y63 w290 h30 0x0100")
 	
 	GuiAddButton("Defaults", ButtonsShiftX "y+8 w90 h23", "SettingsUI_BtnDefaults")
 	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK")
@@ -9817,7 +9927,7 @@ CreateSettingsUI()
 	}
 	
 	; AM Hotkeys
-	GuiAddGroupBox("[AdditionalMacros] Hotkeys", "x7 y35 w630 h625")	
+	GuiAddGroupBox("[AdditionalMacros] Hotkeys", "x7 " topGroupBoxYPos " w630 h625")	
 	
 	If (not AM_Config) {
 		GoSub, AM_Init
@@ -9833,7 +9943,7 @@ CreateSettingsUI()
 			; hotkey checkboxes (enable/disable)
 			HKCheckBoxID := "AM_" sectionName "_State"
 			GuiAddCheckbox(sectionName ":", "x17 yp+" chkBoxShiftY " w" chkBoxWidth " h20 0x0100", AM_Config[sectionName].State, HKCheckBoxID, HKCheckBoxID "H")
-			AddToolTip(%HKCheckBoxID%H, RegExReplace(AM_ConfigDefault[sectionName].Description, "i)(\(Default = .*\))", "`n$1"))	; read description from default config
+			AddToolTip(%HKCheckBoxID%H, RegExReplace(AM_ConfigDefault[sectionName].Description, "i)(\(Default = .*\))|\\n", "`n$1"))	; read description from default config
 			
 			For keyIndex, keyValue in StrSplit(AM_Config[sectionName].Hotkeys, ", ") {	
 				HotKeyID := "AM_" sectionName "_HotKeys_" keyIndex
@@ -9854,7 +9964,29 @@ CreateSettingsUI()
 							CheckBoxID := "AM_" sectionName "_Arg2"
 							GuiAddCheckbox("Leave search field.", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY, keyValue, CheckBoxID, CheckBoxID "H")
 						}
+						If (keyIndex = "Arg3") {
+							CheckBoxID := "AM_" sectionName "_Arg3"
+							GuiAddCheckbox("Enable hideout stash search.", "x+10 yp+0", keyValue, CheckBoxID, CheckBoxID "H")
+						}
+						If (keyIndex = "Arg4") {
+							EditID := "AM_" sectionName "_" keyIndex
+							GuiAddText("Decoration stash search field coordinates:  ", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w260 h20 0x0100", "LblHighlighting", "LblHighlightingH")
+							AddToolTip(LblHighlightingH, "Refers to the decoration stash on the right side`nof the screen, not the master vendor window.`n`nCoordinates are relative to the PoE game window and`nare neccessary to click into/focus the search field.")
+							GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-15 yp+0 w15 h-1 0x0100", "HighlightInfo", "HighlightH", "")
+							GuiAddText("x= ", "x+5 yp+0 w20 h20 0x0100")
+							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID)
+						}
+						If (keyIndex = "Arg5") {
+							EditID := "AM_" sectionName "_" keyIndex
+							GuiAddText("y=", "x+5 yp+2 w20 h20 0x0100")
+							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID)
+						}
 					}
+					Else If (RegExMatch(sectionName, "i)JoinChannel|KickYourself")) {
+						EditID := "AM_" sectionName "_" keyIndex
+						GuiAddText(keyIndex ":", "x+10 yp+4 w85 h20 0x0100")
+						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID)
+					} 
 					Else {
 						EditID := "AM_" sectionName "_" keyIndex
 						GuiAddText(keyIndex ":", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w85 h20 0x0100")
@@ -9867,7 +9999,7 @@ CreateSettingsUI()
 	
 	; AM General
 
-	GuiAddGroupBox("[AdditionalMacros] General", "x647 y35 w310 h60")
+	GuiAddGroupBox("[AdditionalMacros] General", "x647 " topGroupBoxYPos " w310 h60")
 	
 	_i := 0
 	For keyIndex, keyValue in AM_Config.General {
@@ -9903,6 +10035,53 @@ CreateSettingsUI()
 	experimentalNotice .= " You can still assign your settings directly using the AdditionalMacros.ini like before."
 	experimentalNotice .= " (Right-click system tray icon -> Edit Files)."
 	GuiAddText(experimentalNotice, ButtonsShiftX "yp+25 w290")
+	
+	; Begin Lutbot Tab
+	If (SkipItemInfoUpdateCall) {
+		Gui, Tab, 4 
+	} Else {
+		Gui, Tab, 3
+	}
+	
+	GuiAddGroupBox("[Lutbot Logout]", "x7 " topGroupBoxYPos " w630 h625")
+
+	lb_desc := "Lutbot's macro is a collection of features like TCP disconnect logout, whisper replies, ladder tracker and more.`n"
+	lb_desc .= "The included logout macro is the most advanced logout feature currently out there."
+	GuiAddText(lb_desc, "x17 yp+28 w600 h40 0x0100", "", "")
+	
+	lb_desc := "Since running the main version of this script alongside " Globals.Get("Projectname") " can cause some issues`n"
+	lb_desc .= "and hotkey conflicts, Lutbot also released a lite version that only contains the logout features."
+	GuiAddText(lb_desc, "x17 y+10 w600 h35 0x0100", "", "")
+	
+	Gui, Add, Link, x17 y+5 cBlue, <a href="http://lutbot.com/#/ahk">Website and download</a>
+	
+	lb_desc := Globals.Get("Projectname") " can manage running this lite version for you, keeping it an independant script."
+	GuiAddText(lb_desc, "x17 y+20 w600 h20 0x0100", "", "")
+	
+	GuiAddCheckbox("Run lutbot on script start if the lutbot macro exists (requires you to have run it once before).", "x17 yp+20 w600 h30", Opts.Lutbot_CheckScript, "Lutbot_CheckScript", "Lutbot_CheckScriptH")
+	
+	GuiAddCheckbox("Warn in case of hotkey conflicts", "x17 yp+30 w290 h30", Opts.Lutbot_WarnConflicts, "Lutbot_WarnConflicts", "Lutbot_WarnConflictsH")
+	AddToolTip(Lutbot_CheckScriptH, "Check if the lutbot macro exists and run it.")
+	
+	GuiAddButton("Open Lutbot folder", "Default x17 y+10 w130 h23", "OpenLutbotDocumentsFolder")
+	
+	lb_desc := "If you have any issues related to"
+	GuiAddText(lb_desc, "x17 y+40 w600 h20 0x0100", "", "")
+	lb_desc := "- " Globals.Get("Projectname") " starting the lutbot script or checking for conflicts report here:"
+	GuiAddText(lb_desc, "x17 y+0 w600 h20 0x0100", "", "")
+	Gui, Add, Link, x35 y+5 cBlue h20, - <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues">Github</a>
+	Gui, Add, Link, x35 y+0 cBlue h20, - <a href="https://discord.gg/taKZqWw">Discord</a>
+	Gui, Add, Link, x35 y+0 cBlue h20, - <a href="https://www.pathofexile.com/forum/view-thread/1757730">Forum</a>
+
+	lb_desc := "- Lutbots script not working correctly in any way report here:"
+	GuiAddText(lb_desc, "x17 y+5 w600 h20 0x0100", "", "")
+	Gui, Add, Link, x35 y+5 cBlue h20, - <a href="https://discord.gg/nttekWT">Discord</a>
+	
+	; Lutbot Buttons
+	
+	GuiAddText("Mouse over settings to see what these settings do exactly.", ButtonsShiftX "y60 w290 h30 0x0100")
+	GuiAddButton("OK", "Default xp-5 y+8 w90 h23", "SettingsUI_BtnOK")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")
 	
 	; close tabs
 	Gui, Tab
@@ -10177,6 +10356,10 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 		Opts.GDITextOpacity			:= IniRead("GDI", "TextOpacity", Opts.GDITextOpacity, ItemInfoConfigObj)
 		Opts.GDITextOpacityDefault	:= IniRead("GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault, ItemInfoConfigObj)
 		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, "10", "16")
+		
+		; Lutbot
+		Opts.Lutbot_CheckScript		:= IniRead("Lutbot", "Lutbot_CheckScript", Opts.Lutbot_CheckScript, ItemInfoConfigObj)
+		Opts.Lutbot_WarnConflicts	:= IniRead("Lutbot", "Lutbot_WarnConflicts", Opts.Lutbot_WarnConflicts, ItemInfoConfigObj)
 	}
 }
 
@@ -10232,6 +10415,10 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	IniWrite(Opts.GDIBorderOpacity, "GDI", "BorderOpacity", ItemInfoConfigObj)
 	IniWrite(Opts.GDITextColor, "GDI", "TextColor", ItemInfoConfigObj)
 	IniWrite(Opts.GDITextOpacity, "GDI", "TextOpacity", ItemInfoConfigObj)
+	
+	; Lutbot
+	IniWrite(Opts.Lutbot_CheckScript, "Lutbot", "Lutbot_CheckScript", ItemInfoConfigObj)
+	IniWrite(Opts.Lutbot_WarnConflicts, "Lutbot", "Lutbot_WarnConflicts", ItemInfoConfigObj)
 	
 	ItemInfoConfigObj.Save(ConfigPath)
 }
@@ -10313,11 +10500,18 @@ StdOutStream(sCmd, Callback = "") {
 	Return Isfunc( Callback ) ? %Callback%( "", 0 ) : sOutput
 }
 
-ReadConsoleOutputFromFile(command, fileName) {
+ReadConsoleOutputFromFile(command, fileName, ByRef error = "") {
 	file := "temp\" fileName
 	RunWait %comspec% /c "chcp 1251 /f >nul 2>&1 & %command% > %file%", , Hide
 	FileRead, io, %file%
-
+	
+	If (FileExist(file) and not StrLen(io)) {
+		error := "Output file is empty."
+	}
+	Else If (not FileExist(file)) {
+		error := "Output file does not exist."
+	}
+	
 	Return io
 }
 
@@ -10400,7 +10594,7 @@ GetContributors(AuthorsPerLine=0)
 	return Authors
 }
 
-ShowAssignedHotkeys() {
+ShowAssignedHotkeys(returnList = false) {
 	scriptInfo	:= ScriptInfo("ListHotkeys")
 	hotkeys		:= []
 
@@ -10430,7 +10624,11 @@ ShowAssignedHotkeys() {
 			val.Push(KeyCodeToKeyName(val[5]))
 		}
 	}
-
+	
+	If (returnList) {
+		Return hotkeys
+	}
+	
 	Gui, ShowHotkeys:Color, ffffff, ffffff
 	Gui, ShowHotkeys:Add, Text, , List of this scripts assigned hotkeys.
 	Gui, ShowHotkeys:Default
@@ -10490,8 +10688,93 @@ CloseScripts() {
 	ExitApp
 }
 
-HighlightItems(broadTerms = false, leaveSearchField = true) {
-	; Highlights items via stash search (also in vendor search)
+ColorBlindSupport() {
+	IfWinActive, ahk_group PoEWindowGrp
+	{
+		Global Item, Opts, Globals, ItemData
+
+		ClipBoardTemp := ClipboardAll
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		
+		scancode_c := Globals.Get("ScanCodes").c
+
+		; Parse the clipboard contents twice.
+		; If the clipboard contains valid item data before we send ctrl + c to try and parse an item via ctrl + f then don't restore that clipboard data later on.
+		; This prevents the highlighting function to fill search fields with data from previous item parsings/manual data copying since
+		; that clipboard data would always be restored again.
+		Loop, 2 {
+			If (A_Index = 2) {
+				Clipboard :=
+				Send ^{%scancode_c%}	; ^{c}
+				Sleep 100
+			}
+			CBContents := GetClipboardContents()
+			CBContents := PreProcessContents(CBContents)
+			Globals.Set("ItemText", CBContents)
+			ParsedData := ParseItemData(CBContents)
+			If (A_Index = 1 and Item.Name) {
+				dontRestoreClipboard := true
+			}
+		}
+		
+		If (Item.Name) {
+			Sleep,  100
+			If (!dontRestoreClipboard) {
+				Clipboard := ClipBoardTemp
+			}
+			
+			If (Item.IsGem) {
+				ShowToolTip("Gem color: " Item.GemColor)
+			}
+			Else If (Item.Sockets > 0) {
+				sockets := Item.Sockets
+
+				groups := StrSplit(Trim(Item.SocketString), "")
+				groups[2] := groups[2] = "-" ? "--" : "  "
+				groups[6] := groups[6] = "-" ? "--" : "  "
+				groups[10] := groups[10] = "-" ? "--" : "  "
+				
+				str := " `n"
+				If (sockets <= 2) {
+					If (sockets = 1) {
+						str .= "  " groups[1] "  "
+					} Else {
+						str .= " " groups[1] " " groups[2] " " groups[3] " "
+					}					
+					ShowToolTip(str "`n ")
+				}
+				Else If (sockets <= 4) {
+					groups[7] := StrLen(groups[7]) ? groups[7] : " "
+					groups[6] := StrLen(groups[6]) ? groups[6] : " "
+					
+					str .= " " groups[1] " " groups[2] " " groups[3] " `n"
+					str .= (groups[4] = "-") ? "      |" : "      " 
+					str .= "`n " groups[7] " " groups[6] " " groups[5] " "
+					
+					ShowToolTip(str "`n ")
+				}
+				Else {
+					groups[11] := StrLen(groups[11]) ? groups[11] : " "
+					groups[9] := StrLen(groups[9]) ? groups[9] : " "
+					
+					str .= " " groups[1] " " groups[2] " " groups[3] " `n"
+					str .= (groups[4] = "-") ? "      |" : "      " 
+					str .= "`n " groups[7] " " groups[6] " " groups[5] " `n"
+					str .= (groups[8] = "-") ? " |    " : "     " 
+					str .= "`n " groups[9] " " groups[10] " " groups[11] " "
+					
+					ShowToolTip(str "`n ")
+					
+				}
+			}
+		}
+
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
+}
+
+HighlightItems(broadTerms = false, leaveSearchField = true, focusHideoutFilter = false, hideoutFieldX = 0, hideoutFieldY = 0) {
+	; Highlights items via stash search (also in vendor and hideout search)
 	IfWinActive, ahk_group PoEWindowGrp
 	{
 		Global Item, Opts, Globals, ItemData
@@ -10504,7 +10787,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		scancode_a := Globals.Get("ScanCodes").a
 		scancode_f := Globals.Get("ScanCodes").f
 		scancode_enter := Globals.Get("ScanCodes").enter
-		
+
 		; Parse the clipboard contents twice.
 		; If the clipboard contains valid item data before we send ctrl + c to try and parse an item via ctrl + f then don't restore that clipboard data later on.
 		; This prevents the highlighting function to fill search fields with data from previous item parsings/manual data copying since
@@ -10596,8 +10879,8 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 					terms.push(Item.BaseName)
 				}
 			}
-			; leaguestones
-			Else If (Item.IsLeaguestone) {
+			; leaguestones and Scarabs
+			Else If (Item.IsLeaguestone or Item.IsScarab) {
 				If (broadTerms) {
 					terms.push(Item.BaseType)
 				} Else {
@@ -10677,35 +10960,63 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		}
 
 		If (terms.length() > 0) {
-			SendInput ^{%scancode_f%} ; sc021 = f
-			searchText =
-			For key, val in terms {
-				searchText = %searchText% "%val%"
+			focusHideoutFilter := true
+			If (Item.IsHideoutObject and focusHideoutFilter) {				
+				CoordMode, Mouse, Relative
+				MouseGetPos, currentX, currentY				
+				MouseClick, Left, %hideoutFieldX%, %hideoutFieldY%, 1, 0
+				Sleep, 50
+				MouseMove, %currentX%, %currentY%, 0
+				Sleep, 10
+				SendInput ^{%scancode_a%}
+			} Else {
+				SendInput ^{%scancode_f%} ; sc021 = f	
 			}
 
-			; the search field has a 50 character limit, we have to close the last term with a quotation mark
-			If (StrLen(searchText) > 50) {
-				newString := SubStr(searchText, 1, 50)
+			searchText = 
+			For key, val in terms {
+				If (not Item.IsHideoutObject) {
+					searchText = %searchText% "%val%"
+				} Else {
+					; hideout objects shouldn't use quotation marks
+					searchText = %searchText% %val%
+				}				
+			}
+
+			; search fields have character limits
+			; stash search field := 50 chars , we have to close the last term with a quotation mark
+			; hideout mtx search field := 23 chars	
+			charLimit := Item.IsHideoutObject ? 23 : 50
+	
+			If (StrLen(searchText) > charLimit) {
+				newString := SubStr(searchText, 1, charLimit)
+
 				temp := RegExReplace(newString, "i)""", Replacement = "", QuotationMarks)
 				; make sure we have an equal amount of quotation marks (all terms properly enclosed)
 				If (QuotationMarks&1) {
 					searchText := RegExReplace(newString, "i).$", """")
+				} Else {
+					searchText := newString
 				}
 			}
 
 			Clipboard := searchText
-			Sleep 10		
+	
+			Sleep 10
 			SendEvent ^{%scancode_v%}		; ctrl + v
-			If (leaveSearchField) {
-				SendInput {%scancode_enter%}	; enter
-			} Else {
-				SendInput ^{%scancode_a%}	; ctrl + a
+			
+			If (not (Item.IsHideoutObject and focusHideoutFilter)) {
+				If (leaveSearchField) {
+					SendInput {%scancode_enter%}	; enter
+				} Else {
+					SendInput ^{%scancode_a%}	; ctrl + a
+				}
 			}
 		} Else {
 			SendInput ^{%scancode_f%}		; send ctrl + f in case we don't have information to input
 		}
 
-		Sleep, 10
+		Sleep,  500
 		If (!dontRestoreClipboard) {
 			Clipboard := ClipBoardTemp
 		}
@@ -10818,7 +11129,7 @@ OpenItemOnPoEAntiquary() {
 AntiquaryOpenInBrowser(type, name, id, lastLeague, multiItems = false) {
 	league := TradeGlobals.Get("LeagueName")
 	If (RegExMatch(league, "Hardcore.*")) {
-		league := lastLeague "HC"
+		league := lastLeague " HC"
 	} Else {
 		league := lastLeague
 	}
@@ -10885,22 +11196,75 @@ AntiquaryGetType(Item) {
 }
 
 
-StringToBase64UriEncoded(stringIn, noUriEncode = false) {
-	stringBase64 := ""
+StringToBase64UriEncoded(stringIn, noUriEncode = false, ByRef errorMessage = "") {
 	FileDelete, %A_ScriptDir%\temp\itemText.txt
-	FileAppend, %stringIn%, %A_ScriptDir%\temp\itemText.txt, utf-8
-	command		:= "certutil -encode -f ""%cd%\temp\itemText.txt"" ""%cd%\temp\base64ItemText.txt"" & type ""%cd%\temp\base64ItemText.txt"""
-	stringBase64	:= ReadConsoleOutputFromFile(command, "encodeToBase64.txt")
-	stringBase64	:= Trim(RegExReplace(stringBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))
+	FileDelete, %A_ScriptDir%\temp\base64Itemtext.txt
+	FileDelete, %A_ScriptDir%\temp\encodeToBase64.txt
+	
+	encodeError1 := ""
+	encodeError2 := ""
+	stringBase64 := b64Encode(stringIn, encodeError1)
+	
+	If (not StrLen(stringBase64)) {
+		FileAppend, %stringIn%, %A_ScriptDir%\temp\itemText.txt, utf-8
+		command		:= "certutil -encode -f ""%cd%\temp\itemText.txt"" ""%cd%\temp\base64ItemText.txt"" & type ""%cd%\temp\base64ItemText.txt"""
+		stringBase64	:= ReadConsoleOutputFromFile(command, "encodeToBase64.txt", encodeError2)
+		stringBase64	:= Trim(RegExReplace(stringBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))
+	}
+
+	If (not StrLen(stringBase64)) {
+		errorMessage := ""
+		If (StrLen(encodeError1)) {
+			errorMessage .= encodeError1 " "
+		}
+		If (StrLen(encodeError2)) {
+			errorMessage .= "Encoding via certutil returned: " encodeError2
+		}
+	}
 	
 	If (not noUriEncode) {
 		stringBase64	:= UriEncode(stringBase64)
 		stringBase64	:= RegExReplace(stringBase64, "i)^(%0D)?(%0A)?|((%0D)?(%0A)?)+$", "")
 	} Else {
-		stringBase64 := RegExReplace(stringBase64, "i)\r|\n", "") 
-	}	
+		stringBase64 := RegExReplace(stringBase64, "i)\r|\n", "")
+	}
 	
 	Return stringBase64
+}
+
+/*
+	Base64 Encode / Decode a string (binary-to-text encoding)
+	https://github.com/jNizM/AHK_Scripts/blob/master/src/encoding_decoding/base64.ahk
+	
+	Alternative: https://github.com/cocobelgica/AutoHotkey-Util/blob/master/Base64.ahk
+*/
+b64Encode(string, ByRef error = "") {	
+	VarSetCapacity(bin, StrPut(string, "UTF-8")) && len := StrPut(string, &bin, "UTF-8") - 1 
+	If !(DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", len, "uint", 0x1, "ptr", 0, "uint*", size)) {
+		;throw Exception("CryptBinaryToString failed", -1)
+		error := "Exception (1) while encoding string to base64."
+	}	
+	VarSetCapacity(buf, size << 1, 0)
+	If !(DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", len, "uint", 0x1, "ptr", &buf, "uint*", size)) {
+		;throw Exception("CryptBinaryToString failed", -1)
+		error := "Exception (2) while encoding string to base64."
+	}
+	
+	If (not StrLen(Error)) {
+		Return StrGet(&buf)
+	} Else {
+		Return ""
+	}
+}
+
+b64Decode(string)
+{
+	If !(DllCall("crypt32\CryptStringToBinary", "ptr", &string, "uint", 0, "uint", 0x1, "ptr", 0, "uint*", size, "ptr", 0, "ptr", 0))
+		throw Exception("CryptStringToBinary failed", -1)
+	VarSetCapacity(buf, size, 0)
+	If !(DllCall("crypt32\CryptStringToBinary", "ptr", &string, "uint", 0, "uint", 0x1, "ptr", &buf, "uint*", size, "ptr", 0, "ptr", 0))
+		throw Exception("CryptStringToBinary failed", -1)
+	return StrGet(&buf, size, "UTF-8")
 }
 
 OpenWebPageWith(application, url) {
@@ -11539,6 +11903,14 @@ UpdateNotesGuiEscape:
 	Gui, UpdateNotes:Cancel
 Return
 
+HotkeyConflictGuiEscape:
+	Gui, HotkeyConflict:Cancel
+Return
+
+CloseHotkeyConflictGui:
+	Gui, HotkeyConflict:Destroy
+Return
+
 CheckForUpdates:
 	If (not globalUpdateInfo.repo) {
 		global globalUpdateInfo := {}
@@ -11724,6 +12096,10 @@ IsInArray(el, array) {
 		}
 	}
 	Return false
+}
+
+GetObjPropertyCount(obj) {
+	Return NumGet(&obj + 4*A_PtrSize)
 }
 
 TogglePOEItemScript()
@@ -12364,7 +12740,6 @@ ParseItemLootFilter(filter, item, parsingNeeded, advanced = false) {
 	}
 	
 	MouseGetPos, CurrX, CurrY
-	
 	If (advanced) {
 		Run "%A_AhkPath%" "%A_ScriptDir%\lib\PoEScripts_ItemFilterNamePlate.ahk" "%itemName%" "%itemBase%" "%bgColor%"  "%borderColor%"  "%fontColor%"  "%fontSize%" "%CurrX%" "%CurrY%" "1"	
 	} Else {
@@ -12390,6 +12765,223 @@ CompareNumValues(num1, num2, operator = "=") {
 	}
 	Return res
 }
+
+StartLutbot:
+	global LutBotSettings	:= class_EasyIni(A_MyDocuments "\AutoHotKey\LutTools\settings.ini")
+
+	If (not FileExist(A_MyDocuments "\AutoHotKey\LutTools\lite.ahk")) {
+		_project := Globals.Get("ProjectName")
+		MsgBox, 0x14, %_project% - Lutbot lite.ahk missing, The Lutbot lite macro cannot be executed since its script file is missing,`nopen download website? ("http://lutbot.com/#/ahk")
+		IfMsgBox Yes
+		{
+			OpenWebPageWith(AssociatedProgram("html"), "http://lutbot.com/#/ahk")
+		}
+	} Else {		
+		Run "%A_AhkPath%" "%A_MyDocuments%\AutoHotKey\LutTools\lite.ahk"
+	}
+
+	If (Opts.Lutbot_WarnConflicts) {
+		CheckForLutBotHotkeyConflicts(ShowAssignedHotkeys(true), LutBotSettings)
+	}
+
+	SetTimer, StartLutbot, Off
+Return
+
+OpenLutbotDocumentsFolder:
+	OpenUserSettingsFolder("Lutbot", A_MyDocuments "\AutoHotKey\LutTools")
+Return
+
+CheckForLutBotHotkeyConflicts(hotkeys, config) {
+	conflicts := []
+	
+	For key, val in config.hotkeys {
+		If (RegExMatch(key, "i)superLogout|logout|options")) {
+			conflict := {}
+			VKey := KeyNameToKeyCode(val, 0)
+			assignedLabel := GetAssignedHotkeysLabel(key, val, vkey, "on")
+			
+			s1 := RegExReplace(val, "([-+^*$?\|&()])", "\$1")
+			foundConflict := false
+			For k, v in hotkeys {				
+				s2 := RegExReplace(v[6], "([-+^*$?\|&()])", "\$1")
+				If (RegExmatch(Trim(val), "i)^" Trim(s2) "$")) {
+					foundConflict := true
+					Break					
+				}
+			}
+			
+			If (StrLen(assignedLabel) or foundConflict) {
+				conflict.name := key 
+				conflict.hkey := val
+				conflict.vkey := vkey
+				conflict.assignedLabel := assignedLabel				
+				conflicts.push(conflict)
+			}
+		}
+	}
+	
+	If (conflicts.MaxIndex()) {
+		project := Globals.Get("ProjectName")		
+		msg := project " detected a hotkey conflict with the Lutbot lite macro, "
+		msg .= "`n" "which should be resolved before playing the game."
+		msg .= "`n`n" "Conflicting hotkey(s) from Lutbot:"
+		For key, val in conflicts {
+			msg .= "`n"   "- Lutbots """ val.name """ (" val.hkey ") conflicts with """ val.assignedLabel """"
+		}
+		
+		MsgBox, 16, Lutbot lite - %project% conflict, %msg%
+	}
+}
+
+SaveAssignedHotkey(label, key, vkey, state) {
+	hk := {}
+	hk.key := key
+	hk.vkey := vkey
+	hk.state := state
+	
+	obj := Globals.Get("AssignedHotkeys")
+	obj[label] := hk 
+	Globals.Set("AssignedHotkeys", obj)
+}
+
+RemoveAssignedHotkey(label) {	
+	haystack := Globals.Get("AssignedHotkeys")
+	
+	For k, v in haystack {
+		If (k = label) {
+			v.vkey := ""
+			v.key := ""
+			Globals.Set("AssignedHotkeys", haystack)
+			Return
+		}
+	}
+}
+
+GetAssignedHotkeysLabel(label, key, vkey, ByRef state) {
+	haystack := Globals.Get("AssignedHotkeys")
+	
+	For k, v in haystack {
+		If (v.vkey = vkey) {
+			state := v.state
+			Return k
+		}
+	}
+}
+
+GetAssignedHotkeysEnglishKey(vkey) {
+	haystack := ShowAssignedHotkeys(true)
+
+	For k, v in haystack {
+		If (v[5] = vkey) {
+			Return haystack[k]
+		}
+	}
+}
+
+AssignHotKey(Label, key, vkey, enabledState = "on") {
+	assignedState := ""
+	assignedLabel := GetAssignedHotkeysLabel(Label, key, vkey, assignedState)
+	
+	If (assignedLabel = Label and enabledState = assignedState) {
+		; new hotkey is already assigned to the target label
+
+		Return
+	} Else If (assignedLabel = Label and enabledState != assignedState) {
+		; new hotkey is already assigned but has a different state (enabled/disabled)
+		Hotkey, %VKey%, %Label%, UseErrorLevel %enabledState%
+		SaveAssignedHotkey(Label, key, vkey, enabledState)
+	} Else If (StrLen(assignedLabel)) {
+		; new hotkey is already assigned to a different label
+		; the old label will be unassigned unless prevented
+		Hotkey, %VKey%, %Label%, UseErrorLevel %stateValue%
+		If (not ErrorLevel) {
+			SaveAssignedHotkey(Label, key, vkey, enabledState)
+			RemoveAssignedHotkey(assignedLabel)
+			ShowHotKeyConflictUI(GetAssignedHotkeysEnglishKey(VKey), VKey, Label, assignedLabel, false)
+		}
+	} Else {
+		; new hotkey is not assigned to any label yet
+		If (enabledState != "off") {
+			; only assign it when it's enabled
+			Hotkey, %VKey%, %Label%, UseErrorLevel %stateValue%
+			SaveAssignedHotkey(Label, key, vkey, enabledState)
+		}		
+	}
+
+	If (ErrorLevel) {
+		If (errorlevel = 1)
+			str := str . "`nASCII " . VKey . " - 1) The Label parameter specifies a nonexistent label name."
+		Else If (errorlevel = 2)
+			str := str . "`nASCII " . VKey . " - 2) The KeyName parameter specifies one or more keys that are either not recognized or not supported by the current keyboard layout/language. Switching to the english layout should solve this for now."
+		Else If (errorlevel = 3)
+			str := str . "`nASCII " . VKey . " - 3) Unsupported prefix key. For example, using the mouse wheel as a prefix in a hotkey such as WheelDown & Enter is not supported."
+		Else If (errorlevel = 4)
+			str := str . "`nASCII " . VKey . " - 4) The KeyName parameter is not suitable for use with the AltTab or ShiftAltTab actions. A combination of two keys is required. For example: RControl & RShift::AltTab."
+		Else If (errorlevel = 5)
+			str := str . "`nASCII " . VKey . " - 5) The command attempted to modify a nonexistent hotkey."
+		Else If (errorlevel = 6)
+			str := str . "`nASCII " . VKey . " - 6) The command attempted to modify a nonexistent variant of an existing hotkey. To solve this, use Hotkey IfWin to set the criteria to match those of the hotkey to be modified."
+		Else If (errorlevel = 50)
+			str := str . "`nASCII " . VKey . " - 50) Windows 95/98/Me: The command completed successfully but the operating system refused to activate the hotkey. This is usually caused by the hotkey being "" ASCII " . int . " - in use"" by some other script or application (or the OS itself). This occurs only on Windows 95/98/Me because on other operating systems, the program will resort to the keyboard hook to override the refusal."
+		Else If (errorlevel = 51)
+			str := str . "`nASCII " . VKey . " - 51) Windows 95/98/Me: The command completed successfully but the hotkey is not supported on Windows 95/98/Me. For example, mouse hotkeys and prefix hotkeys such as a & b are not supported."
+		Else If (errorlevel = 98)
+			str := str . "`nASCII " . VKey . " - 98) Creating this hotkey would exceed the 1000-hotkey-per-script limit (however, each hotkey can have an unlimited number of variants, and there is no limit to the number of hotstrings)."
+		Else If (errorlevel = 99)
+			str := str . "`nASCII " . VKey . " - 99) Out of memory. This is very rare and usually happens only when the operating system has become unstable."
+
+		MsgBox, %str%
+	}
+}
+
+ShowHotKeyConflictUI(hkeyObj, hkey, hkeyLabel, oldLabel = "", preventedAssignment = false) {
+	SplashTextOff
+	
+	Gui, HotkeyConflict:Destroy
+	Gui, HotkeyConflict:Font,, Consolas
+
+	Gui, HotkeyConflict:Add, Edit, w0 h0
+	
+	Gui, HotkeyConflict:Add, Text, x17 w150 h20, Label
+	Gui, HotkeyConflict:Add, Text, x+10 yp+0 w150 h20, Pretty hotkey
+	Gui, HotkeyConflict:Add, Text, x+10 yp+0 w150 h20, Hotkey
+	Gui, HotkeyConflict:Add, Text, x+10 yp+0 w150 h20, Virtual Key
+	line := ""
+	Loop, 130 {
+		line .= "-"
+	}
+	Gui, HotkeyConflict:Add, Text, x17 y+-5 w630 h20, % line
+	
+	Gui, HotkeyConflict:Add, Text, x17 y+0 w150 h20, % hkeyLabel
+	Gui, HotkeyConflict:Add, Hotkey, x+10 yp-3 w150 h20, % hkeyObj[5]
+	Gui, HotkeyConflict:Add, Text, x+10 yp+3 w150 h20, % hkeyObj[6]
+	Gui, HotkeyConflict:Add, Text, x+10 yp+0 w150 h20, % hkey
+	
+	If (StrLen(oldLabel)) {
+		Gui, HotkeyConflict:Font, bold
+		Gui, HotkeyConflict:Add, Text, x17 y+15 w400 h20, % "Old Label: " oldLabel	
+		Gui, HotkeyConflict:Font, norm
+	}	
+	
+	Gui, HotkeyConflict:Font,, Verdana
+	msg := "The hotkey for the label/function/feature """ hkeyLabel """ was previously used for "
+	msg .= (StrLen(oldLabel)) ? "the label """ oldLabel """." : "a different one."
+	If (not preventedAssignment) {
+		msg .= "`nThe previously created one got overwritten and is now unassigned, please resolve this conflict`nin the settings menu."			
+	} Else {
+		msg .= "`nThis current hotkey was not assigned, keeping it's previous value. Please resolve this conflict`nin the settings menu if you want to set the hotkey to this function."
+	}	
+	msg .= "`n`nYou may have to restart the script afterwards."
+	
+	Gui, HotkeyConflict:Add, Text, x17 y+15 w630 h80, % msg
+	
+	Gui, HotkeyConflict:Add, Button, w60 x590 gCloseHotkeyConflictGui, Close
+	Gui, HotkeyConflict:Show, xCenter yCenter w660, Hotkey conflict
+	
+	WinWaitClose, Hotkey conflict
+	sleep 5000	
+}
+
 
 ; ############ (user) macros #############
 ; macros are being appended here by merge script
