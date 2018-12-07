@@ -743,14 +743,20 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}
 		
 		; veiled mods
-		; TODO, params are speculated
 		If (s.useVeiledPrefix) {
+			/*
 			RequestParams.veiledPrefix_min := s.veiledPrefixCount
 			RequestParams.veiledPrefix_max := s.veiledPrefixCount
+			*/
+			RequestParams.veiled		 := 1
+			
 		}
 		If (s.useVeiledSuffix) {
+			/*
 			RequestParams.veiledSuffix_min := s.useVeiledSuffix
 			RequestParams.veiledSuffix_max := s.useVeiledSuffix
+			*/
+			RequestParams.veiled		 := 1
 		}
 	}
 	
@@ -870,16 +876,23 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	
 	If (not AdvancedPriceCheckItem.mods.length() <= 0) {				
 		; TODO: speculated params
-		/*
 		If (Item.veiledPrefixCount) {
+			/*
 			RequestParams.veiledPrefix_min := Item.veiledPrefixCount
 			RequestParams.veiledPrefix_min := Item.veiledPrefixCount
+			
+			*/
 			Item.UsedInSearch.veiledPrefix := Item.veiledPrefixCount
+			RequestParams.veiled		 := 1
 		}
 		If (Item.veiledSuffixCount) {
+			/*
 			RequestParams.veiledSuffix_min := Item.veiledSuffixCount
 			RequestParams.veiledSuffix_min := Item.veiledSuffixCount
+			
+			*/
 			Item.UsedInSearch.veiledSuffix := Item.veiledSuffixCount
+			RequestParams.veiled		 := 1
 		}
 		*/
 	}
@@ -3152,6 +3165,7 @@ class RequestParams_ {
 	shaper		:= ""
 	elder		:= ""
 	map_series 	:= ""
+	veiled		:= ""
 
 	ToPayload() {
 		modGroupStr := ""
