@@ -1,3 +1,5 @@
+Armageddon Brand Damage Penetrates #% of Branded Enemy's Fire Resistance
+Armageddon Brand has #% increased Activation Frequency
 #% increased Abyssal Cry Damage
 #% increased Abyssal Cry Duration
 Ancestral Protector Totem grants #% increased Attack Speed while Active
@@ -22,9 +24,11 @@ Arc Chains an additional time
 Arc has +#% chance to Shock
 #% increased Arctic Armour Buff Effect
 #% reduced Arctic Armour Mana Reservation
+Arctic Breath's Chilling Area has #% increased Movement Speed
 #% increased Arctic Breath Damage
 #% increased Arctic Breath Duration
 #% increased Arctic Breath Area of Effect
+Armageddon Brand deals #% increased Damage
 #% increased Assassin's Mark Curse Effect
 #% increased Assassin's Mark Duration
 Ball Lightning fires an additional Projectile
@@ -117,14 +121,14 @@ Detonate Dead has a #% chance to detonate an additional Corpse
 #% increased Detonate Dead Area of Effect
 #% increased Devouring Totem Leech per second
 #% increased Chance to consume an additional Corpse with Devouring Totem
-#% chance for Discharge not to consume Charges
+#% chance for Discharge to deal Damage without removing Charges
 #% increased Discharge Damage
 #% increased Discharge Radius
 #% reduced Discipline Mana Reservation
 Dominating Blow can summon # additional Magic Sentinels of Dominance
 Dominating Blow can summon an additional Rare Sentinel of Dominance
 #% increased Dominating Blow Damage
-#% increased Dominating Blow Duration
+#% increased Sentinel of Dominance Duration
 Summoned Sentinels of Dominance deal #% increased Damage
 Lacerate deals (#-#) to (#-#) added Physical Damage against Bleeding Enemies
 #% increased Lacerate Critical Strike Chance
@@ -134,6 +138,7 @@ Lacerate deals (#-#) to (#-#) added Physical Damage against Bleeding Enemies
 #% increased Double Strike Critical Strike Chance
 #% increased Double Strike Damage
 Double Strike has a #% chance to deal Double Damage to Bleeding Enemies
+Dread Banner has #% increased Aura Effect
 #% increased Dual Strike Attack Speed
 #% increased Dual Strike Critical Strike Chance
 #% increased Dual Strike Damage
@@ -218,6 +223,8 @@ Frostbolt has +#% chance to Freeze
 #% increased Frost Bomb Damage
 Frost Bomb has #% increased Debuff Duration
 #% increased Frost Bomb Area of Effect
+Winter Orb has +# Maximum Stages
+Winter Orb has #% increased Area of Effect per Stage
 #% increased Frost Wall Cooldown Recovery Speed
 #% increased Frost Wall Duration
 #% increased Glacial Cascade Damage
@@ -255,6 +262,7 @@ Summoned Holy Relics have #% increased Area of Effect
 #% increased Effect of the Buff granted by your Ice Golems
 #% increased Ice Nova Damage
 Ice Nova has +#% chance to Freeze
+Chills from Ice Nova Hits always reduce Action Speed by at least #%
 #% increased Ice Nova Area of Effect
 #% increased Ice Shot Damage
 #% increased Ice Shot Duration
@@ -263,14 +271,16 @@ Siphoning Trap has #% increased Chill Effect
 Siphoning Trap deals #% increased Damage
 Siphoning Trap's beam to you grants #% reduced Damage taken for each other beam
 Siphoning Trap has #% increased Skill Effect Duration
+Ice Spear fires an additional Projectile
 #% increased Ice Spear Damage
+Ice Spear travels #% reduced distance before changing forms
 #% Chance to gain a Power Charge on Critical Strike with Ice Spear
 #% increased Ice Spear Critical Strike Chance in second form
 Ice Trap Damage Penetrates #% Cold Resistance
 #% increased Ice Trap Damage
 #% increased Ice Trap Area of Effect
 #% increased Immortal Call Duration
-#% chance for Immortal Call to not consume Endurance Charges
+#% chance for Immortal Call to increase Duration without removing Endurance Charges
 Incinerate has #% increased Area of Effect
 #% increased Incinerate Damage
 #% increased Incinerate Damage for each stage
@@ -282,6 +292,9 @@ Infernal Blow Debuff deals an additional #% of Damage per Charge
 #% increased Kinetic Blast Damage
 Kinetic Blast has a #% chance for an additional explosion
 #% increased Kinetic Blast Area of Effect
+Lancing Steel deals #% increased Damage
+Lancing Steel's additional Projectiles have +#% chance to Impale Enemies
+Lancing Steel's primary Projectile Pierces # additional Targets
 #% increased Leap Slam Attack Speed
 #% increased Leap Slam Damage
 #% increased Leap Slam Area of Effect
@@ -319,12 +332,13 @@ Mirror Arrow and Mirror Arrow Clones deal #% increased Damage
 #% increased Molten Shell Buff Effect
 #% increased Molten Shell Damage
 #% increased Molten Strike Damage
+Molten Strike fires an additional Projectile
 Molten Strike fires # additional Projectiles
 #% increased Molten Strike Area of Effect
 Orb of Storms has #% increased Cast Speed
 #% increased Orb of Storms Damage
 #% increased Phase Run Duration
-#% chance for Phase Run to not consume Frenzy Charges
+#% chance for Phase Run to increase Duration without removing Frenzy Charges
 Seismic Trap releases an additional Wave
 Seismic Trap has #% increased Cooldown Recovery Speed
 Seismic Trap deals #% increased Damage
@@ -372,6 +386,9 @@ Scourge Arrow deals #% increased Damage
 #% increased Searing Bond Damage
 #% increased Searing Bond Totem Elemental Resistances
 #% increased Searing Bond Totem Placement Speed
+Shattering Steel fires an additional Projectile
+Shattering Steel deals #% increased Damage
+Shattering Steel grants Fortify on Hitting an Enemy at Close Range
 #% increased Shield Charge Attack Speed
 #% increased Shield Charge Damage
 #% increased Shield Charge Damage per Enemy Hit
@@ -419,6 +436,7 @@ Static Strike has +# maximum Beam Targets
 #% increased Static Strike Area of Effect
 +#% to Stone Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Stone Golems
+Storm Brand deals #% increased Damage
 #% chance to Avoid interruption from Stuns while Casting Storm Burst
 #% increased Storm Burst Damage
 #% increased Storm Burst Area of Effect
@@ -444,7 +462,7 @@ Chaos Golems deal #% increased Damage
 +#% Sweep Knockback Chance
 #% increased Sweep Area of Effect
 #% increased Tectonic Slam Area of Effect
-#% chance for Tectonic Slam to not consume an Endurance Charge
+#% chance to create a Charged Slam
 #% increased Tectonic Slam Damage
 #% increased Tempest Shield Damage
 Tempest Shield chains an additional # times
@@ -469,11 +487,13 @@ Toxic Rain gains #% of Physical Damage as Extra Chaos Damage
 #% increased Volatile Dead Damage
 Volatile Dead destroys up to # additional Corpse
 Vortex has #% increased Area of Effect when Cast on Frostbolt
+Vortex has #% increased Cooldown Recovery Speed
 #% increased Vortex Damage
 #% increased Vortex Duration
 #% increased Vortex Area of Effect
 #% increased Vulnerability Curse Effect
 #% increased Vulnerability Duration
+War Banner has #% increased Aura Effect
 #% increased Warlord's Mark Curse Effect
 #% increased Warlord's Mark Duration
 #% increased Whirling Blades Attack Speed
@@ -481,8 +501,11 @@ Vortex has #% increased Area of Effect when Cast on Frostbolt
 #% increased Wild Strike Damage
 Wild Strike Chains an additional # times
 #% increased Wild Strike Area of Effect
+Winter Orb deals #% increased Damage
 Wither #% increased Duration
 Wither has #% increased Area of Effect
 #% reduced Wrath Mana Reservation
 Zombies have #% increased Attack Speed
 +#% to Raised Zombie Elemental Resistances
+Storm Brand has a #% chance to Chain an additional time
+Storm Brand Damage Penetrates #% of Branded Enemy's Lightning Resistance

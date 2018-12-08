@@ -1,7 +1,7 @@
 Adds # to # Chaos Damage to Attacks
 #% increased Area of Effect
 Bow Attacks fire an additional Arrow
-Enemies can have # additional Curse
+You can apply an additional Curse
 Arrows Pierce an additional Target
 Can have up to # additional Trap placed at a time
 Grants Level # Anger Skill
@@ -17,7 +17,7 @@ Enemies Cannot Leech Life From you
 #% additional Chance to receive a Critical Strike
 #% chance to Dodge Attack Hits
 #% chance to Cause Monsters to Flee
-#% increased Chaos Damage for each Equipped Corrupted Item
+#% increased Chaos Damage for each Corrupted Item Equipped
 +#% to Chaos Resistance
 Grants Level # Clarity Skill
 #% of Cold Damage Leeched as Life
@@ -49,11 +49,11 @@ Grants Level # Haste Skill
 Grants Level # Hatred Skill
 #% increased Endurance, Frenzy and Power Charge Duration
 #% increased Skill Effect Duration
-#% increased Life Leeched per second for each Equipped Corrupted Item
+#% increased Life Leeched per second for each Corrupted Item Equipped
 #% of Lightning Damage Leeched as Life
 Adds # to # Chaos Damage
 +# to Weapon range
-#% increased Mana Leeched per second for each Equipped Corrupted Item
+#% increased Mana Leeched per second for each Corrupted Item Equipped
 +# Mana gained for each Enemy hit by your Attacks
 #% of Damage taken gained as Mana over 4 seconds when Hit
 +# to Maximum Frenzy Charges
