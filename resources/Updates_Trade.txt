@@ -1,5 +1,12 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.12.2
+================================================================================================
+* Updated data files (uniques)
+* Advanced search
+	** You can now include an items veiled prefix/suffix.
+	** Unfortunately poe.trade only allows to filter whether an item is veiled, not whether it has a veiled prefix/suffix.
+
 2.12.1
 ================================================================================================
 * QoL features for the color blind:

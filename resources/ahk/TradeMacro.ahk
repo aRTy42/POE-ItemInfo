@@ -4771,7 +4771,6 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	/*
 		veiled mods
 		*/
-	/*
 	If (advItem.veiledPrefixCount) {
 		Gui, SelectModsGui:Add, CheckBox, x15 yp+25 vTradeAdvancedSelectedVeiledPrefix Checked, % "Veiled Prefix"
 		Gui, SelectModsGui:Add, Edit    , x+1 yp-3 w30 vTradeAdvancedVeiledPrefixCount        , % advItem.veiledPrefixCount
@@ -4780,9 +4779,8 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		voffsetX := advItem.veiledPrefixCount ? "+10" : "15"
 		voffsetY := advItem.veiledPrefixCount ? "+3"  : "+25"
 		Gui, SelectModsGui:Add, CheckBox, x%voffsetX% yp%voffsetY% vTradeAdvancedSelectedVeiledSuffix Checked, % "Veiled Suffix"
-		Gui, SelectModsGui:Add, Edit    , x+1 yp-3 w30 vTradeAdvancedVeiledSuffixCount        , % advItem.veiledPrefixCount
+		Gui, SelectModsGui:Add, Edit    , x+1 yp-3 w30 vTradeAdvancedVeiledSuffixCount        , % advItem.veiledSuffixCount
 	}
-	*/
 
 	/*
 		corrupted state for jewels
