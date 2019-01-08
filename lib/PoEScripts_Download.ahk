@@ -14,143 +14,150 @@
 	*/
 
 	; https://curl.haxx.se/download.html -> https://bintray.com/vszakats/generic/curl/
-	Loop, 2 
-	{
-		curl		:= """" A_ScriptDir "\lib\curl.exe"" "	
-		headers	:= ""
-		cookies	:= ""
-		For key, val in ioHdr {
-			val := Trim(RegExReplace(val, "i)(.*?)\s*:\s*(.*)", "$1:$2"))
-			If (A_Index = 2 and RegExMatch(val, "i)^Host:.*")) {
-				; make sure that the host header is not included on the second try (empty first response)
-			} Else {
-				headers .= "-H """ val """ "	
-			}		
-			
-			If (RegExMatch(val, "i)^Cookie:(.*)", cookie)) {
-				cookies .= cookie1 " "		
-			}
+	/*
+		parse options, create the cURL request and execute it
+	*/
+	reqLoops++
+	curl		:= """" A_ScriptDir "\lib\curl.exe"" "	
+	headers	:= ""
+	cookies	:= ""
+	For key, val in ioHdr {
+		val := Trim(RegExReplace(val, "i)(.*?)\s*:\s*(.*)", "$1:$2"))
+		If (RegExMatch(val, "i)^Cookie:(.*)", cookie)) {
+			cookies .= cookie1 " "		
 		}
-		cookies := StrLen(cookies) ? "-b """ Trim(cookies) """ " : ""
-		
-		redirect := "L"
-		PreventErrorMsg := false
-		validateResponse := 1
-		If (StrLen(options)) {
-			Loop, Parse, options, `n 
-			{
-				If (RegExMatch(A_LoopField, "i)SaveAs:[ \t]*\K[^\r\n]+", SavePath)) {
-					commandData	.= " " A_LoopField " "
-					commandHdr	.= ""	
-				}
-				If (RegExMatch(A_LoopField, "i)Redirect:\sFalse")) {
-					redirect := ""
-				}
-				If (RegExMatch(A_LoopField, "i)PreventErrorMsg")) {
-					PreventErrorMsg := true
-				}
-				If (RegExMatch(A_LoopField, "i)RequestType:(.*)", match)) {
-					requestType := Trim(match1)
-				}
-				If (RegExMatch(A_LoopField, "i)ReturnHeaders:(.*skip.*)")) {
-					skipRetHeaders := true
-				}
-				If (RegExMatch(A_LoopField, "i)TimeOut:(.*)", match)) {
-					timeout := Trim(match1)
-				}
-				If (RegExMatch(A_LoopField, "i)ValidateResponse:(.*)", match)) {
-					If (Trim(match1) = "false") {
-						validateResponse := 0
-					}				
-				}	
-			}			
-		}
-		If (not timeout) {
-			timeout := 30
-		}
+	}
+	cookies := StrLen(cookies) ? "-b """ Trim(cookies) """ " : ""
 
-		e := {}
-		Try {		
-			commandData	:= ""		; console curl command to return data/content 
-			commandHdr	:= ""		; console curl command to return headers
-			If (binaryDL) {
-				commandData .= " -" redirect "Jkv "		; save as file
-				If (SavePath) {
-					commandData .= "-o """ SavePath """ "	; set target destination and name
-				}
-			} Else {
-				commandData .= " -" redirect "ks --compressed "
-				If (requestType = "GET") {
-					commandHdr  .= " -k" redirect "s "
-				} Else {
-					commandHdr  .= " -I" redirect "ks "
-				}
-			}			
-			
-			If (StrLen(headers)) {
-				If (not requestType = "GET") {
-					commandData .= headers
-					commandHdr  .= headers	
+	redirect := "L"
+	PreventErrorMsg := false
+	validateResponse := 1
+	If (StrLen(options)) {
+		Loop, Parse, options, `n 
+		{
+			If (RegExMatch(A_LoopField, "i)SaveAs:[ \t]*\K[^\r\n]+", SavePath)) {
+				commandData	.= " " A_LoopField " "
+				commandHdr	.= ""	
+			}
+			If (RegExMatch(A_LoopField, "i)Redirect:\sFalse")) {
+				redirect := ""
+			}
+			If (RegExMatch(A_LoopField, "i)parseJSON:\sTrue")) {
+				ignoreRetCodeForJSON := true
+			}
+			If (RegExMatch(A_LoopField, "i)PreventErrorMsg")) {
+				PreventErrorMsg := true
+			}
+			If (RegExMatch(A_LoopField, "i)RequestType:(.*)", match)) {
+				requestType := Trim(match1)
+			}
+			If (RegExMatch(A_LoopField, "i)ReturnHeaders:(.*skip.*)")) {
+				skipRetHeaders := true
+			}
+			If (RegExMatch(A_LoopField, "i)ReturnHeaders:(.*append.*)")) {
+				appendRetHeaders := true
+			}
+			If (RegExMatch(A_LoopField, "i)TimeOut:(.*)", match)) {
+				timeout := Trim(match1)
+			}
+			If (RegExMatch(A_LoopField, "i)ValidateResponse:(.*)", match)) {
+				If (Trim(match1) = "false") {
+					validateResponse := 0
 				}				
-				If (StrLen(cookies)) {
-					commandData .= cookies
-					commandHdr  .= cookies
-				}
+			}	
+		}			
+	}
+	If (not timeout) {
+		timeout := 20
+	}
+	
+	e := {}
+	Try {		
+		commandData	:= ""		; console curl command to return data/content 
+		commandHdr	:= ""		; console curl command to return headers
+		If (binaryDL) {
+			commandData .= " -" redirect "Jkv "		; save as file
+			If (SavePath) {
+				commandData .= "-o """ SavePath """ "	; set target destination and name
 			}
-			If (StrLen(ioData) and not requestType = "GET") {
-				If (requestType = "POST") {
-					commandData .= "-X POST "
-				}
-				commandData .= "--data """ ioData """ "
-			} Else If (StrLen(ioData)) {
-				url := url "?" ioData
-			}
-			
-			If (binaryDL) {
-				commandData	.= "--connect-timeout " timeout " "
-				commandData	.= "--connect-timeout " timeout " "
-			} Else {				
-				commandData	.= "--max-time " timeout " "
-				commandHdr	.= "--max-time " timeout " "
-			}
-
-			; get data
-			html	:= StdOutStream(curl """" url """" commandData)
-			;html := ReadConsoleOutputFromFile(commandData """" url """", "commandData") ; alternative function
-			
-			If (returnCurl) {
-				returnCurl := "curl " """" url """" commandData
-			}
-			
-			; get return headers in seperate request
-			If (not binaryDL and not skipRetHeaders) {
-				If (StrLen(ioData) and not requestType = "GET") {
-					commandHdr := curl """" url "?" ioData """" commandHdr		; add payload to url since you can't use the -I argument with POST requests					
-				} Else {
-					commandHdr := curl """" url """" commandHdr
-				}
-				ioHdr := StdOutStream(commandHdr)
-				;ioHrd := ReadConsoleOutputFromFile(commandHdr, "commandHdr") ; alternative function
+		} Else {
+			commandData .= " -" redirect "ks --compressed "
+			If (requestType = "GET") {				
+				;commandHdr  .= " -s" redirect " -D - -o /dev/null " ; unix
+				commandHdr  .= " -s" redirect " -D - -o nul " ; windows
 			} Else {
-				ioHdr := html
+				commandHdr  .= " -I" redirect "ks "
 			}
 			
-			reqHeadersCurl := commandHdr
-		} Catch e {
+			If (appendRetHeaders) {
+				commandData  .= " -w '%{http_code}' "
+			}
+		}			
+		
+		If (StrLen(headers)) {
+			If (not requestType = "GET") {
+				commandData .= headers
+				commandHdr  .= headers	
+			}				
+			If (StrLen(cookies)) {
+				commandData .= cookies
+				commandHdr  .= cookies
+			}
+		}
+		If (StrLen(ioData) and not requestType = "GET") {
+			If (requestType = "POST") {
+				commandData .= "-X POST "
+			}
+			commandData .= "--data """ ioData """ "
+		} Else If (StrLen(ioData)) {
+			url := url "?" ioData
+		}
+		
+		If (binaryDL) {
+			commandData	.= "--connect-timeout " timeout " "
+			commandData	.= "--connect-timeout " timeout " "
+		} Else {
+			commandData	.= "--max-time " timeout " "
+			commandHdr	.= "--max-time " timeout " "
+		}
+		; get data
+		html	:= StdOutStream(curl """" url """" commandData)
+		;html := ReadConsoleOutputFromFile(curl """" url """" commandData, "commandData") ; alternative function
+		
+		If (returnCurl) {
+			returnCurl := "curl " """" url """" commandData
+		}
 
+		; get return headers in seperate request
+		If (not binaryDL and not skipRetHeaders) {
+			If (StrLen(ioData) and not requestType = "GET") {
+				commandHdr := curl """" url "?" ioData """" commandHdr		; add payload to url since you can't use the -I argument with POST requests					
+			} Else {
+				commandHdr := curl """" url """" commandHdr
+			}
+			ioHdr := StdOutStream(commandHdr)
+			;ioHrd := ReadConsoleOutputFromFile(commandHdr, "commandHdr") ; alternative function
+		} Else If (skipRetHeaders) {
+			commandHdr := curl """" url """" commandHdr
+			ioHdr := html
+		} Else {
+			ioHdr := html
 		}
 		
-		; check if response has a good status code or is valid JSON (shouldn't be an erroneous response in that case)
-		goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
-		Try {
-			isJSON := isObject(JSON.Load(ioHdr))
-		} Catch er {
-			
-		}
+		reqHeadersCurl := commandHdr
+	} Catch e {
+
+	}
+	
+	/*
+		handle any issues
+	*/	
+	; check if response has a good status code or is valid JSON (shouldn't be an erroneous response in that case)
+	goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
+	Try {
+		isJSON := isObject(JSON.Load(ioHdr))
+	} Catch er {
 		
-		If ((Strlen(ioHdr) and goodStatusCode) or (StrLen(ioHdr) and isJSON) or not validateResponse) {		
-			Break	; only go into the second loop if the respone is empty or has a bad status code (possible problem with the added host header)
-		}
 	}
 
 	;goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")

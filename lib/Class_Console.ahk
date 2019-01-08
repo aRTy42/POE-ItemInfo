@@ -301,7 +301,7 @@ class console
 	}
 	show(GuiName:="")
 	{	ListLines,Off
-		Gui,% (GuiName?GuiName:this.name) ":Show"
+		Gui,% (GuiName?GuiName:this.name) ":Show", NA
 		ListLines,On
 	}
 	timeSinceLastCall(id:=1,reset:="")
