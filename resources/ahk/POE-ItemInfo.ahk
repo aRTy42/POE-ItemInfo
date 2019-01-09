@@ -5745,16 +5745,15 @@ ParseAffixes(ItemDataAffixes, Item)
 		}
 		
 		
-		; Vagan prefix
+		
 		IfInString, A_LoopField, Gems in this item are Supported by Lvl 1 Blood Magic
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Vagan 7", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "", ""), A_Index)
 			Continue
 		}
-		; Vagan prefix
-		IfInString, A_LoopField, Hits can't be Evaded
+				IfInString, A_LoopField, Hits can't be Evaded
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Buy:Vagan 4", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "", ""), A_Index)
 			Continue
 		}
 		
@@ -5763,32 +5762,32 @@ ParseAffixes(ItemDataAffixes, Item)
 		
 		IfInString, A_LoopField, Can have multiple Crafted Mods
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "Elreon 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, Prefixes Cannot Be Changed
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "Haku 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, Suffixes Cannot Be Changed
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Tora 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "", ""), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, Cannot roll Attack Mods
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "Cata 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, Cannot roll Caster Mods
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "Vagan 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, Cannot roll Mods with Required Lvl above Lvl 28
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "Leo 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
 			Continue
 		}
 	}
@@ -10868,8 +10867,10 @@ HighlightItems(broadTerms = false, leaveSearchField = true, focusHideoutFilter =
 			focusHideoutFilter := true
 			If (Item.IsHideoutObject and focusHideoutFilter) {				
 				CoordMode, Mouse, Relative
-				MouseGetPos, currentX, currentY				
-				MouseClick, Left, %hideoutFieldX%, %hideoutFieldY%, 1, 0
+				MouseGetPos, currentX, currentY
+				MouseMove, %hideoutFieldX%, %hideoutFieldY%, 0
+				Sleep, 10
+				MouseClick
 				Sleep, 50
 				MouseMove, %currentX%, %currentY%, 0
 				Sleep, 10

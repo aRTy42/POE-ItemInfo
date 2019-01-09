@@ -1,6 +1,33 @@
 The following is a list of what has been updated, starting with 1.9.3.
 Current Script Caretaker: aRTy (GitHub/PoE Account: aRTy42, Reddit: -aRTy-)
 
+3.5.00
+================================
+from aRTy, Eruyome
+
+* Updated Uniques, Divination Cards, Maps and Gem Quality info
+** Boss information for maps are not updated yet
+* Included changes from and for the TradeMacro
+** QoL features for the color blind:
+	** `Ctrl + c` now also has the items socket string added to the tooltip, example "R-G-B B-B-G".
+	** `Ctrl + c` on a Gem now has added its color to the tooltip.
+** Lutbot logout macro integration:
+	** LutTools (Lutbot) is a collection of logout, whisper reply and basic price check features.
+	** TradeMacro supports the newly released Lite-Version which only has the TCP logout features included.
+	** TradeMacro only helps in managing this script by giving you the option to run it on script start and check for hotkey conflicts.
+	** The Lutbot macro itself stays as a seperate installation with seperated development and maintaining.
+	** This integration is accessible from a new tab "Lutbot" in the settings menu.
+** Hideout decoration stash search:
+	** The already existing search/highlighting feature (`Ctrl + f`) for your stash search can now also help filtering your hideout stash.
+	** Pressing the hotkey on a decoration item in the decoration purchase window inputs its name into the hideout stash filter field.
+	** The games `Ctrl + f` hotkey would focus the purchase windows filter field instead, pressing it when not hovering over a decoration still does this.
+	** The hotkey added to the "AdditionalMacros" tab needs the coordinates of your hideout stash filter field to click on it, you may have to edit those settings.
+	** This feature can be disabled independently from the stash highlighting feature.
+	** This allows quickly looking up how many of a specific decoration from the vendor you already own.
+** Hotkey Assignment:
+	** Previously TradeMacro didn't detect any hotkey conflicts.
+	** You will now be warned of any conflicts and asked to resolve the issues.
+
 3.3.03
 ================================
 from aRTy, Eruyome
