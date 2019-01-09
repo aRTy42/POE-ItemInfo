@@ -91,6 +91,7 @@ argumentProjectName		= %1%
 argumentUserDirectory	= %2%
 argumentIsDevVersion	= %3%
 argumentOverwrittenFiles = %4%
+argumentMergeScriptPath  = %7%
 
 ; when using the fallback exe we're missing the parameters passed by the merge script
 If (!StrLen(argumentProjectName) > 0) {
@@ -173,7 +174,7 @@ If (_updateConfigWrite) {
 */
 OnMessage( 0x111, "HandleGuiControlSetFocus" )
 
-TradeFunc_FinishTMInit()
+TradeFunc_FinishTMInit(argumentMergeScriptPath)
 
 ; ----------------------------------------------------------- Functions ----------------------------------------------------------------
 
@@ -1533,17 +1534,27 @@ TradeFunc_GetOSInfo() {
 
 ;----------------------- SplashScreens ---------------------------------------
 TradeFunc_StartSplashScreen() {
+	/*
 	initArray := ["Initializing script...", "Preparing Einhars welcoming party...", "Uninstalling Battle.net...", "Investigating the so-called ""Immortals""...", "Starting mobile app..."
 		, "Hunting some old friends...", "Interrogating Master Krillson about fishing secrets...", "Trying to open Voricis chest...", "Setting up lab carries for the other 99%..."
 		, "Helping Alva discover the Jungle Hideout...", "Conning EngineeringEternity with the Atlas City Shuffle...", "Vendoring stat-sticks..."]
+	*/	
+		
+	initArray := ["Initializing script...", "Preparing Einhars welcoming party...", "Uninstalling Battle.net...", "Investigating the so-called ""Immortals""...",
+		, "Hunting some old friends...", "Setting up lab carries for the other 99%...", "Msg @ScourgeOfTheImmortals if you find new map hideouts."]
 
 	Random, randomNum, 1, initArray.MaxIndex()
-	SplashTextOn, 370, 20, PoE-TradeMacro, % initArray[randomNum]
+	SplashTextOn, 420, 20, PoE-TradeMacro, % initArray[randomNum]
 }
 
-TradeFunc_FinishTMInit() {
+TradeFunc_FinishTMInit(argumentMergeScriptPath) {	
+	/*
+		Make sure that the merge script is closed.
+		*/
+	WinClose, %argumentMergeScriptPath% ahk_class AutoHotkey
+	WinKill, %argumentMergeScriptPath% ahk_class AutoHotkey
+	
 	; SplashText gets disabled by ItemInfo
-
 	If (TradeOpts.Debug) {
 		Menu, Tray, Add ; Separator
 		Menu, Tray, Add, Test Item Pricing, DebugTestItemPricing

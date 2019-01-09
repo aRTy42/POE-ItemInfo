@@ -55,8 +55,10 @@ reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,i
 reqHeaders.push("User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36")
 parsedLeagueJSON := PoEScripts_Download("http://api.pathofexile.com/leagues?type=main", postData, reqHeaders, options, true, true, false, "", reqHeadersCurl)
 WriteToLogFile("Requesting leagues from api.pathofexile.com...`n`n" "cURL command:`n" reqHeadersCurl "`n`nAnswer: " reqHeaders, "StartupLog.txt", "PoE-TradeMacro")
-FileDelete, %A_ScriptDir%\temp\currentLeagues.json, 1
-FileAppend, %parsedLeagueJSON%, %A_ScriptDir%\temp\currentLeagues.json
+
+If (PoEScripts_SaveWriteTextFile(A_ScriptDir "\temp\currentLeagues.json", parsedLeagueJSON, "utf-8", true, true)) {
+	WriteToLogFile("Failed to delete " A_ScriptDir "\temp\currentLeagues.json before writing JSON data. `n", "StartupLog.txt", "PoE-TradeMacro")	
+}
 
 errorMsg := "Parsing the league data (json) from the Path of Exile API failed."
 errorMsg .= "`nThis should only happen when the servers are down for maintenance." 

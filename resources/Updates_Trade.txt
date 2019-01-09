@@ -1,5 +1,13 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.12.3
+================================================================================================
+* Added more and more detailed error feedback for poeprices requests (price prediction).
+* Improved overally error handling and feedback for different script/run errors.
+* Fixed fossil price search not working with the alternative currency search (poe.ninja).
+* Removed "fallback.exe" (the compiled script) from the default release. It can still be downloaded and used if you really want it.
+* Updated all data files (uniques, gem quality etc).
+
 2.12.2
 ================================================================================================
 * Updated data files (uniques)

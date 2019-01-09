@@ -54,6 +54,9 @@
 			If (RegExMatch(A_LoopField, "i)ReturnHeaders:(.*skip.*)")) {
 				skipRetHeaders := true
 			}
+			If (RegExMatch(A_LoopField, "i)ReturnHeaders:(.*append.*)")) {
+				appendRetHeaders := true
+			}
 			If (RegExMatch(A_LoopField, "i)TimeOut:(.*)", match)) {
 				timeout := Trim(match1)
 			}
@@ -84,6 +87,10 @@
 				commandHdr  .= " -s" redirect " -D - -o nul " ; windows
 			} Else {
 				commandHdr  .= " -I" redirect "ks "
+			}
+			
+			If (appendRetHeaders) {
+				commandData  .= " -w '%{http_code}' "
 			}
 		}			
 		

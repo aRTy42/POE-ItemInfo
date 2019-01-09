@@ -1306,7 +1306,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	ParsingError	:= ""
 	currencyUrl	:= ""	
 	If (Item.IsCurrency and not Item.IsEssence and TradeFunc_CurrencyFoundOnCurrencySearch(Item.Name)) {
-		If (!TradeOpts.AlternativeCurrencySearch) {
+		If (!TradeOpts.AlternativeCurrencySearch or Item.IsFossil) {			
 			Html := TradeFunc_DoCurrencyRequest(Item.Name, openSearchInBrowser, 0, currencyUrl, error)
 			If (error) {
 				ParsingError := Html
@@ -1360,7 +1360,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	}
 	Else If (Item.isCurrency and !Item.IsEssence and TradeFunc_CurrencyFoundOnCurrencySearch(Item.Name)) {
 		; Default currency search
-		If (!TradeOpts.AlternativeCurrencySearch) {
+		If (!TradeOpts.AlternativeCurrencySearch or Item.IsFossil) {
 			ParsedData := TradeFunc_ParseCurrencyHtml(Html, Payload, ParsingError)
 		}
 		; Alternative currency search (poeninja)
@@ -1984,7 +1984,8 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 	url 		:= "https://www.poeprices.info/api"
 
 	options	:= "RequestType: GET"
-	options	.= "`n" "ReturnHeaders: skip"
+	;options	.= "`n" "ReturnHeaders: skip"
+	options	.= "`n" "ReturnHeaders: append"
 	options	.= "`n" "TimeOut: 10"
 	reqHeaders := []
 
@@ -2003,6 +2004,12 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 	}
 
 	responseObj := {}
+	responseHeader := ""
+	
+	RegExMatch(response, "is)(.*?({.*}))?.*?'(.*?)'.*", responseMatch)
+	response := responseMatch1
+	responseHeader := responseMatch3
+	
 	Try {
 		responseObj := JSON.Load(response)
 	} Catch e {
@@ -2013,9 +2020,14 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 		responseObj := {}
 	}
 	
-	If (not StrLen(response)) {
+	/*
+	If (not StrLen(response) and not responseHeader = "403") {
 		responseObj.failed := "ERROR: Parsing response failed, empty response! "
 	}
+	Else If (responseHeader = "403") {
+		responseObj.failed := "ERROR: Parsing response failed, server returned HTTP ERROR 403! "
+	}
+	*/
 
 	If (TradeOpts.Debug) {
 		arr := {}
@@ -2024,15 +2036,106 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 		arr.League := TradeGlobals.Get("LeagueName")
 		TradeFunc_LogPoePricesRequest(arr, request, "poe_prices_debug_log.txt")
 	}
-
+	
 	responseObj.added := {}
 	responseObj.added.encodedData := EncodedItemData
 	responseObj.added.league := TradeGlobals.Get("LeagueName")
 	responseObj.added.requestUrl := url "?" postData
 	responseObj.added.browserUrl := url "?" postData "&w=1"
 	responseObj.added.encodingError := encodingError
+	responseObj.added.retHeader := responseHeader
 	
 	Return responseObj
+}
+
+TradeFunc_ParsePoePricesInfoErrorCode(response, request) {
+	; https://docs.google.com/spreadsheets/d/1XwHk6FZwzRDxTbDraGkMy5sF0mfGJhCIzCmLSD66JO0/edit#gid=0
+	If (RegExMatch(response.added.retHeader, "i)(403|404)", errMatch)) {
+		ShowToolTip("")
+		ShowTooltip("ERROR: Request to poeprices.info returned HTTP ERROR " errMatch1 "! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
+		TradeFunc_LogPoePricesRequest(response, request)
+		Return 0
+	}
+	Else If (not response or not response.HasKey("error")) {
+		ShowToolTip("")
+		ShowTooltip("ERROR: Request to poeprices.info timed out or`nreturned an invalid response! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
+		TradeFunc_LogPoePricesRequest(response, request)
+		Return 0
+	}
+	Else If (response.error != "0") {
+		ShowToolTip("")
+		If (response.error_msg) {
+			msg := "ERROR: Predicted search has encountered an issue! `n`n"
+			msg .= "Returned message: `n"
+			msg .= TradeFunc_AddLineBreaksToText(response.error_msg, 100)
+			ShowTooltip(msg)
+		} Else {
+			ShowTooltip("ERROR: Predicted search has encountered an unknown error! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
+		}
+		TradeFunc_LogPoePricesRequest(response, request)		
+		Return 0
+	}
+	Else If (response.error = "0") {
+		min := response.HasKey("min") or response.HasKey("min_price") ? true : false
+		max := response.HasKey("max") or response.HasKey("max_price") ? true : false		
+		
+		min_value := StrLen(response.min) ? response.min : response.min_price
+		max_value := StrLen(response.max) ? response.max : response.max_price
+		
+		If (min and max) {
+			If (not StrLen(min_value) and not StrLen(max_value)) {
+				ShowToolTip("")
+				ShowTooltip("No price prediction available. `n`nItem not found, insufficient sample data.")
+				Return 0
+			}
+		} Else If (not StrLen(min_value) and not StrLen(max_value)) {
+			ShowToolTip("")
+			ShowTooltip("ERROR: Request to poeprices.info failed,`nno prices were returned! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
+			TradeFunc_LogPoePricesRequest(response, request)
+			Return 0
+		}
+		
+		Return 1
+	}
+	Return 0
+}
+
+TradeFunc_AddLineBreaksToText(text, approximateCharsPerLine) {
+	arr := StrSplit(text, " ")
+	
+	string := ""
+	l := 0
+	For key, value in arr {
+		l += StrLen(value) + 1
+		If (l >= approximateCharsPerLine) {
+			string .= " " value "`n"
+			l := 0
+		} Else {
+			string .= " " value
+		}
+	}
+	
+	Return string
+}
+
+TradeFunc_LogPoePricesRequest(response, request, filename = "poeprices_log.txt") {
+	text := "#####"
+	text .= "`n### " "Please post this log file below to https://www.pathofexile.com/forum/view-thread/1216141/."	
+	text .= "`n### " "Try not to ""spam"" their thread if a few other reports with the same error description were posted in the last hours."	
+	text .= "`n#####"	
+	
+	text .= "`n`n"
+	text .= "Request and response:`n"
+	Try {
+		text .= JSON.Dump(response, "", 4)
+	} Catch e {
+		text .= response
+	}
+	
+	FileDelete, %A_ScriptDir%\temp\%filename%
+	FileAppend, %text%, %A_ScriptDir%\temp\%filename%
+	
+	Return
 }
 
 TradeFunc_MapCurrencyNameToID(name) {
@@ -2904,69 +3007,6 @@ TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = fals
 	Return, Title
 }
 
-TradeFunc_ParsePoePricesInfoErrorCode(response, request) {
-	If (not response or not response.HasKey("error")) {
-		ShowToolTip("")
-		ShowTooltip("ERROR: Request to poeprices.info timed out or`nreturned an invalid response! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
-		TradeFunc_LogPoePricesRequest(response, request)
-		Return 0
-	}
-	Else If (response.error = "1") {
-		ShowToolTip("")
-		ShowTooltip("No price prediction available. `n`nItem not found, insufficient sample data. ")
-		Return 0
-	}
-	Else If (response.error = "2") {
-		ShowToolTip("")
-		ShowTooltip("ERROR: Predicted search has encountered an unknown error! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
-		TradeFunc_LogPoePricesRequest(response, request)
-		Return 0
-	}
-	Else If (response.error = "0") {
-		min := response.HasKey("min") or response.HasKey("min_price") ? true : false
-		max := response.HasKey("max") or response.HasKey("max_price") ? true : false		
-		
-		min_value := StrLen(response.min) ? response.min : response.min_price
-		max_value := StrLen(response.max) ? response.max : response.max_price
-		
-		If (min and max) {
-			If (not StrLen(min_value) and not StrLen(max_value)) {
-				ShowToolTip("")
-				ShowTooltip("No price prediction available. `n`nItem not found, insufficient sample data.")
-				Return 0
-			}
-		} Else If (not StrLen(min_value) and not StrLen(max_value)) {
-			ShowToolTip("")
-			ShowTooltip("ERROR: Request to poeprices.info failed,`nno prices were returned! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
-			TradeFunc_LogPoePricesRequest(response, request)
-			Return 0
-		}
-		
-		Return 1
-	}
-	Return 0
-}
-
-TradeFunc_LogPoePricesRequest(response, request, filename = "poeprices_log.txt") {
-	text := "#####"
-	text .= "`n### " "Please post this log file below to https://www.pathofexile.com/forum/view-thread/1216141/."	
-	text .= "`n### " "Try not to ""spam"" their thread if a few other reports with the same error description were posted in the last hours."	
-	text .= "`n#####"	
-	
-	text .= "`n`n"
-	text .= "Request and response:`n"
-	Try {
-		text .= JSON.Dump(response, "", 4)
-	} Catch e {
-		text .= response
-	}
-	
-	FileDelete, %A_ScriptDir%\temp\%filename%
-	FileAppend, %text%, %A_ScriptDir%\temp\%filename%
-	
-	Return
-}
-	
 TradeFunc_ParsePoePricesInfoData(response) {
 	Global Item, ItemData, TradeOpts
 	
@@ -4054,7 +4094,7 @@ TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	
 	Gui, PredictedPricing:Margin, 10, 10
 
-	Gui, PredictedPricing:Font, bold s8, Verdana
+	Gui, PredictedPricing:Font, bold s8 c000000, Verdana
 	Gui, PredictedPricing:Add, Text, BackgroundTrans, Priced using machine learning algorithms.
 	Gui, PredictedPricing:Add, Text, BackgroundTrans x+5 yp+0 cRed, (Close with ESC)
 	
@@ -4063,35 +4103,33 @@ TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	_groupBoxHeight := _contributionOffset + 83
 	
 	Gui, PredictedPricing:Add, GroupBox, w400 h%_groupBoxHeight% y+10 x10, Results
-	Gui, PredictedPricing:Font, norm s10, Consolas
+	Gui, PredictedPricing:Font, norm s10 c000000, Consolas
 	Gui, PredictedPricing:Add, Text, yp+25 x20 w380 BackgroundTrans, % _headLine
-	Gui, PredictedPricing:Font, norm bold, Consolas
+	Gui, PredictedPricing:Font, norm bold c000000, Consolas
 	Gui, PredictedPricing:Add, Text, x20 w90 y+10 BackgroundTrans, % "Price range: "
-	Gui, PredictedPricing:Font, norm, Consolas
+	Gui, PredictedPricing:Font, norm c000000, Consolas
 	Gui, PredictedPricing:Add, Text, x+5 yp+0 BackgroundTrans, % Round(Trim(data.min), 2) " ~ " Round(Trim(data.max), 2) " " Trim(data.currency)
 	Gui, PredictedPricing:Add, Text, x20 w300 y+10 BackgroundTrans, % "Contribution to predicted price: "	
 	
 	; mod importance graph
-	Gui, PredictedPricing:Font, s8
+	Gui, PredictedPricing:Font, s8 c000000
 	For _k, _v in _details {
 		If (StrLen(_v.name)) {
 			_line := _v.percentage " -> " _v.name 
 			Gui, PredictedPricing:Add, Text, x30 w350 y+4 BackgroundTrans, % _line	
 		}		
 	}
-		
+
 	; browser url
 	_url := data.added.browserUrl
 	Gui, PredictedPricing:Add, Link, x245 y+12 cBlue BackgroundTrans, <a href="%_url%">Open on poeprices.info</a>
 	
-	Gui, PredictedPricing:Font, norm s8 italic, Verdana
-	;Gui, PredictedPricing:Add, Text, BackgroundTrans x15 y135 w390, % "You can disable this GUI in favour of a simple result tooltip. Settings menu -> under 'Search' group. Or even disable this predicted search entirely."
-	Gui, PredictedPricing:Add, Text, BackgroundTrans x15 y+20 w390, % "You can disable this GUI in favour of a simple result tooltip. Settings menu -> under 'Search' group. Or even disable this predicted search entirely."
+	Gui, PredictedPricing:Font, norm s8 italic c000000, Verdana	
+	Gui, PredictedPricing:Add, Text, BackgroundTrans x15 y+25 w390, % "You can disable this GUI in favour of a simple result tooltip. Settings menu -> under 'Search' group. Or even disable this predicted search entirely."
 	
-	Gui, PredictedPricing:Font, bold s8, Verdana
-	;Gui, PredictedPricing:Add, GroupBox, w400 h230 y180 x10, Feedback
+	Gui, PredictedPricing:Font, bold s8 c000000, Verdana
 	Gui, PredictedPricing:Add, GroupBox, w400 h230 y+20 x10, Feedback
-	Gui, PredictedPricing:Font, norm, Verdana
+	Gui, PredictedPricing:Font, norm c000000, Verdana
 	
 	Gui, PredictedPricing:Add, Text, x20 yp+25 BackgroundTrans, You think the predicted price range is?
 	Gui, PredictedPricing:Add, Progress, x16 yp+18 w2 h56 BackgroundRed hwndPredictedPricingHiddenControl1
@@ -4108,12 +4146,16 @@ TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	Gui, PredictedPricing:Add, Button, x260 w90 yp-5 gPredictedPricingSendFeedback, Send && Close
 	Gui, PredictedPricing:Add, Button, x+11 w40 gPredictedPricingClose, Close
 	
-	Gui, PredictedPricing:Font, bold s8, Verdana
+	Gui, PredictedPricing:Font, bold s8 c000000, Verdana
 	Gui, PredictedPricing:Add, Text, x15 y+20 cGreen BackgroundTrans, % "This feature is powered by poeprices.info!"
-	Gui, PredictedPricing:Font, norm, Verdana
+	Gui, PredictedPricing:Font, norm c000000, Verdana
 	Gui, PredictedPricing:Add, Link, x15 y+5 cBlue BackgroundTrans, <a href="https://www.paypal.me/poeprices/5">Support them via PayPal</a>
-	Gui, PredictedPricing:Add, Text, x+5 yp+0 cDefault BackgroundTrans, % "or"
+	Gui, PredictedPricing:Add, Text, x+5 yp+0 cBlack BackgroundTrans, % "or"
 	Gui, PredictedPricing:Add, Link, x+5 yp+0 cBlue BackgroundTrans, <a href="https://www.patreon.com/bePatron?u=5966037">Patreon</a>
+	
+	If (StrLen(data.warning_msg)) {
+		Gui, PredictedPricing:Add, Text, x20 yp+15 w380 cc14326 BackgroundTrans, % data.warning_msg
+	}
 	
 	; invisible fields
 	Gui, PredictedPricing:Add, Edit, x+0 yp+0 w0 h0 ReadOnly vPredictedPricingEncodedData, % data.added.encodedData
