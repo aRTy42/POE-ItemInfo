@@ -55,8 +55,9 @@ Globals.Set("GithubRepo", "POE-ItemInfo")
 Globals.Set("GithubUser", "aRTy42")
 Globals.Set("ScriptList", [A_ScriptDir "\POE-ItemInfo"])
 Globals.Set("UpdateNoteFileList", [[A_ScriptDir "\resources\updates.txt","ItemInfo"]])
-Globals.Set("SettingsScriptList", ["ItemInfo", "Additional Macros"])
+Globals.Set("SettingsScriptList", ["ItemInfo", "Additional Macros", "Lutbot"])
 Globals.Set("ScanCodes", GetScanCodes())
+Globals.Set("AssignedHotkeys", GetObjPropertyCount(Globals.Get("AssignedHotkeys")) ? Globals.Get("AssignedHotkeys") : {})	; initializes the object only if it hasn't any properties already
 argumentProjectName		= %1%
 argumentUserDirectory	= %2%
 argumentIsDevVersion	= %3%
@@ -68,6 +69,28 @@ global isDevVersion			:= isDevVersion  ? isDevVersion  : argumentIsDevVersion
 global overwrittenUserFiles	:= overwrittenUserFiles ? overwrittenUserFiles : argumentOverwrittenFiles
 
 global SuspendPOEItemScript = 0
+
+/*
+	Import item bases
+*/
+ItemBaseList := {}
+FileRead, JSONFile, %A_ScriptDir%\data\item_bases.json
+parsedJSON := JSON.Load(JSONFile)
+ItemBaseList.general := parsedJSON.item_bases
+
+FileRead, JSONFile, %A_ScriptDir%\data\item_bases_weapon.json
+parsedJSON := JSON.Load(JSONFile)
+ItemBaseList.weapons := parsedJSON.item_bases_weapon
+
+FileRead, JSONFile, %A_ScriptDir%\data\item_bases_armour.json
+parsedJSON := JSON.Load(JSONFile)
+ItemBaseList.armours := parsedJSON.item_bases_armour
+
+Globals.Set("ItemBaseList", ItemBaseList)
+Globals.Set("ItemFilterObj", [])
+Globals.Set("CurrentItemFilter", "")
+/*
+*/
 
 class UserOptions {	
 	ScanUI()
@@ -307,12 +330,20 @@ class Item_ {
 		This.MapLevel		:= ""
 		This.MapTier		:= ""
 		This.MaxSockets	:= ""
+		This.Sockets		:= ""
+		This.AbyssalSockets	:= ""
+		This.SocketGroups	:= []
+		This.SocketString	:= ""
+		This.Links		:= ""
 		This.SubType		:= ""		
 		This.DifficultyRestriction := ""
 		This.Implicit		:= []
 		This.Charges		:= []
 		This.AreaMonsterLevelReq := []
 		This.BeastData 	:= {}
+		This.GemColor		:= ""
+		This.veiledPrefixCount	:= ""
+		This.veiledSuffixCount	:= ""
 		
 		This.HasImplicit	:= False
 		This.HasEffect		:= False
@@ -336,6 +367,7 @@ class Item_ {
 		This.IsTalisman 	:= False
 		This.IsJewel 		:= False
 		This.IsLeaguestone	:= False
+		This.IsScarab		:= False
 		This.IsDivinationCard := False
 		This.IsProphecy	:= False
 		This.IsUnique 		:= False
@@ -349,6 +381,8 @@ class Item_ {
 		This.IsShaperBase	:= False
 		This.IsAbyssJewel	:= False
 		This.IsBeast		:= False
+		This.IsHideoutObject:= False
+		This.IsFossil		:= False
 	}
 }
 Global Item := new Item_
@@ -503,6 +537,14 @@ Menu, Tray, Default, % Globals.Get("SettingsUITitle", "PoE ItemInfo Settings")
 
 Fonts := new Fonts(Opts.FontSize, 9)
 
+If (Opts.Lutbot_CheckScript) {	
+	SetTimer, StartLutbot, 2000
+}
+
+SplashTextOff	; init finished
+
+; ----------------------------------------------------------- Functions and Labels ----------------------------------------------------------------
+
 GetAhkExeFilename(Default_="AutoHotkey.exe")
 {
 	AhkExeFilename := Default_
@@ -590,15 +632,15 @@ OpenUserDirFile(Filename)
 
 OpenUserSettingsFolder(ProjectName, Dir = "")
 {
-    If (!StrLen(Dir)) {
-        Dir := userDirectory
-    }
+	If (!StrLen(Dir)) {
+		Dir := userDirectory
+	}
 
-    If (!InStr(FileExist(Dir), "D")) {
-        FileCreateDir, %Dir%
-    }
-    Run, Explorer %Dir%
-    return
+	If (!InStr(FileExist(Dir), "D")) {
+		FileCreateDir, %Dir%
+	}
+	Run, Explorer %Dir%
+	return
 }
 
 ; Function that checks item type name against entries
@@ -649,7 +691,7 @@ CheckRarityLevel(RarityString)
 	return 0 ; unknown rarity. shouldn't happen!
 }
 
-ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, ByRef GripType, IsMapFragment, RarityLevel)
+ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, ByRef GripType,  RarityLevel)
 {
 	; Grip type only matters for weapons at this point. For all others it will be 'None'.
 	; Note that shields are armour and not weapons, they are not 1H.
@@ -658,95 +700,22 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 	; Check stats section first as weapons usually have their sub type as first line
 	Loop, Parse, ItemDataStats, `n, `r
 	{
-		IfInString, A_LoopField, One Handed Axe
+		If (RegExMatch(A_LoopField, "i)\b((One Handed|Two Handed) (Axe|Sword|Mace)|Sceptre|Staff|Dagger|Claw|Bow|Wand)\b", match))
 		{
-			BaseType = Weapon
-			SubType = Axe
-			GripType = 1H
-			return
-		}
-		IfInString, A_LoopField, Two Handed Axe
-		{
-			BaseType = Weapon
-			SubType = Axe
-			GripType = 2H
-			return
-		}
-		IfInString, A_LoopField, One Handed Mace
-		{
-			BaseType = Weapon
-			SubType = Mace
-			GripType = 1H
-			return
-		}
-		IfInString, A_LoopField, Two Handed Mace
-		{
-			BaseType = Weapon
-			SubType = Mace
-			GripType = 2H
-			return
-		}
-		IfInString, A_LoopField, Sceptre
-		{
-			BaseType = Weapon
-			SubType = Sceptre
-			GripType = 1H
-			return
-		}
-		IfInString, A_LoopField, Staff
-		{
-			BaseType = Weapon
-			SubType = Staff
-			GripType = 2H
-			return
-		}
-		IfInString, A_LoopField, One Handed Sword
-		{
-			BaseType = Weapon
-			SubType = Sword
-			GripType = 1H
-			return
-		}
-		IfInString, A_LoopField, Two Handed Sword
-		{
-			BaseType = Weapon
-			SubType = Sword
-			GripType = 2H
-			return
-		}
-		IfInString, A_LoopField, Dagger
-		{
-			BaseType = Weapon
-			SubType = Dagger
-			GripType = 1H
-			return
-		}
-		IfInString, A_LoopField, Claw
-		{
-			BaseType = Weapon
-			SubType = Claw
-			GripType = 1H
-			return
-		}
-		IfInString, A_LoopField, Bow
-		{
-			BaseType = Weapon
-			SubType = Bow
-			GripType = 2H
-			return
-		}
-		IfInString, A_LoopField, Wand
-		{
-			BaseType = Weapon
-			SubType = Wand
-			GripType = 1H
+			BaseType	:= "Weapon"
+			If (RegExMatch(match1, "i)(Sword|Axe|Mace)", subMatch)) {
+				SubType	:= subMatch1
+			} Else {
+				SubType	:= match1
+			}
+			GripType	:= (RegExMatch(match1, "i)\b(Two Handed|Staff|Bow)\b")) ? "2H" : "1H"
 			return
 		}
 	}
 
 	; Check name plate section
 	Loop, Parse, ItemDataNamePlate, `n, `r
-	{
+	{		
 		; Get third line in case of rare or unique item and retrieve the base item name
 		LoopField := RegExReplace(A_LoopField, "<<.*>>", "")
 		If (RarityLevel > 2)
@@ -760,49 +729,25 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		}
 
 		; Belts, Amulets, Rings, Quivers, Flasks
-		IfInString, LoopField, Rustic Sash
+		If (RegExMatch(LoopField, "i)\b(Belt|Stygian Vise|Rustic Sash)\b"))
 		{
 			BaseType = Item
 			SubType = Belt
 			return
-		}
-		IfInString, LoopField, Stygian Vise
-		{
-			BaseType = Item
-			SubType = Belt
-			return
-		}
-		IfInString, LoopField, Belt
-		{
-			BaseType = Item
-			SubType = Belt
-			return
-		}
-		If (InStr(LoopField, "Amulet") or (InStr(LoopField, "Talisman") and not InStr(LoopField, "Leaguestone")))
+		}		
+		If (RegExMatch(LoopField, "i)\b(Amulet|Talisman)\b")) and not (RegExMatch(LoopField, "i)\bLeaguestone\b"))
 		{
 			BaseType = Item
 			SubType = Amulet
 			return
 		}
-		If (RegExMatch(LoopField, "\bRing\b"))
+		If (RegExMatch(LoopField, "\b(Ring|Quiver|Flask)\b", match))
 		{
-			BaseType = Item
-			SubType = Ring
+			BaseType := "Item"
+			SubType := match1
 			return
 		}
-		IfInString, LoopField, Quiver
-		{
-			BaseType = Item
-			SubType = Quiver
-			return
-		}
-		IfInString, LoopField, Flask
-		{
-			BaseType = Item
-			SubType = Flask
-			return
-		}
-		IfInString, LoopField, %A_Space%Map
+		If (RegExMatch(LoopField, "i)\b(Map)\b"))
 		{
 			Global mapMatchList
 			BaseType = Map
@@ -840,13 +785,13 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			return
 		}
 		
-		; Leaguestones
-		IfInString, LoopField, Leaguestone
+		; Leaguestones and Scarabs
+		If (RegExMatch(Loopfield, "i)\b(Leaguestone|Scarab)\b"))
 		{
-			RegexMatch(LoopField, "i)(.*)Leaguestone", match)
-			RegexMatch(Trim(match1), "i)\b(\w+)\W*$", match) ; match last word
-			BaseType = Leaguestone
-			SubType := Trim(match1) " Leaguestone"
+			RegexMatch(LoopField, "i)(.*)(Leaguestone|Scarab)", typeMatch)
+			RegexMatch(Trim(typeMatch1), "i)\b(\w+)\W*$", match) ; match last word
+			BaseType := Trim(typeMatch2)
+			SubType := Trim(match1) " " Trim(typeMatch2)
 			return
 		}
 
@@ -854,7 +799,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		; Matching armour types with regular expressions for compact code
 
 		; Shields
-		If (RegExMatch(LoopField, "Buckler|Bundle|Shield"))
+		If (RegExMatch(LoopField, "\b(Buckler|Bundle|Shield)\b"))
 		{
 			BaseType = Armour
 			SubType = Shield
@@ -862,7 +807,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		}
 
 		; Gloves
-		If (RegExMatch(LoopField, "Gauntlets|Gloves|Mitts"))
+		If (RegExMatch(LoopField, "\b(Gauntlets|Gloves|Mitts)\b"))
 		{
 			BaseType = Armour
 			SubType = Gloves
@@ -870,7 +815,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		}
 
 		; Boots
-		If (RegExMatch(LoopField, "Boots|Greaves|Slippers"))
+		If (RegExMatch(LoopField, "\b(Boots|Greaves|Slippers)\b"))
 		{
 			BaseType = Armour
 			SubType = Boots
@@ -878,7 +823,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		}
 
 		; Helmets
-		If (RegExMatch(LoopField, "Bascinet|Burgonet|Cage|Circlet|Crown|Hood|Helm|Helmet|Mask|Sallet|Tricorne"))
+		If (RegExMatch(LoopField, "\b(Bascinet|Burgonet|Cage|Circlet|Crown|Hood|Helm|Helmet|Mask|Sallet|Tricorne)\b"))
 		{
 			BaseType = Armour
 			SubType = Helmet
@@ -888,7 +833,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		; Note: Body armours can have "Pelt" in their randomly assigned name,
 		;    explicitly matching the three pelt base items to be safe.
 
-		If (RegExMatch(LoopField, "Iron Hat|Leather Cap|Rusted Coif|Wolf Pelt|Ursine Pelt|Lion Pelt"))
+		If (RegExMatch(LoopField, "\b(Iron Hat|Leather Cap|Rusted Coif|Wolf Pelt|Ursine Pelt|Lion Pelt)\b"))
 		{
 			BaseType = Armour
 			SubType = Helmet
@@ -897,9 +842,9 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 
 		; BodyArmour
 		; Note: Not using "$" means "Leather" could match "Leather Belt", therefore we first check that the item is not a belt. (belts are currently checked earlier so this is redundant, but the order might change)
-		If (!RegExMatch(LoopField, "Belt"))
+		If (!RegExMatch(LoopField, "\b(Belt)\b"))
 		{
-			If (RegExMatch(LoopField, "Armour|Brigandine|Chainmail|Coat|Doublet|Garb|Hauberk|Jacket|Lamellar|Leather|Plate|Raiment|Regalia|Ringmail|Robe|Tunic|Vest|Vestment"))
+			If (RegExMatch(LoopField, "\b(Armour|Brigandine|Chainmail|Coat|Doublet|Garb|Hauberk|Jacket|Lamellar|Leather|Plate|Raiment|Regalia|Ringmail|Robe|Tunic|Vest|Vestment)\b"))
 			{
 				BaseType = Armour
 				SubType = BodyArmour
@@ -907,17 +852,12 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			}
 		}
 
-		If (RegExMatch(LoopField, "Chestplate|Full Dragonscale|Full Wyrmscale|Necromancer Silks|Shabby Jerkin|Silken Wrap"))
+		If (RegExMatch(LoopField, "\b(Chestplate|Full Dragonscale|Full Wyrmscale|Necromancer Silks|Shabby Jerkin|Silken Wrap)\b"))
 		{
 			BaseType = Armour
 			SubType = BodyArmour
 			return
 		}
-	}
-
-	If (IsMapFragment) {
-		SubType = MapFragment
-		return
 	}
 }
 
@@ -1578,6 +1518,27 @@ ParseGemLevel(ItemDataText, PartialString="Level:")
 			Result := StrTrimWhitespace(ItemLevelParts2)
 			return Result
 		}
+	}
+}
+
+ParseGemColor(ItemDataText)
+{
+	RegExMatch(ItemDataText, "ims)Requirements.*?(Str\s?:\s?(\d+))", str)
+	RegExMatch(ItemDataText, "ims)Requirements.*?(Dex\s?:\s?(\d+))", dex)
+	RegExMatch(ItemDataText, "ims)Requirements.*?(Int\s?:\s?(\d+))", int)
+	
+	highestRequirement := ""
+	If (not str2 and not dex2 and not int2) {
+		Return "WHITE"
+	}
+	Else If (str2 > dex2 and str2 > int2) {
+		Return "RED"
+	}
+	Else If (dex2 > str2 and dex2 > int2) {
+		Return "GREEN"
+	}
+	Else If (int2 > dex2 and int2 > str2) {
+		Return "BLUE"
 	}
 }
 
@@ -3877,6 +3838,26 @@ SolveAffixes_PreSuf(Keyname, LineNum, Value, Filename1, Filename2, ItemLevel)
 	}
 }
 
+GetVeiledModCount(ItemDataAffixes, AffixType) {
+	vCount := 0
+	
+	IfInString, ItemDataAffixes, Unidentified
+	{
+		Return ; Not interested in unidentified items
+	}
+	
+	Loop, Parse, ItemDataAffixes, `n, `r 
+	{
+		If (RegExMatch(A_LoopField, "i)Veiled (Prefix|Suffix)", match)) {
+			If (match1 = AffixType) {
+				vCount := vCount + 1	
+			}			
+		}
+	}
+	
+	Return vCount  
+}
+
 ParseAffixes(ItemDataAffixes, Item)
 {
 	Global Globals, Opts, AffixTotals, AffixLines, Itemdata
@@ -5764,16 +5745,15 @@ ParseAffixes(ItemDataAffixes, Item)
 		}
 		
 		
-		; Vagan prefix
+		
 		IfInString, A_LoopField, Gems in this item are Supported by Lvl 1 Blood Magic
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Vagan 7", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "", ""), A_Index)
 			Continue
 		}
-		; Vagan prefix
-		IfInString, A_LoopField, Hits can't be Evaded
+				IfInString, A_LoopField, Hits can't be Evaded
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Buy:Vagan 4", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "", ""), A_Index)
 			Continue
 		}
 		
@@ -5782,32 +5762,32 @@ ParseAffixes(ItemDataAffixes, Item)
 		
 		IfInString, A_LoopField, Can have multiple Crafted Mods
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "Elreon 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, Prefixes Cannot Be Changed
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "Haku 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, Suffixes Cannot Be Changed
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Tora 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "", ""), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, Cannot roll Attack Mods
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "Cata 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, Cannot roll Caster Mods
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "Vagan 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
 			Continue
 		}
 		IfInString, A_LoopField, Cannot roll Mods with Required Lvl above Lvl 28
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "Leo 8", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
 			Continue
 		}
 	}
@@ -6903,7 +6883,7 @@ PostProcessData(ParsedData)
 
 ParseClipBoardChanges(debug = false)
 {
-	Global Opts, Globals
+	Global Opts, Globals, Item
 	
 	CBContents := GetClipboardContents()
 	CBContents := PreProcessContents(CBContents)
@@ -7142,8 +7122,7 @@ AssembleDamageDetails(FullItemData)
 		Q20Dps := Q20Dps + EleDps + ChaosDps	
 	}
 	
-	If ( MainHEleDps > 0 or OffHEleDps > 0 or MainHChaosDps > 0 or OffHChaosDps > 0 )
-	{
+	If ( MainHEleDps > 0 or OffHEleDps > 0 or MainHChaosDps > 0 or OffHChaosDps > 0 ) {
 		MainH_OffH_Display	:= true
 		TotalMainHEleDps	:= MainHEleDps + EleDps
 		TotalOffHEleDps	:= OffHEleDps + EleDps
@@ -7269,6 +7248,14 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemBaseName, AffixCount = ""
 		isVaalGem := true
 	}
 
+	If (RegExMatch(ItemData.NamePlate, "i)Rarity\s?+:\s?+(Currency|Divination Card|Gem)", match)) {
+		If (RegExMatch(match1, "i)Gem")) {
+			ItemBaseName := Trim(RegExReplace(ItemName, "i) Support"))
+		} Else {
+			ItemBaseName := Trim(ItemName)
+		}		
+	}
+	
 	Loop, Parse, ItemDataChunk, `n, `r
 	{
 		If (A_Index == 1)
@@ -7312,8 +7299,10 @@ ParseItemName(ItemDataChunk, ByRef ItemName, ByRef ItemBaseName, AffixCount = ""
 					}
 				}
 			}
+
 			; Normal items don't have a third line and the item name equals the BaseName if we sanitize it ("superior").
-			If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Normal"))
+			; Also unidentified items.
+			If (RegExMatch(ItemDataChunk, "i)Rarity.*?:.*?Normal") or RegExMatch(ItemData.PartsLast, "i)Unidentified"))
 			{
 				ItemBaseName := Trim(RegExReplace(ItemName, "i)Superior", ""))
 				Return
@@ -7399,21 +7388,50 @@ ParseLinks(ItemDataText)
 	return HighestLink
 }
 
-ParseSockets(ItemDataText)
+ParseSockets(ItemDataText, ByRef AbyssalSockets)
 {
 	SocketsCount := 0
+	
+	Loop, Parse, ItemDataText, `n, `r
+	{
+		If (RegExMatch(A_LoopField, "i)^Sockets\s?+:"))
+		{
+			LinksString	:= GetColonValue(A_LoopField)
+			RegExReplace(LinksString, "i)[RGBWDA]", "", SocketsCount) 	; "D" is being used for Resonator sockets, "A" for Abyssal Sockets
+			RegExReplace(LinksString, "i)[A]", "", AbyssalSockets) 	; "A" for Abyssal Sockets
+			Break
+		}
+	}
+	return SocketsCount
+}
+
+ParseSocketGroups(ItemDataText, ByRef RawSocketString = "")
+{
+	groups := []
 	Loop, Parse, ItemDataText, `n, `r
 	{
 		IfInString, A_LoopField, Sockets
 		{
-			LinksString	:= GetColonValue(A_LoopField)
-			before		:= StrLen(LinksString)
-			LinksString	:= RegExReplace(LinksString, "[RGBW]", "")
-			after		:= StrLen(LinksString)
-			SocketsCount	:= before - after
+			RegExMatch(A_LoopField, "i)Sockets:\s?(.*)", socketString)
+			
+			sockets := socketString1 " "	; add a space at the end for easier regex
+			If (StrLen(socketString1)) {
+				RawSocketString := socketString1
+			}			
+			If (StrLen(sockets)) {
+				Pos		:= 0
+				While Pos	:= RegExMatch(sockets, "i)(.*?)\s+", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
+					s := Trim(value1)
+					s := RegExReplace(s, "i)-")
+					If (StrLen(Trim(s))) {
+						groups.push(s)
+					}
+				}
+			}
 		}
 	}
-	return SocketsCount
+
+	return groups
 }
 
 ParseCharges(stats)
@@ -7852,12 +7870,13 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	; ItemData.Requirements := GetItemDataChunk(ItemDataText, "Requirements:")
 	; ParseRequirements(ItemData.Requirements, RequiredLevel, RequiredAttributes, RequiredAttributeValues)
-	
+
 	ParseItemName(ItemData.NamePlate, ItemName, ItemBaseName, "", ItemData)
 	If (Not ItemName)
 	{
 		return
 	}
+
 	Item.Name		:= ItemName
 	Item.BaseName	:= ItemBaseName
 	
@@ -7876,7 +7895,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	ItemData.Rarity	:= ParseRarity(ItemData.NamePlate)
 	
 	ItemData.Links		:= ParseLinks(ItemDataText)
-	ItemData.Sockets	:= ParseSockets(ItemDataText)
+	Item.Links		:= ItemData.Links
+	ItemData.Sockets	:= ParseSockets(ItemDataText, ItemAbyssalSockets)
+	Item.Sockets		:= ItemData.Sockets
+	Item.AbyssalSockets := ItemAbyssalSockets
+	Item.SocketGroups	:= ParseSocketGroups(ItemDataText, ItemSocketString)
+	Item.SocketString	:= ItemSocketString
 
 	Item.Charges		:= ParseCharges(ItemData.Stats)
 
@@ -7908,6 +7932,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		; Item.DifficultyRestriction := Difficulty
 	}
 	
+	; Hideout doodad detection
+	If (InStr(ItemData.PartsLast, "Creates an object in your hideout"))
+	{
+		Item.IsHideoutObject := True
+	}
+	
 	; Beast detection
 	If (RegExMatch(ItemData.Parts[2], "i)Genus|Family"))
 	{
@@ -7918,16 +7948,28 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	
 	Item.IsGem	:= (InStr(ItemData.Rarity, "Gem"))
 	Item.IsCurrency:= (InStr(ItemData.Rarity, "Currency"))
+	Item.IsFossil	:= (RegExMatch(ItemData.NamePlate, "i)Fossil$")) ? true : false
+	Item.IsScarab	:= (RegExMatch(ItemData.NamePlate, "i)Scarab$")) ? true : false
 	
-	If (Not (InStr(ItemDataText, "Itemlevel:") or InStr(ItemDataText, "Item Level:")) and Not Item.IsGem and Not Item.IsCurrency and Not Item.IsDivinationCard and Not Item.IsProphecy)
+	regex := ["^Sacrifice At", "^Fragment of", "^Mortal ", "^Offering to ", "'s Key$", "Ancient Reliquary Key", "Timeworn Reliquary Key", "Breachstone", "Divine Vessel"]
+	For key, val in regex {
+		If (RegExMatch(Item.Name, "i)" val "")) {
+			Item.IsMapFragment := True
+			Item.SubType := "Map Fragment"
+			Break
+		}
+	}	
+
+	If (Not (InStr(ItemDataText, "Itemlevel:") or InStr(ItemDataText, "Item Level:")) and not Item.IsGem and not Item.IsCurrency and not Item.IsDivinationCard and not Item.IsProphecy and not Item.IsScarab)
 	{
 		return Item.Name
 	}
-	
+
 	If (Item.IsGem)
 	{
 		RarityLevel	:= 0
 		Item.Level	:= ParseGemLevel(ItemDataText, "Level:")
+		Item.GemColor	:= ParseGemColor(ItemDataText)
 		ItemExperienceFlat := ""
 		Item.Experience:= ParseGemXP(ItemDataText, "Experience:", ItemExperienceFlat)
 		Item.ExperienceFlat := ItemExperienceFlat
@@ -7939,6 +7981,8 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		If (Item.IsCurrency)
 		{
+			Item.BaseType := "Currency"
+	
 			dataSource	:= ""
 			ValueInChaos	:= ConvertCurrency(Item.Name, ItemData.Stats, dataSource)
 			If (ValueInChaos.Length() and not Item.Name == "Chaos Orb")
@@ -7963,26 +8007,20 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		; Don't do this on Divination Cards or this script crashes on trying to do the ParseItemLevel
 		Else If (Not Item.IsCurrency and Not Item.IsDivinationCard and Not Item.IsProphecy)
 		{
-			regex := ["^Sacrifice At", "^Fragment of", "^Mortal ", "^Offering to ", "'s Key$", "Ancient Reliquary Key", "Timeworn Reliquary Key"]
-			For key, val in regex {
-				If (RegExMatch(Item.Name, "i)" val "")) {
-					Item.IsMapFragment := True
-					Break
-				}
-			}
-
 			RarityLevel	:= CheckRarityLevel(ItemData.Rarity)
-			Item.Level	:= ParseItemLevel(ItemDataText)
-			ItemLevelWord	:= "Item Level:"
+			If (not Item.IsScarab) {
+				Item.Level	:= ParseItemLevel(ItemDataText)
+				ItemLevelWord	:= "Item Level:"	
+			}			
 			If (Not Item.IsBeast) {
-				ParseItemType(ItemData.Stats, ItemData.NamePlate, ItemBaseType, ItemSubType, ItemGripType, Item.IsMapFragment, RarityLevel)
+				ParseItemType(ItemData.Stats, ItemData.NamePlate, ItemBaseType, ItemSubType, ItemGripType, RarityLevel)
 				Item.BaseType	:= ItemBaseType
 				Item.SubType	:= ItemSubType
 				Item.GripType	:= ItemGripType
 			}			
 		}
 	}
-	
+
 	Item.RarityLevel	:= RarityLevel
 	
 	Item.IsBow		:= (Item.SubType == "Bow")
@@ -8006,7 +8044,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsMirrored	:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
 	Item.Note			:= Globals.Get("ItemNote")
-	
+
 	If (Item.IsLeaguestone) {
 		Item.AreaMonsterLevelReq	:= ParseAreaMonsterLevelRequirement(ItemData.Stats)
 	}
@@ -8043,7 +8081,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		return
 	}
 
-	If (Item.IsLeagueStone) {
+	If (Item.IsLeagueStone or Item.IsScarab) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
 	If (Item.IsBeast) {
@@ -8084,7 +8122,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		; already parsed
 	}
-	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = False and not Item.IsLeaguestone)  ; Code added by Bahnzo to avoid maps showing affixes
+	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = False and not (Item.IsLeaguestone or Item.IsScarab))  ; Code added by Bahnzo to avoid maps showing affixes
 	{
 		ParseAffixes(ItemData.Affixes, Item)
 	}
@@ -8092,11 +8130,16 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		MapModWarnings := ParseMapAffixes(ItemData.Affixes)
 	}
-	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsLeaguestone)
+	Else If (RarityLevel > 1 and RarityLevel < 4 and (Item.IsLeaguestone or Item.IsScarab))
 	{
 		ParseLeagueStoneAffixes(ItemData.Affixes, Item)
 	}
 	
+	If (RarityLevel > 1 and Item.IsMap = False) {
+		Item.veiledPrefixCount := GetVeiledModCount(ItemData.Affixes, "Prefix")
+		Item.veiledSuffixCount := GetVeiledModCount(ItemData.Affixes, "Suffix")
+	}
+
 	AffixTotals.FormatAll()
 	
 	NumPrefixes	:= AffixTotals.NumPrefixes
@@ -8119,6 +8162,12 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	If (Item.BaseName && (Item.BaseName != Item.Name))
 	{
 		TT := TT . "`n" . Item.BaseName
+	}
+	
+	If (Item.IsGem) {			
+		If (Item.GemColor) {
+			TT := TT . "`nColor: " . Item.GemColor
+		}
 	}
 	
 	If (Item.IsCurrency)
@@ -8212,6 +8261,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 				TT := TT . Item.MaxSockets
 			}
 		}
+		
+		If (Item.SocketString) {			
+			TT := TT . "`n"
+			TT := TT . "Sockets:        " . Item.SocketString
+		}
 	}
 	
 	If (Item.IsWeapon)
@@ -8287,7 +8341,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 	
 	If (Item.IsGem)
-	{
+	{		
 		If (gemQualityList[Item.Name] != "")
 		{
 			GemQualityDescription := gemQualityList[Item.Name]
@@ -8312,7 +8366,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		If (Itemdata.Rarity = "Magic"){
 			PrefixLimit := 1
 			SuffixLimit := 1
-		}Else{
+		} Else {
 			PrefixLimit := 3
 			SuffixLimit := 3
 		}
@@ -8458,7 +8512,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			TT .= "`n--------`nNotation:" Notation
 		}
 	}
-	
+
 	return TT
 }
 
@@ -8639,7 +8693,24 @@ ModStringToObject(string, isImplicit) {
 		temp.values	:= values
 		; mods with negative values inputted in the value fields are not supported on poe.trade, so searching for "-1 maximum charges/frenzy charges" is not possible
 		; unless there is a mod "-# maximum charges"
-		s			:= RegExReplace(Matches[A_Index], "i)(-?)[.0-9]+", "$1#")
+		
+		; some values shouldn't be replaced because they are fixed, for example "#% chance to gain Onslaught for 4 seconds on Kill"
+		; regex, | delimited
+		exceptionsList := "recovered every 3 seconds|inflicted with this Weapon to deal 100% more Damage|with 30% reduced Movement Speed|chance to Recover 10% of Maximum Mana|"
+		exceptionsList .= "for 3 seconds|for 4 seconds|for 8 seconds|for 10 seconds|over 4 seconds|"
+		exceptionsList .= "per (10|12|15|16|50) (Strength|Dexterity|Intelligence)|"
+		exceptionsList .= "per 200 Accuracy Rating|if you have at least 500 Strength|per 1% Chance to Block Attack Damage|are at least 5 nearby Enemies|a total of 200 Mana"		
+		
+		RegExMatch(Matches[A_Index], "i)(" exceptionsList ")", exception) 
+		
+		s := RegExReplace(Matches[A_Index], "i)(-?)[.0-9]+", "$1#")
+		
+		; restore certain mod line parts if there are exceptions
+		If (exception) {
+			replacer_reg := RegExReplace(exception, "i)(-?)[.0-9]+", "(#)")
+			s := RegExReplace(s, "i)" replacer_reg "", exception)
+		}
+		
 		temp.name		:= RegExReplace(s, "i)# ?to ? #", "#", isRange)
 		temp.isVariable:= false
 		temp.type		:= (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"
@@ -9438,6 +9509,11 @@ GuiAdd(ControlType, Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabe
 	Gui, %GuiName%, %ControlType%, %PositionInfo% %av% %al% %ah% %Options%, %Contents%
 }
 
+GuiAddPicture(Contents, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="")
+{
+	GuiAdd("Picture", Contents, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
+}
+
 GuiAddListView(ColumnHeaders, PositionInfo, AssocVar="", AssocHwnd="", AssocLabel="", Options="", GuiName="")
 {	
 	GuiAdd("ListView", ColumnHeaders, PositionInfo, AssocVar, AssocHwnd, AssocLabel, Options, GuiName)
@@ -9605,10 +9681,10 @@ CreateSettingsUI()
 	Global
 	
 	Gui, Color, ffffff, ffffff
-	
+
 	; ItemInfo is not included in other scripts
-	If (not SkipItemInfoUpdateCall) {	
-		Fonts.SetUIFont()
+	If (not SkipItemInfoUpdateCall) {
+		Fonts.SetUIFont(8)
 		Scripts := Globals.Get("SettingsScriptList")
 		TabNames := ""
 		Loop, % Scripts.Length() {
@@ -9617,15 +9693,16 @@ CreateSettingsUI()
 		}
 
 		StringTrimRight, TabNames, TabNames, 1
-		Gui, Add, Tab3, Choose1 h660 x0, %TabNames%	
+		Gui, Add, Tab3, Choose1 h660 x0, %TabNames%
 	}
 	
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 	
 	generalHeight := SkipItemInfoUpdateCall ? "150" : "240"		; "180" : "270" with ParseItemHotKey
+	topGroupBoxYPos := SkipItemInfoUpdateCall ? "y53" : "y30"
 	
 	; General
-	GuiAddGroupBox("General", "x7 ym" 30 " w310 h" generalHeight " Section")
+	GuiAddGroupBox("General", "x7 " topGroupBoxYPos " w310 h" generalHeight " Section")
 	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w250 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "When checked the script only activates while you are ingame`n(technically while the game window is the frontmost)")
 	
@@ -9681,7 +9758,7 @@ CreateSettingsUI()
 	GuiAddButton("Preview", "xs210 ys290 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
 
 	; Tooltip
-	GuiAddGroupBox("Tooltip", "x327 ym" 30 " w310 h140 Section")
+	GuiAddGroupBox("Tooltip", "x327 " topGroupBoxYPos " w310 h140 Section")
 
 	GuiAddEdit(Opts.MouseMoveThreshold, "xs250 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
 	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w200 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
@@ -9735,7 +9812,7 @@ CreateSettingsUI()
 
 	; Buttons
 	ButtonsShiftX := "x659 "
-	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX "y40 w290 h30 0x0100")
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX " y63 w290 h30 0x0100")
 	
 	GuiAddButton("Defaults", ButtonsShiftX "y+8 w90 h23", "SettingsUI_BtnDefaults")
 	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK")
@@ -9754,7 +9831,7 @@ CreateSettingsUI()
 	}
 	
 	; AM Hotkeys
-	GuiAddGroupBox("[AdditionalMacros] Hotkeys", "x7 y35 w630 h625")	
+	GuiAddGroupBox("[AdditionalMacros] Hotkeys", "x7 " topGroupBoxYPos " w630 h625")	
 	
 	If (not AM_Config) {
 		GoSub, AM_Init
@@ -9770,7 +9847,7 @@ CreateSettingsUI()
 			; hotkey checkboxes (enable/disable)
 			HKCheckBoxID := "AM_" sectionName "_State"
 			GuiAddCheckbox(sectionName ":", "x17 yp+" chkBoxShiftY " w" chkBoxWidth " h20 0x0100", AM_Config[sectionName].State, HKCheckBoxID, HKCheckBoxID "H")
-			AddToolTip(%HKCheckBoxID%H, RegExReplace(AM_ConfigDefault[sectionName].Description, "i)(\(Default = .*\))", "`n$1"))	; read description from default config
+			AddToolTip(%HKCheckBoxID%H, RegExReplace(AM_ConfigDefault[sectionName].Description, "i)(\(Default = .*\))|\\n", "`n$1"))	; read description from default config
 			
 			For keyIndex, keyValue in StrSplit(AM_Config[sectionName].Hotkeys, ", ") {	
 				HotKeyID := "AM_" sectionName "_HotKeys_" keyIndex
@@ -9791,7 +9868,29 @@ CreateSettingsUI()
 							CheckBoxID := "AM_" sectionName "_Arg2"
 							GuiAddCheckbox("Leave search field.", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY, keyValue, CheckBoxID, CheckBoxID "H")
 						}
+						If (keyIndex = "Arg3") {
+							CheckBoxID := "AM_" sectionName "_Arg3"
+							GuiAddCheckbox("Enable hideout stash search.", "x+10 yp+0", keyValue, CheckBoxID, CheckBoxID "H")
+						}
+						If (keyIndex = "Arg4") {
+							EditID := "AM_" sectionName "_" keyIndex
+							GuiAddText("Decoration stash search field coordinates:  ", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w260 h20 0x0100", "LblHighlighting", "LblHighlightingH")
+							AddToolTip(LblHighlightingH, "Refers to the decoration stash on the right side`nof the screen, not the master vendor window.`n`nCoordinates are relative to the PoE game window and`nare neccessary to click into/focus the search field.")
+							GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-15 yp+0 w15 h-1 0x0100", "HighlightInfo", "HighlightH", "")
+							GuiAddText("x= ", "x+5 yp+0 w20 h20 0x0100")
+							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID)
+						}
+						If (keyIndex = "Arg5") {
+							EditID := "AM_" sectionName "_" keyIndex
+							GuiAddText("y=", "x+5 yp+2 w20 h20 0x0100")
+							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID)
+						}
 					}
+					Else If (RegExMatch(sectionName, "i)JoinChannel|KickYourself")) {
+						EditID := "AM_" sectionName "_" keyIndex
+						GuiAddText(keyIndex ":", "x+10 yp+4 w85 h20 0x0100")
+						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID)
+					} 
 					Else {
 						EditID := "AM_" sectionName "_" keyIndex
 						GuiAddText(keyIndex ":", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w85 h20 0x0100")
@@ -9804,7 +9903,7 @@ CreateSettingsUI()
 	
 	; AM General
 
-	GuiAddGroupBox("[AdditionalMacros] General", "x647 y35 w310 h60")
+	GuiAddGroupBox("[AdditionalMacros] General", "x647 " topGroupBoxYPos " w310 h60")
 	
 	_i := 0
 	For keyIndex, keyValue in AM_Config.General {
@@ -9840,6 +9939,53 @@ CreateSettingsUI()
 	experimentalNotice .= " You can still assign your settings directly using the AdditionalMacros.ini like before."
 	experimentalNotice .= " (Right-click system tray icon -> Edit Files)."
 	GuiAddText(experimentalNotice, ButtonsShiftX "yp+25 w290")
+	
+	; Begin Lutbot Tab
+	If (SkipItemInfoUpdateCall) {
+		Gui, Tab, 4 
+	} Else {
+		Gui, Tab, 3
+	}
+	
+	GuiAddGroupBox("[Lutbot Logout]", "x7 " topGroupBoxYPos " w630 h625")
+
+	lb_desc := "Lutbot's macro is a collection of features like TCP disconnect logout, whisper replies, ladder tracker and more.`n"
+	lb_desc .= "The included logout macro is the most advanced logout feature currently out there."
+	GuiAddText(lb_desc, "x17 yp+28 w600 h40 0x0100", "", "")
+	
+	lb_desc := "Since running the main version of this script alongside " Globals.Get("Projectname") " can cause some issues`n"
+	lb_desc .= "and hotkey conflicts, Lutbot also released a lite version that only contains the logout features."
+	GuiAddText(lb_desc, "x17 y+10 w600 h35 0x0100", "", "")
+	
+	Gui, Add, Link, x17 y+5 cBlue, <a href="http://lutbot.com/#/ahk">Website and download</a>
+	
+	lb_desc := Globals.Get("Projectname") " can manage running this lite version for you, keeping it an independant script."
+	GuiAddText(lb_desc, "x17 y+20 w600 h20 0x0100", "", "")
+	
+	GuiAddCheckbox("Run lutbot on script start if the lutbot macro exists (requires you to have run it once before).", "x17 yp+20 w600 h30", Opts.Lutbot_CheckScript, "Lutbot_CheckScript", "Lutbot_CheckScriptH")
+	
+	GuiAddCheckbox("Warn in case of hotkey conflicts", "x17 yp+30 w290 h30", Opts.Lutbot_WarnConflicts, "Lutbot_WarnConflicts", "Lutbot_WarnConflictsH")
+	AddToolTip(Lutbot_CheckScriptH, "Check if the lutbot macro exists and run it.")
+	
+	GuiAddButton("Open Lutbot folder", "Default x17 y+10 w130 h23", "OpenLutbotDocumentsFolder")
+	
+	lb_desc := "If you have any issues related to"
+	GuiAddText(lb_desc, "x17 y+40 w600 h20 0x0100", "", "")
+	lb_desc := "- " Globals.Get("Projectname") " starting the lutbot script or checking for conflicts report here:"
+	GuiAddText(lb_desc, "x17 y+0 w600 h20 0x0100", "", "")
+	Gui, Add, Link, x35 y+5 cBlue h20, - <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues">Github</a>
+	Gui, Add, Link, x35 y+0 cBlue h20, - <a href="https://discord.gg/taKZqWw">Discord</a>
+	Gui, Add, Link, x35 y+0 cBlue h20, - <a href="https://www.pathofexile.com/forum/view-thread/1757730">Forum</a>
+
+	lb_desc := "- Lutbots script not working correctly in any way report here:"
+	GuiAddText(lb_desc, "x17 y+5 w600 h20 0x0100", "", "")
+	Gui, Add, Link, x35 y+5 cBlue h20, - <a href="https://discord.gg/nttekWT">Discord</a>
+	
+	; Lutbot Buttons
+	
+	GuiAddText("Mouse over settings to see what these settings do exactly.", ButtonsShiftX "y60 w290 h30 0x0100")
+	GuiAddButton("OK", "Default xp-5 y+8 w90 h23", "SettingsUI_BtnOK")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")
 	
 	; close tabs
 	Gui, Tab
@@ -10114,6 +10260,10 @@ ReadConfig(ConfigDir = "", ConfigFile = "config.ini")
 		Opts.GDITextOpacity			:= IniRead("GDI", "TextOpacity", Opts.GDITextOpacity, ItemInfoConfigObj)
 		Opts.GDITextOpacityDefault	:= IniRead("GDI", "TextOpacityDefault", Opts.GDITextOpacityDefault, ItemInfoConfigObj)
 		gdipTooltip.UpdateColors(Opts.GDIWindowColor, Opts.GDIWindowOpacity, Opts.GDIBorderColor, Opts.GDIBorderOpacity, Opts.GDITextColor, Opts.GDITextOpacity, "10", "16")
+		
+		; Lutbot
+		Opts.Lutbot_CheckScript		:= IniRead("Lutbot", "Lutbot_CheckScript", Opts.Lutbot_CheckScript, ItemInfoConfigObj)
+		Opts.Lutbot_WarnConflicts	:= IniRead("Lutbot", "Lutbot_WarnConflicts", Opts.Lutbot_WarnConflicts, ItemInfoConfigObj)
 	}
 }
 
@@ -10169,6 +10319,10 @@ WriteConfig(ConfigDir = "", ConfigFile = "config.ini")
 	IniWrite(Opts.GDIBorderOpacity, "GDI", "BorderOpacity", ItemInfoConfigObj)
 	IniWrite(Opts.GDITextColor, "GDI", "TextColor", ItemInfoConfigObj)
 	IniWrite(Opts.GDITextOpacity, "GDI", "TextOpacity", ItemInfoConfigObj)
+	
+	; Lutbot
+	IniWrite(Opts.Lutbot_CheckScript, "Lutbot", "Lutbot_CheckScript", ItemInfoConfigObj)
+	IniWrite(Opts.Lutbot_WarnConflicts, "Lutbot", "Lutbot_WarnConflicts", ItemInfoConfigObj)
 	
 	ItemInfoConfigObj.Save(ConfigPath)
 }
@@ -10250,11 +10404,18 @@ StdOutStream(sCmd, Callback = "") {
 	Return Isfunc( Callback ) ? %Callback%( "", 0 ) : sOutput
 }
 
-ReadConsoleOutputFromFile(command, fileName) {
+ReadConsoleOutputFromFile(command, fileName, ByRef error = "") {
 	file := "temp\" fileName
 	RunWait %comspec% /c "chcp 1251 /f >nul 2>&1 & %command% > %file%", , Hide
 	FileRead, io, %file%
-
+	
+	If (FileExist(file) and not StrLen(io)) {
+		error := "Output file is empty."
+	}
+	Else If (not FileExist(file)) {
+		error := "Output file does not exist."
+	}
+	
 	Return io
 }
 
@@ -10337,7 +10498,7 @@ GetContributors(AuthorsPerLine=0)
 	return Authors
 }
 
-ShowAssignedHotkeys() {
+ShowAssignedHotkeys(returnList = false) {
 	scriptInfo	:= ScriptInfo("ListHotkeys")
 	hotkeys		:= []
 
@@ -10367,7 +10528,11 @@ ShowAssignedHotkeys() {
 			val.Push(KeyCodeToKeyName(val[5]))
 		}
 	}
-
+	
+	If (returnList) {
+		Return hotkeys
+	}
+	
 	Gui, ShowHotkeys:Color, ffffff, ffffff
 	Gui, ShowHotkeys:Add, Text, , List of this scripts assigned hotkeys.
 	Gui, ShowHotkeys:Default
@@ -10427,13 +10592,98 @@ CloseScripts() {
 	ExitApp
 }
 
-HighlightItems(broadTerms = false, leaveSearchField = true) {
-	; Highlights items via stash search (also in vendor search)
+ColorBlindSupport() {
 	IfWinActive, ahk_group PoEWindowGrp
 	{
 		Global Item, Opts, Globals, ItemData
 
-		ClipBoardTemp := Clipboard
+		ClipBoardTemp := ClipboardAll
+		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+		
+		scancode_c := Globals.Get("ScanCodes").c
+
+		; Parse the clipboard contents twice.
+		; If the clipboard contains valid item data before we send ctrl + c to try and parse an item via ctrl + f then don't restore that clipboard data later on.
+		; This prevents the highlighting function to fill search fields with data from previous item parsings/manual data copying since
+		; that clipboard data would always be restored again.
+		Loop, 2 {
+			If (A_Index = 2) {
+				Clipboard :=
+				Send ^{%scancode_c%}	; ^{c}
+				Sleep 100
+			}
+			CBContents := GetClipboardContents()
+			CBContents := PreProcessContents(CBContents)
+			Globals.Set("ItemText", CBContents)
+			ParsedData := ParseItemData(CBContents)
+			If (A_Index = 1 and Item.Name) {
+				dontRestoreClipboard := true
+			}
+		}
+		
+		If (Item.Name) {
+			Sleep,  100
+			If (!dontRestoreClipboard) {
+				Clipboard := ClipBoardTemp
+			}
+			
+			If (Item.IsGem) {
+				ShowToolTip("Gem color: " Item.GemColor)
+			}
+			Else If (Item.Sockets > 0) {
+				sockets := Item.Sockets
+
+				groups := StrSplit(Trim(Item.SocketString), "")
+				groups[2] := groups[2] = "-" ? "--" : "  "
+				groups[6] := groups[6] = "-" ? "--" : "  "
+				groups[10] := groups[10] = "-" ? "--" : "  "
+				
+				str := " `n"
+				If (sockets <= 2) {
+					If (sockets = 1) {
+						str .= "  " groups[1] "  "
+					} Else {
+						str .= " " groups[1] " " groups[2] " " groups[3] " "
+					}					
+					ShowToolTip(str "`n ")
+				}
+				Else If (sockets <= 4) {
+					groups[7] := StrLen(groups[7]) ? groups[7] : " "
+					groups[6] := StrLen(groups[6]) ? groups[6] : " "
+					
+					str .= " " groups[1] " " groups[2] " " groups[3] " `n"
+					str .= (groups[4] = "-") ? "      |" : "      " 
+					str .= "`n " groups[7] " " groups[6] " " groups[5] " "
+					
+					ShowToolTip(str "`n ")
+				}
+				Else {
+					groups[11] := StrLen(groups[11]) ? groups[11] : " "
+					groups[9] := StrLen(groups[9]) ? groups[9] : " "
+					
+					str .= " " groups[1] " " groups[2] " " groups[3] " `n"
+					str .= (groups[4] = "-") ? "      |" : "      " 
+					str .= "`n " groups[7] " " groups[6] " " groups[5] " `n"
+					str .= (groups[8] = "-") ? " |    " : "     " 
+					str .= "`n " groups[9] " " groups[10] " " groups[11] " "
+					
+					ShowToolTip(str "`n ")
+					
+				}
+			}
+		}
+
+		SuspendPOEItemScript = 0 ; Allow Item info to handle clipboard change event
+	}
+}
+
+HighlightItems(broadTerms = false, leaveSearchField = true, focusHideoutFilter = false, hideoutFieldX = 0, hideoutFieldY = 0) {
+	; Highlights items via stash search (also in vendor and hideout search)
+	IfWinActive, ahk_group PoEWindowGrp
+	{
+		Global Item, Opts, Globals, ItemData
+
+		ClipBoardTemp := ClipboardAll
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 		
 		scancode_c := Globals.Get("ScanCodes").c
@@ -10441,7 +10691,7 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		scancode_a := Globals.Get("ScanCodes").a
 		scancode_f := Globals.Get("ScanCodes").f
 		scancode_enter := Globals.Get("ScanCodes").enter
-		
+
 		; Parse the clipboard contents twice.
 		; If the clipboard contains valid item data before we send ctrl + c to try and parse an item via ctrl + f then don't restore that clipboard data later on.
 		; This prevents the highlighting function to fill search fields with data from previous item parsings/manual data copying since
@@ -10533,8 +10783,8 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 					terms.push(Item.BaseName)
 				}
 			}
-			; leaguestones
-			Else If (Item.IsLeaguestone) {
+			; leaguestones and Scarabs
+			Else If (Item.IsLeaguestone or Item.IsScarab) {
 				If (broadTerms) {
 					terms.push(Item.BaseType)
 				} Else {
@@ -10614,35 +10864,65 @@ HighlightItems(broadTerms = false, leaveSearchField = true) {
 		}
 
 		If (terms.length() > 0) {
-			SendInput ^{%scancode_f%} ; sc021 = f
-			searchText =
-			For key, val in terms {
-				searchText = %searchText% "%val%"
+			focusHideoutFilter := true
+			If (Item.IsHideoutObject and focusHideoutFilter) {				
+				CoordMode, Mouse, Relative
+				MouseGetPos, currentX, currentY
+				MouseMove, %hideoutFieldX%, %hideoutFieldY%, 0
+				Sleep, 10
+				MouseClick
+				Sleep, 50
+				MouseMove, %currentX%, %currentY%, 0
+				Sleep, 10
+				SendInput ^{%scancode_a%}
+			} Else {
+				SendInput ^{%scancode_f%} ; sc021 = f	
 			}
 
-			; the search field has a 50 character limit, we have to close the last term with a quotation mark
-			If (StrLen(searchText) > 50) {
-				newString := SubStr(searchText, 1, 50)
+			searchText = 
+			For key, val in terms {
+				If (not Item.IsHideoutObject) {
+					searchText = %searchText% "%val%"
+				} Else {
+					; hideout objects shouldn't use quotation marks
+					searchText = %searchText% %val%
+				}				
+			}
+
+			; search fields have character limits
+			; stash search field := 50 chars , we have to close the last term with a quotation mark
+			; hideout mtx search field := 23 chars	
+			charLimit := Item.IsHideoutObject ? 23 : 50
+	
+			If (StrLen(searchText) > charLimit) {
+				newString := SubStr(searchText, 1, charLimit)
+
 				temp := RegExReplace(newString, "i)""", Replacement = "", QuotationMarks)
 				; make sure we have an equal amount of quotation marks (all terms properly enclosed)
 				If (QuotationMarks&1) {
 					searchText := RegExReplace(newString, "i).$", """")
+				} Else {
+					searchText := newString
 				}
 			}
 
 			Clipboard := searchText
-			Sleep 10		
+	
+			Sleep 10
 			SendEvent ^{%scancode_v%}		; ctrl + v
-			If (leaveSearchField) {
-				SendInput {%scancode_enter%}	; enter
-			} Else {
-				SendInput ^{%scancode_a%}	; ctrl + a
+			
+			If (not (Item.IsHideoutObject and focusHideoutFilter)) {
+				If (leaveSearchField) {
+					SendInput {%scancode_enter%}	; enter
+				} Else {
+					SendInput ^{%scancode_a%}	; ctrl + a
+				}
 			}
 		} Else {
 			SendInput ^{%scancode_f%}		; send ctrl + f in case we don't have information to input
 		}
 
-		Sleep, 10
+		Sleep,  500
 		If (!dontRestoreClipboard) {
 			Clipboard := ClipBoardTemp
 		}
@@ -10655,7 +10935,7 @@ AdvancedItemInfoExt() {
 	{
 		Global Item, Opts, Globals, ItemData
 
-		ClipBoardTemp := Clipboard
+		ClipBoardTemp := ClipboardAll
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 
 		Clipboard :=
@@ -10682,7 +10962,7 @@ OpenItemOnPoEAntiquary() {
 	{
 		Global Item, Opts, Globals, ItemData
 
-		ClipBoardTemp := Clipboard
+		ClipBoardTemp := ClipboardAll
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 
 		Clipboard :=
@@ -10755,7 +11035,7 @@ OpenItemOnPoEAntiquary() {
 AntiquaryOpenInBrowser(type, name, id, lastLeague, multiItems = false) {
 	league := TradeGlobals.Get("LeagueName")
 	If (RegExMatch(league, "Hardcore.*")) {
-		league := lastLeague "HC"
+		league := lastLeague " HC"
 	} Else {
 		league := lastLeague
 	}
@@ -10822,22 +11102,75 @@ AntiquaryGetType(Item) {
 }
 
 
-StringToBase64UriEncoded(stringIn, noUriEncode = false) {
-	stringBase64 := ""
+StringToBase64UriEncoded(stringIn, noUriEncode = false, ByRef errorMessage = "") {
 	FileDelete, %A_ScriptDir%\temp\itemText.txt
-	FileAppend, %stringIn%, %A_ScriptDir%\temp\itemText.txt, utf-8
-	command		:= "certutil -encode -f ""%cd%\temp\itemText.txt"" ""%cd%\temp\base64ItemText.txt"" & type ""%cd%\temp\base64ItemText.txt"""
-	stringBase64	:= ReadConsoleOutputFromFile(command, "encodeToBase64.txt")
-	stringBase64	:= Trim(RegExReplace(stringBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))
+	FileDelete, %A_ScriptDir%\temp\base64Itemtext.txt
+	FileDelete, %A_ScriptDir%\temp\encodeToBase64.txt
+	
+	encodeError1 := ""
+	encodeError2 := ""
+	stringBase64 := b64Encode(stringIn, encodeError1)
+	
+	If (not StrLen(stringBase64)) {
+		FileAppend, %stringIn%, %A_ScriptDir%\temp\itemText.txt, utf-8
+		command		:= "certutil -encode -f ""%cd%\temp\itemText.txt"" ""%cd%\temp\base64ItemText.txt"" & type ""%cd%\temp\base64ItemText.txt"""
+		stringBase64	:= ReadConsoleOutputFromFile(command, "encodeToBase64.txt", encodeError2)
+		stringBase64	:= Trim(RegExReplace(stringBase64, "i)-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|77u/", ""))
+	}
+
+	If (not StrLen(stringBase64)) {
+		errorMessage := ""
+		If (StrLen(encodeError1)) {
+			errorMessage .= encodeError1 " "
+		}
+		If (StrLen(encodeError2)) {
+			errorMessage .= "Encoding via certutil returned: " encodeError2
+		}
+	}
 	
 	If (not noUriEncode) {
 		stringBase64	:= UriEncode(stringBase64)
 		stringBase64	:= RegExReplace(stringBase64, "i)^(%0D)?(%0A)?|((%0D)?(%0A)?)+$", "")
 	} Else {
-		stringBase64 := RegExReplace(stringBase64, "i)\r|\n", "") 
-	}	
+		stringBase64 := RegExReplace(stringBase64, "i)\r|\n", "")
+	}
 	
 	Return stringBase64
+}
+
+/*
+	Base64 Encode / Decode a string (binary-to-text encoding)
+	https://github.com/jNizM/AHK_Scripts/blob/master/src/encoding_decoding/base64.ahk
+	
+	Alternative: https://github.com/cocobelgica/AutoHotkey-Util/blob/master/Base64.ahk
+*/
+b64Encode(string, ByRef error = "") {	
+	VarSetCapacity(bin, StrPut(string, "UTF-8")) && len := StrPut(string, &bin, "UTF-8") - 1 
+	If !(DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", len, "uint", 0x1, "ptr", 0, "uint*", size)) {
+		;throw Exception("CryptBinaryToString failed", -1)
+		error := "Exception (1) while encoding string to base64."
+	}	
+	VarSetCapacity(buf, size << 1, 0)
+	If !(DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", len, "uint", 0x1, "ptr", &buf, "uint*", size)) {
+		;throw Exception("CryptBinaryToString failed", -1)
+		error := "Exception (2) while encoding string to base64."
+	}
+	
+	If (not StrLen(Error)) {
+		Return StrGet(&buf)
+	} Else {
+		Return ""
+	}
+}
+
+b64Decode(string)
+{
+	If !(DllCall("crypt32\CryptStringToBinary", "ptr", &string, "uint", 0, "uint", 0x1, "ptr", 0, "uint*", size, "ptr", 0, "ptr", 0))
+		throw Exception("CryptStringToBinary failed", -1)
+	VarSetCapacity(buf, size, 0)
+	If !(DllCall("crypt32\CryptStringToBinary", "ptr", &string, "uint", 0, "uint", 0x1, "ptr", &buf, "uint*", size, "ptr", 0, "ptr", 0))
+		throw Exception("CryptStringToBinary failed", -1)
+	return StrGet(&buf, size, "UTF-8")
 }
 
 OpenWebPageWith(application, url) {
@@ -10872,7 +11205,7 @@ LookUpAffixes() {
 	{
 		Global Item, Opts, Globals, ItemData
 
-		ClipBoardTemp := Clipboard
+		ClipBoardTemp := ClipboardAll
 		SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
 
 		Clipboard :=
@@ -10949,6 +11282,12 @@ ToolTipTimer:
 		{
 			ToolTip
 		}
+		
+		; close item filter nameplate
+		fullScriptPath := A_ScriptDir "\lib\PoEScripts_ItemFilterNamePlate.ahk"
+		DetectHiddenWindows, On
+		WinClose, %fullScriptPath% ahk_class AutoHotkey
+		WinKill, %fullScriptPath% ahk_class AutoHotkey
 	}
 	return
 
@@ -11470,6 +11809,14 @@ UpdateNotesGuiEscape:
 	Gui, UpdateNotes:Cancel
 Return
 
+HotkeyConflictGuiEscape:
+	Gui, HotkeyConflict:Cancel
+Return
+
+CloseHotkeyConflictGui:
+	Gui, HotkeyConflict:Destroy
+Return
+
 CheckForUpdates:
 	If (not globalUpdateInfo.repo) {
 		global globalUpdateInfo := {}
@@ -11574,10 +11921,10 @@ FetchCurrencyData:
 	
 	Loop, % currencyLeagues.Length() {
 		currencyLeague := currencyLeagues[A_Index]
-		url  := "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
+		url  := "https://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
 		file := A_ScriptDir . "\temp\currencyData_" . currencyLeague . ".json"
 
-		url		:= "http://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
+		url		:= "https://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
 		critical	:= StrLen(Globals.Get("LastCurrencyUpdate")) ? false : true
 		parsedJSON := CurrencyDataDowloadURLtoJSON(url, sampleValue, critical, false, currencyLeague, "PoE-ItemInfo", file, A_ScriptDir "\data", usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)		
 
@@ -11657,6 +12004,10 @@ IsInArray(el, array) {
 	Return false
 }
 
+GetObjPropertyCount(obj) {
+	Return NumGet(&obj + 4*A_PtrSize)
+}
+
 TogglePOEItemScript()
 {
 	IF SuspendPOEItemScript = 0
@@ -11684,8 +12035,9 @@ GetScanCodes() {
 	; 0xF002 = "Dvorak"
 	; 0xF01B = "Dvorak right handed"
 	; 0xF01A = "Dvorak left handed"
+	; 0xF01C0809 = some other Dvorak layout
 	
-	If (RegExMatch(InputLocaleID, "i)^(0xF002|0xF01B|0xF01A).*")) {
+	If (RegExMatch(InputLocaleID, "i)^(0xF002|0xF01B|0xF01A|0xF01C0809|0xF01C0409).*")) {
 		; dvorak
 		sc := {"c" : "sc017", "v" : "sc034", "f" : "sc015", "a" : "sc01E", "enter" : "sc01C"}
 		project := Globals.Set("ProjectName")
@@ -11698,6 +12050,844 @@ GetScanCodes() {
 		Return sc
 	}	
 }
+
+GetCurrentItemFilterPath(ByRef parsingNeeded = true) {
+	currentFilter	:= Globals.Get("CurrentItemFilter")
+	iniPath		:= A_MyDocuments . "\My Games\Path of Exile\"
+	configs 		:= []
+	productionIni	:= iniPath . "production_Config.ini"
+	betaIni		:= iniPath . "beta_Config.ini"	
+
+	configs.push(productionIni)
+	configs.push(betaIni)
+	If (not FileExist(productionIni) and not FileExist(betaIni)) {
+		Loop %iniPath%\*.ini
+		{
+			configs.push(iniPath . A_LoopFileName)		
+		}	
+	}
+
+	readFile		:= ""
+	For key, val in configs {
+		IniRead, filter, %val%, UI, item_filter_loaded_successfully
+		If (filter != "ERROR" and FileExist(iniPath . filter)) {
+			Break
+		}
+	}
+	
+	filter := iniPath . filter
+
+	If (currentFilter != filter) {
+		parsingNeeded := true
+		Globals.Set("CurrentItemFilter", filter)
+		Return filter
+	} Else {
+		parsingNeeded := false
+		Return currentFilter
+	}
+}
+
+ShowAdvancedItemFilterFormatting() {
+	Global Item
+
+	SuspendPOEItemScript = 1 ; This allows us to handle the clipboard change event
+
+	scancode_c := Globals.Get("Scancodes").c
+	Send ^{%scancode_c%}
+	Sleep 150
+	CBContents := GetClipboardContents()
+	CBContents := PreProcessContents(CBContents)
+	Globals.Set("ItemText", CBContents)
+	ParsedData := ParseItemData(CBContents)
+	ShowItemFilterFormatting(Item, true)
+	
+	SuspendPOEItemScript = 0 ; Allow ItemInfo to handle clipboard change event	
+}
+
+ShowItemFilterFormatting(Item, advanced = false) {
+	If (not Item.Name) {
+		Return
+	}
+	
+	parsingNeeded := true
+	filterFile := GetCurrentItemFilterPath(parsingNeeded)
+	If (RegExMatch(filterFile, "i).*\\(error)$")) {
+		If (advanced) {
+			ShowToolTip("No custom loot filter loaded successfully.`nMake sure you have one selected in your UI options.")
+		}
+		Return
+	}
+	
+	ItemBaseList := Globals.Get("ItemBaseList")
+	
+	search := {}
+	search.LinkedSockets := Item.Links
+	search.ShaperItem := Item.IsShaperBase
+	search.ElderItem := Item.IsElderBase
+	search.ItemLevel := Item.Level
+	search.BaseType := [Item.BaseName]
+	search.HasExplicitMod :=					; HasExplicitMod "of Crafting" "of Spellcraft" "of Weaponcraft"
+	search.Identified := Item.IsUnidentified ? 0 : 1
+	search.Corrupted := Item.IsCorrupted
+	search.Quality := Item.Quality
+	search.Sockets := Item.Sockets	
+	search.Width :=
+	search.Height :=
+	search.name := Item.Name
+
+	; rarity
+	If (Item.RarityLevel = 1) {
+		search.Rarity := "Normal"
+		search.RarityLevel := 1
+	} Else If (Item.RarityLevel = 2) {
+		search.Rarity := "Magic"
+		search.RarityLevel := 2
+	} Else If (Item.RarityLevel = 3) {
+		search.Rarity := "Rare"
+		search.RarityLevel := 3
+	} Else If (Item.RarityLevel = 4) {
+		search.Rarity := "Unique"
+		search.RarityLevel := 4
+	}
+	
+	; classes
+	class := (StrLen(Item.SubType)) ? Item.SubType : Item.BaseType
+	search.Class := []
+	If (RegExMatch(class, "i)BodyArmour")) {
+		search.Class.push("Body Armour")
+		search.Class.push("Body Armours")
+	}
+	If (RegExMatch(class, "i)Sword|Mace|Axe")) {
+		If (Item.GripType = "2H") {
+			search.Class.push(class)
+			search.Class.push("Two Hand " class)
+			search.Class.push("Two Hand " class "s")
+			search.Class.push("Two Hand")
+		} Else {
+			search.Class.push(class)
+			search.Class.push("One Hand " class)
+			search.Class.push("One Hand " class "s")
+			search.Class.push("One Hand")
+		}
+	}
+	If (RegExMatch(class, "i)Flask")) {
+		If (RegExMatch(Item.BaseName, "i) (Life|Mana) ", match)) {
+			search.Class.push(match1 " Flasks") 
+			search.Class.push(match1 " Flask") 
+			search.Class.push("Flask") 
+		} Else {			
+			search.Class.push("Utility Flasks") 
+			search.Class.push("Utility Flask") 
+			search.Class.push("Flask") 
+		}
+	}
+	If (RegExMatch(class, "i)Jewel")) {
+		class := "Jewel"
+		search.Class.push(class)
+		search.Class.push(class "s")
+		
+		If (RegExMatch(Item.SubType, "i)Murderous Eye|Hypnotic Eye|Searching Eye")) {
+			class := "Abyss Jewel"
+			search.Class.push(class)
+			search.Class.push(class "s")
+		}
+	}
+	If (RegExMatch(class, "i)Currency") and RegExMatch(Item.BaseName, "i)Resonator")) {
+		search.Class.push("Delve Socketable Currency")		
+		search.Class.push("Currency")		
+	}	
+	; Quest Items
+	If (RegExMatch(Item.BaseName, "i)(Elder's Orb|Shaper's Orb)", match)) {
+		search.Class.push("Quest")
+		Item.IsQuestItem := true
+	}
+
+	If (not search.Class.MaxIndex() and StrLen(class)) {		
+		search.Class.push(class)
+		search.Class.push(class "s")
+	}
+	
+	For key, val in ItemBaseList {
+		For k, v in val {
+			If (k = Item.BaseName) {
+				search.DropLevel := v["Drop Level"]
+				search.Width := v["Width"]
+				search.Height := v["Height"]
+				Break
+			}
+		}
+	}
+	If (Item.IsMap) {
+		search.DropLevel := Item.MapTier + 67
+	}
+
+	; SocketGroups, RGB for example
+	search.SocketGroup := []
+	For key, val in Item.SocketGroups {
+		sGroup := {}
+		_r := RegExReplace(val, "i)r" , "", rCount)
+		_g := RegExReplace(val, "i)g" , "", gCount)
+		_b := RegExReplace(val, "i)b" , "", bCount)
+		_w := RegExReplace(val, "i)w" , "", wCount)
+		_w := RegExReplace(val, "i)d" , "", dCount)
+		_w := RegExReplace(val, "i)a" , "", aCount)
+		sGroup.r := rCount
+		sGroup.g := gCount
+		sGroup.b := bCount
+		sGroup.w := wCount
+		sGroup.d := dCount
+		sGroup.a := aCount
+		If (sGroup.r or sGroup.b or sGroup.g or sGroup.w or sGroup.d or sGroup.a) {
+			search.SocketGroup.push(sGroup)	
+		}		
+	}	
+	
+	search.HasExplicitMod := []
+	; works only for magic items
+	If (Item.RarityLevel = 2) {
+		RegExMatch(Item.Name, "i)(.*)?" Item.BaseName "(.*)?", nameParts)
+		If (StrLen(nameParts1)) {
+			search.HasExplicitMod.push(Trim(nameParts1))
+		}
+		If (StrLen(nameParts2)) {
+			search.HasExplicitMod.push(Trim(nameParts2))
+		}
+	}
+	
+	search.SetBackGroundColor	:= GetItemDefaultColor(Item, "BackGround")
+	search.SetBorderColor		:= GetItemDefaultColor(Item, "Border")
+	search.SetTextColor			:= GetItemDefaultColor(Item, "Text")
+	
+	search.LabelLines := []
+	_line := (Item.Quality > 0) ? "Superior " RegExReplace(Item.Name, "i)Superior (.*)", "$1") : Item.Name
+	_line := (not Item.IsGem and not Item.IsUnidentified and not Item.RarityLevel = 1) ? RegExReplace(Item.Name, "i)Superior (.*)", "$1") : _line
+	_line .= (Item.IsGem and Item.Level > 1) ? " (Level " Item.Level ")" : "" 
+	search.LabelLines.push(_line)
+	
+	; Unidentified rare/unique items have the same baseName as their name
+	If (Item.RarityLevel >= 3 and (RegExReplace(Item.Name, "i)Superior (.*)", "$1") != Item.BaseName)) {
+		_line := Item.BaseName
+		search.LabelLines.push(_line)
+	}	
+
+	ParseItemLootFilter(filterFile, search, parsingNeeded, advanced) 
+}
+
+GetItemDefaultColor(item, cType) {
+	If (cType = "Border") {
+		; labyrinth map item or map fragment
+		If (item.IsMapFragment) {
+			return "200 200 200 1" ; // white
+		}
+
+		; Quest Item / labyrinth item
+		If (item.IsQuestItem or item.IsLabyrinthItem) { ; these variables don't exist yet
+			return "74 230 58 1" ; // green
+		}
+
+		; map rarity
+		Else If (item.IsMap) {
+			If (item.RarityLevel = 1) {
+				return "200 200 200 1"
+			} Else If (item.RarityLevel = 2) {
+				return "136 136 255 1"
+			} Else If (item.RarityLevel = 3) {
+				return "255 255 119 1"
+			} Else If (item.RarityLevel = 4) {
+				return " 175 96 37 1"
+			} Else {
+				return "255 255 255 0"
+			}
+		}
+		
+		; default border color: none
+		Else  {
+			return s:= "0 0 0 0"
+		}
+	}
+	
+	; background is always black
+	Else If (cType = "BackGround") {		
+		return  "0 0 0 255"
+	}
+	
+	Else If (cType = "Text") {
+		; create text color based gem class
+		If (item.IsGem)
+		{
+			return "27 162 155 1"
+		}
+
+		; create text color based on currency class
+		Else If (item.IsCurrency)
+		{
+			return "170 158 130 1"
+		}
+
+		; create text color based on map fragments classes
+		Else If (RegExMatch(item.Name, "i)Offering of the Goddess") or item.IsMap)
+		{
+			return "200 200 200 1"
+		}
+
+		; quest / lab item
+		Else If (item.IsQuestItem or item.IsLabyrinthItem) ; IsLabyrinthItem doesn't exist yet
+		{
+			return "74 230 58 1"
+		}
+
+		; div card
+		Else If (item.IsDivinationCard)
+		{
+			return "14 186 255 1"
+		}
+		
+		; create text color based on rarity
+		Else If (item.RarityLevel)
+		{
+			If (item.RarityLevel = 1) {
+				return "200 200 200 1"
+			} Else If (item.RarityLevel = 2) {
+				return "136 136 255 1"
+			} Else If (item.RarityLevel = 3) {
+				return "255 255 119 1"
+			} Else If (item.RarityLevel = 4) {
+				return " 175 96 37 1"
+			} Else {
+				return "255 255 255 0"
+			}
+		}
+
+		; creating default text color (white)
+		Else {
+			return "255 255 255 1"
+		}
+	}
+	
+	Return
+}
+
+ParseItemLootFilter(filter, item, parsingNeeded, advanced = false) {
+	; https://pathofexile.gamepedia.com/Item_filter
+	rules := []
+	matchedRule := {}
+	
+	; Use already parsed filter data if the item filter is still the same
+	If (not parsingNeeded) {
+		rules := Globals.Get("ItemFilterObj")
+	}
+	; Parse the item filter if it wasn't used the last time or fall back to parsing it if using the already parsed data fails
+	If (parsingNeeded or rules.MaxIndex() > 1) {
+		/*
+			Parse filter rules to object
+		*/
+		Loop, Read, %filter%
+		{
+			If (RegExMatch(A_LoopReadLine, "i)^#") or not StrLen(A_LoopReadLine)) {
+				continue
+			}
+			
+			If (RegExMatch(Trim(A_LoopReadLine), "i)^(Show|Hide)(\s|#)?", match)) {
+				rule := {}
+				rule.Display := match1
+				rule.Conditions := []
+				rule.Comments := []
+				If (RegExMatch(Trim(A_LoopReadLine), "i)#(.*)?", comment)) { ; only comments after filter code
+					If (StrLen(comment1)) {
+						rule.Comments.push(comment1)	
+					}				
+				}
+				rules.push(rule)
+			} Else  {
+				RegExMatch(Trim(A_LoopReadLine), "i)#(.*)?", comment) ; only comments after filter code
+				If (StrLen(comment1)) {
+					rules[rules.MaxIndex()].Comments.push(comment1)
+				}			
+				
+				line := RegExReplace(Trim(A_LoopReadLine), "i)#.*")
+				
+				/*
+					Styles (last line is valid)
+				*/
+				If (RegExMatch(line, "i)^.*?Color\s")) {
+					RegExMatch(line, "i)(.*?)\s(.*)", match)
+					rules[rules.MaxIndex()][Trim(match1)] := Trim(match2)
+				}
+				
+				Else If (RegExMatch(line, "i)^.*?(PlayAlertSound|MinimapIcon|PlayEffect)\s")) {
+					RegExMatch(line, "i)(.*?)\s(.*)", match)
+					params := StrSplit(Trim(match2), " ")
+					rules[rules.MaxIndex()][Trim(match1)] := params
+				}
+				
+				/*
+					Conditions (every condition must match, lines don't overwrite each other)
+				*/
+				Else If (RegExMatch(line, "i)^.*?(Class|BaseType|HasExplicitMod|SocketGroup)\s")) {
+					RegExMatch(line, "i)(.*?)\s(.*)", match)
+					
+					;temp := RegExReplace(match2, "i)(""\s+"")", """,""")
+					temp := RegExReplace(match2, "i)(\s)\s+", "\s")
+					temp := RegExReplace(temp, "i)(\s+)|""(.*?)""", "$1,$2")
+					temp := RegExReplace(temp, "i)(,,+)", ",")
+					temp := RegExReplace(temp, "i)(\s,)", ",")
+					temp := RegExReplace(temp, "i)(^,)|(, $)")
+					
+					arr := StrSplit(temp, ",")
+					
+					condition := {}
+					condition.name := match1
+					condition.values := arr
+					rules[rules.MaxIndex()].conditions.push(condition)
+				}
+				
+				Else If (RegExMatch(line, "i)^.*?(DropLevel|ItemLevel|Rarity|LinkedSockets|Sockets|Quality|Height|Width|StackSize|GemLevel|MapTier)\s")) {
+					RegExMatch(line, "i)(.*?)\s(.*)", match)
+					paramsTemp := StrSplit(Trim(match2), " ")
+					
+					condition := {}
+					condition.name := match1
+					condition.operator := ParamsTemp.MaxIndex() = 2 ? paramsTemp[1] : "=" 
+					condition.value := ParamsTemp.MaxIndex() = 2 ? paramsTemp[2] : paramsTemp[1]
+					
+					; rarity
+					If (condition.value = "Normal") {
+						condition.value := 1
+					} Else If (condition.value = "Magic") {
+						condition.value := 2
+					} Else If (condition.value = "Rare") {
+						condition.value := 3
+					} Else If (condition.value = "Unique") {
+						condition.value := 4
+					}
+					
+					rules[rules.MaxIndex()].conditions.push(condition)
+				}
+				
+				Else If (RegExMatch(line, "i)^.*?(Identified|Corrupted|ElderItem|ShaperItem|ShapedMap|ElderMap)\s")) {
+					RegExMatch(line, "i)(.*?)\s(.*)", match)		
+					
+					condition := {}
+					condition.name := Trim(match1)
+					condition.value := Trim(match2) = "True" ? true : false			
+					rules[rules.MaxIndex()].conditions.push(condition)
+				}		
+				
+				/*
+					the rest
+				*/			
+				Else {
+					RegExMatch(line, "i)(.*?)\s(.*)", match)			
+					rules[rules.MaxIndex()][Trim(match1)] := Trim(match2)
+				}
+			}
+		}
+		Globals.Set("ItemFilterObj", rules)
+	}
+	
+	json := JSON.Dump(rules)
+	FileDelete, %A_ScriptDir%\temp\itemFilterParsed.json
+	FileAppend, %json%, %A_ScriptDir%\temp\itemFilterParsed.json
+	
+	/*
+		Match item againt rules
+	*/
+	match := ""
+	match1 := ""
+	match2 := ""
+	For k, rule in rules {
+		totalConditions := rule.conditions.MaxIndex()
+		matchingConditions := 0		
+		matching_rules := []
+		
+		For i, condition in rule.conditions {
+			
+			If (RegExMatch(condition.name, "i)(LinkedSockets|DropLevel|ItemLevel|Rarity|Sockets|Quality|Height|Width|StackSize|GemLevel|MapTier)", match1)) {
+				If (match1 = "Rarity") {
+					If (CompareNumValues(item["RarityLevel"], condition.value, condition.operator)) {
+						matchingConditions++
+						matching_rules.push(condition.name)
+					}
+				} Else {
+					If (CompareNumValues(item[match1], condition.value, condition.operator)) {
+						matchingConditions++
+						matching_rules.push(condition.name)
+					}	
+				}				
+			}
+			Else If (RegExMatch(condition.name, "i)(Identified|Corrupted|ElderItem|ShaperItem|ShapedMap)", match1)) {
+				If (item[match1] == condition.value) {
+					matchingConditions++
+					matching_rules.push(condition.name)
+				}
+			}
+			Else If (RegExMatch(condition.name, "i)(Class|BaseType|HasExplicitMod)", match1)) {
+				For j, value in condition.values {
+					foundMatch := 0
+					
+					For l, v in item[match1] {
+						If (RegExMatch(v, "i)" value "")) {
+							matchingConditions++
+							matching_rules.push(condition.name)
+							foundMatch := 1
+							Break
+						}
+					}
+					If (foundMatch) {
+						Break
+					}
+				}
+			}
+			Else If (RegExMatch(condition.name, "i)(SocketGroup)", match1)) {
+				For j, value in condition.values {
+					foundMatch := 0
+					
+					For l, v in item[match1] {
+						_r := RegExReplace(value, "i)r" , "", rCount)
+						_g := RegExReplace(value, "i)g" , "", gCount)
+						_b := RegExReplace(value, "i)b" , "", bCount)
+						_w := RegExReplace(value, "i)w" , "", wCount)
+						_w := RegExReplace(value, "i)d" , "", dCount)
+						_w := RegExReplace(value, "i)a" , "", aCount)
+						
+						If (v.r = rCount and v.g = gCount and v.b = bCount and v.w = wCount and v.d = dCount and v.a = aCount) {
+							matchingConditions++
+							matching_rules.push(condition.name)
+							foundMatch := 1
+							Break
+						}
+					}
+					If (foundMatch) {
+						Break
+					}
+				}
+			}
+		}
+		
+		If (totalConditions = matchingConditions) {
+			matchedRule := rule
+			matchedRule["matching_rules"] := matching_rules
+			Break
+		}
+	}
+	;debugprintarray([matchedRule, item])
+	
+	If (not StrLen(matchedRule.SetBackgroundColor)) {
+		matchedRule.SetBackgroundColor := item.SetBackgroundColor
+	}
+	If (not StrLen(matchedRule.SetBorderColor)) {
+		matchedRule.SetBorderColor := item.SetBorderColor
+	}
+	If (not StrLen(matchedRule.SetTextColor)) {
+		matchedRule.SetTextColor := item.SetTextColor
+	}
+	If (not StrLen(matchedRule.SetFontSize)) {
+		matchedRule.SetFontSize := 32
+	}
+
+	itemName		:= item.LabelLines[1]
+	itemBase		:= item.LabelLines[2]
+	bgColor		:= matchedRule.SetBackgroundColor
+	borderColor	:= matchedRule.SetBorderColor
+	fontColor 	:= matchedRule.SetTextColor
+	fontSize		:= matchedRule.SetFontSize
+	
+	If (advanced) {	
+		filterName := RegExReplace(Globals.Get("CurrentItemFilter"), "i).*\\(.*)(\.filter)","$1")
+		commentsJSON := DebugPrintArray(matchedRule, false)
+		
+		comments := ""
+		For key, val in matchedRule.Comments {
+			comments .= val "`n"
+		}
+		
+		conditions := ""
+		rarities := ["Normal", "Magic", "Rare", "Unique"]
+		For key, val in matchedRule.Conditions {
+			If (val.operator) {
+				cLine := val.name
+				If (val.name = "Rarity") {				
+					cLine .= " " val.operator " " rarities[val.value]
+				} Else {
+					cLine .= " " val.operator " " val.value	
+				}				
+			}
+			Else {
+				cLine := val.name ": "
+				indent := StrLen(cLine)
+				count := 0
+				For k, v in val.values {
+					cLine .= """" v """"
+					
+					count++
+					If (count = 5) {
+						cLine .= "`n" StrPad("", indent)
+						count := 0
+					} Else {
+						cLine .= ", "
+					}
+				}
+			}
+			
+			conditions .= cLine "`n" 
+		}
+		conditions := RegExReplace(Trim(conditions), "i),(\n|\r|\s)+?$")
+
+		line := "--------------------------------------------"
+		tt := "Loaded Item Filter: """ filterName """`n`n"
+		tt .= "Inline comments:" "`n" line "`n" 
+		tt .= comments "`n"
+		tt .= "Matching conditions:" "`n" line "`n" 
+		tt .= conditions "`n`n"
+		tt .= "  Disclaimer: Matching explicit mods is only possible for magic items. In rare" "`n"
+		tt .= "              cases this can cause a wrong match, depending on the used filter."
+		
+		ShowToolTip(tt)	
+	}
+	
+	MouseGetPos, CurrX, CurrY
+	If (advanced) {
+		Run "%A_AhkPath%" "%A_ScriptDir%\lib\PoEScripts_ItemFilterNamePlate.ahk" "%itemName%" "%itemBase%" "%bgColor%"  "%borderColor%"  "%fontColor%"  "%fontSize%" "%CurrX%" "%CurrY%" "1"	
+	} Else {
+		Run "%A_AhkPath%" "%A_ScriptDir%\lib\PoEScripts_ItemFilterNamePlate.ahk" "%itemName%" "%itemBase%" "%bgColor%"  "%borderColor%"  "%fontColor%"  "%fontSize%" "%CurrX%" "%CurrY%" 
+	}
+	
+}
+
+CompareNumValues(num1, num2, operator = "=") {
+	res := 0
+	If (operator = "=") {
+		res := num1 = num2
+	} Else If (operator = "==") {
+		res := num1 == num2
+	} Else If (operator = ">=") {
+		res := num1 >= num2
+	} Else If (operator = ">") {
+		res := num1 > num2
+	} Else If (operator = "<=") {
+		res := num1 <= num2
+	} Else If (operator = "<") {
+		res := num1 < num2
+	}
+	Return res
+}
+
+StartLutbot:
+	global LutBotSettings	:= class_EasyIni(A_MyDocuments "\AutoHotKey\LutTools\settings.ini")
+
+	If (not FileExist(A_MyDocuments "\AutoHotKey\LutTools\lite.ahk")) {
+		_project := Globals.Get("ProjectName")
+		MsgBox, 0x14, %_project% - Lutbot lite.ahk missing, The Lutbot lite macro cannot be executed since its script file is missing,`nopen download website? ("http://lutbot.com/#/ahk")
+		IfMsgBox Yes
+		{
+			OpenWebPageWith(AssociatedProgram("html"), "http://lutbot.com/#/ahk")
+		}
+	} Else {		
+		Run "%A_AhkPath%" "%A_MyDocuments%\AutoHotKey\LutTools\lite.ahk"
+	}
+
+	If (Opts.Lutbot_WarnConflicts) {
+		CheckForLutBotHotkeyConflicts(ShowAssignedHotkeys(true), LutBotSettings)
+	}
+
+	SetTimer, StartLutbot, Off
+Return
+
+OpenLutbotDocumentsFolder:
+	OpenUserSettingsFolder("Lutbot", A_MyDocuments "\AutoHotKey\LutTools")
+Return
+
+CheckForLutBotHotkeyConflicts(hotkeys, config) {
+	conflicts := []
+	
+	For key, val in config.hotkeys {
+		If (RegExMatch(key, "i)superLogout|logout|options")) {
+			conflict := {}
+			VKey := KeyNameToKeyCode(val, 0)
+			assignedLabel := GetAssignedHotkeysLabel(key, val, vkey, "on")
+			
+			s1 := RegExReplace(val, "([-+^*$?\|&()])", "\$1")
+			foundConflict := false
+			For k, v in hotkeys {				
+				s2 := RegExReplace(v[6], "([-+^*$?\|&()])", "\$1")
+				If (RegExmatch(Trim(val), "i)^" Trim(s2) "$")) {
+					foundConflict := true
+					Break					
+				}
+			}
+			
+			If (StrLen(assignedLabel) or foundConflict) {
+				conflict.name := key 
+				conflict.hkey := val
+				conflict.vkey := vkey
+				conflict.assignedLabel := assignedLabel				
+				conflicts.push(conflict)
+			}
+		}
+	}
+	
+	If (conflicts.MaxIndex()) {
+		project := Globals.Get("ProjectName")		
+		msg := project " detected a hotkey conflict with the Lutbot lite macro, "
+		msg .= "`n" "which should be resolved before playing the game."
+		msg .= "`n`n" "Conflicting hotkey(s) from Lutbot:"
+		For key, val in conflicts {
+			msg .= "`n"   "- Lutbots """ val.name """ (" val.hkey ") conflicts with """ val.assignedLabel """"
+		}
+		
+		MsgBox, 16, Lutbot lite - %project% conflict, %msg%
+	}
+}
+
+SaveAssignedHotkey(label, key, vkey, state) {
+	hk := {}
+	hk.key := key
+	hk.vkey := vkey
+	hk.state := state
+	
+	obj := Globals.Get("AssignedHotkeys")
+	obj[label] := hk 
+	Globals.Set("AssignedHotkeys", obj)
+}
+
+RemoveAssignedHotkey(label) {	
+	haystack := Globals.Get("AssignedHotkeys")
+	
+	For k, v in haystack {
+		If (k = label) {
+			v.vkey := ""
+			v.key := ""
+			Globals.Set("AssignedHotkeys", haystack)
+			Return
+		}
+	}
+}
+
+GetAssignedHotkeysLabel(label, key, vkey, ByRef state) {
+	haystack := Globals.Get("AssignedHotkeys")
+	
+	For k, v in haystack {
+		If (v.vkey = vkey) {
+			state := v.state
+			Return k
+		}
+	}
+}
+
+GetAssignedHotkeysEnglishKey(vkey) {
+	haystack := ShowAssignedHotkeys(true)
+
+	For k, v in haystack {
+		If (v[5] = vkey) {
+			Return haystack[k]
+		}
+	}
+}
+
+AssignHotKey(Label, key, vkey, enabledState = "on") {
+	assignedState := ""
+	assignedLabel := GetAssignedHotkeysLabel(Label, key, vkey, assignedState)
+	
+	If (assignedLabel = Label and enabledState = assignedState) {
+		; new hotkey is already assigned to the target label
+
+		Return
+	} Else If (assignedLabel = Label and enabledState != assignedState) {
+		; new hotkey is already assigned but has a different state (enabled/disabled)
+		Hotkey, %VKey%, %Label%, UseErrorLevel %enabledState%
+		SaveAssignedHotkey(Label, key, vkey, enabledState)
+	} Else If (StrLen(assignedLabel)) {
+		; new hotkey is already assigned to a different label
+		; the old label will be unassigned unless prevented
+		Hotkey, %VKey%, %Label%, UseErrorLevel %stateValue%
+		If (not ErrorLevel) {
+			SaveAssignedHotkey(Label, key, vkey, enabledState)
+			RemoveAssignedHotkey(assignedLabel)
+			ShowHotKeyConflictUI(GetAssignedHotkeysEnglishKey(VKey), VKey, Label, assignedLabel, false)
+		}
+	} Else {
+		; new hotkey is not assigned to any label yet
+		If (enabledState != "off") {
+			; only assign it when it's enabled
+			Hotkey, %VKey%, %Label%, UseErrorLevel %stateValue%
+			SaveAssignedHotkey(Label, key, vkey, enabledState)
+		}		
+	}
+
+	If (ErrorLevel) {
+		If (errorlevel = 1)
+			str := str . "`nASCII " . VKey . " - 1) The Label parameter specifies a nonexistent label name."
+		Else If (errorlevel = 2)
+			str := str . "`nASCII " . VKey . " - 2) The KeyName parameter specifies one or more keys that are either not recognized or not supported by the current keyboard layout/language. Switching to the english layout should solve this for now."
+		Else If (errorlevel = 3)
+			str := str . "`nASCII " . VKey . " - 3) Unsupported prefix key. For example, using the mouse wheel as a prefix in a hotkey such as WheelDown & Enter is not supported."
+		Else If (errorlevel = 4)
+			str := str . "`nASCII " . VKey . " - 4) The KeyName parameter is not suitable for use with the AltTab or ShiftAltTab actions. A combination of two keys is required. For example: RControl & RShift::AltTab."
+		Else If (errorlevel = 5)
+			str := str . "`nASCII " . VKey . " - 5) The command attempted to modify a nonexistent hotkey."
+		Else If (errorlevel = 6)
+			str := str . "`nASCII " . VKey . " - 6) The command attempted to modify a nonexistent variant of an existing hotkey. To solve this, use Hotkey IfWin to set the criteria to match those of the hotkey to be modified."
+		Else If (errorlevel = 50)
+			str := str . "`nASCII " . VKey . " - 50) Windows 95/98/Me: The command completed successfully but the operating system refused to activate the hotkey. This is usually caused by the hotkey being "" ASCII " . int . " - in use"" by some other script or application (or the OS itself). This occurs only on Windows 95/98/Me because on other operating systems, the program will resort to the keyboard hook to override the refusal."
+		Else If (errorlevel = 51)
+			str := str . "`nASCII " . VKey . " - 51) Windows 95/98/Me: The command completed successfully but the hotkey is not supported on Windows 95/98/Me. For example, mouse hotkeys and prefix hotkeys such as a & b are not supported."
+		Else If (errorlevel = 98)
+			str := str . "`nASCII " . VKey . " - 98) Creating this hotkey would exceed the 1000-hotkey-per-script limit (however, each hotkey can have an unlimited number of variants, and there is no limit to the number of hotstrings)."
+		Else If (errorlevel = 99)
+			str := str . "`nASCII " . VKey . " - 99) Out of memory. This is very rare and usually happens only when the operating system has become unstable."
+
+		MsgBox, %str%
+	}
+}
+
+ShowHotKeyConflictUI(hkeyObj, hkey, hkeyLabel, oldLabel = "", preventedAssignment = false) {
+	SplashTextOff
+	
+	Gui, HotkeyConflict:Destroy
+	Gui, HotkeyConflict:Font,, Consolas
+
+	Gui, HotkeyConflict:Add, Edit, w0 h0
+	
+	Gui, HotkeyConflict:Add, Text, x17 w150 h20, Label
+	Gui, HotkeyConflict:Add, Text, x+10 yp+0 w150 h20, Pretty hotkey
+	Gui, HotkeyConflict:Add, Text, x+10 yp+0 w150 h20, Hotkey
+	Gui, HotkeyConflict:Add, Text, x+10 yp+0 w150 h20, Virtual Key
+	line := ""
+	Loop, 130 {
+		line .= "-"
+	}
+	Gui, HotkeyConflict:Add, Text, x17 y+-5 w630 h20, % line
+	
+	Gui, HotkeyConflict:Add, Text, x17 y+0 w150 h20, % hkeyLabel
+	Gui, HotkeyConflict:Add, Hotkey, x+10 yp-3 w150 h20, % hkeyObj[5]
+	Gui, HotkeyConflict:Add, Text, x+10 yp+3 w150 h20, % hkeyObj[6]
+	Gui, HotkeyConflict:Add, Text, x+10 yp+0 w150 h20, % hkey
+	
+	If (StrLen(oldLabel)) {
+		Gui, HotkeyConflict:Font, bold
+		Gui, HotkeyConflict:Add, Text, x17 y+15 w400 h20, % "Old Label: " oldLabel	
+		Gui, HotkeyConflict:Font, norm
+	}	
+	
+	Gui, HotkeyConflict:Font,, Verdana
+	msg := "The hotkey for the label/function/feature """ hkeyLabel """ was previously used for "
+	msg .= (StrLen(oldLabel)) ? "the label """ oldLabel """." : "a different one."
+	If (not preventedAssignment) {
+		msg .= "`nThe previously created one got overwritten and is now unassigned, please resolve this conflict`nin the settings menu."			
+	} Else {
+		msg .= "`nThis current hotkey was not assigned, keeping it's previous value. Please resolve this conflict`nin the settings menu if you want to set the hotkey to this function."
+	}	
+	msg .= "`n`nYou may have to restart the script afterwards."
+	
+	Gui, HotkeyConflict:Add, Text, x17 y+15 w630 h80, % msg
+	
+	Gui, HotkeyConflict:Add, Button, w60 x590 gCloseHotkeyConflictGui, Close
+	Gui, HotkeyConflict:Show, xCenter yCenter w660, Hotkey conflict
+	
+	WinWaitClose, Hotkey conflict
+	sleep 5000	
+}
+
 
 ; ############ (user) macros #############
 ; macros are being appended here by merge script

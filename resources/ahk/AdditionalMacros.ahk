@@ -53,6 +53,9 @@ AM_AssignHotkeys:
 	global AM_ChannelName		:= AM_Config["JoinChannel"].Channel
 	global AM_HighlightArg1		:= AM_Config["HighlightItems"].Arg1
 	global AM_HighlightArg2		:= AM_Config["HighlightItems"].Arg2
+	global AM_HighlightArg3		:= AM_Config["HighlightItems"].Arg3
+	global AM_HighlightArg4		:= AM_Config["HighlightItems"].Arg4
+	global AM_HighlightArg5		:= AM_Config["HighlightItems"].Arg5
 	global AM_HighlightAltArg1	:= AM_Config["HighlightItemsAlt"].Arg1
 	global AM_HighlightAltArg2	:= AM_Config["HighlightItemsAlt"].Arg2
 	global AM_KeyToSCState		:= (TradeOpts.KeyToSCState != "") ? TradeOpts.KeyToSCState : AM_Config["General"].General_KeyToSCState
@@ -72,10 +75,11 @@ AM_Minimize_HKey:
 Return
 
 AM_HighlightItems_HKey:
-	HighlightItems(AM_HighlightArg1, AM_HighlightArg2)		; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
-													; Function parameters, change if needed or wanted:
-													;	1. Use broader terms, default = false.
-													;	2. Leave the search field after pasting the search terms, default = true.
+	HighlightItems(AM_HighlightArg1, AM_HighlightArg2, AM_HighlightArg3, AM_HighlightArg4, AM_HighlightArg5)		
+							; Ctrl+F fills search bars in the stash or vendor screens with the item's name or info you're hovering over.
+							; Function parameters, change if needed or wanted:
+							;	1. Use broader terms, default = false.
+							;	2. Leave the search field after pasting the search terms, default = true.
 Return
 
 AM_HighlightItemsAlt_HKey:
@@ -124,7 +128,7 @@ AM_Remaining_HKey:
 Return
 
 AM_JoinChannel_HKey:
-	SendInput {Enter}/%AM_ChannelName%{Enter}		; Join a channel with F10. Default = global 820.
+	SendInput {Enter}/%AM_ChannelName%{Enter}	; Join a channel with F10. Default = global 820.
 Return
 
 AM_SetAfkMessage_HKey:
@@ -135,8 +139,18 @@ AM_OpenOnPoEAntiquary_HKey:
 	OpenItemOnPoEAntiquary()					; Opens an item on http://poe-antiquary.xyz to lookup a price history from last leagues.
 Return
 
+/*
 AM_AdvancedItemInfo_HKey:
 	AdvancedItemInfoExt()					; Opens an item on pathof.info for an advanced affix breakdown.
+Return
+*/
+
+AM_AdvItemFilterPreview_HKey:
+	ShowAdvancedItemFilterFormatting()			; Parses your current loot filter (if a custom filter is being used) and shows a highlighting preview for our item, including information about the mathcing filter rule 
+Return
+
+AM_ColorBlindSupport_HKey:
+	ColorBlindSupport()						; Shows text-based information about an items socket colors or a gems color
 Return
 
 AM_WhoisLastWhisper_HKey:
@@ -182,17 +196,18 @@ AM_SetHotkeys() {
 				For labelKeyIndex, labelKeyName in StrSplit(AM_Config[labelName].Hotkeys, ", ") {
 					If (labelKeyName and labelKeyName != A_Space) {
 						AM_Config[labelName].State := AM_ConvertState(AM_Config[labelName].State)						
-						stateValue := AM_Config[labelName].State ? "on" : "off"
-						
+						stateValue := AM_Config[labelName].State ? "on" : "off"	
+	
+						VKey := KeyNameToKeyCode(labelKeyName, AM_KeyToSCState)						
+
 						; TODO: Fix hotkeys not being set without restart
 						If (stateValue = "on" and not AM_Config.General.finishedInit) {
 							; set hotkeys on init, only set enabled hotkeys to prevent key conflicts with other macros/applications
-							Hotkey, % KeyNameToKeyCode(labelKeyName, AM_KeyToSCState), AM_%labelName%_HKey, % stateValue
+							AssignHotKey("AM_" labelName "_HKey", VKey, VKey, stateValue)
 						} Else If (AM_Config.General.finishedInit) {
 							; change hotkey states/keys without a restart (currently not working without the restart)
-							Hotkey, % KeyNameToKeyCode(labelKeyName, AM_KeyToSCState), AM_%labelName%_HKey, % stateValue							
-							;console.log(labelKeyName ", " KeyNameToKeyCode(labelKeyName, AM_KeyToSCState) ", " "AM_" labelName "_HKey, " stateValue ", " ErrorLevel)
-						}		
+							AssignHotKey("AM_" labelName "_HKey", VKey, VKey, stateValue)
+						}
 					}
 				}
 			}
@@ -200,7 +215,7 @@ AM_SetHotkeys() {
 		
 		If (not AM_Config.General.finishedInit) {
 			AM_Config.General.finishedInit := true	
-		}		
+		}
 	}
 }
 
