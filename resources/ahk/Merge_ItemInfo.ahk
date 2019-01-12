@@ -30,9 +30,7 @@ If (not PoEScripts_CheckCorrectClientLanguage()) {
 If (!PoEScripts_CreateTempFolder(scriptDir, projectName)) {
 	ExitApp
 }
-If (InStr(scriptDir, A_Desktop)) {
-	Msgbox, 0x1010, Invalid Installation Path, Executing PoE-ItemInfo from your Desktop (or any of its subfolders) may cause script errors, please choose a different directory.
-}
+PoEScripts_CheckInvalidScriptFolder(scriptDir, "PoE-ItemInfo")
 
 /*
 	Set some important variables

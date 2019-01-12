@@ -1074,10 +1074,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 
 	/*
 		handle corruption
-		*/
-		
+		*/		
 	If (Item.IsCorrupted and isAdvancedPriceCheckRedirect and RequestParams.corrupted = "0" and Item.IsJewel) {
-		RequestParams.corrupted := "0"
+		RequestParams.corrupted := "1"
 	}
 	Else If (Item.IsCorrupted and TradeOpts.CorruptedOverride and not Item.IsDivinationCard) {
 		If (TradeOpts.Corrupted = "Either") {
@@ -1958,10 +1957,13 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	reqHeaders.push("Upgrade-Insecure-Requests: 1")
 	reqHeaders.push("Content-type: application/x-www-form-urlencoded; charset=UTF-8")
 	reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-	reqHeaders.push("Referer: http://poe.trade/")
+	reqHeaders.push("Referer: http://poe.trade/")	
+	
 	If (StrLen(UserAgent)) {
 		reqHeaders.push("User-Agent: " UserAgent)
 		reqHeaders.push("Cookie: __cfduid=" cfduid "; cf_clearance=" cfClearance)
+	} Else {
+		reqHeaders.push("User-Agent:Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")
 	}
 
 	html := PoEScripts_Download(url, postData, reqHeaders, options, false)
@@ -1982,11 +1984,12 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 	postData 	:= "l=" UriEncode(TradeGlobals.Get("LeagueName")) "&i=" EncodedItemData
 	payLength	:= StrLen(postData)
 	url 		:= "https://www.poeprices.info/api"
-
+	
+	reqTimeout := 25
 	options	:= "RequestType: GET"
 	;options	.= "`n" "ReturnHeaders: skip"
 	options	.= "`n" "ReturnHeaders: append"
-	options	.= "`n" "TimeOut: 10"
+	options	.= "`n" "TimeOut: " reqTimeout
 	reqHeaders := []
 
 	reqHeaders.push("Connection: keep-alive")
@@ -2019,15 +2022,6 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 	If (not isObject(responseObj)) {		
 		responseObj := {}
 	}
-	
-	/*
-	If (not StrLen(response) and not responseHeader = "403") {
-		responseObj.failed := "ERROR: Parsing response failed, empty response! "
-	}
-	Else If (responseHeader = "403") {
-		responseObj.failed := "ERROR: Parsing response failed, server returned HTTP ERROR 403! "
-	}
-	*/
 
 	If (TradeOpts.Debug) {
 		arr := {}
@@ -2036,7 +2030,7 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 		arr.League := TradeGlobals.Get("LeagueName")
 		TradeFunc_LogPoePricesRequest(arr, request, "poe_prices_debug_log.txt")
 	}
-	
+
 	responseObj.added := {}
 	responseObj.added.encodedData := EncodedItemData
 	responseObj.added.league := TradeGlobals.Get("LeagueName")
@@ -2044,15 +2038,24 @@ TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
 	responseObj.added.browserUrl := url "?" postData "&w=1"
 	responseObj.added.encodingError := encodingError
 	responseObj.added.retHeader := responseHeader
+	responseObj.added.timeoutParam := reqTimeout
 	
 	Return responseObj
 }
 
 TradeFunc_ParsePoePricesInfoErrorCode(response, request) {
+	httpErrors := {"403":"Forbidden", "404":"Not Found", "504":"Gateway Timeout", "000":"Client disconnected"}
 	; https://docs.google.com/spreadsheets/d/1XwHk6FZwzRDxTbDraGkMy5sF0mfGJhCIzCmLSD66JO0/edit#gid=0
-	If (RegExMatch(response.added.retHeader, "i)(403|404)", errMatch)) {
+	If (RegExMatch(response.added.retHeader, "i)(403|404|504)", errMatch)) {
 		ShowToolTip("")
-		ShowTooltip("ERROR: Request to poeprices.info returned HTTP ERROR " errMatch1 "! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
+		errorDesc := " (" httpErrors[errMatch1] ")"
+		ShowTooltip("ERROR: Request to poeprices.info returned HTTP ERROR " errMatch1 errorDesc "! `n`nPlease take a look at the file ""temp\poeprices_log.txt"".")
+		TradeFunc_LogPoePricesRequest(response, request)
+		Return 0
+	}
+	Else If (RegExMatch(response.added.retHeader, "i)(000)", errMatch)) {
+		ShowToolTip("")
+		ShowTooltip("ERROR: Client disconnected before completing the request to poeprices.info.`nA possible cause is that the timeout was set too low (" response.added.timeoutParam "s) and may have to be increased! `n`nThis might be a temporary issue because of slow server responses.`nPlease report it anyway.")
 		TradeFunc_LogPoePricesRequest(response, request)
 		Return 0
 	}
@@ -4125,10 +4128,16 @@ TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	Gui, PredictedPricing:Add, Link, x245 y+12 cBlue BackgroundTrans, <a href="%_url%">Open on poeprices.info</a>
 	
 	Gui, PredictedPricing:Font, norm s8 italic c000000, Verdana	
-	Gui, PredictedPricing:Add, Text, BackgroundTrans x15 y+25 w390, % "You can disable this GUI in favour of a simple result tooltip. Settings menu -> under 'Search' group. Or even disable this predicted search entirely."
-	
+
+	If (StrLen(data.warning_msg)) {
+		Gui, PredictedPricing:Add, Text, x15 y+25 w380 cc14326 BackgroundTrans, % "poeprices warning message:"
+		Gui, PredictedPricing:Add, Text, x15 y+8 w380 cc14326 BackgroundTrans, % data.warning_msg
+	} Else {
+		Gui, PredictedPricing:Add, Text, x15 y+25 w380 BackgroundTrans, % ""
+	}
+
 	Gui, PredictedPricing:Font, bold s8 c000000, Verdana
-	Gui, PredictedPricing:Add, GroupBox, w400 h230 y+20 x10, Feedback
+	Gui, PredictedPricing:Add, GroupBox, w400 h230 y+10 x10, Feedback
 	Gui, PredictedPricing:Font, norm c000000, Verdana
 	
 	Gui, PredictedPricing:Add, Text, x20 yp+25 BackgroundTrans, You think the predicted price range is?
@@ -4153,9 +4162,7 @@ TradeFunc_ShowPredictedPricingFeedbackUI(data) {
 	Gui, PredictedPricing:Add, Text, x+5 yp+0 cBlack BackgroundTrans, % "or"
 	Gui, PredictedPricing:Add, Link, x+5 yp+0 cBlue BackgroundTrans, <a href="https://www.patreon.com/bePatron?u=5966037">Patreon</a>
 	
-	If (StrLen(data.warning_msg)) {
-		Gui, PredictedPricing:Add, Text, x20 yp+15 w380 cc14326 BackgroundTrans, % data.warning_msg
-	}
+	Gui, PredictedPricing:Add, Text, BackgroundTrans x15 y+10 w390, % "You can disable this GUI in favour of a simple result tooltip. Settings menu -> under 'Search' group. Or even disable this predicted search entirely."
 	
 	; invisible fields
 	Gui, PredictedPricing:Add, Edit, x+0 yp+0 w0 h0 ReadOnly vPredictedPricingEncodedData, % data.added.encodedData

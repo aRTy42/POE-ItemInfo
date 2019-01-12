@@ -9,6 +9,7 @@
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_CheckCorrectClientLanguage.ahk
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_CreateTempFolder.ahk
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_HandleUserSettings.ahk
+#Include, %A_ScriptDir%\..\..\lib\PoEScripts_CheckInvalidScriptFolder.ahk
 
 arguments := ""
 arg1 	= %1%
@@ -52,10 +53,7 @@ If (not PoEScripts_CheckCorrectClientLanguage()) {
 If (!PoEScripts_CreateTempFolder(scriptDir, projectName)) {
 	ExitApp
 }
-
-If (InStr(scriptDir, A_Desktop)) {
-	Msgbox, 0x1010, Invalid Installation Path, Executing PoE-TradeMacro from your Desktop (or any of its subfolders) may cause script errors, please choose a different directory.
-}
+PoEScripts_CheckInvalidScriptFolder(scriptDir, "PoE-TradeMacro")
 
 /*
 	Set some important variables

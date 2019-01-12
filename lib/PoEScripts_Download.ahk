@@ -21,14 +21,21 @@
 	curl		:= """" A_ScriptDir "\lib\curl.exe"" "	
 	headers	:= ""
 	cookies	:= ""
-	For key, val in ioHdr {
+	uAgent	:= ""
+
+	For key, val in ioHdr {		
 		val := Trim(RegExReplace(val, "i)(.*?)\s*:\s*(.*)", "$1:$2"))
+
 		If (RegExMatch(val, "i)^Cookie:(.*)", cookie)) {
 			cookies .= cookie1 " "		
 		}
+		If (RegExMatch(val, "i)^User-Agent:(.*)", ua)) {
+			uAgent := ua1 " "		
+		}
 	}
 	cookies := StrLen(cookies) ? "-b """ Trim(cookies) """ " : ""
-
+	uAgent := StrLen(uAgent) ? "-A """ Trim(uAgent) """ " : ""
+	
 	redirect := "L"
 	PreventErrorMsg := false
 	validateResponse := 1
@@ -94,16 +101,20 @@
 			}
 		}			
 		
-		If (StrLen(headers)) {
+;		If (StrLen(headers)) {
 			If (not requestType = "GET") {
 				commandData .= headers
-				commandHdr  .= headers	
-			}				
+				commandHdr  .= headers
+			}			
 			If (StrLen(cookies)) {
 				commandData .= cookies
 				commandHdr  .= cookies
 			}
-		}
+			If (StrLen(uAgent)) {
+				commandData .= uAgent
+				commandHdr  .= uAgent
+			}
+		;}
 		If (StrLen(ioData) and not requestType = "GET") {
 			If (requestType = "POST") {
 				commandData .= "-X POST "
@@ -122,6 +133,7 @@
 		}
 		; get data
 		html	:= StdOutStream(curl """" url """" commandData)
+		
 		;html := ReadConsoleOutputFromFile(curl """" url """" commandData, "commandData") ; alternative function
 		
 		If (returnCurl) {
@@ -143,7 +155,7 @@
 		} Else {
 			ioHdr := html
 		}
-		
+	;	msgbox % curl """" url """" commandData "`n`n" commandHdr
 		reqHeadersCurl := commandHdr
 	} Catch e {
 

@@ -66,10 +66,14 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 		downloadFile 		:= UrlParts[UrlParts.MaxIndex()] . ".zip"
 		downloadURL_zip 	:= "https://github.com/" . user . "/" . repo . "/archive/" . downloadFile
 		downloadURL_asset 	:= ""
+
 		If (LatestRelease.assets.MaxIndex()) {
 			For key, val in LatestRelease.assets {
 				If (InStr(val.content_type, "zip")) {
 					downloadURL_asset := val.browser_download_url
+					If (RegExMatch(val.browser_download_url, "i)" RegExReplace(LatestRelease.tag_name, "i)^v") "\.zip$")) {
+						Break
+					}
 				}
 			}
 		}
@@ -104,7 +108,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 			Gui, UpdateNotification:Color, ffffff, ffffff
 			Gui, UpdateNotification:Font,, Consolas
 
-			Gui, UpdateNotification:Add, GroupBox, w630 h80 cGreen, Update available!			
+			Gui, UpdateNotification:Add, GroupBox, w630 h80 cGreen, Update available!	
 			If (isPrerelease) {
 				Gui, UpdateNotification:Add, Text, x20 yp+20, Warning: This is a pre-release.
 				Gui, UpdateNotification:Add, Text, x20 y+10, Installed version:
@@ -118,7 +122,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 			Gui, UpdateNotification:Add, Text, x150 yp+0,  %currentLabel%	
 			
 			Gui, UpdateNotification:Add, Text, x20 y+0, Latest version:
-			
+
 			Gui, UpdateNotification:Add, Text, x150 yp+0,  %latestLabel%
 			Gui, UpdateNotification:Add, Link, x+20 yp+0 cBlue, <a href="%releaseURL%">Download it here</a>
 			Gui, UpdateNotification:Add, Button, x+20 yp-5 gUpdateScript, Update

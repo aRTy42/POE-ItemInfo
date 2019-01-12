@@ -156,7 +156,7 @@ Return
 AM_WhoisLastWhisper_HKey:
 	KeyWait, Ctrl							; Sends "/whois lastWhisperCharacterName" when keys are released (not when pressed).
 	KeyWait, Alt
-	SendInput {Enter}{Home}{Del}/whois{Space}{Enter}
+	SendInput ^{Enter}{Home}{Del}/whois{Space}{Enter}
 Return
 
 setAfkMessage(){
