@@ -8,6 +8,7 @@
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_CheckCorrectClientLanguage.ahk
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_CreateTempFolder.ahk
 #Include, %A_ScriptDir%\..\..\lib\PoEScripts_HandleUserSettings.ahk
+#Include, %A_ScriptDir%\..\..\lib\PoEScripts_CheckInvalidScriptFolder.ahk
 
 RunAsAdmin()
 arg1 	= %1%

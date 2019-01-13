@@ -1949,6 +1949,8 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	payLength	:= StrLen(postData)
 	url 		:= "http://poe.trade/search"
 	options	:= ""
+	options	.= "`n" "ReturnHeaders: append"
+	options	.= "`n" "TimeOut: " TradeOpts.CurlTimeout
 
 	reqHeaders	:= []
 	reqHeaders.push("Connection: keep-alive")
@@ -1967,13 +1969,28 @@ TradeFunc_DoPostRequest(payload, openSearchInBrowser = false) {
 	}
 
 	html := PoEScripts_Download(url, postData, reqHeaders, options, false)
-
+	
 	If (TradeOpts.Debug) {
 		FileDelete, %A_ScriptDir%\temp\DebugSearchOutput.html
 		FileAppend, %html%, %A_ScriptDir%\temp\DebugSearchOutput.html
 	}
 
 	Return, html
+}
+
+TradeFunc_ParseRequestErrors(response) {
+	RegExMatch(Trim(response), "i)'(\d{1,3})'$", httpCode)
+	response := RegExReplace(Trim(response), "i)(.*)('\d{1,3}')$", "$1")
+	
+	error := ""
+	If (httpCode1 = "000") {
+		error := "ERROR: Client disconnected before completing the request to poe.trade."
+		error .= "`n`n" "The timeout (currently " TradeOpts.CurlTimeout "s) may have to be increased."
+		error .= "`n" "You can do this in the settings menu -> ""TradeMacro"" tab."
+		error .=  "`n`n" "This might just be a temporary issue because of slow server responses."
+	}
+
+	Return error
 }
 
 TradeFunc_DoPoePricesRequest(RawItemData, ByRef retCurl) {
@@ -2189,6 +2206,8 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 
 	postData 	:= ""
 	options	:= ""
+	options	.= "`n" "ReturnHeaders: append"
+	options	.= "`n" "TimeOut: " TradeOpts.CurlTimeout
 
 	reqHeaders	:= []
 	If (StrLen(UserAgent)) {
@@ -2303,7 +2322,12 @@ TradeFunc_ParseCurrencyIDs(html) {
 TradeFunc_ParseCurrencyHtml(html, payload, ParsingError = "") {
 	Global Item, ItemData, TradeOpts
 	LeagueName := TradeGlobals.Get("LeagueName")
-
+	
+	httpError := TradeFunc_ParseRequestErrors(html)
+	If (httpError) {
+		Return httpError
+	}	
+	
 	If (StrLen(ParsingError)) {
 		Return, ParsingError
 	}
@@ -2502,9 +2526,9 @@ TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = "") {
 	Title := ""
 	error := 0
 
-	; loop over the first 99 results if possible, otherwise over as many as are available
+	; loop over the first 200 results if possible, otherwise over as many as are available
 	accounts := []
-	NoOfItemsToCount := 99
+	NoOfItemsToCount := 200
 	NoOfItemsSkipped := 0
 	While A_Index <= NoOfItemsToCount {
 		ItemBlock 	:= TradeUtils.HtmlParseItemData(html, "<tbody id=""item-container-" A_Index - 1 """(.*?)<\/tbody>", html)
@@ -2513,13 +2537,12 @@ TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = "") {
 		;ChaosValue 	:= TradeUtils.HtmlParseItemData(ItemBlock, "data-name=""price_in_chaos_new""(.*?)>")
 		Currency	 	:= TradeUtils.HtmlParseItemData(ItemBlock, "has-tip.*currency-(.*?)""", rest)
 		CurrencyV	 	:= TradeUtils.HtmlParseItemData(rest, ">(.*?)<", rest)
-		RegExMatch(CurrencyV, "i)\d+(\.|,?\d+)?", match)
-		CurrencyV		:= match
+		RegExMatch(CurrencyV, "i)(\d+((\.|,)\d{1,2})?|\d+)", match)
+		CurrencyV		:= match1
 
 		; skip multiple results from the same account
 		If (TradeOpts.RemoveMultipleListingsFromSameAccount) {
 			If (TradeUtils.IsInArray(AccountName, accounts)) {
-				NoOfItemsToShow := NoOfItemsToShow + 1
 				NoOfItemsSkipped := NoOfItemsSkipped + 1
 				continue
 			} Else {
@@ -2558,10 +2581,10 @@ TradeFunc_GetMeanMedianPrice(html, payload, ByRef errorMsg = "") {
 		errorMsg := "Couldn't find the chaos equiv. value for " error " item(s). Please report this."
 	}
 
-	; calculate average and median prices (truncated median, too)	
+	; calculate average and median prices (truncated median, too)
 	If (prices.MaxIndex() > 0) {
 		; average
-		average := average / (itemCount - 1)
+		average := average / (itemCount)
 		
 		; truncated mean
 		trimPercent := 20
@@ -2653,8 +2676,7 @@ TradeFunc_ParseHtmlToObj(html, payload, iLvl = "", ench = "", isItemAgeRequest =
 	; Target HTML Looks like the ff:
      ; <tbody id="item-container-97" class="item" data-seller="Jobo" data-sellerid="458008"
 	; data-buyout="15 chaos" data-ign="Lolipop_Slave" data-league="Essence" data-name="Tabula Rasa Simple Robe"
-	; data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">
-	
+	; data-tab="This is a buff" data-x="10" data-y="9"> <tr class="first-line">	
 
 	NoOfItemsToShow := TradeOpts.ShowItemResults
 	results := []
@@ -2752,7 +2774,13 @@ TradeFunc_ParseHtmlToObj(html, payload, iLvl = "", ench = "", isItemAgeRequest =
 
 ; Parse poe.trade html to display the search result tooltip with X listings
 TradeFunc_ParseHtml(html, payload, iLvl = "", ench = "", isItemAgeRequest = false, isAdvancedSearch = false) {
-	Global Item, ItemData, TradeOpts
+	Global Item, ItemData, TradeOpts	
+	
+	httpError := TradeFunc_ParseRequestErrors(html)
+	If (httpError) {
+		Return httpError
+	}
+
 	LeagueName := TradeGlobals.Get("LeagueName")
 
 	seperatorBig := "`n-----------------------------------------------------------------------`n"
@@ -5380,7 +5408,7 @@ ReadPoeNinjaCurrencyData:
 	file			:= A_ScriptDir . "\temp\currencyData.json"
 	fallBackDir	:= A_ScriptDir . "\data_trade"
 	url			:= "https://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
-	parsedJSON	:= CurrencyDataDowloadURLtoJSON(url, sampleValue, false, isFallback, league, "PoE-TradeMacro", file, fallBackDir, usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)
+	parsedJSON	:= CurrencyDataDownloadURLtoJSON(url, sampleValue, false, isFallback, league, "PoE-TradeMacro", file, fallBackDir, usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest, TradeOpts.CurlTimeout)
 	
 	; fallback to Standard and Hardcore league if used league seems to not be available
 	If (!parsedJSON.currencyDetails.length()) {
@@ -5394,8 +5422,8 @@ ReadPoeNinjaCurrencyData:
 		}
 
 		url			:= "https://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
-		parsedJSON	:= CurrencyDataDowloadURLtoJSON(url, sampleValue, true, isFallback, league, "PoE-TradeMacro", file, fallBackDir, usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)
-	}	
+		parsedJSON	:= CurrencyDataDownloadURLtoJSON(url, sampleValue, true, isFallback, league, "PoE-TradeMacro", file, fallBackDir, usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest, TradeOpts.CurlTimeout)
+	}
 	global CurrencyHistoryData := parsedJSON.lines
 	TradeGlobals.Set("LastAltCurrencyUpdate", A_NowUTC)
 	

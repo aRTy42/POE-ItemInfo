@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.12.5
+================================================================================================
+* Improved feedback for issues with poe.trade http requests.
+* Added a "Curl/HTTP request timeout" option. Increasing this timeout can help with issues related to requests taking too long (server issues).
+* Fixed a script run error for the standalone ItemInfo script.
+
 2.12.4
 ================================================================================================
 * Fixed an issue that broke most requests to poe.trade (except currency).

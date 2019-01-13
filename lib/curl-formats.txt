@@ -1,0 +1,19 @@
+\n    time_namelookup:  %{time_namelookup}s        The time it took from the start until the name resolving was completed.
+\n       time_connect:  %{time_connect}s        The time it took from the start until the TCP connect to the remote host (or proxy) was completed.
+\n    time_appconnect:  %{time_appconnect}s        The time it took from the start until the SSL/SSH/etc connect/handshake to the remote host was completed.
+\n   time_pretransfer:  %{time_pretransfer}s        The time it took from the start until the file transfer was just about to begin.
+\n      time_redirect:  %{time_redirect}s        The time it took for all redirection steps including name lookup, connect, pretransfer and transfer before the final transaction was started.
+\n time_starttransfer:  %{time_starttransfer}s        The time it took from the start until the first byte was just about to be transferred.
+\n                    ----------
+\n         time_total:  %{time_total}s        The total time, in seconds, that the full operation lasted.
+\n
+\n          http_code:  %{http_code}
+\n       http_connect:  %{http_connect}
+\n      num_redirects:  %{num_redirects}
+\n      size_download:  %{size_download}
+\n     speed_download:  %{speed_download} average bytes/s
+\n      url_effective:  %{url_effective}
+\n       content_type:  %{content_type}
+\n\n
+  https://curl.haxx.se/docs/manpage.html
+\n
