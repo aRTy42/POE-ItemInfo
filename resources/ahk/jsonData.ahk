@@ -3,8 +3,6 @@
 ; Data is available via global variables
 ; json scraped with https://github.com/Eruyome/scrapeVariableUniqueItems/
 
-#Include, %A_ScriptDir%\lib\JSON.ahk
-
 ; when using the fallback exe we're missing the parameters passed by the merge script and missed clearing the temp folder
 argumentIsMergedScript = %5%
 If (argumentIsMergedScript != "isMergedScript") {
@@ -13,35 +11,24 @@ If (argumentIsMergedScript != "isMergedScript") {
 }
 
 ; Parse the unique items data
-FileRead, JSONFile, %A_ScriptDir%\data_trade\uniques.json
-parsedJSON := JSON.Load(JSONFile)
-global TradeUniqueData := parsedJSON.uniques
+global TradeUniqueData := ReadJSONDataFromFile(A_ScriptDir "\data_trade\uniques.json", "uniques")
 
 ; Parse the unique relic items data
-FileRead, JSONFile, %A_ScriptDir%\data_trade\relics.json
-parsedJSON := JSON.Load(JSONFile)
-global TradeRelicData := parsedJSON.relics
+global TradeRelicData := ReadJSONDataFromFile(A_ScriptDir "\data_trade\relics.json", "relics")
 
 ; Parse the poe.trade mods
-FileRead, JSONFile, %A_ScriptDir%\data_trade\mods.json
-parsedJSON := JSON.Load(JSONFile)
-global TradeModsData := parsedJSON.mods
+global TradeModsData := ReadJSONDataFromFile(A_ScriptDir "\data_trade\mods.json", "mods")
 
 ; Parse currency names (in-game names mapped to poe.trade names)
-FileRead, JSONFile, %A_ScriptDir%\data_trade\currencyNames.json
-parsedJSON := JSON.Load(JSONFile)
-global TradeCurrencyNames := parsedJSON.currencyNames
+global TradeCurrencyNames := ReadJSONDataFromFile(A_ScriptDir "\data_trade\currencyNames.json", "currencyNames")
 
 ; Parse fallback currency IDs
-FileRead, JSONFile, %A_ScriptDir%\data_trade\currencyIDs_Fallback.json
-parsedJSON := JSON.Load(JSONFile)
-global TradeCurrencyIDsFallback := parsedJSON
+global TradeCurrencyIDsFallback := ReadJSONDataFromFile(A_ScriptDir "\data_trade\currencyIDs_Fallback.json")
 
 ; Parse the unique items data
-FileRead, JSONFile, %A_ScriptDir%\data_trade\currency_tags.json
-parsedJSON := JSON.Load(JSONFile)
-global TradeCurrencyTags := parsedJSON.tags
+global TradeCurrencyTags := ReadJSONDataFromFile(A_ScriptDir "\data_trade\currency_tags.json", "tags")
 
+SplashUI.SetSubMessage("Parsing leagues from GGGs API...")
 ; Download and parse the current leagues
 postData		:= ""
 reqHeaders	:= []
@@ -78,4 +65,48 @@ Try {
 } Catch error {
 	MsgBox, 16, PoE-TradeMacro - Error, %errorMsg%	
 	ExitApp
+}
+
+ReadJSONDataFromFile(filepath, key = "", critical = false) {
+	data := 
+	
+	failed := false
+	errorMsg := "Parsing the JSON data from the file """ filepath """ failed."
+	errorMsg .= "`n" ""
+	
+	Try {	
+		test := FileExist(filepath)
+		If (test) {
+			FileRead, JSONFile, %filepath%
+			parsedJSON := JSON.Load(JSONFile)
+			If (StrLen(key)) {
+				data := parsedJSON[key]
+			} Else {
+				data := parsedJSON
+			}
+		}
+		Else {
+			errorMsg .= "`n" "The file doesn't exist."
+			failed := true		
+		}
+	} Catch error {
+		errorMsg .= "`n" "The file may contain invalid JSON data which would mean that the file got ""broken."""
+		failed := true
+	}
+	
+	If (failed) {
+		If (not critical) {
+			errorMsg .= "`n`n" "You can continue running the script so that you can go to the settings" 
+			errorMsg .= "`n" "menu -> TradeMaco tab -> disable ""Download data files on start"" to make sure that this is not caused by a failed download."
+			errorMsg .= "`n`n" "You will have to use the data file from the original script download though to replace the missing/broken one."	
+		}		
+		errorMsg .= "`n`n" "Repeating the script start could solve this issue."
+		
+		MsgBox, 16, PoE-TradeMacro - Error, %errorMsg%	
+		If (critical) {
+			ExitApp
+		}
+	}
+
+	Return data
 }

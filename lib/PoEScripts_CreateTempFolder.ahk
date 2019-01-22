@@ -28,6 +28,7 @@
 			MsgBox, 5, %project%, % msg
 			IfMsgBox, Cancel
 			{
+				SplashUI.DestroyUI()
 				SplashTextOn, , 20, %project%, Exiting script...
 				Sleep, 2000
 				SplashTextOff

@@ -584,10 +584,6 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Item.UsedInSearch.iLvl.min := 35
 			Item.UsedInSearch.iLvl.max := 49
 		}
-		Else If (Item.MaxSockets = 5) {
-			RequestParams.ilevel_min := 35
-			Item.UsedInSearch.iLvl.min := 35
-		}
 		; is (no 1-hand or shield or unset ring or helmet or glove or boots) but is weapon or armor
 		Else If ((not Item.IsFourSocket and not Item.IsThreeSocket and not Item.IsSingleSocket) and (Item.IsWeapon or Item.IsArmour) and Item.Level < 35) {
 			RequestParams.ilevel_max := 34
@@ -734,6 +730,9 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Else If (Item.IsElderBase) {
 				RequestParams.Elder := 1
 			}
+		} Else {
+			RequestParams.Shaper := ""
+			RequestParams.Elder := ""
 		}
 
 		; abyssal sockets 
@@ -851,21 +850,26 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			}
 		}
 		
-		If (Item.IsShaperBase) {
-			RequestParams.Shaper := 1
-			Item.UsedInSearch.specialBase := "Shaper"
-		}
-		Else {		
-			RequestParams.Shaper := 0
-		}
-		
-		If (Item.IsElderBase) {
-			RequestParams.Elder := 1
-			Item.UsedInSearch.specialBase := "Elder"
-		}
-		Else {			
-			RequestParams.Elder := 0
-		}
+		If (isAdvancedPriceCheckRedirect and not TradeGlobals.Get("AdvancedPriceCheckItem").useSpecialBase) {
+			RequestParams.Shaper := ""
+			RequestParams.Elder := ""
+		} Else {
+			If (Item.IsShaperBase) {
+				RequestParams.Shaper := 1
+				Item.UsedInSearch.specialBase := "Shaper"
+			}
+			Else {		
+				RequestParams.Shaper := 0
+			}
+			
+			If (Item.IsElderBase) {
+				RequestParams.Elder := 1
+				Item.UsedInSearch.specialBase := "Elder"
+			}
+			Else {			
+				RequestParams.Elder := 0
+			}	
+		}		
 	} 
 	Else {
 		RequestParams.xtype := (Item.xtype) ? Item.xtype : Item.SubType
@@ -2177,6 +2181,7 @@ TradeFunc_DoCurrencyRequest(currencyName = "", openSearchInBrowser = false, init
 
 	If (init) {
 		Url := "http://currency.poe.trade/"
+		SplashUI.SetSubMessage("Looking up poe.trade currency IDs...")
 	}
 	Else {
 		LeagueName := TradeGlobals.Get("LeagueName")
@@ -5361,7 +5366,7 @@ Return
 
 TradeSettingsUI_BtnOK:
 	Global TradeOpts
-	Gui, Submit
+	Gui, SettingsUI:Submit
 	SavedTradeSettings := true
 	Sleep, 50
 	WriteTradeConfig()
@@ -5369,11 +5374,11 @@ TradeSettingsUI_BtnOK:
 Return
 
 TradeSettingsUI_BtnCancel:
-	Gui, Cancel
+	Gui, SettingsUI:Cancel
 Return
 
 TradeSettingsUI_BtnDefaults:
-	Gui, Cancel
+	Gui, SettingsUI:Cancel
 	Sleep, 75
 	ReadTradeConfig(A_ScriptDir "\resources\default_UserFiles")
 	Sleep, 75
@@ -5652,7 +5657,7 @@ TradeFunc_ChangeLeague() {
 
 	NewSearchLeague := (next) ? next : first
 	; Call Submit for the settings UI, otherwise we can't set the new league if the UI was last closed via close button or "x"
-	Gui, Submit
+	Gui, SettingsUI:Submit
 	SearchLeague := TradeFunc_CheckIfLeagueIsActive(NewSearchLeague)
 	TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[SearchLeague])
 	WriteTradeConfig()

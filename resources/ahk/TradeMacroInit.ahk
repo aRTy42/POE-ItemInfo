@@ -4,15 +4,18 @@
 #NoEnv ; Recommended for performance and compatibility with future AutoHotkey releases.
 #Persistent ; Stay open in background
 
+;#Warn, ALL, OutputDebug
+;#Warn, UseUnsetGlobal, Off
+;#Warn, UseUnsetLocal, Off
+
 SetWorkingDir, %A_ScriptDir%
 
-#Include, %A_ScriptDir%\lib\JSON.ahk				; https://autohotkey.com/boards/viewtopic.php?f=6&t=53
+;#Include, %A_ScriptDir%\lib\JSON.ahk				; https://autohotkey.com/boards/viewtopic.php?f=6&t=53
 #Include, %A_ScriptDir%\lib\Class_Console.ahk		; Console https://autohotkey.com/boards/viewtopic.php?f=6&t=2116
-#Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
+;#Include, %A_ScriptDir%\lib\DebugPrintArray.ahk
 #Include, %A_ScriptDir%\lib\AssociatedProgram.ahk
-#Include, %A_ScriptDir%\lib\EasyIni.ahk
+;#Include, %A_ScriptDir%\lib\EasyIni.ahk
 #Include, %A_ScriptDir%\lib\ConvertKeyToKeyCode.ahk
-#Include, %A_ScriptDir%\resources\ahk\jsonData.ahk
 #Include, %A_ScriptDir%\resources\VersionTrade.txt
 
 TradeMsgWrongAHKVersion := "AutoHotkey v" . TradeAHKVersionRequired . " or later is needed to run this script. `n`nYou are using AutoHotkey v" . A_AhkVersion . " (installed at: " . A_AhkPath . ")`n`nPlease go to http://ahkscript.org to download the most recent version."
@@ -36,8 +39,10 @@ Menu, Tray, Add, Open Wiki/FAQ, OpenGithubWikiFromMenu
 
 argumentSkipSplash = %6%
 If (not argumentSkipSplash) {
-	TradeFunc_StartSplashScreen()
+	TradeFunc_StartSplashScreen(TradeReleaseVersion)
 }
+SplashUI.SetSubMessage("Parsing data files...")
+#Include, %A_ScriptDir%\resources\ahk\jsonData.ahk
 
 class TradeGlobals {
 	Set(name, value) {
@@ -65,6 +70,7 @@ global SavedTradeSettings := false
 ; 	TradeOpts_New := class_EasyIni(A_ScriptDir "\resources\default_UserFiles\config_trade.ini")
 ; }
 
+SplashUI.SetSubMessage("Reading PoE-TradeMacro config...")
 TradeOpts_New := class_EasyIni(A_ScriptDir "\resources\default_UserFiles\config_trade.ini")
 MakeOldTradeOptsAndVars(TradeOpts_New)
 
@@ -99,7 +105,7 @@ If (!StrLen(argumentProjectName) > 0) {
 	fallbackExeMsg .= "`n`nThis version can possibly cause issues that you wouldn't have with the normal script though."
 	fallbackExeMsg .= "`n`nUse ""Run_TradeMacro.ahk"" if possible and try it before reporting any issues!"
 	fallbackExeMsg .= "`n`n(closes after 10s)..."
-	SplashTextOff
+	SplashUI.DestroyUI()
 	MsgBox, 0x1030, PoE-TradeMacro Fallback, % fallbackExeMsg, 10
 	
 	argumentProjectName		:= "PoE-TradeMacro"
@@ -506,6 +512,7 @@ TradeFunc_GetTempLeagueDates(ltype = "") {
 
 ;----------------------- Handle available script updates ---------------------------------------
 TradeFunc_ScriptUpdate() {
+	SplashUI.SetSubMessage("Checking for script updates...")
 	If (firstUpdateCheck) {
 		ShowUpdateNotification := TradeOpts.ShowUpdateNotifications
 	} Else {
@@ -530,306 +537,307 @@ CreateTradeSettingsUI()
 	}
 
 	StringTrimRight, TabNames, TabNames, 1
-	Gui, Add, Tab3, Choose1 h660 x0, %TabNames%
+	Gui, SettingsUI:Add, Tab3, Choose1 h660 x0, %TabNames%
+	Gui, SettingsUI:Default
 	
-	topGroupBoxYPos := "y53"
+	topGroupBoxYPos := "y51"
 	
 	/* 
 		General
 	*/
 
-	GuiAddGroupBox("[TradeMacro] General", "x7 y+7 w310 h410")
+	GuiAddGroupBox("[TradeMacro] General", "x7 y+5 w310 h410", "", "", "", "", "SettingsUI")
 
     ; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 
-	GuiAddText("Show Items:", "x17 yp+28 w230 h20 0x0100", "LblShowItemResults", "LblShowItemResultsH")
+	GuiAddText("Show Items:", "x17 yp+28 w230 h20 0x0100", "LblShowItemResults", "LblShowItemResultsH", "", "", "SettingsUI")
 	AddToolTip(LblShowItemResultsH, "Number of items displayed in search results.")
-	GuiAddEdit(TradeOpts.ShowItemResults, "x+10 yp-2 w50 h20", "ShowItemResults", "ShowItemResultsH")
+	GuiAddEdit(TradeOpts.ShowItemResults, "x+10 yp-2 w50 h20", "ShowItemResults", "ShowItemResultsH", "", "", "SettingsUI")
 
-	GuiAddCheckbox("Show Account Name", "x17 yp+24 w260 h30", TradeOpts.ShowAccountName, "ShowAccountName", "ShowAccountNameH")
+	GuiAddCheckbox("Show Account Name", "x17 yp+24 w260 h30", TradeOpts.ShowAccountName, "ShowAccountName", "ShowAccountNameH", "", "","SettingsUI")
 	AddToolTip(ShowAccountNameH, "Show sellers account name in search results tooltip.")
 
-	GuiAddCheckbox("Update: Show Notifications", "x17 yp+30 w260 h30", TradeOpts.ShowUpdateNotifications, "ShowUpdateNotifications", "ShowUpdateNotificationsH")
+	GuiAddCheckbox("Update: Show Notifications", "x17 yp+30 w260 h30", TradeOpts.ShowUpdateNotifications, "ShowUpdateNotifications", "ShowUpdateNotificationsH", "", "", "SettingsUI")
 	AddToolTip(ShowUpdateNotificationsH, "Notifies you when there's a new release available.")
 
-	GuiAddCheckbox("Update: Skip folder selection", "x17 yp+30 w260 h30", TradeOpts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+	GuiAddCheckbox("Update: Skip folder selection", "x17 yp+30 w260 h30", TradeOpts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH", "", "", "SettingsUI")
 	AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")
 
-	GuiAddCheckbox("Update: Skip backup", "x17 yp+30 w260 h30", TradeOpts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+	GuiAddCheckbox("Update: Skip backup", "x17 yp+30 w260 h30", TradeOpts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH", "", "", "SettingsUI")
 	AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
 
-	GuiAddCheckbox("Open browser Win10 fix", "x17 yp+30 w260 h30", TradeOpts.OpenWithDefaultWin10Fix, "OpenWithDefaultWin10Fix", "OpenWithDefaultWin10FixH")
+	GuiAddCheckbox("Open browser Win10 fix", "x17 yp+30 w260 h30", TradeOpts.OpenWithDefaultWin10Fix, "OpenWithDefaultWin10Fix", "OpenWithDefaultWin10FixH", "", "", "SettingsUI")
 	AddToolTip(OpenWithDefaultWin10FixH, " If your PC always asks you what program to use to open`n the wiki-link, enable this to let ahk find your default`nprogram from the registry.")
 
-	GuiAddText("Browser Path:", "x17 yp+35 w100 h20 0x0100", "LblBrowserPath", "LblBrowserPathH")
+	GuiAddText("Browser Path:", "x17 yp+35 w100 h20 0x0100", "LblBrowserPath", "LblBrowserPathH", "", "", "SettingsUI")
 	AddToolTip(LblBrowserPathH, "Optional: Set the path to the browser (.exe) to open Urls with.")
-	GuiAddEdit(TradeOpts.BrowserPath, "x+10 yp-2 w180 h20", "BrowserPath", "BrowserPathH")
+	GuiAddEdit(TradeOpts.BrowserPath, "x+10 yp-2 w180 h20", "BrowserPath", "BrowserPathH", "", "", "SettingsUI")
 
-	GuiAddCheckbox("Copy urls to clipboard.", "x17 yp+23 w260 h30", TradeOpts.CopyUrlToClipboard, "CopyUrlToClipboard", "CopyUrlToClipboardH")
+	GuiAddCheckbox("Copy urls to clipboard.", "x17 yp+23 w260 h30", TradeOpts.CopyUrlToClipboard, "CopyUrlToClipboard", "CopyUrlToClipboardH", "", "", "SettingsUI")
 	AddToolTip(CopyUrlToClipboardH, "Copies urls to your clipboard instead of directly opening them.")
 
-	GuiAddCheckbox("Enable ""Url shortcuts"" without item hover.", "x17 yp+30 w260 h30", TradeOpts.OpenUrlsOnEmptyItem, "OpenUrlsOnEmptyItem", "OpenUrlsOnEmptyItemH")
+	GuiAddCheckbox("Enable ""Url shortcuts"" without item hover.", "x17 yp+30 w260 h30", TradeOpts.OpenUrlsOnEmptyItem, "OpenUrlsOnEmptyItem", "OpenUrlsOnEmptyItemH", "", "", "SettingsUI")
 	AddToolTip(OpenUrlsOnEmptyItemH, "This enables the ctrl+q and ctrl+w shortcuts`neven without hovering over an item.`nBe careful!")
 
-	GuiAddCheckbox("Download Data Files on start", "x17 yp+30 w260 h30", TradeOpts.DownloadDataFiles, "DownloadDataFiles", "DownloadDataFilesH")
+	GuiAddCheckbox("Download Data Files on start", "x17 yp+30 w260 h30", TradeOpts.DownloadDataFiles, "DownloadDataFiles", "DownloadDataFilesH", "", "", "SettingsUI")
 	AddToolTip(DownloadDataFilesH, "Downloads all data files (mods, enchantments etc) on every script start.`nBy disabling this, these files are only updated with new releases.`nDisabling is not recommended.")
 
-	GuiAddCheckbox("Delete cookies on start", "x17 yp+30 w210 h30", TradeOpts.DeleteCookies, "DeleteCookies", "DeleteCookiesH")
+	GuiAddCheckbox("Delete cookies on start", "x17 yp+30 w210 h30", TradeOpts.DeleteCookies, "DeleteCookies", "DeleteCookiesH", "", "", "SettingsUI")
 	AddToolTip(DeleteCookiesH, "Delete Internet Explorer cookies.`nThe default option (all) is preferred.`n`nThis will be skipped if no cookies are needed to access poe.trade.")
-	GuiAddDropDownList("All|poe.trade", "x+10 yp+4 w70", TradeOpts.CookieSelect, "CookieSelect", "CookieSelectH")
+	GuiAddDropDownList("All|poe.trade", "x+10 yp+4 w70", TradeOpts.CookieSelect, "CookieSelect", "CookieSelectH", "", "", "SettingsUI")
 
-	GuiAddCheckbox("Use poedb.tw instead of the wiki.", "x17 yp+27 w260 h30 0x0100", TradeOpts.WikiAlternative, "WikiAlternative", "WikiAlternativeH")
+	GuiAddCheckbox("Use poedb.tw instead of the wiki.", "x17 yp+27 w260 h30 0x0100", TradeOpts.WikiAlternative, "WikiAlternative", "WikiAlternativeH", "", "", "SettingsUI")
 	AddToolTip(WikiAlternativeH, "Use poedb.tw to open a page with information`nabout your item/item base.")
 
-	GuiAddText("Curl/HTTP request timeout (s):", "x17 yp+33 w230 h20 0x0100", "LblCurlTimeout", "LblCurlTimeoutH")
+	GuiAddText("Curl/HTTP request timeout (s):", "x17 yp+33 w230 h20 0x0100", "LblCurlTimeout", "LblCurlTimeoutH", "", "", "SettingsUI")
 	AddToolTip(LblCurlTimeoutH, "This is the default timeout (seconds) used for HTTP requests to trade sites and APIs.`n`nRequests taking longer than this will be aborted.")
-	GuiAddEdit(TradeOpts.CurlTimeout, "x+10 yp-2 w50 h20 Number", "CurlTimeout", "CurlTimeoutH")
+	GuiAddEdit(TradeOpts.CurlTimeout, "x+10 yp-2 w50 h20 Number", "CurlTimeout", "CurlTimeoutH", "", "", "SettingsUI")
 
 	/* 
 		Search
 	*/
 
-	GuiAddGroupBox("[TradeMacro] Search", "x327 " topGroupBoxYPos " w310 h625")
+	GuiAddGroupBox("[TradeMacro] Search", "x327 " topGroupBoxYPos " w310 h625", "", "", "", "", "SettingsUI")
 	
 	; league section
-	GuiAddText("League:", "x337 yp+28 w160 h20 0x0100", "LblSearchLeague", "LblSearchLeagueH")
+	GuiAddText("League:", "x337 yp+28 w160 h20 0x0100", "LblSearchLeague", "LblSearchLeagueH", "", "", "SettingsUI")
 	AddToolTip(LblSearchLeagueH, """TmpStandard"" = current softcore challenge league.`n""TmpHardcore"" = current hardcore challenge league.`n`nDefaults are ""Standard"" and ""TempStandard"" depending on league availability.")
 	
-	GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-15 yp+0 w15 h-1 0x0100", "LeagueInfo", "LeagueInfoH", "")
+	GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-15 yp+0 w15 h-1 0x0100", "LeagueInfo", "LeagueInfoH", "", "", "SettingsUI")
 	
 	LeagueList := TradeFunc_GetDelimitedLeagueList()
-	GuiAddDropDownList(LeagueList, "x+10 yp-4", TradeOpts.SearchLeague, "SearchLeague", "SearchLeagueH")
+	GuiAddDropDownList(LeagueList, "x+10 yp-4", TradeOpts.SearchLeague, "SearchLeague", "SearchLeagueH", "", "", "SettingsUI")
 	AddToolTip(SearchLeagueH, """TmpStandard"" = current softcore challenge league.`n""TmpHardcore"" = current hardcore challenge league.`n`nDefaults are ""Standard"" and ""TempStandard"" depending on league availability.")
 	; league section end
 
-	GuiAddText("Account Name:", "x337 yp+34 w160 h20 0x0100", "LblAccountName", "LblAccountNameH")
+	GuiAddText("Account Name:", "x337 yp+34 w160 h20 0x0100", "LblAccountName", "LblAccountNameH", "", "", "SettingsUI")
 	AddToolTip(LblAccountNameH, "Your Account Name used to check your item's age.")
-	GuiAddEdit(TradeOpts.AccountName, "x+10 yp-2 w120 h20", "AccountName", "AccountNameH")
+	GuiAddEdit(TradeOpts.AccountName, "x+10 yp-2 w120 h20", "AccountName", "AccountNameH", "", "", "SettingsUI")
 	
 	; gem section start
-	GuiAddText("Gem Lvl:", "x337 yp+32 w54 h20 0x0100", "LblGemLevel", "LblGemLevelH")
+	GuiAddText("Gem Lvl:", "x337 yp+32 w54 h20 0x0100", "LblGemLevel", "LblGemLevelH", "", "", "SettingsUI")
 	AddToolTip(LblGemLevelH, "Gem level is ignored in the search unless it's equal`nor higher than this value.`n`nSet to something like 30 to completely ignore the level.")
-	GuiAddEdit(TradeOpts.GemLevel, "x+1 yp-2 w33 h20", "GemLevel", "GemLevelH")
+	GuiAddEdit(TradeOpts.GemLevel, "x+1 yp-2 w33 h20", "GemLevel", "GemLevelH", "", "", "SettingsUI")
 
-	GuiAddText("Lvl Range:", "x+5 yp+2 w63 h20 0x0100", "LblGemLevelRange", "LblGemLevelRangeH")
+	GuiAddText("Lvl Range:", "x+5 yp+2 w63 h20 0x0100", "LblGemLevelRange", "LblGemLevelRangeH", "", "", "SettingsUI")
 	AddToolTip(LblGemLevelRangeH, "Uses Gem level option to create a range around it.`n `nSetting it to 0 ignores this option.")
-	GuiAddEdit(TradeOpts.GemLevelRange, "x+1 yp-2 w33 h20", "GemLevelRange", "GemLevelRangeH")
+	GuiAddEdit(TradeOpts.GemLevelRange, "x+1 yp-2 w33 h20", "GemLevelRange", "GemLevelRangeH", "", "", "SettingsUI")
 
-	GuiAddText("Q. Range:", "x+5 yp+2 w62 h20 0x0100", "LblGemQualityRange", "LblGemQualityRangeH")
+	GuiAddText("Q. Range:", "x+5 yp+2 w62 h20 0x0100", "LblGemQualityRange", "LblGemQualityRangeH", "", "","SettingsUI")
 	AddToolTip(LblGemQualityRangeH, "Use this to set a range to quality Gem searches. For example a range of 1`n searches 14% - 16% when you have a 15% Quality Gem.`nSetting it to 0 (default) uses your Gems quality as min_quality`nwithout max_quality in your search.")
-	GuiAddEdit(TradeOpts.GemQualityRange, "x+1 yp-2 w33 h20", "GemQualityRange", "GemQualityRangeH")
+	GuiAddEdit(TradeOpts.GemQualityRange, "x+1 yp-2 w33 h20", "GemQualityRange", "GemQualityRangeH", "", "", "SettingsUI")
 	; gem section end
 	
 	; gem xp section start
-	GuiAddCheckbox("Use Gem XP", "x337 yp+24 w100 h30 0x0100", TradeOpts.UseGemXP, "UseGemXP", "UseGemXPH")
+	GuiAddCheckbox("Use Gem XP", "x337 yp+24 w100 h30 0x0100", TradeOpts.UseGemXP, "UseGemXP", "UseGemXPH", "", "", "SettingsUI")
 	AddToolTip(UseGemXP, "Use gem experience in the search.`n`nWorks for gems with a level of 19 and higher or`nEnhance, Empower and Enlighten.")
 	
-	GuiAddText("Gem XP threshold:", "x467 yp+8 w115 h20 0x0100", "LblGemXPThreshold", "LblGemXPThresholdH")
+	GuiAddText("Gem XP threshold:", "x467 yp+8 w115 h20 0x0100", "LblGemXPThreshold", "LblGemXPThresholdH", "", "", "SettingsUI")
 	AddToolTip(LblGemXPThresholdH, "Gem experience won't be used in the search if`nlower than this value.")
-	GuiAddEdit(TradeOpts.GemXPThreshold, "x+10 yp-2 w35 h20", "GemXPThreshold", "GemXPThresholdH")
+	GuiAddEdit(TradeOpts.GemXPThreshold, "x+10 yp-2 w35 h20", "GemXPThreshold", "GemXPThresholdH", "", "", "SettingsUI")
 	; gem xp section end
 
-	GuiAddText("Mod Range Modifier (%):", "x337 yp+32 w190 h20 0x0100", "LblAdvancedSearchModValueRange", "LblAdvancedSearchModValueRangeH")
+	GuiAddText("Mod Range Modifier (%):", "x337 yp+32 w190 h20 0x0100", "LblAdvancedSearchModValueRange", "LblAdvancedSearchModValueRangeH", "", "", "SettingsUI")
 	AddToolTip(LblAdvancedSearchModValueRangeH, "Advanced search lets you select the items mods to include in your`nsearch and lets you set their min/max values.`n`nThese min/max values are pre-filled, to calculate them we look at`nthe difference between the mods theoretical max and min value and`ntreat it as 100%.`n`nWe then use this modifier as a percentage of this differences to`ncreate a range (min/max value) to search in. ")
-	GuiAddEdit(TradeOpts.AdvancedSearchModValueRangeMin, "x+10 yp-2 w35 h20", "AdvancedSearchModValueRangeMin", "AdvancedSearchModValueRangeMinH")
-	GuiAddText(" -", "x+5 yp+2 w10 h20 0x0100", "LblAdvancedSearchModValueRangeSpacer", "LblAdvancedSearchModValueRangeSpacerH")
-	GuiAddEdit(TradeOpts.AdvancedSearchModValueRangeMax, "x+5 yp-2 w35 h20", "AdvancedSearchModValueRangeMax", "AdvancedSearchModValueRangeMaxH")
+	GuiAddEdit(TradeOpts.AdvancedSearchModValueRangeMin, "x+10 yp-2 w35 h20", "AdvancedSearchModValueRangeMin", "AdvancedSearchModValueRangeMinH", "", "", "SettingsUI")
+	GuiAddText(" -", "x+5 yp+2 w10 h20 0x0100", "LblAdvancedSearchModValueRangeSpacer", "LblAdvancedSearchModValueRangeSpacerH", "", "", "SettingsUI")
+	GuiAddEdit(TradeOpts.AdvancedSearchModValueRangeMax, "x+5 yp-2 w35 h20", "AdvancedSearchModValueRangeMax", "AdvancedSearchModValueRangeMaxH", "", "", "SettingsUI")
 
-	GuiAddText("Corrupted:", "x337 yp+32 w150 h20 0x0100", "LblCorrupted", "LblCorruptedH")
+	GuiAddText("Corrupted:", "x337 yp+32 w150 h20 0x0100", "LblCorrupted", "LblCorruptedH", "", "", "SettingsUI")
 	AddToolTip(LblCorruptedH, "Default = search results have the same corrupted state as the checked item.`nUse this option to override that and always search as selected.")
-	GuiAddDropDownList("Either|Yes|No", "x+10 yp-4 w52", TradeOpts.Corrupted, "Corrupted", "CorruptedH")
-	GuiAddCheckbox("Override", "x+10 yp+4 0x0100", TradeOpts.CorruptedOverride, "CorruptedOverride", "CorruptedOverrideH", "TradeSettingsUI_ChkCorruptedOverride")
+	GuiAddDropDownList("Either|Yes|No", "x+10 yp-4 w52", TradeOpts.Corrupted, "Corrupted", "CorruptedH", "", "", "SettingsUI")
+	GuiAddCheckbox("Override", "x+10 yp+4 0x0100", TradeOpts.CorruptedOverride, "CorruptedOverride", "CorruptedOverrideH", "TradeSettingsUI_ChkCorruptedOverride", "", "SettingsUI")
 
 	GoSub, TradeSettingsUI_ChkCorruptedOverride
 
 	CurrencyList := TradeFunc_GetDelimitedCurrencyListString()
-	GuiAddText("Currency Search:", "x337 yp+30 w160 h20 0x0100", "LblCurrencySearchHave", "LblCurrencySearchHaveH")
+	GuiAddText("Currency Search:", "x337 yp+30 w160 h20 0x0100", "LblCurrencySearchHave", "LblCurrencySearchHaveH", "", "", "SettingsUI")
 	AddToolTip(LblCurrencySearchHaveH, "This settings sets the currency that you`nwant to use as ""have"" for the currency search.")
-	GuiAddDropDownList(CurrencyList, "x+10 yp-4", TradeOpts.CurrencySearchHave, "CurrencySearchHave", "CurrencySearchHaveH")
+	GuiAddDropDownList(CurrencyList, "x+10 yp-4", TradeOpts.CurrencySearchHave, "CurrencySearchHave", "CurrencySearchHaveH", "", "", "SettingsUI")
 
-	GuiAddText("Secondary Currency:", "x337 yp+30 w160 h20 0x0100", "LblCurrencySearchHave2", "LblCurrencySearchHave2H")
+	GuiAddText("Secondary Currency:", "x337 yp+30 w160 h20 0x0100", "LblCurrencySearchHave2", "LblCurrencySearchHave2H", "", "", "SettingsUI")
 	AddToolTip(LblCurrencySearchHave2H, "This setting sets the currency that you`nwant to use as ""have"" when searching for`nthe above selected currency.")
-	GuiAddDropDownList(CurrencyList, "x+10 yp-4", TradeOpts.CurrencySearchHave2, "CurrencySearchHave2", "CurrencySearchHave2H")
+	GuiAddDropDownList(CurrencyList, "x+10 yp-4", TradeOpts.CurrencySearchHave2, "CurrencySearchHave2", "CurrencySearchHave2H", "", "", "SettingsUI")
 
 	; option group start
-	GuiAddCheckbox("Use the ""exact currency"" option.", "x337 yp+27 w280 h20", TradeOpts.ExactCurrencySearch, "ExactCurrencySearch", "ExactCurrencySearchH")
+	GuiAddCheckbox("Use the ""exact currency"" option.", "x337 yp+27 w280 h20", TradeOpts.ExactCurrencySearch, "ExactCurrencySearch", "ExactCurrencySearchH", "", "", "SettingsUI")
 	AddToolTip(ExactCurrencySearchH, "Searches for exact currencies, will ignore results not listed as these.`nOnly applicable to searches using poe.trade.`n`nUses the selected currencies from the ""Currency Search"" and ""Secondary Search"" option.`nSecondary currency will be used for a second search if no results are found.")
 	
 	; option group start
-	GuiAddCheckbox("Show prices as chaos equivalent.", "x337 yp+25 w280 h20", TradeOpts.ShowPricesAsChaosEquiv, "ShowPricesAsChaosEquiv", "ShowPricesAsChaosEquivH")
+	GuiAddCheckbox("Show prices as chaos equivalent.", "x337 yp+25 w280 h20", TradeOpts.ShowPricesAsChaosEquiv, "ShowPricesAsChaosEquiv", "ShowPricesAsChaosEquivH", "", "", "SettingsUI")
 	AddToolTip(ShowPricesAsChaosEquivH, "Shows all prices as their chaos equivalent.")
 
 	; option group start
-	GuiAddCheckbox("Online only", "x337 yp+25 w145 h20 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH")
+	GuiAddCheckbox("Online only", "x337 yp+25 w145 h20 0x0100", TradeOpts.OnlineOnly, "OnlineOnly", "OnlineOnlyH", "", "", "SettingsUI")
 
-	GuiAddCheckbox("Buyout only", "x482 yp0 w145 h20 0x0100", TradeOpts.BuyoutOnly, "BuyoutOnly", "BuyoutOnlyH")
+	GuiAddCheckbox("Buyout only", "x482 yp0 w145 h20 0x0100", TradeOpts.BuyoutOnly, "BuyoutOnly", "BuyoutOnlyH", "", "", "SettingsUI")
 	AddToolTip(BuyoutOnlyH, "This option only takes affect when opening the search on poe.trade.")
 
 	; option group start
-	GuiAddCheckbox("Force max links (certain corrupted items).", "x337 yp+25 w280 h20", TradeOpts.ForceMaxLinks, "ForceMaxLinks", "ForceMaxLinksH")
+	GuiAddCheckbox("Force max links (certain corrupted items).", "x337 yp+25 w280 h20", TradeOpts.ForceMaxLinks, "ForceMaxLinks", "ForceMaxLinksH", "", "", "SettingsUI")
 	AddToolTip(ForceMaxLinksH, "Searches for corrupted 3/4 max-socket unique items always use`nthe maximum amount of links if your item is fully linked.")
 	
 	; option group start
-	GuiAddCheckbox("Remove multiple Listings from same Account.", "x337 yp+25 w280 h20", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH")
+	GuiAddCheckbox("Remove multiple Listings from same Account.", "x337 yp+25 w280 h20", TradeOpts.RemoveMultipleListingsFromSameAccount, "RemoveMultipleListingsFromSameAccount", "RemoveMultipleListingsFromSameAccountH", "", "", "SettingsUI")
 	AddToolTip(RemoveMultipleListingsFromSameAccountH, "Removes multiple listings from the same account from`nyour search results (to combat market manipulators).`n`nThe removed items are also removed from the average and`nmedian price calculations.")
 	
 	; option group start
-	GuiAddCheckbox("Alternative currency search.", "x337 yp+25 w280 h20", TradeOpts.AlternativeCurrencySearch, "AlternativeCurrencySearch", "AlternativeCurrencySearchH")
+	GuiAddCheckbox("Alternative currency search.", "x337 yp+25 w280 h20", TradeOpts.AlternativeCurrencySearch, "AlternativeCurrencySearch", "AlternativeCurrencySearchH", "", "", "SettingsUI")
 	AddToolTip(AlternativeCurrencySearchH, "Shows historical data of the searched currency.`nProvided by poe.ninja.")
 	
 	; option group start
-	GuiAddCheckbox("Open items on poe.ninja.", "x337 yp+25 w280 h20", TradeOpts.PoENinjaSearch, "PoENinjaSearch", "PoENinjaSearchH")
+	GuiAddCheckbox("Open items on poe.ninja.", "x337 yp+25 w280 h20", TradeOpts.PoENinjaSearch, "PoENinjaSearch", "PoENinjaSearchH", "", "", "SettingsUI")
 	AddToolTip(PoENinjaSearchH, "Opens items on poe.ninja instead of poe.trade when using the ""Search (poe.trade)"" hotkey.`n`nOnly works on certain supported item types:`nDiv cards, prophecies, maps, uniques, essences, helmet enchants (have priority over item).")
 	
 	; option group start
-	GuiAddCheckbox("Use predicted pricing.", "x337 yp+25 w145 h20", TradeOpts.UsePredictedItemPricing, "UsePredictedItemPricing", "UsePredictedItemPricingH")
+	GuiAddCheckbox("Use predicted pricing.", "x337 yp+25 w145 h20", TradeOpts.UsePredictedItemPricing, "UsePredictedItemPricing", "UsePredictedItemPricingH", "", "", "SettingsUI")
 	AddToolTip(UsePredictedItemPricingH, "Use predicted item pricing via machine-learning algorithms.`nReplaces the default search, works with magic/rare/unique items.`n`nProvided by poeprices.info.")
 
 	; option group start
-	GuiAddCheckbox("Use feedback Gui.", "x482 yp+0 w120 h20", TradeOpts.UsePredictedItemPricingGui, "UsePredictedItemPricingGui", "UsePredictedItemPricingGuiH")
+	GuiAddCheckbox("Use feedback Gui.", "x482 yp+0 w120 h20", TradeOpts.UsePredictedItemPricingGui, "UsePredictedItemPricingGui", "UsePredictedItemPricingGuiH", "", "", "SettingsUI")
 	AddToolTip(UsePredictedItemPricingGuiH, "Use a Gui instead of the default tooltip to display results.`nYou can send some feedback to improve this feature.")
 
 	; option group start
-	GuiAddCheckbox("Include search parameter via edit field focus.", "x337 yp+25 w280 h20", TradeOpts.IncludeSearchParamByFocus, "IncludeSearchParamByFocus", "IncludeSearchParamByFocusH")
+	GuiAddCheckbox("Include search parameter via edit field focus.", "x337 yp+25 w280 h20", TradeOpts.IncludeSearchParamByFocus, "IncludeSearchParamByFocus", "IncludeSearchParamByFocusH", "", "", "SettingsUI")
 	AddToolTip(IncludeSearchParamByFocusH, "Checks a search parameters (mod/stat line) checkbox to include it in the`nadvanced search when any of its edit fields gets focus.")
 
 
 	; header
-	GuiAddText("Pre-Select Options (Advanced Search)", "x337 yp+35 w280 h20 0x0100 cDA4F49", "", "")
-	GuiAddText("-------------------------------------------------------------", "x337 yp+6 w280 h20 0x0100 cDA4F49", "", "")
+	GuiAddText("Pre-Select Options (Advanced Search)", "x337 yp+35 w280 h20 0x0100 cDA4F49", "", "", "", "", "SettingsUI")
+	GuiAddText("-------------------------------------------------------------", "x337 yp+6 w280 h20 0x0100 cDA4F49", "", "", "", "", "SettingsUI")
 
 	; option group start
-	GuiAddCheckbox("Pre-Fill Min-Values", "x337 yp+16 w145 h20", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH")
+	GuiAddCheckbox("Pre-Fill Min-Values", "x337 yp+16 w145 h20", TradeOpts.PrefillMinValue, "PrefillMinValue", "PrefillMinValueH", "", "", "SettingsUI")
 	AddToolTip(PrefillMinValueH, "Automatically fill the min-values in the advanced search GUI.")
 
-	GuiAddCheckbox("Pre-Fill Max-Values", "x482 yp0 w145 h20", TradeOpts.PrefillMaxValue, "PrefillMaxValue", "PrefillMaxValueH")
+	GuiAddCheckbox("Pre-Fill Max-Values", "x482 yp0 w145 h20", TradeOpts.PrefillMaxValue, "PrefillMaxValue", "PrefillMaxValueH", "", "", "SettingsUI")
 	AddToolTip(PrefillMaxValueH, "Automatically fill the max-values in the advanced search GUI.")
 
 	; option group start
-	GuiAddCheckbox("Normal mods", "x337 yp+20 w135 h20", TradeOpts.AdvancedSearchCheckMods, "AdvancedSearchCheckMods", "AdvancedSearchCheckModsH")
+	GuiAddCheckbox("Normal mods", "x337 yp+20 w135 h20", TradeOpts.AdvancedSearchCheckMods, "AdvancedSearchCheckMods", "AdvancedSearchCheckModsH", "", "", "SettingsUI")
 	AddToolTip(AdvancedSearchCheckModsH, "Selects all normal mods (no pseudo mods)`nwhen creating the advanced search GUI.")
 
-	GuiAddCheckbox("Total Ele Resistances", "x482 yp0 w145 h20", TradeOpts.AdvancedSearchCheckTotalEleRes, "AdvancedSearchCheckTotalEleRes", "AdvancedSearchCheckTotalEleResH")
+	GuiAddCheckbox("Total Ele Resistances", "x482 yp0 w145 h20", TradeOpts.AdvancedSearchCheckTotalEleRes, "AdvancedSearchCheckTotalEleRes", "AdvancedSearchCheckTotalEleResH", "", "", "SettingsUI")
 	AddToolTip(AdvancedSearchCheckTotalEleResH, "Selects the total elemental resistances pseudo mod`nwhen creating the advanced search GUI.")
 
 	; option group start
-	GuiAddCheckbox("Life", "x337 yp+20 w50 h20", TradeOpts.AdvancedSearchCheckTotalLife, "AdvancedSearchCheckTotalLife", "AdvancedSearchCheckTotalLifeH")
+	GuiAddCheckbox("Life", "x337 yp+20 w50 h20", TradeOpts.AdvancedSearchCheckTotalLife, "AdvancedSearchCheckTotalLife", "AdvancedSearchCheckTotalLifeH", "", "", "SettingsUI")
 	AddToolTip(AdvancedSearchCheckTotalLifeH, "Selects the total flat life pseudo mod or flat life mod and`n percent maximum increased life mod when creating the advanced search GUI.")
 
-	GuiAddCheckbox("ES Mod", "x390 yp0 w60 h20", TradeOpts.AdvancedSearchCheckES, "AdvancedSearchCheckES", "AdvancedSearchCheckESH")
+	GuiAddCheckbox("ES Mod", "x390 yp0 w60 h20", TradeOpts.AdvancedSearchCheckES, "AdvancedSearchCheckES", "AdvancedSearchCheckESH", "", "", "SettingsUI")
 	AddToolTip(AdvancedSearchCheckESH, "Selects the flat energy shield mod and percent maximum increased `nenergy shield mod when creating the advanced search GUI.")
 
-	GuiAddCheckbox("ES Defense Total", "x482 yp0 w135 h20", TradeOpts.AdvancedSearchCheckTotalES, "AdvancedSearchCheckTotalES", "AdvancedSearchCheckTotalESH")
+	GuiAddCheckbox("ES Defense Total", "x482 yp0 w135 h20", TradeOpts.AdvancedSearchCheckTotalES, "AdvancedSearchCheckTotalES", "AdvancedSearchCheckTotalESH", "", "", "SettingsUI")
 	AddToolTip(AdvancedSearchCheckTotalESH, "Selects the energy shield total defense, for example on `narmour pieces when creating the advanced search GUI.")
 
 	; option group start
-	GuiAddCheckbox("Elemental DPS", "x337 yp+20 w135 h20", TradeOpts.AdvancedSearchCheckEDPS, "AdvancedSearchCheckEDPS", "AdvancedSearchCheckEDPSH")
+	GuiAddCheckbox("Elemental DPS", "x337 yp+20 w135 h20", TradeOpts.AdvancedSearchCheckEDPS, "AdvancedSearchCheckEDPS", "AdvancedSearchCheckEDPSH", "", "", "SettingsUI")
 	AddToolTip(AdvancedSearchCheckEDPSH, "Selects elemental damage per second`nwhen creating the advanced search GUI.")
 
-	GuiAddCheckbox("Physical DPS", "x482 yp0 w135 h20", TradeOpts.AdvancedSearchCheckPDPS, "AdvancedSearchCheckPDPS", "AdvancedSearchCheckPDPSH")
+	GuiAddCheckbox("Physical DPS", "x482 yp0 w135 h20", TradeOpts.AdvancedSearchCheckPDPS, "AdvancedSearchCheckPDPS", "AdvancedSearchCheckPDPSH", "", "", "SettingsUI")
 	AddToolTip(AdvancedSearchCheckPDPSH, "Selects physical damage per second`nwhen creating the advanced search GUI.")
 
 	; option group start
-	GuiAddCheckbox("Minimum Item Level", "x337 yp+20 w135 h20", TradeOpts.AdvancedSearchCheckILVL, "AdvancedSearchCheckILVL", "AdvancedSearchCheckILVLH")
+	GuiAddCheckbox("Minimum Item Level", "x337 yp+20 w135 h20", TradeOpts.AdvancedSearchCheckILVL, "AdvancedSearchCheckILVL", "AdvancedSearchCheckILVLH", "", "", "SettingsUI")
 	AddToolTip(AdvancedSearchCheckILVLH, "Selects the items itemlevel as minimum itemlevel`nwhen creating the advanced search GUI.")
 
-	GuiAddCheckbox("Item Base", "x482 yp0 w135 h20", TradeOpts.AdvancedSearchCheckBase, "AdvancedSearchCheckBase", "AdvancedSearchCheckBaseH")
+	GuiAddCheckbox("Item Base", "x482 yp0 w135 h20", TradeOpts.AdvancedSearchCheckBase, "AdvancedSearchCheckBase", "AdvancedSearchCheckBaseH", "", "", "SettingsUI")
 	AddToolTip(AdvancedSearchCheckBaseH, "Selects the item base`nwhen creating the advanced search GUI.")
 
-	;Gui, Add, Link, x337 yp+43 w280 cBlue BackgroundTrans, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
+	;Gui, SettingsUI:Add, Link, x337 yp+43 w280 cBlue BackgroundTrans, <a href="https://github.com/POE-TradeMacro/POE-TradeMacro/wiki/Options">Options Wiki-Page</a>
 
 	/* 
 		Hotkeys 
 	*/
 
-	GuiAddGroupBox("[TradeMacro] Hotkeys", "x647 " topGroupBoxYPos " w310 h295")
+	GuiAddGroupBox("[TradeMacro] Hotkeys", "x647 " topGroupBoxYPos " w310 h295", "", "", "", "", "SettingsUI")
 
-	GuiAddCheckbox("Price Check:", "x657 yp+26 w165 h20 0x0100", TradeOpts.PriceCheckEnabled, "PriceCheckEnabled", "PriceCheckEnabledH")
+	GuiAddCheckbox("Price Check:", "x657 yp+26 w165 h20 0x0100", TradeOpts.PriceCheckEnabled, "PriceCheckEnabled", "PriceCheckEnabledH", "", "", "SettingsUI")
 	AddToolTip(PriceCheckEnabledH, "Check item prices.")
-	GuiAddHotkey(TradeOpts.PriceCheckHotKey, "x+1 yp-2 w124 h20", "PriceCheckHotKey", "PriceCheckHotKeyH")
+	GuiAddHotkey(TradeOpts.PriceCheckHotKey, "x+1 yp-2 w124 h20", "PriceCheckHotKey", "PriceCheckHotKeyH", "", "", "SettingsUI")
 	AddToolTip(PriceCheckHotKeyH, "Press key/key combination.`nDefault: ctrl + d")
 
-	GuiAddCheckbox("Advanced Price Check:", "x657 yp+32 w165 h20 0x010", TradeOpts.AdvancedPriceCheckEnabled, "AdvancedPriceCheckEnabled", "AdvancedPriceCheckEnabledH")
+	GuiAddCheckbox("Advanced Price Check:", "x657 yp+32 w165 h20 0x010", TradeOpts.AdvancedPriceCheckEnabled, "AdvancedPriceCheckEnabled", "AdvancedPriceCheckEnabledH", "", "", "SettingsUI")
 	AddToolTip(AdvancedPriceCheckEnabledH, "Select mods to include in your search`nbefore checking prices.")
-	GuiAddHotkey(TradeOpts.AdvancedPriceCheckHotKey, "x+1 yp-2 w124 h20", "AdvancedPriceCheckHotKey", "AdvancedPriceCheckHotKeyH")
+	GuiAddHotkey(TradeOpts.AdvancedPriceCheckHotKey, "x+1 yp-2 w124 h20", "AdvancedPriceCheckHotKey", "AdvancedPriceCheckHotKeyH", "", "", "SettingsUI")
 	AddToolTip(AdvancedPriceCheckHotKeyH, "Press key/key combination.`nDefault: ctrl + alt + d")
 
-	GuiAddCheckbox("Custom Search:", "x657 yp+32 w165 h20 0x0100", TradeOpts.CustomInputSearchEnabled, "CustomInputSearchEnabled", "CustomInputSearchEnabledH")
+	GuiAddCheckbox("Custom Search:", "x657 yp+32 w165 h20 0x0100", TradeOpts.CustomInputSearchEnabled, "CustomInputSearchEnabled", "CustomInputSearchEnabledH", "", "", "SettingsUI")
 	AddToolTip(CustomInputSearchEnabledH, "Custom text input search.")	
-	GuiAddHotkey(TradeOpts.CustomInputSearchHotKey, "x+1 yp-2 w124 h20", "CustomInputSearchHotKey", "CustomInputSearchHotKeyH")
+	GuiAddHotkey(TradeOpts.CustomInputSearchHotKey, "x+1 yp-2 w124 h20", "CustomInputSearchHotKey", "CustomInputSearchHotKeyH", "", "", "SettingsUI")
 	AddToolTip(CustomInputSearchHotKeyH, "Press key/key combination.`nDefault: ctrl + i")
 
-	GuiAddCheckbox("Search (poe.trade):", "x657 yp+32 w165 h20 0x0100", TradeOpts.OpenSearchOnPoeTradeEnabled, "OpenSearchOnPoeTradeEnabled", "OpenSearchOnPoeTradeEnabledH")
+	GuiAddCheckbox("Search (poe.trade):", "x657 yp+32 w165 h20 0x0100", TradeOpts.OpenSearchOnPoeTradeEnabled, "OpenSearchOnPoeTradeEnabled", "OpenSearchOnPoeTradeEnabledH", "", "", "SettingsUI")
 	AddToolTip(OpenSearchOnPoeTradeEnabledH, "Open your search on poe.trade instead of showing`na tooltip with results.")
-	GuiAddHotkey(TradeOpts.OpenSearchOnPoeTradeHotKey, "x+1 yp-2 w124 h20", "OpenSearchOnPoeTradeHotKey", "OpenSearchOnPoeTradeHotKeyH")
+	GuiAddHotkey(TradeOpts.OpenSearchOnPoeTradeHotKey, "x+1 yp-2 w124 h20", "OpenSearchOnPoeTradeHotKey", "OpenSearchOnPoeTradeHotKeyH", "", "", "SettingsUI")
 	AddToolTip(OpenSearchOnPoeTradeHotKeyH, "Press key/key combination.`nDefault: ctrl + q")
 
-	GuiAddCheckbox("Search (poeapp.com):", "x657 yp+32 w165 h20 0x0100", TradeOpts.OpenSearchOnPoEAppEnabled, "OpenSearchOnPoEAppEnabled", "OpenSearchOnPoEAppEnabledH")
+	GuiAddCheckbox("Search (poeapp.com):", "x657 yp+32 w165 h20 0x0100", TradeOpts.OpenSearchOnPoEAppEnabled, "OpenSearchOnPoEAppEnabled", "OpenSearchOnPoEAppEnabledH", "", "", "SettingsUI")
 	AddToolTip(OpenSearchOnPoEAppEnabledH, "Open your search on poeapp.com instead of showing`na tooltip with results.")
-	GuiAddHotkey(TradeOpts.OpenSearchOnPoEAppHotKey, "x+1 yp-2 w124 h20", "OpenSearchOnPoEAppHotKey", "OpenSearchOnPoEAppHotKeyH")
+	GuiAddHotkey(TradeOpts.OpenSearchOnPoEAppHotKey, "x+1 yp-2 w124 h20", "OpenSearchOnPoEAppHotKey", "OpenSearchOnPoEAppHotKeyH", "", "", "SettingsUI")
 	AddToolTip(OpenSearchOnPoEAppHotKeyH, "Press key/key combination.`nDefault: ctrl + shift + q")
 
-	GuiAddCheckbox("Open Item (Wiki):", "x657 yp+32 w165 h20 0x0100", TradeOpts.OpenWikiEnabled, "OpenWikiEnabled", "OpenWikiEnabledH")
+	GuiAddCheckbox("Open Item (Wiki):", "x657 yp+32 w165 h20 0x0100", TradeOpts.OpenWikiEnabled, "OpenWikiEnabled", "OpenWikiEnabledH", "", "", "SettingsUI")
 	AddToolTip(OpenWikiEnabledH, "Open your items page on the PoE-Wiki.")
-	GuiAddHotkey(TradeOpts.OpenWikiHotKey, "x+1 yp-2 w124 h20", "OpenWikiHotKey", "OpenWikiHotKeyH")
+	GuiAddHotkey(TradeOpts.OpenWikiHotKey, "x+1 yp-2 w124 h20", "OpenWikiHotKey", "OpenWikiHotKeyH", "", "", "SettingsUI")
 	AddToolTip(OpenWikiHotKeyH, "Press key/key combination.`nDefault: ctrl + w")
 
-	GuiAddCheckbox("Show Item Age:", "x657 yp+32 w165 h20 0x010", TradeOpts.ShowItemAgeEnabled, "ShowItemAgeEnabled", "ShowItemAgeEnabledH")
+	GuiAddCheckbox("Show Item Age:", "x657 yp+32 w165 h20 0x010", TradeOpts.ShowItemAgeEnabled, "ShowItemAgeEnabled", "ShowItemAgeEnabledH", "", "", "SettingsUI")
 	AddToolTip(ShowItemAgeEnabledH, "Checks your item's age.")
-	GuiAddHotkey(TradeOpts.ShowItemAgeHotkey, "x+1 yp-2 w124 h20", "ShowItemAgeHotkey", "ShowItemAgeHotkeyH")
+	GuiAddHotkey(TradeOpts.ShowItemAgeHotkey, "x+1 yp-2 w124 h20", "ShowItemAgeHotkey", "ShowItemAgeHotkeyH", "", "", "SettingsUI")
 	AddToolTip(ShowItemAgeHotkeyH, "Press key/key combination.`nDefault: ctrl + e")
 	
-	GuiAddCheckbox("Change League:", "x657 yp+32 w165 h20 0x0100", TradeOpts.ChangeLeagueEnabled, "ChangeLeagueEnabled", "ChangeLeagueEnabledH")
+	GuiAddCheckbox("Change League:", "x657 yp+32 w165 h20 0x0100", TradeOpts.ChangeLeagueEnabled, "ChangeLeagueEnabled", "ChangeLeagueEnabledH", "", "", "SettingsUI")
 	AddToolTip(ChangeLeagueEnabledH, "Changes the league you're searching for the item in.")
-	GuiAddHotkey(TradeOpts.ChangeLeagueHotkey, "x+1 yp-2 w124 h20", "ChangeLeagueHotkey", "ChangeLeagueHotkeyH")
+	GuiAddHotkey(TradeOpts.ChangeLeagueHotkey, "x+1 yp-2 w124 h20", "ChangeLeagueHotkey", "ChangeLeagueHotkeyH", "", "", "SettingsUI")
 	AddToolTip(ChangeLeagueHotkeyH, "Press key/key combination.`nDefault: ctrl + l")
 	
-	GuiAddCheckbox("Get currency ratio note:", "x657 yp+32 w165 h20 0x0100", TradeOpts.SetCurrencyRatio, "SetCurrencyRatio", "SetCurrencyRatioH")
+	GuiAddCheckbox("Get currency ratio note:", "x657 yp+32 w165 h20 0x0100", TradeOpts.SetCurrencyRatio, "SetCurrencyRatio", "SetCurrencyRatioH", "", "", "SettingsUI")
 	AddToolTip(SetCurrencyRatioH, "Copies an item note for premium tabs to your clipboard`nthat creates a valid currency ratio on all trade sites.")
-	GuiAddHotkey(TradeOpts.SetCurrencyRatioHotkey, "x+1 yp-2 w124 h20", "SetCurrencyRatioHotkey", "SetCurrencyRatioHotkeyH")
+	GuiAddHotkey(TradeOpts.SetCurrencyRatioHotkey, "x+1 yp-2 w124 h20", "SetCurrencyRatioHotkey", "SetCurrencyRatioHotkeyH", "", "", "SettingsUI")
 	AddToolTip(SetCurrencyRatioHotkeyH, "Press key/key combination.`nDefault: alt + r")
 
-	Gui, Add, Link, x657 yp+35 w210 h20 cBlue BackgroundTrans, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
+	Gui, SettingsUI:Add, Link, x657 yp+35 w210 h20 cBlue BackgroundTrans, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>
 
 	/* 
 		Cookies
 	*/
 
-	GuiAddGroupBox("[TradeMacro] Manual cookie selection", "x647 yp+40 w310 h160")
+	GuiAddGroupBox("[TradeMacro] Manual cookie selection", "x647 yp+40 w310 h160", "", "", "", "", "")
 
-	GuiAddCheckbox("Overwrite automatic cookie retrieval.", "x657 yp+20 w250 h30", TradeOpts.UseManualCookies, "UseManualCookies", "UseManualCookiesH")
+	GuiAddCheckbox("Overwrite automatic cookie retrieval.", "x657 yp+20 w250 h30", TradeOpts.UseManualCookies, "UseManualCookies", "UseManualCookiesH", "", "", "SettingsUI")
 	AddToolTip(UseManualCookiesH, "Use your own cookies instead of automatically retrieving`nthem from Internet Explorer.")
 
-	GuiAddText("User-Agent:", "x657 yp+32 w120 h20 0x0100", "LblUserAgent", "LblUserAgentH")
+	GuiAddText("User-Agent:", "x657 yp+32 w120 h20 0x0100", "LblUserAgent", "LblUserAgentH", "", "", "SettingsUI")
 	AddToolTip(LblUserAgentH, "Your browsers user-agent. See 'How to'.")
-	GuiAddEdit(TradeOpts.UserAgent, "x+10 yp-2 w160 h20", "UserAgent", "UserAgentH")
+	GuiAddEdit(TradeOpts.UserAgent, "x+10 yp-2 w160 h20", "UserAgent", "UserAgentH", "", "", "SettingsUI")
 
-	GuiAddText("__cfduid:", "x657 yp+30 w120 h20 0x0100", "LblCfdUid", "LblCfdUidH")
+	GuiAddText("__cfduid:", "x657 yp+30 w120 h20 0x0100", "LblCfdUid", "LblCfdUidH", "", "", "SettingsUI")
 	AddToolTip(LblCfdUidH, "'__cfduid' cookie. See 'How to'.")
-	GuiAddEdit(TradeOpts.CfdUid, "x+10 yp-2 w160 h20", "CfdUid", "CfdUidH")
+	GuiAddEdit(TradeOpts.CfdUid, "x+10 yp-2 w160 h20", "CfdUid", "CfdUidH", "", "", "SettingsUI")
 
-	GuiAddText("cf_clearance:", "x657 yp+30 w120 h20 0x0100", "LblCfClearance", "LblCfClearanceH")
+	GuiAddText("cf_clearance:", "x657 yp+30 w120 h20 0x0100", "LblCfClearance", "LblCfClearanceH", "", "", "SettingsUI")
 	AddToolTip(LblCfClearanceH, "'cf_clearance' cookie. See 'How to'.")
-	GuiAddEdit(TradeOpts.CfClearance, "x+10 yp-2 w160 h20", "CfClearance", "CfClearanceH")
+	GuiAddEdit(TradeOpts.CfClearance, "x+10 yp-2 w160 h20", "CfClearance", "CfClearanceH", "", "", "SettingsUI")
 
-	Gui, Add, Link, x657 yp+28 w210 h20 cBlue BackgroundTrans, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Cookie-retrieval">How to</a>
+	Gui, SettingsUI:Add, Link, x657 yp+28 w210 h20 cBlue BackgroundTrans, <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/wiki/Cookie-retrieval">How to</a>
 	
 	/* 
 		Buttons
 	*/
 	
-	GuiAddText("Mouse over settings to see a detailed description.", "x657 yp+40 w300 h30")
+	GuiAddText("Mouse over settings to see a detailed description.", "x657 yp+40 w300 h30", "", "", "", "", "SettingsUI")
 
-	GuiAddCheckbox("Debug Output", "x657 yp+13 w100 h25", TradeOpts.Debug, "Debug", "DebugH")
+	GuiAddCheckbox("Debug Output", "x657 yp+13 w100 h25", TradeOpts.Debug, "Debug", "DebugH", "", "", "SettingsUI")
 	AddToolTip(DebugH, "Don't use this unless you're developing!")
 
-	GuiAddButton("Defaults", "x659 y+10 w90 h23", "TradeSettingsUI_BtnDefaults")
-	GuiAddButton("Ok", "Default x+5 yp+0 w90 h23", "TradeSettingsUI_BtnOK")
-	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "TradeSettingsUI_BtnCancel")
+	GuiAddButton("Defaults", "x659 y+10 w90 h23", "TradeSettingsUI_BtnDefaults", "", "", "", "SettingsUI")
+	GuiAddButton("Ok", "Default x+5 yp+0 w90 h23", "TradeSettingsUI_BtnOK", "", "", "", "SettingsUI")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "TradeSettingsUI_BtnCancel", "", "", "", "SettingsUI")
 
-	GuiAddText("Use these buttons to change TradeMacro settings (ItemInfo has it's own buttons).", "x657 y+10 w300 h50 cRed")
+	GuiAddText("Use these buttons to change TradeMacro settings (ItemInfo has it's own buttons).", "x657 y+10 w300 h50 cRed", "", "", "", "", "SettingsUI")
 
-	Gui, Tab, 2
+	Gui, SettingsUI:Tab, 2
 }
 
 TradeFunc_GetDelimitedLeagueList() {
@@ -851,7 +859,7 @@ TradeFunc_GetDelimitedCurrencyListString() {
 	CurrencyList := ""
 	CurrencyTemp := TradeGlobals.Get("CurrencyIDs")
 	CurrencyTemp := TradeCurrencyNames.eng
-
+	
 	For currName, currID in CurrencyTemp {
 		name := RegExReplace(currName,  "i)_", " ")
 		; only use real currency items here
@@ -1039,7 +1047,9 @@ TradeFunc_ParseSearchFormOptions() {
 	FileDelete, %A_ScriptDir%\temp\poe_trade_search_form_options.txt
 }
 
-TradeFunc_DownloadDataFiles() {
+TradeFunc_DownloadDataFiles() {	
+	SplashUI.SetSubMessage("Downloading latest data files from github...")
+	
 	; disabled while using debug mode
 	owner	:= TradeGlobals.Get("GithubUser", "POE-TradeMacro")
 	repo 	:= TradeGlobals.Get("GithubRepo", "POE-TradeMacro")
@@ -1077,6 +1087,7 @@ TradeFunc_DownloadDataFiles() {
 }
 
 TradeFunc_CheckIfCloudFlareBypassNeeded() {
+	SplashUI.SetSubMessage("Testing connection to poe.trade...")
 	; call this function without parameters to access poe.trade without cookies
 	; if it succeeds we don't need any cookies
 	If (!TradeFunc_TestCloudflareBypass("http://poe.trade", "", "", "", false, "PreventErrorMsg")) {
@@ -1086,7 +1097,7 @@ TradeFunc_CheckIfCloudFlareBypassNeeded() {
 
 TradeFunc_ReadCookieData() {
 	If (!TradeOpts.UseManualCookies) {
-		SplashTextOn, 500, 40, PoE-TradeMacro, Reading user-agent and cookies from poe.trade, this can take`na few seconds if your Internet Explorer doesn't have the cookies cached.
+		SplashUI.SetSubMessage("Reading user-agent and cookies from poe.trade, this can take`na few seconds if your Internet Explorer doesn't have the cookies cached.")
 
 		If (TradeOpts.DeleteCookies) {
 			TradeFunc_ClearWebHistory()
@@ -1207,7 +1218,7 @@ TradeFunc_ReadCookieData() {
 		}
 	}
 
-	SplashTextOff
+	SplashUI.DestroyUI()
 	If (CookieErrorLevel or BypassFailed or CompiledExeNotFound) {
 		; collect debug information
 		ScriptVersion	:= TradeGlobals.Get("ReleaseVersion")
@@ -1454,7 +1465,7 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 		Return 1
 	}
 	Else If (appendedCode1 = "000") {
-		SplashTextOff
+		SplashUI.DestroyUI()		
 		msg := "Test request to poe.trade timed out (was aborted by the client). You can continue the script but you may experience issues when making any search requests."
 		msg .= "`n`n" "This is most likely caused by poe.trade server issues."
 		msg .= "`n`n" "You can change the timout for these requests (currently " TradeOpts.CurlTimeout "s) in the settings menu -> ""TradeMacro"" tab -> ""General"" section."
@@ -1473,7 +1484,7 @@ TradeFunc_TestCloudflareBypass(Url, UserAgent="", cfduid="", cfClearance="", use
 }
 
 TradeFunc_HandleConnectionFailure(authHeaders, returnedHeaders, url = "") {
-	SplashTextOff
+	SplashUI.DestroyUI()
 	Gui, ConnectionFailure:Add, Text, x10 cRed, Request to %url% using cookies failed!
 	text := "You can continue to run PoE-TradeMacro with limited functionality.`nThe only searches that will work are the ones`ndirectly openend in your browser."
 	Gui, ConnectionFailure:Add, Text, , % text
@@ -1549,18 +1560,19 @@ TradeFunc_GetOSInfo() {
 }
 
 ;----------------------- SplashScreens ---------------------------------------
-TradeFunc_StartSplashScreen() {
+TradeFunc_StartSplashScreen(TradeReleaseVersion) {
 	/*
 	initArray := ["Initializing script...", "Preparing Einhars welcoming party...", "Uninstalling Battle.net...", "Investigating the so-called ""Immortals""...", "Starting mobile app..."
 		, "Hunting some old friends...", "Interrogating Master Krillson about fishing secrets...", "Trying to open Voricis chest...", "Setting up lab carries for the other 99%..."
 		, "Helping Alva discover the Jungle Hideout...", "Conning EngineeringEternity with the Atlas City Shuffle...", "Vendoring stat-sticks..."]
 	*/	
-		
+
 	initArray := ["Initializing script...", "Preparing Einhars welcoming party...", "Uninstalling Battle.net...", "Investigating the so-called ""Immortals""..."
 		, "Hunting some old friends...", "Setting up lab carries for the other 99%...", "Msg @ScourgeOfTheImmortals to share new map hideouts with me."]
 
 	Random, randomNum, 1, initArray.MaxIndex()
-	SplashTextOn, 430, 20, PoE-TradeMacro, % initArray[randomNum]
+	
+	global SplashUI := new SplashUI("on", "PoE-TradeMacro", initArray[randomNum], "", TradeReleaseVersion, A_ScriptDir "\resources\images\greydot.png")
 }
 
 TradeFunc_FinishTMInit(argumentMergeScriptPath) {	
@@ -1570,7 +1582,7 @@ TradeFunc_FinishTMInit(argumentMergeScriptPath) {
 	WinClose, %argumentMergeScriptPath% ahk_class AutoHotkey
 	WinKill, %argumentMergeScriptPath% ahk_class AutoHotkey
 	
-	; SplashText gets disabled by ItemInfo
+	; SplashScreen gets disabled by ItemInfo
 	If (TradeOpts.Debug) {
 		Menu, Tray, Add ; Separator
 		Menu, Tray, Add, Test Item Pricing, DebugTestItemPricing
@@ -1588,7 +1600,7 @@ TradeFunc_FinishTMInit(argumentMergeScriptPath) {
 			console.log("Fetching gem names failed.")
 		}
 	}
-
+	
      ; Let timer run until ItemInfos global settings are set to overwrite them.
 	SetTimer, OverwriteSettingsWidthTimer, 250
 	SetTimer, OverwriteSettingsHeightTimer, 250
@@ -1596,6 +1608,7 @@ TradeFunc_FinishTMInit(argumentMergeScriptPath) {
 	SetTimer, OverwriteSettingsNameTimer, 250
 	SetTimer, ChangeScriptListsTimer, 250
 	SetTimer, OverwriteUpdateOptionsTimer, 250
+	SplashUI.SetSubMessage("Fetching currency data for currently selected league...")
 	GoSub, ReadPoeNinjaCurrencyData
 	GoSub, TrackUserCount
 }

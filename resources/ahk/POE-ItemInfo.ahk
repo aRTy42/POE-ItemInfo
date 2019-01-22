@@ -23,6 +23,7 @@ GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExi
 #Include, %A_ScriptDir%\lib\ConvertKeyToKeyCode.ahk
 #Include, %A_ScriptDir%\lib\Class_GdipTooltip.ahk
 #Include, %A_ScriptDir%\lib\Class_ColorPicker.ahk
+#Include, %A_ScriptDir%\lib\Class_SplashUI.ahk
 #Include, %A_ScriptDir%\lib\AdvancedHotkey.ahk
 IfNotExist, %A_ScriptDir%\temp
 FileCreateDir, %A_ScriptDir%\temp
@@ -228,11 +229,11 @@ class Fonts {
 		{
 			Options .= "s" FontSize_
 		}		
-		Gui Font, %Options%, Arial
-		Gui Font, %Options%, Tahoma
-		Gui Font, %Options%, Segoe UI
-		Gui Font, %Options%, Verdana
-		Gui Add, Text, HwndHidden h0 w0 x0 y0,
+		Gui, SettingsUI:Font, %Options%, Arial
+		Gui, SettingsUI:Font, %Options%, Tahoma
+		Gui, SettingsUI: Font, %Options%, Segoe UI
+		Gui, SettingsUI: Font, %Options%, Verdana
+		Gui, SettingsUI: Add, Text, HwndHidden h0 w0 x0 y0,
 		SendMessage, 0x31,,,, ahk_id %Hidden%
 		return ErrorLevel
 	}
@@ -478,6 +479,7 @@ Sleep, 100
 ; "SkipItemInfoUpdateCall" should be set outside by other scripts.
 global firstUpdateCheck := true
 If (!SkipItemInfoUpdateCall) {
+	global SplashUI := new SplashUI("on", "PoE-ItemInfo", "Initializing PoE-ItemInfo...", "", ReleaseVersion, A_ScriptDir "\resources\images\greydot.png")
 	GoSub, CheckForUpdates
 }
 firstUpdateCheck := false
@@ -487,6 +489,7 @@ If (StrLen(overwrittenUserFiles)) {
 	ShowChangedUserFiles()
 }
 GoSub, AM_AssignHotkeys
+SplashUI.SetSubMessage("Fetching currency data from poe.ninja for all leagues...")
 GoSub, FetchCurrencyData
 GoSub, InitGDITooltip
 
@@ -498,6 +501,7 @@ GoSub, InitGDITooltip
 If (false) {
 	global currentLocale := ""
 	_Debug := true
+	SplashUI.SetSubMessage("Downloading language files...")
 	global translationData := PoEScripts_DownloadLanguageFiles(currentLocale, false, "PoE-ItemInfo", "Updating and parsing language files...", _Debug)
 }
 
@@ -541,7 +545,7 @@ If (Opts.Lutbot_CheckScript) {
 	SetTimer, StartLutbot, 2000
 }
 
-SplashTextOff	; init finished
+SplashUI.DestroyUI() ; init finished
 
 ; ----------------------------------------------------------- Functions and Labels ----------------------------------------------------------------
 
@@ -9680,7 +9684,8 @@ CreateSettingsUI()
 {
 	Global
 	
-	Gui, Color, ffffff, ffffff
+	Gui, SettingsUI:Color, ffffff, ffffff
+	Gui, SettingsUI:Default
 
 	; ItemInfo is not included in other scripts
 	If (not SkipItemInfoUpdateCall) {
@@ -9693,145 +9698,145 @@ CreateSettingsUI()
 		}
 
 		StringTrimRight, TabNames, TabNames, 1
-		Gui, Add, Tab3, Choose1 h660 x0, %TabNames%
+		Gui, SettingsUI:Add, Tab3, Choose1 h660 x0, %TabNames%
 	}
 	
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 	
 	generalHeight := SkipItemInfoUpdateCall ? "150" : "240"		; "180" : "270" with ParseItemHotKey
-	topGroupBoxYPos := SkipItemInfoUpdateCall ? "y53" : "y30"
+	topGroupBoxYPos := SkipItemInfoUpdateCall ? "y51" : "y30"
 	
 	; General
-	GuiAddGroupBox("General", "x7 " topGroupBoxYPos " w310 h" generalHeight " Section")
-	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w250 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
+	GuiAddGroupBox("General", "x7 " topGroupBoxYPos " w310 h" generalHeight " Section", "", "", "", "", "SettingsUI")
+	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w250 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH", "", "", "SettingsUI")
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "When checked the script only activates while you are ingame`n(technically while the game window is the frontmost)")
 	
 	;GuiAddHotkey(Opts.ParseItemHotKey, "xs75 yp+37 w120 h20", "ParseItemHotKey")
 	;GuiAddText("Hotkey:", "xs27 yp+2 w50 h20 0x0100", "LblParseItemHotKey")
 	; Change next from yp+30 to yp+25 when this is implemented.
 	
-	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 yp+30 w250 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
+	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 yp+30 w250 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH", "", "", "SettingsUI")
 	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text into the system clipboard`n(overwriting the raw text PoE itself put there to begin with)")
 	
-	GuiAddCheckbox("Enable Map Mod Warnings", "xs10 yp+30 w250 h30", Opts.EnableMapModWarnings, "EnableMapModWarnings", "EnableMapModWarningsH")
+	GuiAddCheckbox("Enable Map Mod Warnings", "xs10 yp+30 w250 h30", Opts.EnableMapModWarnings, "EnableMapModWarnings", "EnableMapModWarningsH", "", "", "SettingsUI")
 	AddToolTip(EnableMapModWarningsH, "Enables or disables the entire Map Mod Warnings function.")
 
 	If (!SkipItemInfoUpdateCall) {
-		GuiAddCheckbox("Update: Show Notifications", "xs10 yp+30 w250 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
+		GuiAddCheckbox("Update: Show Notifications", "xs10 yp+30 w250 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH", "", "", "SettingsUI")
 		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")
 		
-		GuiAddCheckbox("Update: Skip folder selection", "xs10 yp+30 w250 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+		GuiAddCheckbox("Update: Skip folder selection", "xs10 yp+30 w250 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH", "", "", "SettingsUI")
 		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")
 		
-		GuiAddCheckbox("Update: Skip backup", "xs10 yp+30 w250 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+		GuiAddCheckbox("Update: Skip backup", "xs10 yp+30 w250 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH", "", "", "SettingsUI")
 		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
 	}	
 	
 	; GDI+
 	GDIShift := SkipItemInfoUpdateCall ? 210 : 300
-	GuiAddGroupBox("GDI+", "x7 ym+" GDIShift " w310 h320 Section")
+	GuiAddGroupBox("GDI+", "x7 ym+" GDIShift " w310 h320 Section", "", "", "", "", "SettingsUI")
 	
-	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w115", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
+	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w115", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI", "", "SettingsUI")
 	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")
-	GuiAddCheckBox("Rendering Fix", "xs10 yp+30 w115", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
+	GuiAddCheckBox("Rendering Fix", "xs10 yp+30 w115", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH", "", "", "SettingsUI")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
-	GuiAddText("(Restart script after disabling GDI+. Enabling might cause general FPS drops.)", "xs120 ys+20 w185 cRed", "")
+	GuiAddText("(Restart script after disabling GDI+. Enabling might cause general FPS drops.)", "xs120 ys+20 w185 cRed", "", "", "", "", "SettingsUI")
 	
-	GuiAddButton("Edit Window", "xs9 ys80 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys85 w200", "LblGDIWindowColor")
-	GuiAddEdit(Opts.GDIWindowColor, "xs240 ys82 w60", "GDIWindowColor", "GDIWindowColorH")
-	GuiAddText("Opactiy (0-100):", "xs100 ys115 w200", "LblGDIWindowOpacity")
-	GuiAddEdit(Opts.GDIWindowOpacity, "xs240 ys112 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
-	GuiAddButton("Edit Border", "xs9 ys140 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys145 w200", "LblGDIBorderColor")
-	GuiAddEdit(Opts.GDIBorderColor, "xs240 ys142 w60", "GDIBorderColor", "GDIBorderColorH")	
-	GuiAddText("Opacity (0-100):", "xs100 ys175 w200", "LblGDIBorderOpacity")
-	GuiAddEdit(Opts.GDIBorderOpacity, "xs240 ys172 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
-	GuiAddButton("Edit Text", "xs9 ys200 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys205 w200", "LblGDITextColor")
-	GuiAddEdit(Opts.GDITextColor, "xs240 ys202 w60", "GDITextColor", "GDITextColorH")
-	GuiAddText("Opacity (0-100):", "xs100 ys235 w200", "LblGDITextOpacity")
-	GuiAddEdit(Opts.GDITextOpacity, "xs240 ys232 w60", "GDITextOpacity", "GDITextOpacityH")
-	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys260 w260", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
+	GuiAddButton("Edit Window", "xs9 ys80 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor", "", "", "SettingsUI")
+	GuiAddText("Color (hex RGB):", "xs100 ys85 w200", "LblGDIWindowColor", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDIWindowColor, "xs240 ys82 w60", "GDIWindowColor", "GDIWindowColorH", "", "", "SettingsUI")
+	GuiAddText("Opactiy (0-100):", "xs100 ys115 w200", "LblGDIWindowOpacity", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDIWindowOpacity, "xs240 ys112 w60", "GDIWindowOpacity", "GDIWindowOpacityH", "", "", "SettingsUI")
+	GuiAddButton("Edit Border", "xs9 ys140 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor", "", "", "SettingsUI")
+	GuiAddText("Color (hex RGB):", "xs100 ys145 w200", "LblGDIBorderColor", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDIBorderColor, "xs240 ys142 w60", "GDIBorderColor", "GDIBorderColorH", "", "", "SettingsUI")
+	GuiAddText("Opacity (0-100):", "xs100 ys175 w200", "LblGDIBorderOpacity", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDIBorderOpacity, "xs240 ys172 w60", "GDIBorderOpacity", "GDIBorderOpacityH", "", "", "SettingsUI")
+	GuiAddButton("Edit Text", "xs9 ys200 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor", "", "", "SettingsUI")
+	GuiAddText("Color (hex RGB):", "xs100 ys205 w200", "LblGDITextColor", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDITextColor, "xs240 ys202 w60", "GDITextColor", "GDITextColorH", "", "", "SettingsUI")
+	GuiAddText("Opacity (0-100):", "xs100 ys235 w200", "LblGDITextOpacity", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDITextOpacity, "xs240 ys232 w60", "GDITextOpacity", "GDITextOpacityH", "", "", "SettingsUI")
+	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys260 w260", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH", "", "", "SettingsUI")
 	
-	GuiAddButton("GDI Defaults", "xs9 ys290 w100 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
-	GuiAddButton("Preview", "xs210 ys290 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
+	GuiAddButton("GDI Defaults", "xs9 ys290 w100 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH", "", "SettingsUI")
+	GuiAddButton("Preview", "xs210 ys290 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH", "", "SettingsUI")
 
 	; Tooltip
-	GuiAddGroupBox("Tooltip", "x327 " topGroupBoxYPos " w310 h140 Section")
+	GuiAddGroupBox("Tooltip", "x327 " topGroupBoxYPos " w310 h140 Section", "", "", "", "", "SettingsUI")
 
-	GuiAddEdit(Opts.MouseMoveThreshold, "xs250 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
-	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w200 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
+	GuiAddEdit(Opts.MouseMoveThreshold, "xs250 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH", "", "", "SettingsUI")
+	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w200 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH", "", "", "SettingsUI")
 	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip when the mouse cursor moved x pixel away from the initial position.`nEffectively permanent tooltip when using a value larger than the monitor diameter.")
 	
-	GuiAddEdit(Opts.ToolTipTimeoutSeconds, "xs250 yp+27 w50 Number", "ToolTipTimeoutSeconds")
-	GuiAddCheckBox("Use tooltip timeout (seconds)", "xs10 yp+3 w200", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
+	GuiAddEdit(Opts.ToolTipTimeoutSeconds, "xs250 yp+27 w50 Number", "ToolTipTimeoutSeconds", "", "", "", "SettingsUI")
+	GuiAddCheckBox("Use tooltip timeout (seconds)", "xs10 yp+3 w200", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout", "", "SettingsUI")
 	AddToolTip(UseTooltipTimeoutH, "Hide tooltip automatically after defined time.")
 	
-	GuiAddCheckbox("Display at fixed coordinates", "xs10 yp+30 w280", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
+	GuiAddCheckbox("Display at fixed coordinates", "xs10 yp+30 w280", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords", "", "SettingsUI")
 	AddToolTip(DisplayToolTipAtFixedCoordsH, "Show tooltip in virtual screen space at the fixed`ncoordinates given below. Virtual screen space means`nthe full desktop frame, including any secondary`nmonitors. Coords are relative to the top left edge`nand increase going down and to the right.")
-		GuiAddEdit(Opts.ScreenOffsetX, "xs50 yp+22 w50", "ScreenOffsetX")
-		GuiAddEdit(Opts.ScreenOffsetY, "xs130 yp+0 w50", "ScreenOffsetY")
-		GuiAddText("X", "xs35 yp+3 w15", "LblScreenOffsetX")
-		GuiAddText("Y", "xs115 yp+0 w15", "LblScreenOffsetY")
+		GuiAddEdit(Opts.ScreenOffsetX, "xs50 yp+22 w50", "ScreenOffsetX", "", "", "", "SettingsUI")
+		GuiAddEdit(Opts.ScreenOffsetY, "xs130 yp+0 w50", "ScreenOffsetY", "", "", "", "SettingsUI")
+		GuiAddText("X", "xs35 yp+3 w15", "LblScreenOffsetX", "", "", "", "SettingsUI")
+		GuiAddText("Y", "xs115 yp+0 w15", "LblScreenOffsetY", "", "", "", "SettingsUI")
 	
 	
 	; Display
-	GuiAddGroupBox("Display", "x327 ym+" 200 " w310 h295 Section")
+	GuiAddGroupBox("Display", "x327 ym+" 200 " w310 h295 Section", "", "", "", "", "SettingsUI")
 	
-	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w260 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
+	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w260 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH", "", "", "SettingsUI")
 	AddToolTip(ShowHeaderForAffixOverviewH, "Include a header above the affix overview:`n   TierRange ilvl   Total ilvl  Tier")
 	
-	GuiAddCheckbox("Show explanation for used notation", "xs10 yp+30 w260 h30", Opts.ShowExplanationForUsedNotation, "ShowExplanationForUsedNotation", "ShowExplanationForUsedNotationH")
+	GuiAddCheckbox("Show explanation for used notation", "xs10 yp+30 w260 h30", Opts.ShowExplanationForUsedNotation, "ShowExplanationForUsedNotation", "ShowExplanationForUsedNotationH", "", "", "SettingsUI")
 	AddToolTip(ShowExplanationForUsedNotationH, "Explain abbreviations and special notation symbols at`nthe end of the tooltip when they are used")
 	
-	GuiAddEdit(Opts.AffixTextEllipsis, "xs260 y+5 w40 h20", "AffixTextEllipsis")
-	GuiAddText("Affix text ellipsis:", "xs10 yp+3 w170 h20 0x0100", "LblAffixTextEllipsis", "AffixTextEllipsisH")
+	GuiAddEdit(Opts.AffixTextEllipsis, "xs260 y+5 w40 h20", "AffixTextEllipsis", "", "", "", "SettingsUI")
+	GuiAddText("Affix text ellipsis:", "xs10 yp+3 w170 h20 0x0100", "LblAffixTextEllipsis", "AffixTextEllipsisH", "", "", "SettingsUI")
 	AddToolTip(AffixTextEllipsisH, "Symbol used when affix text is shortened, such as:`n50% increased Spell…")
 	
-	GuiAddEdit(Opts.AffixColumnSeparator, "xs260 y+7 w40 h20", "AffixColumnSeparator")
-	GuiAddText("Affix column separator:", "xs10 yp+3 w170 h20 0x0100", "LblAffixColumnSeparator", "AffixColumnSeparatorH")
+	GuiAddEdit(Opts.AffixColumnSeparator, "xs260 y+7 w40 h20", "AffixColumnSeparator", "", "", "", "SettingsUI")
+	GuiAddText("Affix column separator:", "xs10 yp+3 w170 h20 0x0100", "LblAffixColumnSeparator", "AffixColumnSeparatorH", "", "", "SettingsUI")
 	AddToolTip(AffixColumnSeparatorH, "Select separator (default: 2 spaces) for the \\ spots:`n50% increased Spell…\\50-59 (46)\\75-79 (84)\\T4 P")
 	
-	GuiAddEdit(Opts.DoubleRangeSeparator, "xs260 y+7 w40 h20", "DoubleRangeSeparator")
-	GuiAddText("Double range separator:", "xs10 yp+3 w170 h20 0x0100", "LblDoubleRangeSeparator", "DoubleRangeSeparatorH")
+	GuiAddEdit(Opts.DoubleRangeSeparator, "xs260 y+7 w40 h20", "DoubleRangeSeparator", "", "", "", "SettingsUI")
+	GuiAddText("Double range separator:", "xs10 yp+3 w170 h20 0x0100", "LblDoubleRangeSeparator", "DoubleRangeSeparatorH", "", "", "SettingsUI")
 	AddToolTip(DoubleRangeSeparatorH, "Select separator (default: | ) for double ranges from 'added damage' mods:`na-b to c-d is displayed as a-b|c-d")
 	
-	GuiAddCheckbox("Use compact double ranges", "xs10 y+3 w210 h30", Opts.UseCompactDoubleRanges, "UseCompactDoubleRanges", "UseCompactDoubleRangesH", "SettingsUI_ChkUseCompactDoubleRanges")
+	GuiAddCheckbox("Use compact double ranges", "xs10 y+3 w210 h30", Opts.UseCompactDoubleRanges, "UseCompactDoubleRanges", "UseCompactDoubleRangesH", "SettingsUI_ChkUseCompactDoubleRanges", "", "SettingsUI")
 	AddToolTip(UseCompactDoubleRangesH, "Show double ranges from 'added damage' mods as one range,`ne.g. a-b to c-d becomes a-d")
 	
-	GuiAddCheckbox("Only compact for 'Total' column", "xs30 yp+30 w210 h30", Opts.OnlyCompactForTotalColumn, "OnlyCompactForTotalColumn", "OnlyCompactForTotalColumnH")
+	GuiAddCheckbox("Only compact for 'Total' column", "xs30 yp+30 w210 h30", Opts.OnlyCompactForTotalColumn, "OnlyCompactForTotalColumn", "OnlyCompactForTotalColumnH", "", "", "SettingsUI")
 	AddToolTip(OnlyCompactForTotalColumnH, "Only use compact double ranges for the second range column`nin the affix overview (with the header 'total')")
 	
-	GuiAddEdit(Opts.MultiTierRangeSeparator, "xs260 y+6 w40 h20", "MultiTierRangeSeparator")
-	GuiAddText("Multi tier range separator:", "xs10 yp+3 w170 h20 0x0100", "LblMultiTierRangeSeparator", "MultiTierRangeSeparatorH")
+	GuiAddEdit(Opts.MultiTierRangeSeparator, "xs260 y+6 w40 h20", "MultiTierRangeSeparator", "", "", "", "SettingsUI")
+	GuiAddText("Multi tier range separator:", "xs10 yp+3 w170 h20 0x0100", "LblMultiTierRangeSeparator", "MultiTierRangeSeparatorH", "", "", "SettingsUI")
 	AddToolTip(MultiTierRangeSeparatorH, "Select separator (default: … ) for a multi tier roll range with uncertainty:`n83% increased Light…   73-85…83-95   102-109 (84)  T1-4 P + T1-6 S`n	                     There--^")
 	
-	GuiAddEdit(Opts.FontSize, "xs260 y+6 w40 h20 Number", "FontSize")
-	GuiAddText("Font Size:", "xs10 yp+3 w180 h20 0x0100")
+	GuiAddEdit(Opts.FontSize, "xs260 y+6 w40 h20 Number", "FontSize", "", "", "", "SettingsUI")
+	GuiAddText("Font Size:", "xs10 yp+3 w180 h20 0x0100", "", "", "", "", "SettingsUI")
 
 	; Buttons
 	ButtonsShiftX := "x659 "
-	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX " y63 w290 h30 0x0100")
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX " y63 w290 h30 0x0100", "", "", "", "", "SettingsUI")
 	
-	GuiAddButton("Defaults", ButtonsShiftX "y+8 w90 h23", "SettingsUI_BtnDefaults")
-	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK")
-	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")	
+	GuiAddButton("Defaults", ButtonsShiftX "y+8 w90 h23", "SettingsUI_BtnDefaults", "", "", "", "SettingsUI")
+	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK", "", "", "", "SettingsUI")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel", "", "", "", "SettingsUI")
 	
 	If (SkipItemInfoUpdateCall) {
-		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+10 w250 h50 cRed")
-		GuiAddText("", "x10 y10 w250 h10")
-	}	
+		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+10 w250 h50 cRed", "", "", "", "", "SettingsUI")
+		GuiAddText("", "x10 y10 w250 h10", "", "", "", "", "SettingsUI")
+	}
 	
 	; Begin Additional Macros Tab
 	If (SkipItemInfoUpdateCall) {
-		Gui, Tab, 3 
+		Gui, SettingsUI:Tab, 3 
 	} Else {
-		Gui, Tab, 2
+		Gui, SettingsUI:Tab, 2
 	}
 	
 	; AM Hotkeys
-	GuiAddGroupBox("[AdditionalMacros] Hotkeys", "x7 " topGroupBoxYPos " w630 h625")	
+	GuiAddGroupBox("[AdditionalMacros] Hotkeys", "x7 " topGroupBoxYPos " w630 h625", "", "", "", "", "SettingsUI")
 	
 	If (not AM_Config) {
 		GoSub, AM_Init
@@ -9846,19 +9851,19 @@ CreateSettingsUI()
 		If (sectionName != "General") {
 			; hotkey checkboxes (enable/disable)
 			HKCheckBoxID := "AM_" sectionName "_State"
-			GuiAddCheckbox(sectionName ":", "x17 yp+" chkBoxShiftY " w" chkBoxWidth " h20 0x0100", AM_Config[sectionName].State, HKCheckBoxID, HKCheckBoxID "H")
+			GuiAddCheckbox(sectionName ":", "x17 yp+" chkBoxShiftY " w" chkBoxWidth " h20 0x0100", AM_Config[sectionName].State, HKCheckBoxID, HKCheckBoxID "H", "", "", "SettingsUI")
 			AddToolTip(%HKCheckBoxID%H, RegExReplace(AM_ConfigDefault[sectionName].Description, "i)(\(Default = .*\))|\\n", "`n$1"))	; read description from default config
 			
 			For keyIndex, keyValue in StrSplit(AM_Config[sectionName].Hotkeys, ", ") {	
 				HotKeyID := "AM_" sectionName "_HotKeys_" keyIndex
 				LV_shiftY := keyIndex > 1 ? 1 : 0 
-				GuiAddListView("1|2", "x+10 yp+" LV_shiftY " h20 w" LVWidth, HotKeyID, HotKeyID "H", "", "r1 -Hdr -LV0x20 r1 C454444 Backgroundf0f0f0")			
+				GuiAddListView("1|2", "x+10 yp+" LV_shiftY " h20 w" LVWidth, HotKeyID, HotKeyID "H", "", "r1 -Hdr -LV0x20 r1 C454444 Backgroundf0f0f0", "SettingsUI")
 				LV_ModifyCol(1, 0)
 				LV_ModifyCol(2, LVWidth - 5)
 				LV_Delete(1)
 				LV_Add("","", keyValue)			
 
-				GuiAddButton("Edit", "xp+" LVWidth " yp-1 w30 h22 v" HotKeyID "_Trigger", "LV_HotkeyEdit")
+				GuiAddButton("Edit", "xp+" LVWidth " yp-1 w30 h22 v" HotKeyID "_Trigger", "LV_HotkeyEdit", "", "", "", "SettingsUI")
 			}
 			
 			For keyIndex, keyValue in AM_Config[sectionName] {
@@ -9866,35 +9871,35 @@ CreateSettingsUI()
 					If (RegExMatch(sectionName, "i)HighlightItems|HighlightItemsAlt")) {
 						If (keyIndex = "Arg2") {
 							CheckBoxID := "AM_" sectionName "_Arg2"
-							GuiAddCheckbox("Leave search field.", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY, keyValue, CheckBoxID, CheckBoxID "H")
+							GuiAddCheckbox("Leave search field.", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY, keyValue, CheckBoxID, CheckBoxID "H", "", "", "SettingsUI")
 						}
 						If (keyIndex = "Arg3") {
 							CheckBoxID := "AM_" sectionName "_Arg3"
-							GuiAddCheckbox("Enable hideout stash search.", "x+10 yp+0", keyValue, CheckBoxID, CheckBoxID "H")
+							GuiAddCheckbox("Enable hideout stash search.", "x+10 yp+0", keyValue, CheckBoxID, CheckBoxID "H", "", "", "SettingsUI")
 						}
 						If (keyIndex = "Arg4") {
 							EditID := "AM_" sectionName "_" keyIndex
-							GuiAddText("Decoration stash search field coordinates:  ", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w260 h20 0x0100", "LblHighlighting", "LblHighlightingH")
+							GuiAddText("Decoration stash search field coordinates:  ", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w260 h20 0x0100", "LblHighlighting", "LblHighlightingH", "", "", "SettingsUI")
 							AddToolTip(LblHighlightingH, "Refers to the decoration stash on the right side`nof the screen, not the master vendor window.`n`nCoordinates are relative to the PoE game window and`nare neccessary to click into/focus the search field.")
-							GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-15 yp+0 w15 h-1 0x0100", "HighlightInfo", "HighlightH", "")
-							GuiAddText("x= ", "x+5 yp+0 w20 h20 0x0100")
-							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID)
+							GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-15 yp+0 w15 h-1 0x0100", "HighlightInfo", "HighlightH", "", "", "SettingsUI")
+							GuiAddText("x= ", "x+5 yp+0 w20 h20 0x0100", "", "", "", "", "SettingsUI")
+							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID, "", "", "", "SettingsUI")
 						}
 						If (keyIndex = "Arg5") {
 							EditID := "AM_" sectionName "_" keyIndex
-							GuiAddText("y=", "x+5 yp+2 w20 h20 0x0100")
-							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID)
+							GuiAddText("y=", "x+5 yp+2 w20 h20 0x0100", "", "", "", "", "SettingsUI")
+							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID, "", "", "", "SettingsUI")
 						}
 					}
 					Else If (RegExMatch(sectionName, "i)JoinChannel|KickYourself")) {
 						EditID := "AM_" sectionName "_" keyIndex
-						GuiAddText(keyIndex ":", "x+10 yp+4 w85 h20 0x0100")
-						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID)
+						GuiAddText(keyIndex ":", "x+10 yp+4 w85 h20 0x0100", "", "", "", "", "SettingsUI")
+						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID, "", "", "", "SettingsUI")
 					} 
 					Else {
 						EditID := "AM_" sectionName "_" keyIndex
-						GuiAddText(keyIndex ":", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w85 h20 0x0100")
-						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID)
+						GuiAddText(keyIndex ":", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w85 h20 0x0100", "", "", "", "", "SettingsUI")
+						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID, "", "", "", "SettingsUI")
 					}					
 				}
 			}
@@ -9903,17 +9908,17 @@ CreateSettingsUI()
 	
 	; AM General
 
-	GuiAddGroupBox("[AdditionalMacros] General", "x647 " topGroupBoxYPos " w310 h60")
+	GuiAddGroupBox("[AdditionalMacros] General", "x647 " topGroupBoxYPos " w310 h60", "", "", "", "", "SettingsUI")
 	
 	_i := 0
 	For keyIndex, keyValue in AM_Config.General {
 		If (not RegExMatch(keyIndex, ".*_Description$")) {
 			elementYPos := _i > 0 ? 20 : 30
-			
+
 			If (RegExMatch(keyIndex, ".*State$") and not (InStr(keyIndex, "KeyToSC", 0))) {
 				RegExMatch(AM_ConfigDefault.General[keyIndex "_Description"], ".*Short\$(.*)Long\$(.*)""", _description)		; read description from default config
 				ControlID := "AM_General_" keyIndex
-				GuiAddCheckbox(Trim(_description1), "x657 yp+" elementYPos " w250 h30", AM_Config.General[keyIndex], ControlID, ControlID "H")
+				GuiAddCheckbox(Trim(_description1), "x657 yp+" elementYPos " w250 h30", AM_Config.General[keyIndex], ControlID, ControlID "H", "", "", "SettingsUI")
 				AddToolTip(%ControlID%H, Trim(_description2))
 			}
 			_i++
@@ -9922,73 +9927,78 @@ CreateSettingsUI()
 	
 	; AM Buttons
 	
-	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX "yp+60 w290 h30 0x0100")	
-	GuiAddButton("Defaults", "xp-5 y+8 w90 h23", "SettingsUI_AM_BtnDefaults")
-	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK")
-	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")
-	GuiAddText("Any change here currently requires a script restart!", ButtonsShiftX "y+10 w280 h50 cGreen")
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX "yp+60 w290 h30 0x0100", "", "", "", "", "SettingsUI")
+	GuiAddButton("Defaults", "xp-5 y+8 w90 h23", "SettingsUI_AM_BtnDefaults", "", "", "", "SettingsUI")
+	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK", "", "", "", "SettingsUI")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel", "", "", "", "SettingsUI")
+	GuiAddText("Any change here currently requires a script restart!", ButtonsShiftX "y+10 w280 h50 cGreen", "", "", "", "", "SettingsUI")
 	
 	If (SkipItemInfoUpdateCall) {
-		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+5 w280 h50 cRed")
+		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+5 w280 h50 cRed", "", "", "", "", "SettingsUI")
 	}
 	
-	GuiAddText("Experimental Feature!", ButtonsShiftX "y+35 w280 h200 cRed")
+	GuiAddText("Experimental Feature!", ButtonsShiftX "y+35 w280 h200 cRed", "", "", "", "", "SettingsUI")
 	experimentalNotice := "This new feature to assign hotkeys may cause issues for users with non-latin keyboard layouts."
 	experimentalNotice .= "`n`n" . "AHKs default UI element for selecting hotkeys doesn't support any special keys and mouse buttons."
 	experimentalNotice .= "`n`n" . "Please report any issues that you are experiencing."
 	experimentalNotice .= " You can still assign your settings directly using the AdditionalMacros.ini like before."
 	experimentalNotice .= " (Right-click system tray icon -> Edit Files)."
-	GuiAddText(experimentalNotice, ButtonsShiftX "yp+25 w290")
+	GuiAddText(experimentalNotice, ButtonsShiftX "yp+25 w290", "", "", "", "", "SettingsUI")
 	
 	; Begin Lutbot Tab
 	If (SkipItemInfoUpdateCall) {
-		Gui, Tab, 4 
+		Gui, SettingsUI:Tab, 4 
 	} Else {
-		Gui, Tab, 3
+		Gui, SettingsUI:Tab, 3
 	}
 	
-	GuiAddGroupBox("[Lutbot Logout]", "x7 " topGroupBoxYPos " w630 h625")
+	GuiAddGroupBox("[Lutbot Logout]", "x7 " topGroupBoxYPos " w630 h625", "", "", "", "", "SettingsUI")
 
 	lb_desc := "Lutbot's macro is a collection of features like TCP disconnect logout, whisper replies, ladder tracker and more.`n"
 	lb_desc .= "The included logout macro is the most advanced logout feature currently out there."
-	GuiAddText(lb_desc, "x17 yp+28 w600 h40 0x0100", "", "")
+	GuiAddText(lb_desc, "x17 yp+28 w600 h40 0x0100", "", "", "", "", "SettingsUI")
 	
 	lb_desc := "Since running the main version of this script alongside " Globals.Get("Projectname") " can cause some issues`n"
 	lb_desc .= "and hotkey conflicts, Lutbot also released a lite version that only contains the logout features."
-	GuiAddText(lb_desc, "x17 y+10 w600 h35 0x0100", "", "")
+	GuiAddText(lb_desc, "x17 y+10 w600 h35 0x0100", "", "", "", "", "SettingsUI")
 	
-	Gui, Add, Link, x17 y+5 cBlue, <a href="http://lutbot.com/#/ahk">Website and download</a>
+	Gui, SettingsUI:Add, Link, x17 y+5 cBlue, <a href="http://lutbot.com/#/ahk">Website and download</a>
 	
 	lb_desc := Globals.Get("Projectname") " can manage running this lite version for you, keeping it an independant script."
-	GuiAddText(lb_desc, "x17 y+20 w600 h20 0x0100", "", "")
+	GuiAddText(lb_desc, "x17 y+20 w600 h20 0x0100", "", "", "", "", "SettingsUI")
 	
-	GuiAddCheckbox("Run lutbot on script start if the lutbot macro exists (requires you to have run it once before).", "x17 yp+20 w600 h30", Opts.Lutbot_CheckScript, "Lutbot_CheckScript", "Lutbot_CheckScriptH")
+	GuiAddCheckbox("Run lutbot on script start if the lutbot macro exists (requires you to have run it once before).", "x17 yp+20 w600 h30", Opts.Lutbot_CheckScript, "Lutbot_CheckScript", "Lutbot_CheckScriptH", "", "", "SettingsUI")
 	
-	GuiAddCheckbox("Warn in case of hotkey conflicts", "x17 yp+30 w290 h30", Opts.Lutbot_WarnConflicts, "Lutbot_WarnConflicts", "Lutbot_WarnConflictsH")
+	GuiAddCheckbox("Warn in case of hotkey conflicts", "x17 yp+30 w290 h30", Opts.Lutbot_WarnConflicts, "Lutbot_WarnConflicts", "Lutbot_WarnConflictsH", "", "", "SettingsUI")
 	AddToolTip(Lutbot_CheckScriptH, "Check if the lutbot macro exists and run it.")
 	
-	GuiAddButton("Open Lutbot folder", "Default x17 y+10 w130 h23", "OpenLutbotDocumentsFolder")
+	GuiAddButton("Open Lutbot folder", "Default x17 y+10 w130 h23", "OpenLutbotDocumentsFolder", "", "", "", "SettingsUI")
 	
 	lb_desc := "If you have any issues related to"
-	GuiAddText(lb_desc, "x17 y+40 w600 h20 0x0100", "", "")
+	GuiAddText(lb_desc, "x17 y+40 w600 h20 0x0100", "", "", "", "", "SettingsUI")
 	lb_desc := "- " Globals.Get("Projectname") " starting the lutbot script or checking for conflicts report here:"
-	GuiAddText(lb_desc, "x17 y+0 w600 h20 0x0100", "", "")
-	Gui, Add, Link, x35 y+5 cBlue h20, - <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues">Github</a>
-	Gui, Add, Link, x35 y+0 cBlue h20, - <a href="https://discord.gg/taKZqWw">Discord</a>
-	Gui, Add, Link, x35 y+0 cBlue h20, - <a href="https://www.pathofexile.com/forum/view-thread/1757730">Forum</a>
+	GuiAddText(lb_desc, "x17 y+0 w600 h20 0x0100", "", "", "", "", "SettingsUI")
+	Gui, SettingsUI:Add, Link, x35 y+5 cBlue h20, - <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues">Github</a>
+	Gui, SettingsUI:Add, Link, x35 y+0 cBlue h20, - <a href="https://discord.gg/taKZqWw">Discord</a>
+	Gui, SettingsUI:Add, Link, x35 y+0 cBlue h20, - <a href="https://www.pathofexile.com/forum/view-thread/1757730">Forum</a>
 
 	lb_desc := "- Lutbots script not working correctly in any way report here:"
-	GuiAddText(lb_desc, "x17 y+5 w600 h20 0x0100", "", "")
-	Gui, Add, Link, x35 y+5 cBlue h20, - <a href="https://discord.gg/nttekWT">Discord</a>
+	GuiAddText(lb_desc, "x17 y+5 w600 h20 0x0100", "", "", "", "", "SettingsUI")
+	Gui, SettingsUI:Add, Link, x35 y+5 cBlue h20, - <a href="https://discord.gg/nttekWT">Discord</a>
 	
 	; Lutbot Buttons
 	
-	GuiAddText("Mouse over settings to see what these settings do exactly.", ButtonsShiftX "y60 w290 h30 0x0100")
-	GuiAddButton("OK", "Default xp-5 y+8 w90 h23", "SettingsUI_BtnOK")
-	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")
+	GuiAddText("Mouse over settings to see what these settings do exactly.", ButtonsShiftX "y60 w290 h30 0x0100", "", "", "", "", "SettingsUI")
+	GuiAddButton("OK", "Default xp-5 y+8 w90 h23", "SettingsUI_BtnOK", "", "", "", "SettingsUI")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel", "", "", "", "SettingsUI")
 	
 	; close tabs
-	Gui, Tab
+	Gui, SettingsUI:Tab
+	
+	GoSub, SettingsUI_ChkUseCompactDoubleRanges
+	GoSub, SettingsUI_ChkDisplayToolTipAtFixedCoords
+	GoSub, SettingsUI_ChkUseTooltipTimeout
+	GoSub, SettingsUI_ChkUseGDI
 }
 
 UpdateSettingsUI()
@@ -10118,7 +10128,7 @@ ShowSettingsUI()
 	; The TradeMacro needs much more space for all the options.
 	SettingsUIHeight := Globals.Get("SettingsUIHeight", 615)
 	SettingsUITitle := Globals.Get("SettingsUITitle", "PoE ItemInfo Settings")
-	Gui, Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
+	Gui, SettingsUI:Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
 }
 
 ShowUpdateNotes()
@@ -10536,8 +10546,8 @@ ShowAssignedHotkeys(returnList = false) {
 	Gui, ShowHotkeys:Color, ffffff, ffffff
 	Gui, ShowHotkeys:Add, Text, , List of this scripts assigned hotkeys.
 	Gui, ShowHotkeys:Default
-	Gui, Font, , Courier New
-	Gui, Font, , Consolas
+	Gui, ShowHotkeys:Font, , Courier New
+	Gui, ShowHotkeys:Font, , Consolas
 	Gui, ShowHotkeys:Add, ListView, r25 w800 NoSortHdr Grid ReadOnly, Type | Enabled | Level | Running | Key combination (Code) | Key combination (ENG name)
 	For key, val in hotkeys {
 		If (key != 1) {
@@ -10565,7 +10575,7 @@ ShowAssignedHotkeys(returnList = false) {
 	Gui, ShowHotkeys:Add, Text, , % text
 
 	Gui, ShowHotkeys:Show, w820 xCenter yCenter, Assigned Hotkeys
-	Gui, 1:Default
+	Gui, SettingsUI:Default
 	Gui, Font
 }
 
@@ -11451,7 +11461,7 @@ ShowSettingsUI:
 
 SettingsUI_BtnOK:
 	Global Opts
-	Gui, Submit
+	Gui, SettingsUI:Submit
 	Sleep, 50
 	WriteConfig()
 	AM_WriteConfig()
@@ -11460,11 +11470,11 @@ SettingsUI_BtnOK:
 	return
 
 SettingsUI_BtnCancel:
-	Gui, Cancel
+	Gui, SettingsUI:Cancel
 	return
 
 SettingsUI_BtnDefaults:
-	Gui, Cancel
+	Gui, SettingsUI:Cancel
 	RemoveConfig()
 	Sleep, 75
 	CopyDefaultConfig()
@@ -11476,7 +11486,7 @@ SettingsUI_BtnDefaults:
 	return
 	
 SettingsUI_AM_BtnDefaults:
-	Gui, Cancel
+	Gui, SettingsUI:Cancel
 	RemoveConfig("AdditionalMacros.ini")
 	Sleep, 75
 	CopyDefaultConfig("AdditionalMacros.ini")
@@ -11788,9 +11798,9 @@ ShowAssignedHotkeys:
 	Gui, 3:Cancel
 	return
 
-GuiEscape: 
+SettingsUIGuiEscape: 
 	; settings 
-	Gui, Cancel
+	Gui, SettingsUI:Cancel
 Return
 
 AboutGuiEscape:
@@ -11833,9 +11843,9 @@ CheckForUpdates:
 
 	hasUpdate := PoEScripts_Update(globalUpdateInfo.user, globalUpdateInfo.repo, globalUpdateInfo.releaseVersion, globalUpdateInfo.skipUpdateCheck, userDirectory, isDevVersion, globalUpdateInfo.skipSelection, globalUpdateInfo.skipBackup)
 	If (hasUpdate = "no update" and not firstUpdateCheck) {
-		SplashTextOn, , , No update available
+		SplashUI.SetSubMessage("No update available")
 		Sleep 2000
-		SplashTextOff
+		SplashUI.DestroyUI()
 	}
 	return
 
@@ -12697,7 +12707,9 @@ StartLutbot:
 Return
 
 OpenLutbotDocumentsFolder:
-	OpenUserSettingsFolder("Lutbot", A_MyDocuments "\AutoHotKey\LutTools")
+	;OpenUserSettingsFolder("Lutbot", A_MyDocuments "\AutoHotKey\LutTools")
+	LutBotSettings.launcherPath
+	OpenUserSettingsFolder("Lutbot", LutBotSettings.launcherPath)
 Return
 
 CheckForLutBotHotkeyConflicts(hotkeys, config) {
@@ -12844,7 +12856,7 @@ AssignHotKey(Label, key, vkey, enabledState = "on") {
 }
 
 ShowHotKeyConflictUI(hkeyObj, hkey, hkeyLabel, oldLabel = "", preventedAssignment = false) {
-	SplashTextOff
+	SplashUI.DestroyUI()
 	
 	Gui, HotkeyConflict:Destroy
 	Gui, HotkeyConflict:Font,, Consolas

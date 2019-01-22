@@ -1,6 +1,9 @@
 ; #####################################################################################################################
 ; # This script checks if the right AHK version is installed and runs the TradeMacro merge script.
 ; #####################################################################################################################
+#SingleInstance, Force
+#NoEnv
+SetWorkingDir, %A_ScriptDir%
 
 versionFilePath := A_ScriptDir "\resources\VersionTrade.txt"
 FileRead, versionFile, %versionFilePath%

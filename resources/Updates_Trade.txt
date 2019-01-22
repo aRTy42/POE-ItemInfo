@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.13.1
+================================================================================================
+* Added a new splash screen.
+* Further improved handling of various (runtime) errors.
+* Various small improvements/fixes.
+
 2.12.5
 ================================================================================================
 * Improved feedback for issues with poe.trade http requests.

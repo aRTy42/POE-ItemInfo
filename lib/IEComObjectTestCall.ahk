@@ -12,7 +12,9 @@ If (FileExist(userFolderPath "\IEComObjectCall.txt")) {
 }
 
 url := "https://poe-trademacro.github.io/userCount/index.html"
-Try {   
+killIElowutil := false
+Try {
+	;killIElowutil := CheckForRunningIElowutil()
 	wb1 := ComObjCreate("InternetExplorer.Application")
 	wb1.Visible := False
 	wb1.Navigate(url)	
@@ -30,6 +32,18 @@ Try {
 	}	
 }
 
+If (killIElowutil) {
+	DetectHiddenWindows, On
+	SetTitleMatchMode, 2
+	
+	Process, Exist, ielowutil.exe ; Sets errorlevel to process PID
+	pid := ErrorLevel
+	Process, Close, %pid%
+	Process, Close, ielowutil.ex
+	WinClose, % "ahk_pid " pid 
+	WinKill, % "ahk_pid " pid 
+}
+
 CleanIE() {
 	Try {	
 		wb1.Quit
@@ -38,7 +52,25 @@ CleanIE() {
 		
 	}
 	ExitApp
-}	
+}
+
+CheckForRunningIElowutil() {
+	DetectHiddenWindows, On
+	SetTitleMatchMode, 2
+	Loop
+	{
+		Process, Exist, ielowutil.exe ; Sets errorlevel to process PID
+		pid := ErrorLevel
+		IfWinNotExist, % "ahk_pid " pid ; Expression for ahk_pid
+		{
+			Return 0
+		}
+		IfWinExist, % "ahk_pid " pid ; Expression for ahk_pid
+		{
+			Return 1
+		}
+	}
+}
 
 IELoad(wb, ByRef loaded = false, path = "", visible = false)	;You need to send the IE handle to the function unless you define it as global.
 {

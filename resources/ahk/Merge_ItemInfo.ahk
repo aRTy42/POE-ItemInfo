@@ -46,8 +46,8 @@ PoEScripts_CompareUserFolderWithScriptFolder(userDirectory, scriptDir, projectNa
 /*
 	merge all scripts into `_ItemInfoMain.ahk` and execute it.
 */
-info		:= ReadFileToMerge(scriptDir "\resources\ahk\POE-ItemInfo.ahk")
-addMacros := ReadFileToMerge(scriptDir "\resources\ahk\AdditionalMacros.ahk")
+info		:= ReadFileToMerge(file01 := scriptDir "\resources\ahk\POE-ItemInfo.ahk")
+addMacros := ReadFileToMerge(file02 := scriptDir "\resources\ahk\AdditionalMacros.ahk")
 
 info		:= info . "`n`r`n`r"
 addMacros	:= "`n`r#IfWinActive ahk_group PoEWindowGrp" . "`n`r`n`r" . addMacros
@@ -57,6 +57,8 @@ CloseScript("ItemInfoMain.ahk")
 FileDelete, %scriptDir%\_ItemInfoMain.ahk
 FileCopy,   %scriptDir%\resources\ahk\POE-ItemInfo.ahk, %scriptDir%\_ItemInfoMain.ahk
 
+; additional macros
+FileAppend, % "`r`n`r`n/* ###--- Merged File: " file02 " ---###  `r`n*/`r`n", %scriptDir%\_TradeMacroMain.ahk
 FileAppend, %addMacros%	, %scriptDir%\_ItemInfoMain.ahk
 
 ; set script hidden
@@ -103,7 +105,7 @@ RunAsAdmin()
 
 AppendCustomMacros(userDirectory)
 {
-	If(!InStr(FileExist(userDirectory "\CustomMacros"), "D")) {
+	If (!InStr(FileExist(userDirectory "\CustomMacros"), "D")) {
 		FileCreateDir, %userDirectory%\CustomMacros\
 	}
 
@@ -113,8 +115,8 @@ AppendCustomMacros(userDirectory)
 	{
 		If A_LoopFileExt in %extensions%
 		{
-			FileRead, tmp, %A_LoopFileFullPath%
-			appendedMacros .= "; appended custom macro file: " A_LoopFileName " ---------------------------------------------------"
+			FileRead, tmp, %A_LoopFileFullPath%			
+			appendedMacros .= "`r`n`r`n/* ###--- Merged File: " A_LoopFileFullPath " ---###  `r`n*/`r`n"
 			appendedMacros .= "`n" tmp "`n`n"
 		}
 	}

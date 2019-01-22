@@ -23,6 +23,7 @@
 			Msgbox, 0x1030, %project% Problematic Installation Path, % msg
 		} Else {
 			SplashTextOff
+			SplashUI.DestroyUI()
 			msg .= "`n`n" "Do not report this, it is intended behaviour! Move your script folder to somewhere else!"
 			Msgbox, 0x1010, %project% Invalid Installation Path, % msg
 		}	
