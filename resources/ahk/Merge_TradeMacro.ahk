@@ -187,7 +187,8 @@ RunAsAdmin(arguments)
 }
 
 StartSplashScreen(version) {
-	global SplashUI := new SplashUI("on", "PoE-TradeMacro", "Initializing PoE-TradeMacro...", "- Checking permission and access to some folders...", version, scriptDir "\resources\images\greydot.png")
+	global SplashUI := new SplashUI("on", "PoE-TradeMacro", "Initializing PoE-TradeMacro...", "", version, scriptDir "\resources\images\greydot.png")
+	SplashUI.SetSubMessage("Checking permission and access to some folders...")
 }
 
 AppendCustomMacros(userDirectory)

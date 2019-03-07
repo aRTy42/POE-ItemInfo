@@ -14,10 +14,14 @@ If (not StrLen(versionFile) or error) {
 		MsgBox, 16, PoE-TradeMacro - Critical error, % "You are trying to run PoE-TradeMacro from inside a zip-archive, please unzip the whole folder. `n`nClosing script..."
 		ExitApp
 	} Else {
-		If (FileExist(versionFilePath)) {
+		If (not FileExist(versionFilePath)) {
 			MsgBox, 16, PoE-TradeMacro - Critical error, % "Script couldn't find the file """ A_ScriptDir "\resources\VersionTrade.txt"". `n`nClosing script..."
 		} Else {
-			MsgBox, 16, PoE-TradeMacro - Critical error, % "Script couldn't read/access the file """ A_ScriptDir "\resources\VersionTrade.txt"". `n`nClosing script..."
+			msg := "Script couldn't read/access the file """ A_ScriptDir "\resources\VersionTrade.txt"". "
+			msg .= "`n"   "Try running this script as admin if you haven't done so already."
+			msg .= "`n`n" "This could also be caused by some other application blocking AHK from reading the file, like your security suite or some application that snycs the drive/folder that the macro is located in."
+			msg .= "`n`n" "Closing script..."
+			MsgBox, 16, PoE-TradeMacro - Critical error, % msg
 		}
 		ExitApp
 	}

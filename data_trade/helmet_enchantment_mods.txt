@@ -437,6 +437,7 @@ Static Strike has +# maximum Beam Targets
 +#% to Stone Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Stone Golems
 Storm Brand deals #% increased Damage
+Storm Burst fires an additional Projectile
 #% chance to Avoid interruption from Stuns while Casting Storm Burst
 #% increased Storm Burst Damage
 #% increased Storm Burst Area of Effect

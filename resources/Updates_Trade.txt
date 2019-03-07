@@ -1,5 +1,17 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.14.0
+================================================================================================
+* Initial support for the Synthesis league (synthesised and fractured items):
+	** Added parsing for these item bases and mods.
+	** Added advanced search support for these items.
+	** Finalizing the search parameters for these items/mods will have to wait a bit because they depend on upcoming poe.trade changes.
+	** These features are partly disabled until then.
+	** BE CAREFUL when pricing synthesised/fractured items in the first days. Don't fully trust the macro.
+* Adjusted the handling of enchantments since they now aren't implicit mods anymore.
+* Updated all data files. As alwyays further updates will have to wait until the wiki is updated (new and updated uniques/enchantments).
+* Fixed poe.ninja item urls.
+
 2.13.1
 ================================================================================================
 * Added a new splash screen.

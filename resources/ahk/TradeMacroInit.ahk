@@ -180,6 +180,8 @@ If (_updateConfigWrite) {
 */
 OnMessage( 0x111, "HandleGuiControlSetFocus" )
 
+global ItsApriFoolsTime := TradeFunc_CheckAprilFools()
+
 TradeFunc_FinishTMInit(argumentMergeScriptPath)
 
 ; ----------------------------------------------------------- Functions ----------------------------------------------------------------
@@ -1565,10 +1567,10 @@ TradeFunc_StartSplashScreen(TradeReleaseVersion) {
 	initArray := ["Initializing script...", "Preparing Einhars welcoming party...", "Uninstalling Battle.net...", "Investigating the so-called ""Immortals""...", "Starting mobile app..."
 		, "Hunting some old friends...", "Interrogating Master Krillson about fishing secrets...", "Trying to open Voricis chest...", "Setting up lab carries for the other 99%..."
 		, "Helping Alva discover the Jungle Hideout...", "Conning EngineeringEternity with the Atlas City Shuffle...", "Vendoring stat-sticks..."]
-	*/	
+	*/
 
-	initArray := ["Initializing script...", "Preparing Einhars welcoming party...", "Uninstalling Battle.net...", "Investigating the so-called ""Immortals""..."
-		, "Hunting some old friends...", "Setting up lab carries for the other 99%...", "Msg @ScourgeOfTheImmortals to share new map hideouts with me."]
+	initArray := ["Hand initializing script...", "Searching for synthesis targets...", "Restoring memory dumps...", "Clearing memory dumps...", "Hand casting search queries..."
+		, "Applying melee focused loot filter...", "Stabilizing memories...", "Hand drawing the user interface..."]
 
 	Random, randomNum, 1, initArray.MaxIndex()
 	
