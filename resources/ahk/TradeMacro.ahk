@@ -689,9 +689,10 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			If (s.mods[A_Index].selected > 0) {
 				modParam := new _ParamMod()
 				
-				If (s.mods[A_Index].spawntype = "fragmented" and s.inlcudeFractured) {
-					modParam.mod_name := TradeFunc_FindInModGroup(TradeGlobals.Get("ModsData")["fragmented"], s.mods[A_Index])
+				If (s.mods[A_Index].spawntype = "fractured" and s.inlcudeFractured) {
+					modParam.mod_name := TradeFunc_FindInModGroup(TradeGlobals.Get("ModsData")["fractured"], s.mods[A_Index])
 				}
+				
 				If (not StrLen(modParam.mod_name)) {
 					modParam.mod_name := s.mods[A_Index].param	
 				}
@@ -794,7 +795,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RequestParams.corrupted := "0"
 		}
 		
-		; special bases (elder/shaper/synthesised/fragmented)
+		; special bases (elder/shaper/synthesised/fractured)
 		If (s.useSpecialBase) {
 			If (Item.IsShaperBase) {
 				RequestParams.Shaper := 1
@@ -934,6 +935,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RequestParams.Shaper := ""
 			RequestParams.Elder := ""
 			RequestParams.Fractured := ""
+			RequestParams.Synthesised := ""
 		} Else {
 			If (Item.IsShaperBase) {
 				RequestParams.Shaper := 1
@@ -975,8 +977,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}		
 	}
 	
-	If (not AdvancedPriceCheckItem.mods.length() <= 0) {				
-		; TODO: speculated params
+	If (not AdvancedPriceCheckItem.mods.length() <= 0) {
 		If (Item.veiledPrefixCount) {
 			/*
 			RequestParams.veiledPrefix_min := Item.veiledPrefixCount
@@ -3758,7 +3759,7 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["leaguestone"], _item.mods[k])
 			}
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["fragmented"], _item.mods[k])
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["fractured"], _item.mods[k])
 			}
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["synthesised"], _item.mods[k])
@@ -3799,7 +3800,7 @@ TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["leaguestone"], _item.mods[k])
 		}
 		If (StrLen(_item.mods[k]["param"]) < 1) {
-			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["fragmented"], _item.mods[k])
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["fractured"], _item.mods[k])
 		}
 		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["synthesised"], _item.mods[k])
@@ -3821,7 +3822,7 @@ TradeFunc_FindInModGroup(modgroup, needle, simpleRange = true, recurse = true) {
 	editedNeedle := ""
 
 	For j, mod in modgroup {
-		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)|\(leaguestone\)|\(beastiary\)", ""))
+		s  := Trim(RegExReplace(mod, "i)\(pseudo\)|\(total\)|\(crafted\)|\(implicit\)|\(explicit\)|\(enchant\)|\(prophecy\)|\(leaguestone\)|\(beastiary\)|\(fractured\)|\(synthesised\)", ""))
 		If (simpleRange) {
 			s  := RegExReplace(s, "# ?to ? #", "#")
 		}
@@ -4918,7 +4919,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 
 		If (advItem.isFracturedBase and advItem.mods[A_Index].spawnType = "fractured") {
 			GuiAddPicture(A_ScriptDir "\resources\images\fractured-symbol.png", "xp+28 yp-" fracturedImageShift " w27 h-1 0x0100", "", "", "", "", "SelectModsGui")
-			Gui, SelectModsGui:Add, Edit, xp+0 h27 w1 yp+%fracturedImageShift% vTradeAdvancedIsFragmented%index% Disabled1, % "1" 	; fix positions and set the hidden "fragmented" parameter
+			Gui, SelectModsGui:Add, Edit, xp+0 h27 w1 yp+%fracturedImageShift% vTradeAdvancedIsFractured%index% Disabled1, % "1" 	; fix positions and set the hidden "fractured" parameter
 		}
 		
 		; hidden fields to pass the raw/original mod names also
@@ -5049,7 +5050,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	If (advItem.specialBase) {
 		If (not RegExMatch(advItem.specialBase,"i)fractured")) {
 			Gui, SelectModsGui:Add, CheckBox, x+15 yp+0 vTradeAdvancedSelectedSpecialBase Checked, % advItem.specialBase 	
-		} Else If (advItem.isFracturedBase and false) { ; todo enable this
+		} Else If (advItem.isFracturedBase) {
 			Gui, SelectModsGui:Add, CheckBox, x+15 yp+0 vTradeAdvancedSelectedSpecialBase Checked, % advItem.specialBase 
 		}		
 	}
@@ -5094,21 +5095,12 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	
 	; fractured mods
 	If (advItem.isFracturedBase) {
-		If (false) {  ; todo enable this
-			GuiAddText("Include fractured states", "x" RightPosText " y+10 right w130 0x0100", "LblFracturedInfo", "LblFracturedInfoH", "", "", "SelectModsGui")
-			Gui, SelectModsGui:Add, CheckBox, x%RightPos% yp+0 vTradeAdvancedSelectedIncludeFractured gAdvancedIncludeFractured Checked, % " "	
-			GuiAddPicture(A_ScriptDir "\resources\images\fractured-symbol.png", "xp+28 yp-" fracturedImageShift " w27 h-1 0x0100", "", "", "", "", "SelectModsGui")
-		
-			GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-" 193 " yp+" fracturedImageShift - 1 " w15 h-1 0x0100", "FracturedInfo", "FracturedInfoH", "", "", "SelectModsGui")
-			AddToolTip(LblFracturedInfoH, "Includes selected fractured mods with their ""fractured"" porperty`n instead of as normal mods.")
-		} Else {
-			GuiAddText("Fractured mods not working", "x" RightPosText - 30 " y+10 right w160 0x0100 cRed", "LblFracturedInfo", "LblFracturedInfoH", "", "", "SelectModsGui")
-			Gui, SelectModsGui:Add, CheckBox, x%RightPos% yp+0 vTradeAdvancedSelectedIncludeFractured gAdvancedIncludeFractured Disabled, % " "	
-			GuiAddPicture(A_ScriptDir "\resources\images\fractured-symbol.png", "xp+28 yp-" fracturedImageShift " w27 h-1 0x0100", "", "", "", "", "SelectModsGui")
-		
-			GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-" 223 " yp+" fracturedImageShift - 1 " w15 h-1 0x0100", "FracturedInfo", "FracturedInfoH", "", "", "SelectModsGui")
-			AddToolTip(LblFracturedInfoH, "The option to search fractured mods with their ""fractured"" property`ninstead of as a normal mod is disabled until poe.trades implementation is known.")
-		}
+		GuiAddText("Include fractured states", "x" RightPosText " y+10 right w130 0x0100", "LblFracturedInfo", "LblFracturedInfoH", "", "", "SelectModsGui")
+		Gui, SelectModsGui:Add, CheckBox, x%RightPos% yp+0 vTradeAdvancedSelectedIncludeFractured gAdvancedIncludeFractured Checked, % " "	
+		GuiAddPicture(A_ScriptDir "\resources\images\fractured-symbol.png", "xp+28 yp-" fracturedImageShift " w27 h-1 0x0100", "", "", "", "", "SelectModsGui")
+
+		GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-" 193 " yp+" fracturedImageShift - 1 " w15 h-1 0x0100", "FracturedInfo", "FracturedInfoH", "", "", "SelectModsGui")
+		AddToolTip(LblFracturedInfoH, "Includes selected fractured mods with their ""fractured"" porperty`n instead of as normal mods.")
 	}
 
 	If (ModNotFound) {
@@ -5229,7 +5221,7 @@ TradeFunc_ResetGUI() {
 			TradeAdvancedModMin%A_Index%	:=
 			TradeAdvancedModMax%A_Index%	:=
 			TradeAdvancedModName%A_Index%	:=
-			TradeAdvancedIsFragmented%A_Index% :=
+			TradeAdvancedIsFractured%A_Index% :=
 			TradeAdvancedModNameRaw%A_index% :=
 			TradeAdvancedModNameRawOrig%A_index% :=
 		}
@@ -5303,9 +5295,9 @@ TradeFunc_HandleGuiSubmit() {
 			Else If (TradeAdvancedIsImplicit%A_Index% and mod.selected) {
 				newItem.UsedInSearch.CorruptedMod := true
 			}
-			; fragmented mod
-			If (TradeAdvancedIsFragmented%A_Index% = "1" or TradeAdvancedIsFragmented%A_Index% = 1) {
-				mod.spawntype := "fragmented"
+			; fractured mod
+			If (TradeAdvancedIsFractured%A_Index% = "1" or TradeAdvancedIsFractured%A_Index% = 1) {
+				mod.spawntype := "fractured"
 			}
 
 			mods.Push(mod)
