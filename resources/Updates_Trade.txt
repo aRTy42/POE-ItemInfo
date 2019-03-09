@@ -1,5 +1,10 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.14.1
+================================================================================================
+* Hotfixed the parsing of crafted mords (advanced search) which was broken in PoE 3.6.
+* Updated data files (uniques, supported mods).
+
 2.14.0
 ================================================================================================
 * Initial support for the Synthesis league (synthesised and fractured items):

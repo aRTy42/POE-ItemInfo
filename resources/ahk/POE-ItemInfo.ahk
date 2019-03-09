@@ -3955,7 +3955,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		; --- PRE-PASS ---
 		Loop, Parse, ItemDataChunk, `n, `r
 		{			
-			LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured\)$")
+			LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured|crafted\)$")
 			If StrLen(LoopField) = 0
 			{
 				Continue ; Not interested in blank lines
@@ -4210,7 +4210,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		; --- PRE-PASS ---
 		Loop, Parse, ItemDataChunk, `n, `r
 		{
-			LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured\)$")
+			LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured|crafted\)$")
 			If StrLen(LoopField) = 0
 			{
 				Continue ; Not interested in blank lines
@@ -4252,7 +4252,7 @@ ParseAffixes(ItemDataAffixes, Item)
 	
 	Loop, Parse, ItemDataChunk, `n, `r
 	{		
-		LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured\)$")
+		LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured|crafted\)$")
 		If StrLen(LoopField) = 0
 		{
 			Continue ; Not interested in blank lines
@@ -8636,7 +8636,7 @@ ModStringToObject(string, isImplicit) {
 	RegExMatch(val, "i) \((fractured)\)$", sType)
 	spawnType := sType1
 	
-	val := RegExReplace(val, "i) \((fractured)\)$")
+	val := RegExReplace(val, "i) \((fractured|crafted)\)$")
 
 	; Collect all numeric values in the mod-string
 	Pos        := 0
@@ -8837,7 +8837,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 			mod.spawnType := spawnType1	
 		}		
 		
-		mod.name := RegExReplace(mod.name, "i) \((fractured)\)$")
+		mod.name := RegExReplace(mod.name, "i) \((fractured|crafted)\)$")
 		
 		; ### Base stats
 		; life and mana
