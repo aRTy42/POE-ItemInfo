@@ -12,7 +12,7 @@ Ancestral Warchief Totem grants #% increased Melee Damage while Active
 Ancestral Blademaster Totem grants #% of Physical Damage as Extra Fire Damage while Active
 #% increased Ancestral Blademaster Totem Damage
 #% increased Ancestral Blademaster Totem Area of Effect
-#% reduced Anger Mana Reservation
+Anger has #% reduced Mana Reservation
 Animated Guardians deal #% increased Damage
 +#% to Animated Guardian Elemental Resistances
 #% chance to create an additional Animate Weapon copy
@@ -23,7 +23,7 @@ Arc deals #% increased Damage for each time it has Chained
 Arc Chains an additional time
 Arc has +#% chance to Shock
 #% increased Arctic Armour Buff Effect
-#% reduced Arctic Armour Mana Reservation
+Arctic Armour has #% reduced Mana Reservation
 Arctic Breath's Chilling Area has #% increased Movement Speed
 #% increased Arctic Breath Damage
 #% increased Arctic Breath Duration
@@ -35,6 +35,9 @@ Ball Lightning fires an additional Projectile
 #% increased Ball Lightning Damage
 #% reduced Ball Lightning Projectile Speed
 #% increased Ball Lightning Area of Effect
+Bane has #% increased Area of Effect
+Bane deals #% increased Damage
+#% increased Effect of Curses applied by Bane
 #% increased Barrage Attack Speed
 #% increased Barrage Damage
 Barrage fires an additional Projectile
@@ -83,7 +86,7 @@ Caustic Arrow has #% chance to inflict Withered on Hit for # seconds base Durati
 #% chance to Dodge Attack Hits if you have finished Channelling Charged Dash Recently
 Charged Dash has #% more Movement Speed
 Charged Dash has +# to Radius of each Wave's last damage Area
-#% reduced Clarity Mana Reservation
+Clarity has #% reduced Mana Reservation
 #% increased Cleave Attack Speed
 #% increased Cleave Damage
 #% increased Cleave Area of Effect
@@ -115,7 +118,7 @@ Desecrate summons # additional corpses
 #% increased Desecrate Cooldown Recovery Speed
 #% increased Despair Duration
 #% increased Despair Curse Effect
-#% reduced Determination Mana Reservation
+Determination has #% reduced Mana Reservation
 #% increased Detonate Dead Damage
 Detonate Dead has a #% chance to detonate an additional Corpse
 #% increased Detonate Dead Area of Effect
@@ -124,7 +127,11 @@ Detonate Dead has a #% chance to detonate an additional Corpse
 #% chance for Discharge to deal Damage without removing Charges
 #% increased Discharge Damage
 #% increased Discharge Radius
-#% reduced Discipline Mana Reservation
+Discipline has #% reduced Mana Reservation
+Divine Ire's beam has #% increased width
+Divine Ire deals #% increased Damage
+Divine Ire Damages an additional nearby Enemy when gaining Stages
+Divine Ire Damages # additional nearby Enemies when gaining Stages
 Dominating Blow can summon # additional Magic Sentinels of Dominance
 Dominating Blow can summon an additional Rare Sentinel of Dominance
 #% increased Dominating Blow Damage
@@ -193,6 +200,7 @@ Flamethrower Trap has #% increased Cast Speed
 Flamethrower Trap has #% increased Cooldown Recovery Speed
 Flamethrower Trap deals #% increased Damage
 Flamethrower Trap has #% increased Skill Effect Duration
+Consecrated Ground created with Holy Flame Totem applies #% increased Damage taken to Enemies
 #% increased Flame Totem Damage
 Flame Totem fires an additional Projectile
 Flame Totem fires # additional Projectiles
@@ -233,25 +241,25 @@ Winter Orb has #% increased Area of Effect per Stage
 #% increased Glacial Hammer Damage
 Glacial Hammer has +#% chance to Freeze
 #% of Glacial Hammer Physical Damage gained as Extra Cold Damage
-#% reduced Grace Mana Reservation
+Grace has #% reduced Mana Reservation
 Ground Slam has a #% increased angle
 #% increased Ground Slam Damage
 #% increased Ground Slam Area of Effect
-#% reduced Haste Mana Reservation
-#% reduced Hatred Mana Reservation
+Haste has #% reduced Mana Reservation
+Hatred has #% reduced Mana Reservation
 #% increased Heavy Strike Attack Speed
 #% increased Heavy Strike Damage
 Heavy Strike has a #% chance to deal Double Damage
 Herald of Agony has #% reduced Mana Reservation
 Summoned Agony Crawler fires # additional Projectiles
 #% increased Herald of Ash Damage
-#% reduced Herald of Ash Mana Reservation
+Herald of Ash has #% reduced Mana Reservation
 #% increased Herald of Ice Damage
-#% reduced Herald of Ice Mana Reservation
+Herald of Ice has #% reduced Mana Reservation
 +# to maximum number of Sentinels of Purity
 Herald of Purity has #% reduced Mana Reservation
 #% increased Herald of Thunder Damage
-#% reduced Herald of Thunder Mana Reservation
+Herald of Thunder has #% reduced Mana Reservation
 Summoned Holy Relics have #% increased Buff Effect
 Summoned Holy Relics deal #% increased Damage
 Summoned Holy Relics have #% increased Area of Effect
@@ -326,6 +334,7 @@ Lightning Trap Damage Penetrates #% Lightning Resistance
 Magma Orb Chains an additional time
 Magma Orb Chains an additional # times
 #% increased Magma Orb Area of Effect
+Malevolence has #% reduced Mana Reservation
 Mirror Arrow and Mirror Arrow Clones have #% increased Attack Speed
 #% increased Mirror Arrow Cooldown Recovery Speed
 Mirror Arrow and Mirror Arrow Clones deal #% increased Damage
@@ -357,10 +366,13 @@ Power Siphon fires # additional Projectiles
 #% Chance for Puncture to Maim on hit
 #% increased Punishment Curse Effect
 #% increased Punishment Duration
-#% reduced Purity of Elements Mana Reservation
-#% reduced Purity of Fire Mana Reservation
-#% reduced Purity of Ice Mana Reservation
-#% reduced Purity of Lightning Mana Reservation
+Purifying Flame has #% increased Area of Effect if targeting Consecrated Ground
+Consecrated Ground created with Sanctify applies #% increased Damage taken to Enemies
+Purifying Flame deals #% increased Damage
+Purity of Elements has #% reduced Mana Reservation
+Purity of Fire has #% reduced Mana Reservation
+Purity of Ice has #% reduced Mana Reservation
+Purity of Lightning has #% reduced Mana Reservation
 #% increased Rain of Arrows Attack Speed
 #% increased Rain of Arrows Damage
 #% increased Rain of Arrows Area of Effect
@@ -414,6 +426,9 @@ Smite has #% increased Aura Effect
 Smite deals #% increased Damage
 #% increased Smoke Mine Duration
 Smoke Mine grants additional #% increased Movement Speed
+Soulrend also Hinders Enemies, with #% reduced Movement Speed
+Soulrend deals #% increased Damage
+Soulrend fires an additional Projectile
 #% increased Spark Damage
 Spark fires # additional Projectiles
 #% increased Spark Projectile Speed
@@ -437,7 +452,7 @@ Static Strike has +# maximum Beam Targets
 +#% to Stone Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Stone Golems
 Storm Brand deals #% increased Damage
-Storm Burst fires an additional Projectile
+Storm Burst has a #% chance to create an additional Orb
 #% chance to Avoid interruption from Stuns while Casting Storm Burst
 #% increased Storm Burst Damage
 #% increased Storm Burst Area of Effect
@@ -463,6 +478,7 @@ Chaos Golems deal #% increased Damage
 +#% Sweep Knockback Chance
 #% increased Sweep Area of Effect
 #% increased Tectonic Slam Area of Effect
+Tectonic Slam has #% chance to create a Charged Slam
 #% chance to create a Charged Slam
 #% increased Tectonic Slam Damage
 #% increased Tempest Shield Damage
@@ -483,7 +499,7 @@ Toxic Rain gains #% of Physical Damage as Extra Chaos Damage
 #% increased Viper Strike Critical Strike Chance
 #% increased Viper Strike Damage
 #% increased Viper Strike Duration
-#% reduced Vitality Mana Reservation
+Vitality has #% reduced Mana Reservation
 #% increased Volatile Dead Cast Speed
 #% increased Volatile Dead Damage
 Volatile Dead destroys up to # additional Corpse
@@ -497,6 +513,9 @@ Vortex has #% increased Cooldown Recovery Speed
 War Banner has #% increased Aura Effect
 #% increased Warlord's Mark Curse Effect
 #% increased Warlord's Mark Duration
+Wave of Conviction's Exposure applies -#% Elemental Resistance
+Wave of Conviction deals #% increased Damage
+Wave of Conviction has #% increased Duration
 #% increased Whirling Blades Attack Speed
 #% increased Whirling Blades Damage
 #% increased Wild Strike Damage
@@ -505,7 +524,8 @@ Wild Strike Chains an additional # times
 Winter Orb deals #% increased Damage
 Wither #% increased Duration
 Wither has #% increased Area of Effect
-#% reduced Wrath Mana Reservation
+Wrath has #% reduced Mana Reservation
+Zealotry has #% reduced Mana Reservation
 Zombies have #% increased Attack Speed
 +#% to Raised Zombie Elemental Resistances
 Storm Brand has a #% chance to Chain an additional time

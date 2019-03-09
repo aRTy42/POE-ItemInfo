@@ -14,7 +14,7 @@ Enemies Cannot Leech Life From you
 #% increased Cast Speed
 #% chance to Avoid being Frozen
 #% chance to Avoid being Ignited
-#% additional Chance to receive a Critical Strike
+Hits have +#% additional Critical Stike Chance against you
 #% chance to Dodge Attack Hits
 #% chance to Cause Monsters to Flee
 #% increased Chaos Damage for each Corrupted Item Equipped
@@ -49,11 +49,11 @@ Grants Level # Haste Skill
 Grants Level # Hatred Skill
 #% increased Endurance, Frenzy and Power Charge Duration
 #% increased Skill Effect Duration
-#% increased Life Leeched per second for each Corrupted Item Equipped
+#% increased total Recovery per second from Life Leech for each Corrupted Item Equipped
 #% of Lightning Damage Leeched as Life
 Adds # to # Chaos Damage
 +# to Weapon range
-#% increased Mana Leeched per second for each Corrupted Item Equipped
+#% increased total Recovery per second from Mana Leech for each Corrupted Item Equipped
 +# Mana gained for each Enemy hit by your Attacks
 #% of Damage taken gained as Mana over 4 seconds when Hit
 +# to Maximum Frenzy Charges
@@ -133,7 +133,9 @@ Determination has #% increased Aura Effect
 Discipline has #% increased Aura Effect
 Grace has #% increased Aura Effect
 Hatred has #% increased Aura Effect
+Malevolence has #% increased Aura Effect
 Wrath has #% increased Aura Effect
+Zealotry has #% increased Aura Effect
 #% increased Burning Damage
 #% increased Cast Speed during any Flask Effect
 #% increased Effect of Chill
@@ -167,6 +169,7 @@ Adds # to # Physical Damage
 #% increased Critical Strike Chance
 #% increased Physical Damage
 You cannot be Maimed
+Grants Level # Malevolence Skill
 +#% to maximum Chance to Block Attack Damage
 Gain #% of Physical Damage as Extra Cold Damage
 Gain #% of Physical Damage as Extra Fire Damage
@@ -203,6 +206,7 @@ Socketed Gems are Supported by Level # Reduced Mana
 #% chance to gain Unholy Might for 3 seconds on Kill
 #% increased Elemental Damage with Attack Skills
 Grants Level # Wrath Skill
-#% increased Vaal Skill Damage
+Grants Level # Zealotry Skill
+Vaal Skills deal #% increased Damage
 Grants Level # Vitality Skill
 Grants Level # Vulnerability Skill
