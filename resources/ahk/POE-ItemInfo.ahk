@@ -346,6 +346,7 @@ class Item_ {
 		This.GemColor		:= ""
 		This.veiledPrefixCount	:= ""
 		This.veiledSuffixCount	:= ""
+		This.fracturedModsCount	:= ""
 		
 		This.HasImplicit	:= False
 		This.HasEnchantment	:= False
@@ -8096,7 +8097,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	If (Item.IsLeagueStone or Item.IsScarab) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
-	If (Item.IsBeast) {
+	Else If (Item.IsProphecy) {
+		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
+	}
+	Else If (Item.IsBeast) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
 	ItemData.Affixes := RegExReplace(ItemDataParts%ItemDataIndexAffixes%, "[\r\n]+([a-z])", " $1")
@@ -8151,6 +8155,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	{
 		ParseAffixes(ItemData.Affixes, Item)
 	}
+	Else If (Item.IsProphecy) {
+		ParseAffixes(ItemData.Affixes, Item)
+	}
 	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = True)
 	{
 		MapModWarnings := ParseMapAffixes(ItemData.Affixes)
@@ -8180,6 +8187,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.BaseName := ItemBaseName
 	
 	pseudoMods := PreparePseudoModCreation(ItemData.Affixes, Item.Implicit, RarityLevel, Item.isMap)
+	fracturedModsCount :=  ; can't be reliably determined that easily since a hybrid mod (which counts as as single ractured mod) gets displayed as two fractured mods in the item data
 	
 	; Start assembling the text for the tooltip
 	TT := Item.Name

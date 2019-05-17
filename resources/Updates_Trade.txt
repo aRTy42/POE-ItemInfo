@@ -1,5 +1,9 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.14.2
+================================================================================================
+* Fixed event leagues not being parsed and therefore not being available in the league selection.
+
 2.14.1
 ================================================================================================
 * Hotfixed the parsing of crafted mords (advanced search) which was broken in PoE 3.6.

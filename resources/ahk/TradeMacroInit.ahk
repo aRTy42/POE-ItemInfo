@@ -141,6 +141,8 @@ ReadTradeConfig("", "config_trade.ini", _updateConfigWrite)
 TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
 
 TradeFunc_CheckIfCloudFlareBypassNeeded()
+; call it again (TradeFunc_CheckIfCloudFlareBypassNeeded reads poetrades available leagues but can't be called before the first TradeFunc_GetLeagues call at the moment (bad coding))
+TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
 
 ; set this variable to skip the update check in "PoE-ItemInfo.ahk"
 SkipItemInfoUpdateCall := 1
@@ -391,7 +393,7 @@ TradeFunc_GetLeagues() {
 	standard := "standard"
 
 	For key, val in LeaguesData {
-		If (!val.event and not RegExMatch(val.id, "i)^SSF"))  {
+		If (not val.event and not RegExMatch(val.id, "i)^SSF")) {
 			If (val.id = standard) {
 				leagues[standard] := val.id
 			}
@@ -405,9 +407,17 @@ TradeFunc_GetLeagues() {
 				leagues["tmp" standard] := val.id
 			}
 		}
+		Else If (val.event and not RegExMatch(val.id, "i)^SSF")) {
+			If (InStr(val.id, " HC ")) {
+				leagues["event" hardcore] := val.id
+			}
+			Else {
+				leagues["event" standard] := val.id
+			}
+		}
 		Else {
 			For i, value in poeTradeLeagues {
-				If (value = val.id) {
+				If (value = val.id and not RegExMatch(value, "i)^PS4|^XBOX")) {
 					trimmedValue := Format("{:L}", RegExReplace(value, "i)\s", ""))
 					leagues[trimmedValue] := value
 				}
@@ -419,7 +429,7 @@ TradeFunc_GetLeagues() {
 	; make sure there are no duplicate temp leagues (hardcoded keys)
 	For j, value in poeTradeLeagues {
 		trimmedValue := Format("{:L}", RegExReplace(value, "i)\s", ""))
-		If (not leagues[trimmedValue]) {
+		If (not leagues[trimmedValue] and not RegExMatch(value, "i)^PS4|^XBOX")) {
 			found := false
 			For i, l in leagues {
 				If (value = l) {
@@ -431,7 +441,7 @@ TradeFunc_GetLeagues() {
 			}
 		}
 	}
-	
+
 	Return leagues
 }
 

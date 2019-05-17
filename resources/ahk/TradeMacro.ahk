@@ -689,10 +689,10 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			If (s.mods[A_Index].selected > 0) {
 				modParam := new _ParamMod()
 				
-				If (s.mods[A_Index].spawntype = "fractured" and s.inlcudeFractured) {
+				If (s.mods[A_Index].spawntype = "fractured" and s.includeFractured) {
 					modParam.mod_name := TradeFunc_FindInModGroup(TradeGlobals.Get("ModsData")["fractured"], s.mods[A_Index])
 				}
-				
+
 				If (not StrLen(modParam.mod_name)) {
 					modParam.mod_name := s.mods[A_Index].param	
 				}
@@ -701,6 +701,19 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 				modParam.mod_max := s.mods[A_Index].max	
 				RequestParams.modGroups[1].AddMod(modParam)
 			}
+		}
+		If (s.includeFracturedCount and s.fracturedCount > 0) {
+			modParam := new _ParamMod()
+			modParam.mod_name := "(pseudo) # Fractured Modifiers" ; TradeFunc_FindInModGroup(TradeGlobals.Get("ModsData")["pseudo"], "# Fractured Modifiers")
+			/*
+			_tmpitem := {}
+			_tmpitem.mods := []
+			_tmpitem.mods.push({name : "# Fractured Modifiers"})
+			modParam.mod_name := TradeFunc_GetItemsPoeTradeMods(_tmpitem)
+			*/			
+			modParam.mod_min := s.fracturedCount
+			modParam.mod_max := s.fracturedCount
+			RequestParams.modGroups[1].AddMod(modParam)
 		}
 		Loop % s.stats.Length() {
 			If (s.stats[A_Index].selected > 0) {
@@ -1306,6 +1319,22 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			;RequestParams. := 1
 			;Item.UsedInSearch.abyssJewel := 1 
 		}
+	}
+	
+	/*
+		prophecies
+		*/
+	If (Item.IsProphecy and RegExMatch(Item.Name, "i)A Master seeks Help")) {
+		_tempItem	:= {}
+		_tempItem.name_orig	:= "(prophecy) " ItemData.Affixes
+		_tempItem.name		:= "(prophecy) " ItemData.Affixes
+		_tempItem.param	:= "(prophecy) " ItemData.Affixes
+
+		modParam := new _ParamMod()
+		modParam.mod_name := _tempItem.param
+		modParam.mod_min := 
+		modParam.mod_max := 
+		RequestParams.modGroups[1].AddMod(modParam)
 	}
 
 	/*
@@ -5101,6 +5130,12 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 
 		GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-" 193 " yp+" fracturedImageShift - 1 " w15 h-1 0x0100", "FracturedInfo", "FracturedInfoH", "", "", "SelectModsGui")
 		AddToolTip(LblFracturedInfoH, "Includes selected fractured mods with their ""fractured"" porperty`n instead of as normal mods.")
+		
+		GuiAddText("Fractured mods count", "x" RightPosText " y+10 right w130 0x0100", "LblFracturedCount", "LblFracturedCountH", "", "", "SelectModsGui")
+		Gui, SelectModsGui:Add, CheckBox, x%RightPos% yp+0 vTradeAdvancedSelectedFracturedCount Checked, % " "
+		Gui, SelectModsGui:Add, Edit    , x+1 yp-4 w30 vTradeAdvancedFracturedCount , 
+		GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-" 193 " yp+" 3 " w15 h-1 0x0100", "FracturedCount", "FracturedCountH", "", "", "SelectModsGui")
+		AddToolTip(LblFracturedCountH, "The correct number of fractured mods can't be determined from the item data reliably.`n`nMake sure to check it by pressing ""Alt"" when hovering over your item, `nwhich requires ""Advanced Mod Descriptions"" to be enabled.")
 	}
 
 	If (ModNotFound) {
@@ -5266,6 +5301,8 @@ TradeFunc_ResetGUI() {
 	TradeAdvancedSelectedVeiledSuffix	:=
 	TradeAdvancedVeiledSuffixCount	:=	
 	TradeAdvancedSelectedIncludeFractured	:=	
+	TradeAdvancedSelectedFracturedCount	:=	
+	TradeAdvancedFracturedCount	:=	
 
 	TradeGlobals.Set("AdvancedPriceCheckItem", {})
 }
@@ -5342,7 +5379,9 @@ TradeFunc_HandleGuiSubmit() {
 	newItem.veiledPrefixCount	:= TradeAdvancedVeiledPrefixCount
 	newItem.useVeiledSuffix		:= TradeAdvancedSelectedVeiledSuffix
 	newItem.veiledSuffixCount	:= TradeAdvancedVeiledSuffixCount
-	newItem.inlcudeFractured		:= TradeAdvancedSelectedIncludeFractured
+	newItem.includeFractured		:= TradeAdvancedSelectedIncludeFractured
+	newItem.includeFracturedCount	:= TradeAdvancedSelectedFracturedCount
+	newItem.fracturedCount		:= TradeAdvancedFracturedCount
 
 	TradeGlobals.Set("AdvancedPriceCheckItem", newItem)
 	Gui, SelectModsGui:Destroy
@@ -5645,7 +5684,7 @@ ReadPoeNinjaCurrencyData:
 	fallBackDir	:= A_ScriptDir . "\data_trade"
 	url			:= "https://poe.ninja/api/Data/GetCurrencyOverview?league=" . league
 	parsedJSON	:= CurrencyDataDownloadURLtoJSON(url, sampleValue, false, isFallback, league, "PoE-TradeMacro", file, fallBackDir, usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest, TradeOpts.CurlTimeout)
-	
+
 	; fallback to Standard and Hardcore league if used league seems to not be available
 	If (!parsedJSON.currencyDetails.length()) {
 		isFallback	:= true
