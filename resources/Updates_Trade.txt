@@ -1,5 +1,15 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.15.0
+================================================================================================
+* Added support for the korean PoE game client.
+* Fixed the GDI+ tooltip, it now works again.
+* Fixed some sceptres incorrectly being treated as maces on poe.trade.
+* Fixed the beyond map mod not being recognized by ItemInfos map mod warnings.
+* Added the currently selected search league to the tray icon tooltip.
+* Added an update check that repeats every 2 hours, shows a tray tip ballon notification and a different tray icon when an update is available. This notification won't be visible when using any application in fullscreen.
+
+
 2.14.2
 ================================================================================================
 * Fixed event leagues not being parsed and therefore not being available in the league selection.

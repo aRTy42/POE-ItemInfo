@@ -25,8 +25,14 @@ global TradeCurrencyNames := ReadJSONDataFromFile(A_ScriptDir "\data_trade\curre
 ; Parse fallback currency IDs
 global TradeCurrencyIDsFallback := ReadJSONDataFromFile(A_ScriptDir "\data_trade\currencyIDs_Fallback.json")
 
-; Parse the unique items data
+; Parse the currency tags
 global TradeCurrencyTags := ReadJSONDataFromFile(A_ScriptDir "\data_trade\currency_tags.json", "tags")
+
+; Parse item base data (weapons)
+global TradeItemBasesWeapons := ReadJSONDataFromFile(A_ScriptDir "\data_trade\item_bases_weapon.json", "item_bases_weapon")
+
+; Parse item base data (armours)
+global TradeItemBasesArmours := ReadJSONDataFromFile(A_ScriptDir "\data_trade\item_bases_armour.json", "item_bases_armour")
 
 SplashUI.SetSubMessage("Parsing leagues from GGGs API...")
 ; Download and parse the current leagues

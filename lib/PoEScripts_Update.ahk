@@ -1,13 +1,13 @@
 ﻿#Include, %A_ScriptDir%\lib\JSON.ahk
 #Include, %A_ScriptDir%\lib\zip.ahk
 
-PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "", debugState = false) {
+PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "", debugState = false, repeatedCheck = false) {
 	debug := (debugState) ? 1 : 0
-	status := GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle, debug)
+	status := GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle, debug, repeatedCheck)
 	Return status
 }
 
-GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "", debug = 0) {
+GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "", debug = 0, repeatedCheck = false) {
 	If (ShowUpdateNotification = 0) {
 		return
 	}
@@ -97,7 +97,14 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 		versions := ParseVersionStringsToObject(releaseTag, ReleaseVersion)
 		
 		newRelease := CompareVersions(versions.latest, versions.current)
-		If (newRelease) {
+		If (newRelease and repo = "PoE-TradeMacro") {
+			Menu, Tray, Icon, %A_ScriptDir%\resources\images\poe-trade-bl-update.ico
+		}
+		
+		If (newRelease and repeatedCheck) {
+			TrayTip, %repo%, Update available.
+		}
+		Else If (newRelease) {
 			If (SplashScreenTitle) {
 				Try {
 					WinSet, AlwaysOnTop, Off, %SplashScreenTitle%
@@ -148,8 +155,10 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 			Return s
 		}
 	} Catch e {
-		SplashTextOff
-		MsgBox,,, % "Update-Check failed, Exception thrown!`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
+		If (not repeatedCheck) {
+			SplashTextOff
+			MsgBox,,, % "Update-Check failed, Exception thrown!`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
+		}
 	}
 	
 	Return

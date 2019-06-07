@@ -367,7 +367,7 @@ Power Siphon fires # additional Projectiles
 #% increased Punishment Curse Effect
 #% increased Punishment Duration
 Purifying Flame has #% increased Area of Effect if targeting Consecrated Ground
-Consecrated Ground created with Sanctify applies #% increased Damage taken to Enemies
+Consecrated Ground from Purifying Flame applies #% increased Damage taken to Enemies
 Purifying Flame deals #% increased Damage
 Purity of Elements has #% reduced Mana Reservation
 Purity of Fire has #% reduced Mana Reservation

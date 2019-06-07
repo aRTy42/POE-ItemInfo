@@ -15,6 +15,8 @@ GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExi
 GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExileSteam.exe
 GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile_x64.exe
 GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile_x64Steam.exe
+GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile_KG.exe
+GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile_x64_KG.exe
 
 #Include, %A_ScriptDir%\resources\Version.txt
 #Include, %A_ScriptDir%\lib\JSON.ahk
@@ -2484,7 +2486,7 @@ ParseMapAffixes(ItemDataAffixes)
 			SetMapInfoLine("Prefix", MapAffixCount)
 			Continue
 		}
-		If (RegExMatch(A_LoopField, "Slaying Enemies close together can attract monsters from Beyond"))
+		If (RegExMatch(A_LoopField, "Slaying Enemies close together has a \d+% chance to attract monsters from Beyond"))
 		{
 			MapModWarnings .= MapModWarn.Beyond ? "`nBeyond" : ""
 			SetMapInfoLine("Prefix", MapAffixCount)
@@ -11924,6 +11926,7 @@ CurrencyDataDownloadURLtoJSON(url, sampleValue, critical = false, isFallbackRequ
 	errorMsg .= "`n`n"
 	errorMsg .= "You can find a log file with some debug information:"
 	errorMsg .= "`n" """" A_ScriptDir "\temp\StartupLog.txt"""
+	errorMsg .= "`n`nTry opening the settings menu and selecting a league/making sure that one is selected."
 	errorMsg .= "`n`n"
 
 	errors := 0

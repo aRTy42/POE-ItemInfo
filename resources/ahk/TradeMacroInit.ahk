@@ -82,6 +82,7 @@ TradeGlobals.Set("DefaultLeague", (TradeFunc_CheckIfTempLeagueIsRunning() > 0) ?
 TradeGlobals.Set("GithubUser", "POE-TradeMacro")
 TradeGlobals.Set("GithubRepo", "POE-TradeMacro")
 TradeGlobals.Set("ReleaseVersion", TradeReleaseVersion)
+TradeGlobals.Set("TrayTip", "")
 Globals.Set("AssignedHotkeys", {})
 global globalUpdateInfo := {}
 globalUpdateInfo.repo := TradeGlobals.Get("GithubRepo")
@@ -138,11 +139,11 @@ global overwrittenUserFiles	:= argumentOverwrittenFiles
 TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
 Sleep, 200
 ReadTradeConfig("", "config_trade.ini", _updateConfigWrite)
-TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
 
 TradeFunc_CheckIfCloudFlareBypassNeeded()
 ; call it again (TradeFunc_CheckIfCloudFlareBypassNeeded reads poetrades available leagues but can't be called before the first TradeFunc_GetLeagues call at the moment (bad coding))
 TradeGlobals.Set("Leagues", TradeFunc_GetLeagues())
+TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague])
 
 ; set this variable to skip the update check in "PoE-ItemInfo.ahk"
 SkipItemInfoUpdateCall := 1
@@ -1578,9 +1579,27 @@ TradeFunc_StartSplashScreen(TradeReleaseVersion) {
 		, "Hunting some old friends...", "Interrogating Master Krillson about fishing secrets...", "Trying to open Voricis chest...", "Setting up lab carries for the other 99%..."
 		, "Helping Alva discover the Jungle Hideout...", "Conning EngineeringEternity with the Atlas City Shuffle...", "Vendoring stat-sticks..."]
 	*/
-
-	initArray := ["Hand initializing script...", "Searching for synthesis targets...", "Restoring memory dumps...", "Clearing memory dumps...", "Hand casting search queries..."
-		, "Applying melee focused loot filter...", "Stabilizing memories...", "Hand drawing the user interface..."]
+	
+	initArray := ["Loading Carnage league data..."
+		,"Taking the element out of elementalist..."
+		,"Grinding Artifact Power to fight the legion..."
+		,"Moving all map drops to the Memory Nexus..."
+		,"Corrupting passives..."
+		,"Deleting elementalist for performance reasons..."
+		,"Compiling angry reddit threads..."
+		,"Lowering prices of Energy Shield gear..."
+		,"Reenacting the Battle of the Five Armies..."
+		,"Unlocking the fifth sloth..."
+		,"Welcoming our new Korean top-racers..."
+		,"Updating price fixing algorithms..."
+		,"Booting up second life..."
+		,"Interfacing with the better legion expansion..."
+		,"Preparing funeral for Occultist..."
+		,"Hiding Mirrors of Kalandra in the currently selected lootfilter..."
+		,"Searching for the crying woman in Crossroads..."
+		,"Forcing Soul of Steel allocation..."
+		,"Replacing toucan copypasta with the new sloth overlord..."
+		,"Blocking access to the auction house..."]
 
 	Random, randomNum, 1, initArray.MaxIndex()
 	
@@ -1623,4 +1642,6 @@ TradeFunc_FinishTMInit(argumentMergeScriptPath) {
 	SplashUI.SetSubMessage("Fetching currency data for currently selected league...")
 	GoSub, ReadPoeNinjaCurrencyData
 	GoSub, TrackUserCount
+	
+	SetTimer, CheckForUpdatesTimer, 7200000
 }

@@ -465,11 +465,6 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		hasAdvancedSearch := true
 	}
 
-	; Harbinger fragments/maps are unique but not flagged as such on poe.trade
-	If (RegExMatch(Item.Name, "i)(First|Second|Third|Fourth) Piece of.*|The Beachhead.*")) {
-		Item.IsUnique 	:= false
-	}
-
 	/*
 		further item parsing and preparation
 		*/	
@@ -856,13 +851,25 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	/*
 		prepend the item.subtype to match the options used on poe.trade
 		*/	
-	If (RegExMatch(Item.SubType, "i)Mace|Axe|Sword")) {
+	If (RegExMatch(Item.SubType, "i)Mace|Axe|Sword|Sceptre")) {
 		If (Item.IsThreeSocket) {
-			If (RegExMatch(Item.BaseName, "i)Sceptre")) {
-				Item.xtype := "Sceptre"
+			If (TradeItemBasesWeapons[Item.BaseName]["Item Class"]) {
+				Item.ItemClass := TradeItemBasesWeapons[Item.BaseName]["Item Class"]
+			}
+			
+			If (Item.ItemClass) {
+				If (RegExMatch(Item.ItemClass, "i)Sceptres")) {
+					Item.xtype := "Sceptre"
+				}
 			} Else {
-				Item.xtype := "One Hand " . Item.SubType	
-			}			
+				If (RegExMatch(Item.BaseName, "i)Sceptre")) {
+					Item.xtype := "Sceptre"
+				}
+			}
+			
+			If (not Item.xtype) {
+				Item.xtype := "One Hand " . Item.SubType				
+			}
 		}
 		Else {
 			Item.xtype := "Two Hand " . Item.SubType
@@ -886,7 +893,10 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Item.UsedInSearch.Rarity := "Relic"
 		} Else If (Item.IsUnique) {
 			RequestParams.rarity := "unique"
-			RequestParams.xbase  := Item.BaseName
+			; Harbinger fragments are unique but don't have a selectable base type on poe.trade
+			If (!RegExMatch(Item.Name, "i)(First|Second|Third|Fourth) Piece of.*")) {
+				RequestParams.xbase  := Item.BaseName
+			}
 		}
 		Item.UsedInSearch.FullName := true
 	}
@@ -5598,7 +5608,11 @@ OverwriteSettingsNameTimer:
 
 	If (o) {
 		RelVer := TradeGlobals.Get("ReleaseVersion")
-		Menu, Tray, Tip, Path of Exile TradeMacro %RelVer%
+		TradeFunc_SetMenuTrayTip("Path of Exile TradeMacro - " RelVer)
+		If (TradeOpts.SearchLeague) {			
+			TradeFunc_SetMenuTrayTip("`nSelected league: """ TradeOpts.SearchLeague """", true)
+		}
+
 		OldMenuTrayName := Globals.Get("SettingsUITitle")
 		NewMenuTrayName := TradeGlobals.Get("SettingsUITitle")
 		Menu, Tray, UseErrorLevel
@@ -5612,10 +5626,26 @@ OverwriteSettingsNameTimer:
 	}
 Return
 
+TradeFunc_SetMenuTrayTip(msg, append := false) {
+	_TrayTip := ""
+	If (not append) {
+		TradeGlobals.Set("TrayTip", msg)
+		_TrayTip := TradeGlobals.Get("TrayTip")
+	} Else {
+		_TrayTip := TradeGlobals.Get("TrayTip") . msg
+		TradeGlobals.Set("TrayTip", _TrayTip)
+	}	
+	Menu, Tray, Tip, %_TrayTip%
+}
+
 OverwriteUpdateOptionsTimer:
 	If (InititalizedItemInfoUserOptions) {
 		TradeFunc_SyncUpdateSettings()
 	}
+Return
+
+CheckForUpdatesTimer:
+	PoEScripts_Update(globalUpdateInfo.user, globalUpdateInfo.repo, globalUpdateInfo.releaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, globalUpdateInfo.skipSelection, globalUpdateInfo.skipBackup, SplashScreenTitle, TradeOpts.Debug, true)
 Return
 
 BringPoEWindowToFrontAfterInit:
