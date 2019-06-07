@@ -13,8 +13,10 @@ SendMode Input ; Recommended for new scripts due to its superior speed and relia
 ;Define window criteria for the regular and steam version, for later use at the very end of the script. This needs to be done early, in the "auto-execute section".
 GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile.exe
 GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExileSteam.exe
+GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile_KG.exe
 GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile_x64.exe
 GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile_x64Steam.exe
+GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExile_x64_KG.exe
 
 #Include, %A_ScriptDir%\resources\Version.txt
 #Include, %A_ScriptDir%\lib\JSON.ahk
@@ -23,6 +25,7 @@ GroupAdd, PoEWindowGrp, Path of Exile ahk_class POEWindowClass ahk_exe PathOfExi
 #Include, %A_ScriptDir%\lib\ConvertKeyToKeyCode.ahk
 #Include, %A_ScriptDir%\lib\Class_GdipTooltip.ahk
 #Include, %A_ScriptDir%\lib\Class_ColorPicker.ahk
+#Include, %A_ScriptDir%\lib\Class_SplashUI.ahk
 #Include, %A_ScriptDir%\lib\AdvancedHotkey.ahk
 IfNotExist, %A_ScriptDir%\temp
 FileCreateDir, %A_ScriptDir%\temp
@@ -228,11 +231,11 @@ class Fonts {
 		{
 			Options .= "s" FontSize_
 		}		
-		Gui Font, %Options%, Arial
-		Gui Font, %Options%, Tahoma
-		Gui Font, %Options%, Segoe UI
-		Gui Font, %Options%, Verdana
-		Gui Add, Text, HwndHidden h0 w0 x0 y0,
+		Gui, SettingsUI:Font, %Options%, Arial
+		Gui, SettingsUI:Font, %Options%, Tahoma
+		Gui, SettingsUI: Font, %Options%, Segoe UI
+		Gui, SettingsUI: Font, %Options%, Verdana
+		Gui, SettingsUI: Add, Text, HwndHidden h0 w0 x0 y0,
 		SendMessage, 0x31,,,, ahk_id %Hidden%
 		return ErrorLevel
 	}
@@ -338,14 +341,17 @@ class Item_ {
 		This.SubType		:= ""		
 		This.DifficultyRestriction := ""
 		This.Implicit		:= []
+		This.Enchantment	:= []
 		This.Charges		:= []
 		This.AreaMonsterLevelReq := []
 		This.BeastData 	:= {}
 		This.GemColor		:= ""
 		This.veiledPrefixCount	:= ""
 		This.veiledSuffixCount	:= ""
+		This.fracturedModsCount	:= ""
 		
 		This.HasImplicit	:= False
+		This.HasEnchantment	:= False
 		This.HasEffect		:= False
 		This.IsWeapon		:= False
 		This.IsArmour 		:= False
@@ -379,6 +385,8 @@ class Item_ {
 		This.IsRelic		:= False
 		This.IsElderBase	:= False
 		This.IsShaperBase	:= False
+		This.IsSynthesisedBase:= False
+		This.IsFracturedBase:= False
 		This.IsAbyssJewel	:= False
 		This.IsBeast		:= False
 		This.IsHideoutObject:= False
@@ -478,6 +486,7 @@ Sleep, 100
 ; "SkipItemInfoUpdateCall" should be set outside by other scripts.
 global firstUpdateCheck := true
 If (!SkipItemInfoUpdateCall) {
+	global SplashUI := new SplashUI("on", "PoE-ItemInfo", "Initializing PoE-ItemInfo...", "", ReleaseVersion, A_ScriptDir "\resources\images\greydot.png")
 	GoSub, CheckForUpdates
 }
 firstUpdateCheck := false
@@ -487,6 +496,7 @@ If (StrLen(overwrittenUserFiles)) {
 	ShowChangedUserFiles()
 }
 GoSub, AM_AssignHotkeys
+SplashUI.SetSubMessage("Fetching currency data from poe.ninja for all leagues...")
 GoSub, FetchCurrencyData
 GoSub, InitGDITooltip
 
@@ -498,6 +508,7 @@ GoSub, InitGDITooltip
 If (false) {
 	global currentLocale := ""
 	_Debug := true
+	SplashUI.SetSubMessage("Downloading language files...")
 	global translationData := PoEScripts_DownloadLanguageFiles(currentLocale, false, "PoE-ItemInfo", "Updating and parsing language files...", _Debug)
 }
 
@@ -541,7 +552,7 @@ If (Opts.Lutbot_CheckScript) {
 	SetTimer, StartLutbot, 2000
 }
 
-SplashTextOff	; init finished
+SplashUI.DestroyUI() ; init finished
 
 ; ----------------------------------------------------------- Functions and Labels ----------------------------------------------------------------
 
@@ -2475,7 +2486,7 @@ ParseMapAffixes(ItemDataAffixes)
 			SetMapInfoLine("Prefix", MapAffixCount)
 			Continue
 		}
-		If (RegExMatch(A_LoopField, "Slaying Enemies close together can attract monsters from Beyond"))
+		If (RegExMatch(A_LoopField, "Slaying Enemies close together has a \d+% chance to attract monsters from Beyond"))
 		{
 			MapModWarnings .= MapModWarn.Beyond ? "`nBeyond" : ""
 			SetMapInfoLine("Prefix", MapAffixCount)
@@ -3946,19 +3957,20 @@ ParseAffixes(ItemDataAffixes, Item)
 		
 		; --- PRE-PASS ---
 		Loop, Parse, ItemDataChunk, `n, `r
-		{
-			If StrLen(A_LoopField) = 0
+		{			
+			LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured|crafted\)$")
+			If StrLen(LoopField) = 0
 			{
 				Continue ; Not interested in blank lines
 			}
 			
-			Itemdata.AffixTextLines.Push( {"Text":A_LoopField, "Value":GetActualValue(A_LoopField)} )
+			Itemdata.AffixTextLines.Push( {"Text":LoopField, "Value":GetActualValue(LoopField)} )
 			; AffixTextLines[1].Text stores the full text of the first line (yes, with index 1 and not 0)
 			; AffixTextLines[1].Value stores just the extracted value
 			
 			++HasLastLineNumber		; Counts the affix text lines so that the last line can be checked for being a craft
 			
-			IfInString, A_LoopField, to Armour
+			IfInString, LoopField, to Armour
 			{
 				If (HasToArmour){
 					HasToArmourCraft := A_Index
@@ -3967,7 +3979,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, to Evasion Rating
+			IfInString, LoopField, to Evasion Rating
 			{
 				If (HasToEvasion){
 					HasToEvasionCraft := A_Index
@@ -3976,7 +3988,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, to maximum Energy Shield
+			IfInString, LoopField, to maximum Energy Shield
 			{
 				If (HasToMaxES){
 					HasToMaxESCraft := A_Index
@@ -3985,7 +3997,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, to maximum Life
+			IfInString, LoopField, to maximum Life
 			{
 				If (HasToMaxLife){
 					HasToMaxLifeCraft := A_Index
@@ -3994,7 +4006,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Armour and Evasion	; it's indeed "Evasion" and not "Evasion Rating" here
+			IfInString, LoopField, increased Armour and Evasion	; it's indeed "Evasion" and not "Evasion Rating" here
 			{
 				If (HasIncrDefences){
 					HasIncrDefencesCraftType := "Defences_HybridBase"
@@ -4005,7 +4017,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Armour and Energy Shield
+			IfInString, LoopField, increased Armour and Energy Shield
 			{
 				If (HasIncrDefences){
 					HasIncrDefencesCraftType := "Defences_HybridBase"
@@ -4016,7 +4028,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Evasion and Energy Shield	; again "Evasion" and not "Evasion Rating"
+			IfInString, LoopField, increased Evasion and Energy Shield	; again "Evasion" and not "Evasion Rating"
 			{
 				If (HasIncrDefences){
 					HasIncrDefencesCraftType := "Defences_HybridBase"
@@ -4027,7 +4039,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Armour
+			IfInString, LoopField, increased Armour
 			{
 				If (HasIncrDefences){
 					HasIncrDefencesCraftType := "Armour"
@@ -4038,7 +4050,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Evasion Rating
+			IfInString, LoopField, increased Evasion Rating
 			{
 				If (HasIncrDefences){
 					HasIncrDefencesCraftType := "Evasion"
@@ -4049,7 +4061,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Energy Shield
+			IfInString, LoopField, increased Energy Shield
 			{
 				If (HasIncrDefences){
 					HasIncrDefencesCraftType := "EnergyShield"
@@ -4060,12 +4072,12 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Stun and Block Recovery
+			IfInString, LoopField, increased Stun and Block Recovery
 			{
 				HasStunBlockRecovery := A_Index
 				Continue
 			}
-			IfInString, A_LoopField, Chance to Block
+			IfInString, LoopField, Chance to Block
 			{
 				IfInString, ItemNamePlate, Tower Shield
 				{
@@ -4073,7 +4085,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, to Accuracy Rating
+			IfInString, LoopField, to Accuracy Rating
 			{
 				If (HasToAccuracyRating){
 					HasToAccuracyRatingCraft := A_Index
@@ -4082,7 +4094,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Physical Damage
+			IfInString, LoopField, increased Physical Damage
 			{
 				If (HasIncrPhysDmg){
 					HasIncrPhysDmgCraft := A_Index
@@ -4091,7 +4103,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Rarity of Items found
+			IfInString, LoopField, increased Rarity of Items found
 			{
 				If (HasIncrRarity){
 					HasIncrRarityCraft := A_Index
@@ -4100,7 +4112,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, to maximum Mana
+			IfInString, LoopField, to maximum Mana
 			{
 				If (HasMaxMana){
 					HasMaxManaCraft := A_Index
@@ -4109,12 +4121,12 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Light Radius
+			IfInString, LoopField, increased Light Radius
 			{
 				HasIncrLightRadius := A_Index
 				Continue
 			}
-			IfInString, A_LoopField, increased Spell Damage
+			IfInString, LoopField, increased Spell Damage
 			{
 				If (HasIncrSpellDamage){
 					HasIncrSpellDamageCraft := A_Index
@@ -4125,9 +4137,9 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				
 				If ((ItemGripType = "1H") or (ItemSubType = "Shield")){
-					Found := LookupTierByValue(GetActualValue(A_LoopField), ArrayFromDatafile("data\SpellDamage_MaxMana_1H.txt"), ItemLevel).Tier
+					Found := LookupTierByValue(GetActualValue(LoopField), ArrayFromDatafile("data\SpellDamage_MaxMana_1H.txt"), ItemLevel).Tier
 				}Else{
-					Found := LookupTierByValue(GetActualValue(A_LoopField), ArrayFromDatafile("data\SpellDamage_MaxMana_Staff.txt"), ItemLevel).Tier
+					Found := LookupTierByValue(GetActualValue(LoopField), ArrayFromDatafile("data\SpellDamage_MaxMana_Staff.txt"), ItemLevel).Tier
 				}
 				If ( ! Found){
 					HasIncrSpellDamagePrefix := A_Index
@@ -4135,7 +4147,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Fire Damage
+			IfInString, LoopField, increased Fire Damage
 			{
 				If (HasIncrFireDamage){
 					HasIncrFireDamageCraft := A_Index
@@ -4145,14 +4157,14 @@ ParseAffixes(ItemDataAffixes, Item)
 					HasIncrFireDamage := A_Index
 				}
 				
-				If ( ! LookupTierByValue(GetActualValue(A_LoopField), ArrayFromDatafile("data\IncrFireDamage_Suffix_Weapon.txt"), ItemLevel).Tier )
+				If ( ! LookupTierByValue(GetActualValue(LoopField), ArrayFromDatafile("data\IncrFireDamage_Suffix_Weapon.txt"), ItemLevel).Tier )
 				{
 					HasIncrFireDamagePrefix := A_Index
 					HasIncrSpellOrElePrefix := A_Index
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Cold Damage
+			IfInString, LoopField, increased Cold Damage
 			{
 				If (HasIncrColdDamage){
 					HasIncrColdDamageCraft := A_Index
@@ -4162,14 +4174,14 @@ ParseAffixes(ItemDataAffixes, Item)
 					HasIncrColdDamage := A_Index
 				}
 				
-				If ( ! LookupTierByValue(GetActualValue(A_LoopField), ArrayFromDatafile("data\IncrColdDamage_Suffix_Weapon.txt"), ItemLevel).Tier )
+				If ( ! LookupTierByValue(GetActualValue(LoopField), ArrayFromDatafile("data\IncrColdDamage_Suffix_Weapon.txt"), ItemLevel).Tier )
 				{
 					HasIncrColdDamagePrefix := A_Index
 					HasIncrSpellOrElePrefix := A_Index
 				}
 				Continue
 			}
-			IfInString, A_LoopField, increased Lightning Damage
+			IfInString, LoopField, increased Lightning Damage
 			{
 				If (HasIncrLightningDamage){
 					HasIncrLightningDamageCraft := A_Index
@@ -4179,14 +4191,14 @@ ParseAffixes(ItemDataAffixes, Item)
 					HasIncrLightningDamage := A_Index
 				}
 				
-				If ( ! LookupTierByValue(GetActualValue(A_LoopField), ArrayFromDatafile("data\IncrLightningDamage_Suffix_Weapon.txt"), ItemLevel).Tier )
+				If ( ! LookupTierByValue(GetActualValue(LoopField), ArrayFromDatafile("data\IncrLightningDamage_Suffix_Weapon.txt"), ItemLevel).Tier )
 				{
 					HasIncrLightningDamagePrefix := A_Index
 					HasIncrSpellOrElePrefix := A_Index
 				}
 				Continue
 			}
-			IfInString, A_Loopfield, Can have multiple Crafted Mods
+			IfInString, LoopField, Can have multiple Crafted Mods
 			{
 				HasMultipleCrafted := A_Index
 				Itemdata.HasMultipleCrafted := A_Index
@@ -4201,14 +4213,16 @@ ParseAffixes(ItemDataAffixes, Item)
 		; --- PRE-PASS ---
 		Loop, Parse, ItemDataChunk, `n, `r
 		{
-			If StrLen(A_LoopField) = 0
+			LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured|crafted\)$")
+			If StrLen(LoopField) = 0
 			{
 				Continue ; Not interested in blank lines
 			}
-			Itemdata.AffixTextLines.Push( {"Text":A_LoopField, "Value":GetActualValue(A_LoopField)} )
+			
+			Itemdata.AffixTextLines.Push( {"Text":LoopField, "Value":GetActualValue(LoopField)} )
 			++HasLastLineNumber
 			
-			IfInString, A_LoopField, increased Accuracy Rating
+			IfInString, LoopField, increased Accuracy Rating
 			{
 				If (Item.SubType = "Viridian Jewel" or Item.SubType = "Prismatic Jewel")
 				{
@@ -4217,7 +4231,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 			}
 			
-			IfInString, A_LoopField, increased Global Critical Strike Chance
+			IfInString, LoopField, increased Global Critical Strike Chance
 			{
 				If (Item.SubType = "Viridian Jewel" or Item.SubType = "Prismatic Jewel" )
 				{
@@ -4240,8 +4254,9 @@ ParseAffixes(ItemDataAffixes, Item)
 	; --- SIMPLE AFFIXES ---
 	
 	Loop, Parse, ItemDataChunk, `n, `r
-	{
-		If StrLen(A_LoopField) = 0
+	{		
+		LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured|crafted\)$")
+		If StrLen(LoopField) = 0
 		{
 			Continue ; Not interested in blank lines
 		}
@@ -4250,7 +4265,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			Break ; Not interested in unidentified items
 		}
 		
-		CurrValue := GetActualValue(A_LoopField)
+		CurrValue := GetActualValue(LoopField)
 		CurrTier := 0
 		
 		
@@ -4260,356 +4275,356 @@ ParseAffixes(ItemDataAffixes, Item)
 		{
 			If (Item.IsAbyssJewel)
 			{
-				If RegExMatch(A_LoopField, "Adds \d+? to \d+? (Physical|Fire|Cold|Lightning|Chaos) Damage")
+				If RegExMatch(LoopField, "Adds \d+? to \d+? (Physical|Fire|Cold|Lightning|Chaos) Damage")
 				{
-					If RegExMatch(A_LoopField, "Adds \d+? to \d+? (Physical|Fire|Cold|Lightning|Chaos) Damage to \w+ Attacks", match)
+					If RegExMatch(LoopField, "Adds \d+? to \d+? (Physical|Fire|Cold|Lightning|Chaos) Damage to \w+ Attacks", match)
 					{
 						LookupAffixAndSetInfoLine("data\abyss_jewel\Adds" match1 "DamageToWeaponTypeAttacks.txt", "Prefix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Adds \d+? to \d+? (Physical|Fire|Cold|Lightning|Chaos) Damage to Attacks", match)
+					If RegExMatch(LoopField, "Adds \d+? to \d+? (Physical|Fire|Cold|Lightning|Chaos) Damage to Attacks", match)
 					{
 						LookupAffixAndSetInfoLine("data\abyss_jewel\Adds" match1 "DamageToAttacks.txt", "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Adds \d+? to \d+? (Physical|Fire|Cold|Lightning|Chaos) Damage to Spells while", match)
+					If RegExMatch(LoopField, "Adds \d+? to \d+? (Physical|Fire|Cold|Lightning|Chaos) Damage to Spells while", match)
 					{
 						LookupAffixAndSetInfoLine("data\abyss_jewel\Adds" match1 "DamageToSpellsWhile.txt", "Prefix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Adds \d+? to \d+? (Physical|Fire|Cold|Lightning|Chaos) Damage to Spells", match)
+					If RegExMatch(LoopField, "Adds \d+? to \d+? (Physical|Fire|Cold|Lightning|Chaos) Damage to Spells", match)
 					{
 						LookupAffixAndSetInfoLine("data\abyss_jewel\Adds" match1 "DamageToSpells.txt", "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
 				}
 				
-				IfInString, A_LoopField, to maximum Life
+				IfInString, LoopField, to maximum Life
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\MaxLife.txt", "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, to maximum Mana
+				IfInString, LoopField, to maximum Mana
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\MaxMana.txt", "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, to Armour
+				IfInString, LoopField, to Armour
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\ToArmour.txt", "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, to Evasion Rating
+				IfInString, LoopField, to Evasion Rating
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\ToEvasionRating.txt", "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, to maximum Energy Shield
+				IfInString, LoopField, to maximum Energy Shield
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\ToMaximumEnergyShield.txt", "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, Energy Shield Regenerated per second
+				IfInString, LoopField, Energy Shield Regenerated per second
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\EnergyShieldRegenerated.txt", "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
-				If RegExMatch(A_LoopField, "^[\d\.]+ Life Regenerated per second$")
+				If RegExMatch(LoopField, "^[\d\.]+ Life Regenerated per second$")
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\LifeRegenerated.txt", "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, Mana Regenerated per second
+				IfInString, LoopField, Mana Regenerated per second
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\ManaRegenerated.txt", "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Damage over Time while
+				IfInString, LoopField, increased Damage over Time while
 				{
 					LookupAffixAndSetInfoLine(["1|10-14"], "Prefix", ItemLevel, CurrValue)
 					Continue
 				}
 				
-				IfInString, A_LoopField, Minion
+				IfInString, LoopField, Minion
 				{
-					If RegExMatch(A_LoopField, "Minions deal \d+? to \d+? additional (Physical|Fire|Cold|Lightning|Chaos) Damage", match)
+					If RegExMatch(LoopField, "Minions deal \d+? to \d+? additional (Physical|Fire|Cold|Lightning|Chaos) Damage", match)
 					{
 						LookupAffixAndSetInfoLine("data\abyss_jewel\MinionsDealAdditional" match1 "Damage.txt", "Prefix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions Regenerate \d+? Life per second")
+					If RegExMatch(LoopField, "Minions Regenerate \d+? Life per second")
 					{
 						LookupAffixAndSetInfoLine("data\abyss_jewel\MinionsRegenerateLife.txt", "Prefix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions have \d+% chance to Blind on Hit with Attacks")
+					If RegExMatch(LoopField, "Minions have \d+% chance to Blind on Hit with Attacks")
 					{
 						LookupAffixAndSetInfoLine(["32|3-4","65|5-6"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions have \d+% chance to Taunt on Hit with Attacks")
+					If RegExMatch(LoopField, "Minions have \d+% chance to Taunt on Hit with Attacks")
 					{
 						LookupAffixAndSetInfoLine(["32|3-5","65|6-8"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions have \d+% chance to Hinder Enemies on Hit with Spells, with 30% reduced Movement Speed")
+					If RegExMatch(LoopField, "Minions have \d+% chance to Hinder Enemies on Hit with Spells, with 30% reduced Movement Speed")
 					{
 						LookupAffixAndSetInfoLine(["32|3-5","65|6-8"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions deal \d+% increased Damage against Abyssal Monsters")
+					If RegExMatch(LoopField, "Minions deal \d+% increased Damage against Abyssal Monsters")
 					{
 						LookupAffixAndSetInfoLine(["1|30-40"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions have \d+% increased (Attack|Cast) Speed")
+					If RegExMatch(LoopField, "Minions have \d+% increased (Attack|Cast) Speed")
 					{
 						LookupAffixAndSetInfoLine(["1|4-6"], "Hybrid Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions Regenerate \d+% Life per second")
+					If RegExMatch(LoopField, "Minions Regenerate \d+% Life per second")
 					{
 						LookupAffixAndSetInfoLine(["1|0.4-0.8"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions Leech [\d\.]+% of Damage as Life")
+					If RegExMatch(LoopField, "Minions Leech [\d\.]+% of Damage as Life")
 					{
 						LookupAffixAndSetInfoLine(["1|0.3-0.5"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions have \d+% increased Movement Speed")
+					If RegExMatch(LoopField, "Minions have \d+% increased Movement Speed")
 					{
 						LookupAffixAndSetInfoLine(["1|6-10"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions have \d+% increased maximum Life")
+					If RegExMatch(LoopField, "Minions have \d+% increased maximum Life")
 					{
 						LookupAffixAndSetInfoLine(["1|8-12"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions have +\d+% to all Elemental Resistances")
+					If RegExMatch(LoopField, "Minions have +\d+% to all Elemental Resistances")
 					{
 						LookupAffixAndSetInfoLine(["1|6-10"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions have +\d+% to Chaos Resistance")
+					If RegExMatch(LoopField, "Minions have +\d+% to Chaos Resistance")
 					{
 						LookupAffixAndSetInfoLine(["1|7-12"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "Minions have \d+% increased Attack and Cast Speed if you or your Minions have Killed Recently")
+					If RegExMatch(LoopField, "Minions have \d+% increased Attack and Cast Speed if you or your Minions have Killed Recently")
 					{
 						LookupAffixAndSetInfoLine(["1|6-8"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}
-					If RegExMatch(A_LoopField, "increased Minion Damage if you've used a Minion Skill Recently")
+					If RegExMatch(LoopField, "increased Minion Damage if you've used a Minion Skill Recently")
 					{
 						LookupAffixAndSetInfoLine(["1|15-20"], "Suffix", ItemLevel, CurrValue)
 						Continue
 					}					
 				}
 				
-				IfInString, A_LoopField, to Accuracy Rating
+				IfInString, LoopField, to Accuracy Rating
 				{
 					LookupAffixAndSetInfoLine("data\abyss_jewel\AccuracyRating.txt", "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, chance to Blind Enemies on Hit with Attacks
+				IfInString, LoopField, chance to Blind Enemies on Hit with Attacks
 				{
 					LookupAffixAndSetInfoLine(["32|3-4","65|5-6"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, chance to Taunt Enemies on Hit with Attacks
+				IfInString, LoopField, chance to Taunt Enemies on Hit with Attacks
 				{
 					LookupAffixAndSetInfoLine(["32|3-5","65|6-8"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				If RegExMatch(A_LoopField, "chance to Hinder Enemies on Hit with Spells, with 30% reduced Movement Speed")
+				If RegExMatch(LoopField, "chance to Hinder Enemies on Hit with Spells, with 30% reduced Movement Speed")
 				{
 					LookupAffixAndSetInfoLine(["32|3-5","65|6-8"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				If RegExMatch(A_LoopField, "chance to Avoid being (Ignited|Shocked)")
+				If RegExMatch(LoopField, "chance to Avoid being (Ignited|Shocked)")
 				{
 					LookupAffixAndSetInfoLine(["1|6-8","30|9-10"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				If RegExMatch(A_LoopField, "chance to Avoid being (Chilled|Frozen)")
+				If RegExMatch(LoopField, "chance to Avoid being (Chilled|Frozen)")
 				{
 					LookupAffixAndSetInfoLine(["1|6-8","30|9-10"], "Hybrid Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				If RegExMatch(A_LoopField, "chance to [Aa]void (being Poisoned|Bleeding)")
+				If RegExMatch(LoopField, "chance to [Aa]void (being Poisoned|Bleeding)")
 				{
 					LookupAffixAndSetInfoLine(["20|6-8","50|9-10"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, chance to Avoid being Stunned
+				IfInString, LoopField, chance to Avoid being Stunned
 				{
 					LookupAffixAndSetInfoLine(["1|6-8","20|9-10"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Damage against Abyssal Monsters
+				IfInString, LoopField, increased Damage against Abyssal Monsters
 				{
 					LookupAffixAndSetInfoLine(["1|30-40"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, additional Physical Damage Reduction against Abyssal Monsters
+				IfInString, LoopField, additional Physical Damage Reduction against Abyssal Monsters
 				{
 					LookupAffixAndSetInfoLine(["1|4-6"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				If RegExMatch(A_LoopField, "increased Effect of (Chill|Shock)")
+				If RegExMatch(LoopField, "increased Effect of (Chill|Shock)")
 				{
 					LookupAffixAndSetInfoLine(["30|6-10"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, chance to Block Spells if you were Damaged by a Hit Recently
+				IfInString, LoopField, chance to Block Spells if you were Damaged by a Hit Recently
 				{
 					LookupAffixAndSetInfoLine(["1|2"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, additional Physical Damage Reduction if you weren't Damaged by a Hit Recently
+				IfInString, LoopField, additional Physical Damage Reduction if you weren't Damaged by a Hit Recently
 				{
 					LookupAffixAndSetInfoLine(["1|2"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Movement Speed if you haven't taken Damage Recently
+				IfInString, LoopField, increased Movement Speed if you haven't taken Damage Recently
 				{
 					LookupAffixAndSetInfoLine(["1|3-4"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Damage if you've Killed Recently
+				IfInString, LoopField, increased Damage if you've Killed Recently
 				{
 					LookupAffixAndSetInfoLine(["1|10-20"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, to Critical Strike Multiplier if you've Killed Recently
+				IfInString, LoopField, to Critical Strike Multiplier if you've Killed Recently
 				{
 					LookupAffixAndSetInfoLine(["25|8-14"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Armour if you haven't Killed Recently
+				IfInString, LoopField, increased Armour if you haven't Killed Recently
 				{
 					LookupAffixAndSetInfoLine(["1|20-30"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Accuracy Rating if you haven't Killed Recently
+				IfInString, LoopField, increased Accuracy Rating if you haven't Killed Recently
 				{
 					LookupAffixAndSetInfoLine(["1|20-30"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				If RegExMatch(A_LoopField, "Damage Penetrates \d+% Elemental Resistance if you haven't Killed Recently")
+				If RegExMatch(LoopField, "Damage Penetrates \d+% Elemental Resistance if you haven't Killed Recently")
 				{
 					LookupAffixAndSetInfoLine(["1|2"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Evasion Rating while moving
+				IfInString, LoopField, increased Evasion Rating while moving
 				{
 					LookupAffixAndSetInfoLine(["1|25-35"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Mana Regeneration Rate while moving
+				IfInString, LoopField, increased Mana Regeneration Rate while moving
 				{
 					LookupAffixAndSetInfoLine(["1|20-25"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, of Life Regenerated per second while moving
+				IfInString, LoopField, of Life Regenerated per second while moving
 				{
 					LookupAffixAndSetInfoLine(["1|0.5-1"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				If RegExMatch(A_LoopField, "Gain \d+% of Physical Damage as Extra Fire Damage if you've dealt a Critical Strike Recently")
+				If RegExMatch(LoopField, "Gain \d+% of Physical Damage as Extra Fire Damage if you've dealt a Critical Strike Recently")
 				{
 					LookupAffixAndSetInfoLine(["40|2-4"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Attack Speed if you've dealt a Critical Strike Recently
+				IfInString, LoopField, increased Attack Speed if you've dealt a Critical Strike Recently
 				{
 					LookupAffixAndSetInfoLine(["25|6-8"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Cast Speed if you've dealt a Critical Strike Recently
+				IfInString, LoopField, increased Cast Speed if you've dealt a Critical Strike Recently
 				{
 					LookupAffixAndSetInfoLine(["25|5-7"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Critical Strike Chance if you haven't dealt a Critical Strike Recently
+				IfInString, LoopField, increased Critical Strike Chance if you haven't dealt a Critical Strike Recently
 				{
 					LookupAffixAndSetInfoLine(["1|20-30"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, chance to Dodge Attacks and Spells if you've been Hit Recently
+				IfInString, LoopField, chance to Dodge Attacks and Spells if you've been Hit Recently
 				{
 					LookupAffixAndSetInfoLine(["1|2"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, increased Movement Speed if you've Killed Recently
+				IfInString, LoopField, increased Movement Speed if you've Killed Recently
 				{
 					LookupAffixAndSetInfoLine(["1|2-4"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, additional Block Chance if you were Damaged by a Hit Recently
+				IfInString, LoopField, additional Block Chance if you were Damaged by a Hit Recently
 				{
 					LookupAffixAndSetInfoLine(["1|2"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, chance to gain Onslaught for 4 seconds on Kill
+				IfInString, LoopField, chance to gain Onslaught for 4 seconds on Kill
 				{
 					LookupAffixAndSetInfoLine(["10|3-5","50|6-8"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, chance to gain Phasing for 4 seconds on Kill
+				IfInString, LoopField, chance to gain Phasing for 4 seconds on Kill
 				{
 					LookupAffixAndSetInfoLine(["10|3-5","50|6-8"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
-				IfInString, A_LoopField, chance to gain Unholy Might for 4 seconds on Melee Kill
+				IfInString, LoopField, chance to gain Unholy Might for 4 seconds on Melee Kill
 				{
 					LookupAffixAndSetInfoLine(["40|2-3","80|4-5"], "Suffix", ItemLevel, CurrValue)
 					Continue
 				}
 			}
 			
-			IfInString, A_LoopField, increased Area Damage
+			IfInString, LoopField, increased Area Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\AreaDamage.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Attack and Cast Speed
+			IfInString, LoopField, increased Attack and Cast Speed
 			{
 				LookupAffixAndSetInfoLine("data\jewel\AttackAndCastSpeed.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*increased Attack Speed with (One|Two) Handed Melee Weapons")
+			If RegExMatch(LoopField, ".*increased Attack Speed with (One|Two) Handed Melee Weapons")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\AttackSpeedWith1H2HMelee.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Attack Speed while holding a Shield
+			IfInString, LoopField, increased Attack Speed while holding a Shield
 			{
 				LookupAffixAndSetInfoLine("data\jewel\AttackSpeedWhileHoldingShield.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Attack Speed while Dual Wielding
+			IfInString, LoopField, increased Attack Speed while Dual Wielding
 			{
 				LookupAffixAndSetInfoLine("data\jewel\AttackSpeedWhileDualWielding.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*increased Attack Speed with (Axes|Bows|Claws|Daggers|Maces|Staves|Swords|Wands)")
+			If RegExMatch(LoopField, ".*increased Attack Speed with (Axes|Bows|Claws|Daggers|Maces|Staves|Swords|Wands)")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\AttackSpeedWithWeapontype.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
 			
 			; Pure Attack Speed must be checked last if RegEx line end isn't used
-			If RegExMatch(A_LoopField, ".*increased Attack Speed$")
+			If RegExMatch(LoopField, ".*increased Attack Speed$")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\AttackSpeed_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
 			
-			IfInString, A_LoopField, increased Accuracy Rating
+			IfInString, LoopField, increased Accuracy Rating
 			{
 				If (Item.SubType = "Cobalt Jewel" or Item.SubType = "Crimson Jewel")
 				{
@@ -4624,65 +4639,65 @@ ParseAffixes(ItemDataAffixes, Item)
 				}
 			}
 			
-			IfInString, A_LoopField, to all Attributes
+			IfInString, LoopField, to all Attributes
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ToAllAttributes_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
 			
-			If RegExMatch(A_LoopField, ".*to (Strength|Dexterity|Intelligence) and (Strength|Dexterity|Intelligence)")
+			If RegExMatch(LoopField, ".*to (Strength|Dexterity|Intelligence) and (Strength|Dexterity|Intelligence)")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\To2Attributes_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*to (Strength|Dexterity|Intelligence)")
+			If RegExMatch(LoopField, ".*to (Strength|Dexterity|Intelligence)")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\To1Attribute_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*increased Cast Speed (with|while) .*")
+			If RegExMatch(LoopField, ".*increased Cast Speed (with|while) .*")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CastSpeedWithWhile.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
 			
 			; pure Cast Speed must be checked last if RegEx line end isn't used
-			If RegExMatch(A_LoopField, ".*increased Cast Speed$")
+			If RegExMatch(LoopField, ".*increased Cast Speed$")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CastSpeed_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Critical Strike Chance for Spells
+			IfInString, LoopField, increased Critical Strike Chance for Spells
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritChanceSpells_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Melee Critical Strike Chance
+			IfInString, LoopField, increased Melee Critical Strike Chance
 			{
 				LookupAffixAndSetInfoLine("data\jewel\MeleeCritChance.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Critical Strike Chance with Elemental Skills
+			IfInString, LoopField, increased Critical Strike Chance with Elemental Skills
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritChanceElementalSkills.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*increased Critical Strike Chance with (Fire|Cold|Lightning) Skills")
+			If RegExMatch(LoopField, ".*increased Critical Strike Chance with (Fire|Cold|Lightning) Skills")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritChanceFireColdLightningSkills.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*increased Critical Strike Chance with (One|Two) Handed Melee Weapons")
+			If RegExMatch(LoopField, ".*increased Critical Strike Chance with (One|Two) Handed Melee Weapons")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritChanceWith1H2HMelee.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Weapon Critical Strike Chance while Dual Wielding
+			IfInString, LoopField, increased Weapon Critical Strike Chance while Dual Wielding
 			{
 				LookupAffixAndSetInfoLine("data\jewel\WeaponCritChanceDualWielding.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Global Critical Strike Chance
+			IfInString, LoopField, increased Global Critical Strike Chance
 			{
 				If not (Item.SubType = "Viridian Jewel" or Item.SubType = "Prismatic Jewel")
 				{
@@ -4696,188 +4711,188 @@ ParseAffixes(ItemDataAffixes, Item)
 					Continue
 				}
 			}
-			IfInString, A_LoopField, to Melee Critical Strike Multiplier
+			IfInString, LoopField, to Melee Critical Strike Multiplier
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritMeleeMultiplier.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, to Critical Strike Multiplier for Spells
+			IfInString, LoopField, to Critical Strike Multiplier for Spells
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritMultiplierSpells.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, to Critical Strike Multiplier with Elemental Skills
+			IfInString, LoopField, to Critical Strike Multiplier with Elemental Skills
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritMultiplierElementalSkills.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*to Critical Strike Multiplier with (Fire|Cold|Lightning) Skills")
+			If RegExMatch(LoopField, ".*to Critical Strike Multiplier with (Fire|Cold|Lightning) Skills")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritMultiplierFireColdLightningSkills.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*to Critical Strike Multiplier with (One|Two) Handed Melee Weapons")
+			If RegExMatch(LoopField, ".*to Critical Strike Multiplier with (One|Two) Handed Melee Weapons")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritMultiplierWith1H2HMelee.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, to Critical Strike Multiplier while Dual Wielding
+			IfInString, LoopField, to Critical Strike Multiplier while Dual Wielding
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritMultiplierWhileDualWielding.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, Critical Strike Multiplier
+			IfInString, LoopField, Critical Strike Multiplier
 			{
 				LookupAffixAndSetInfoLine("data\jewel\CritMultiplierGlobal_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, chance to Ignite
+			IfInString, LoopField, chance to Ignite
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ChanceToIgnite.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Ignite Duration on Enemies
+			IfInString, LoopField, increased Ignite Duration on Enemies
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IgniteDurationOnEnemies.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, chance to Freeze
+			IfInString, LoopField, chance to Freeze
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ChanceToFreeze.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Freeze Duration on Enemies
+			IfInString, LoopField, increased Freeze Duration on Enemies
 			{
 				LookupAffixAndSetInfoLine("data\jewel\FreezeDurationOnEnemies.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, chance to Shock
+			IfInString, LoopField, chance to Shock
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ChanceToShock.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Shock Duration on Enemies
+			IfInString, LoopField, increased Shock Duration on Enemies
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ShockDurationOnEnemies.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, chance to Poison
+			IfInString, LoopField, chance to Poison
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ChanceToPoison.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Poison Duration on Enemies
+			IfInString, LoopField, increased Poison Duration on Enemies
 			{
 				LookupAffixAndSetInfoLine("data\jewel\PoisonDuration.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, chance to cause Bleeding
+			IfInString, LoopField, chance to cause Bleeding
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ChanceToBleed.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Bleed duration
+			IfInString, LoopField, increased Bleed duration
 			{
 				LookupAffixAndSetInfoLine("data\jewel\BleedingDurationOnEnemies.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Burning Damage
+			IfInString, LoopField, increased Burning Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrBurningDamage.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Damage with Bleeding
+			IfInString, LoopField, increased Damage with Bleeding
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrBleedingDamage.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Damage with Poison
+			IfInString, LoopField, increased Damage with Poison
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrPoisonDamage.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*increased (Fire|Cold|Lightning) Damage")
+			If RegExMatch(LoopField, ".*increased (Fire|Cold|Lightning) Damage")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrFireColdLightningDamage_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, "Minions have .* Chance to Block")
+			If RegExMatch(LoopField, "Minions have .* Chance to Block")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\MinionBlockChance.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*(Chance to Block|Block Chance).*")
+			If RegExMatch(LoopField, ".*(Chance to Block|Block Chance).*")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\BlockChance_ChanceToBlock_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Damage over Time
+			IfInString, LoopField, increased Damage over Time
 			{
 				LookupAffixAndSetInfoLine("data\jewel\DamageOverTime.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, "Minions deal .* increased Damage")
+			If RegExMatch(LoopField, "Minions deal .* increased Damage")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\MinionsDealIncrDamage.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*increased Damage$")
+			If RegExMatch(LoopField, ".*increased Damage$")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrDamage.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, chance to Knock Enemies Back on hit
+			IfInString, LoopField, chance to Knock Enemies Back on hit
 			{
 				LookupAffixAndSetInfoLine("data\jewel\KnockBackOnHit.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, Life gained for each Enemy hit by your Attacks
+			IfInString, LoopField, Life gained for each Enemy hit by your Attacks
 			{
 				LookupAffixAndSetInfoLine("data\jewel\LifeOnHit_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, Energy Shield gained for each Enemy hit by your Attacks
+			IfInString, LoopField, Energy Shield gained for each Enemy hit by your Attacks
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ESOnHit.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, Mana gained for each Enemy hit by your Attacks
+			IfInString, LoopField, Mana gained for each Enemy hit by your Attacks
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ManaOnHit.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, reduced Mana Cost of Skills
+			IfInString, LoopField, reduced Mana Cost of Skills
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ReducedManaCost.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Mana Regeneration Rate
+			IfInString, LoopField, increased Mana Regeneration Rate
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ManaRegen_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Melee Damage
+			IfInString, LoopField, increased Melee Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\MeleeDamage.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Projectile Damage
+			IfInString, LoopField, increased Projectile Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ProjectileDamage.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Projectile Speed
+			IfInString, LoopField, increased Projectile Speed
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ProjectileSpeed_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, to all Elemental Resistances
+			IfInString, LoopField, to all Elemental Resistances
 			{
 				; "to all Elemental Resistances" matches multiple affixes
-				If InStr(A_LoopField, "Minions have"){
+				If InStr(LoopField, "Minions have"){
 					File := "data\jewel\ToAllResist_Jewels_Minions.txt"
 				}
-				Else If InStr(A_LoopField, "Totems gain"){
+				Else If InStr(LoopField, "Totems gain"){
 					File := "data\jewel\ToAllResist_Jewels_Totems.txt"
 				}
 				Else{
@@ -4886,89 +4901,89 @@ ParseAffixes(ItemDataAffixes, Item)
 				LookupAffixAndSetInfoLine(File, "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*to (Fire|Cold|Lightning) and (Fire|Cold|Lightning) Resistances")
+			If RegExMatch(LoopField, ".*to (Fire|Cold|Lightning) and (Fire|Cold|Lightning) Resistances")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\To2Resist_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*to (Fire|Cold|Lightning) Resistance")
+			If RegExMatch(LoopField, ".*to (Fire|Cold|Lightning) Resistance")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\To1Resist_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, to Chaos Resistance
+			IfInString, LoopField, to Chaos Resistance
 			{
 				LookupAffixAndSetInfoLine("data\jewel\ToChaosResist_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Stun Duration on Enemies
+			IfInString, LoopField, increased Stun Duration on Enemies
 			{
 				LookupAffixAndSetInfoLine("data\jewel\StunDuration_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*increased Physical Damage with (Axes|Bows|Claws|Daggers|Maces|Staves|Swords|Wands)")
+			If RegExMatch(LoopField, ".*increased Physical Damage with (Axes|Bows|Claws|Daggers|Maces|Staves|Swords|Wands)")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrPhysDamageWithWeapontype.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Melee Physical Damage while holding a Shield
+			IfInString, LoopField, increased Melee Physical Damage while holding a Shield
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrMeleePhysDamageWhileHoldingShield.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Physical Weapon Damage while Dual Wielding
+			IfInString, LoopField, increased Physical Weapon Damage while Dual Wielding
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrPhysWeaponDamageDualWielding.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			If RegExMatch(A_LoopField, ".*increased Physical Damage with (One|Two) Handed Melee Weapons")
+			If RegExMatch(LoopField, ".*increased Physical Damage with (One|Two) Handed Melee Weapons")
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrPhysDamageWith1H2HMelee.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Global Physical Damage
+			IfInString, LoopField, increased Global Physical Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrPhysDamage_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Totem Damage
+			IfInString, LoopField, increased Totem Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrTotemDamage.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Totem Life
+			IfInString, LoopField, increased Totem Life
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrTotemLife.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Trap Throwing Speed
+			IfInString, LoopField, increased Trap Throwing Speed
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrTrapThrowingSpeed.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Trap Damage
+			IfInString, LoopField, increased Trap Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrTrapDamage.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Mine Laying Speed
+			IfInString, LoopField, increased Mine Laying Speed
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrMineLayingSpeed.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Mine Damage
+			IfInString, LoopField, increased Mine Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrMineDamage.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Chaos Damage
+			IfInString, LoopField, increased Chaos Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrChaosDamage.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			If ( InStr(A_LoopField,"increased maximum Life"))
+			If ( InStr(LoopField,"increased maximum Life"))
 			{
-				If InStr(A_LoopField,"Minions have")
+				If InStr(LoopField,"Minions have")
 				{
 					FilePath := "data\jewel\MinionIncrMaximumLife.txt"
 				}
@@ -4979,67 +4994,67 @@ ParseAffixes(ItemDataAffixes, Item)
 				LookupAffixAndSetInfoLine(FilePath, "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Armour
+			IfInString, LoopField, increased Armour
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrArmour_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Evasion Rating
+			IfInString, LoopField, increased Evasion Rating
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrEvasion_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Energy Shield Recharge Rate
+			IfInString, LoopField, increased Energy Shield Recharge Rate
 			{
 				LookupAffixAndSetInfoLine("data\jewel\EnergyShieldRechargeRate.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, faster start of Energy Shield Recharge
+			IfInString, LoopField, faster start of Energy Shield Recharge
 			{
 				LookupAffixAndSetInfoLine("data\jewel\FasterStartOfEnergyShieldRecharge.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased maximum Energy Shield
+			IfInString, LoopField, increased maximum Energy Shield
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrMaxEnergyShield_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, Physical Attack Damage Leeched as
+			IfInString, LoopField, Physical Attack Damage Leeched as
 			{
 				LookupAffixAndSetInfoLine("data\jewel\PhysicalAttackDamageLeeched_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Spell Damage while Dual Wielding
+			IfInString, LoopField, increased Spell Damage while Dual Wielding
 			{
 				LookupAffixAndSetInfoLine("data\jewel\SpellDamageDualWielding_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Spell Damage while holding a Shield
+			IfInString, LoopField, increased Spell Damage while holding a Shield
 			{
 				LookupAffixAndSetInfoLine("data\jewel\SpellDamageHoldingShield_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Spell Damage while wielding a Staff
+			IfInString, LoopField, increased Spell Damage while wielding a Staff
 			{
 				LookupAffixAndSetInfoLine("data\jewel\SpellDamageWieldingStaff_Jewels.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Spell Damage
+			IfInString, LoopField, increased Spell Damage
 			{
 				LookupAffixAndSetInfoLine("data\jewel\SpellDamage_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased maximum Mana
+			IfInString, LoopField, increased maximum Mana
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IncrMaximumMana_Jewel.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Stun and Block Recovery
+			IfInString, LoopField, increased Stun and Block Recovery
 			{
 				LookupAffixAndSetInfoLine("data\jewel\StunRecovery_Suffix_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Rarity
+			IfInString, LoopField, increased Rarity
 			{
 				LookupAffixAndSetInfoLine("data\jewel\IIR_Suffix_Jewels.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
@@ -5051,7 +5066,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		
 		; Suffixes
 		
-		IfInString, A_LoopField, increased Attack Speed
+		IfInString, LoopField, increased Attack Speed
 		{
 			If (ItemSubType = "Wand" or ItemSubType = "Bow"){
 				File := "data\AttackSpeed_BowsAndWands.txt"
@@ -5068,7 +5083,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			LookupAffixAndSetInfoLine(File, "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, to all Attributes
+		IfInString, LoopField, to all Attributes
 		{
 			If (ItemSubType = "Amulet"){
 				LookupAffixAndSetInfoLine("data\ToAllAttributes_Amulet.txt", "Suffix", ItemLevel, CurrValue)
@@ -5079,7 +5094,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				Continue	
 			}
 		}
-		If RegExMatch(A_LoopField, ".*to (Strength|Dexterity|Intelligence)", match)
+		If RegExMatch(LoopField, ".*to (Strength|Dexterity|Intelligence)", match)
 		{
 			If ((match1 = "Strength" and ItemSubType = "Belt") or (match1 = "Dexterity" and (ItemSubType = "Gloves" or ItemSubType = "Quiver")) or (match1 = "Intelligence" and ItemSubType = "Helmet"))
 			{
@@ -5092,7 +5107,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				Continue
 			}
 		}
-		IfInString, A_LoopField, increased Cast Speed
+		IfInString, LoopField, increased Cast Speed
 		{
 			If (ItemGripType = "1H"){
 				; wands and scepters
@@ -5121,14 +5136,14 @@ ParseAffixes(ItemDataAffixes, Item)
 			Continue
 		}
 		
-		IfInString, A_LoopField, increased Critical Strike Chance for Spells
+		IfInString, LoopField, increased Critical Strike Chance for Spells
 		{
 			LookupAffixAndSetInfoLine("data\CritChanceSpells.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
 		
 		; Pure Critical Strike Chance must be checked last
-		IfInString, A_LoopField, Critical Strike Chance
+		IfInString, LoopField, Critical Strike Chance
 		{
 			If (ItemBaseType = "Weapon"){
 				File := "data\CritChance_Weapon.txt"
@@ -5143,7 +5158,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			Continue
 		}
 		
-		IfInString, A_LoopField, Critical Strike Multiplier
+		IfInString, LoopField, Critical Strike Multiplier
 		{
 			If (ItemBaseType = "Weapon"){
 				File := "data\CritMultiplierLocal.txt"
@@ -5154,7 +5169,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			LookupAffixAndSetInfoLine(File, "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Light Radius
+		IfInString, LoopField, increased Light Radius
 		{
 			; T1 comes with "#% increased Accuracy Rating", T2-3 with "+# to Accuracy Rating"
 			; This part can always be assigned now. The Accuracy will be solved later in case it's T2-3 and it forms a complex affix.
@@ -5164,10 +5179,10 @@ ParseAffixes(ItemDataAffixes, Item)
 			; We don't want to overcount the affixes by 0.5 when overwriting though,
 			;   so we don't count them here (see also "increased Accuracy" right below).
 			ValueRanges := LookupAffixData("data\LightRadius_AccuracyRating.txt", ItemLevel, CurrValue, CurrTier)
-			AppendAffixInfo(MakeAffixDetailLine(A_LoopField, "Hybrid Suffix", ValueRanges, CurrTier, False), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(LoopField, "Hybrid Suffix", ValueRanges, CurrTier, False), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, increased Accuracy Rating
+		IfInString, LoopField, increased Accuracy Rating
 		{
 			; This variant comes always with Light Radius, see part right above.
 			HasIncrLightRadius := False	; Second part is accounted for, no need to involve "+# to Accuracy Rating" or complex affixes.
@@ -5177,7 +5192,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			AffixTotals.NumSuffixes += 0.5
 			Continue
 		}
-		IfInString, A_LoopField, Chance to Block
+		IfInString, LoopField, Chance to Block
 		{
 			If (not HasChanceToBlockStrShield){
 				LookupAffixAndSetInfoLine("data\BlockChance.txt", "Suffix", ItemLevel, CurrValue)
@@ -5185,23 +5200,23 @@ ParseAffixes(ItemDataAffixes, Item)
 			Continue
 		}
 		; Flask affixes (on belts)
-		IfInString, A_LoopField, reduced Flask Charges used
+		IfInString, LoopField, reduced Flask Charges used
 		{
 			LookupAffixAndSetInfoLine("data\FlaskChargesUsed.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Flask Charges gained
+		IfInString, LoopField, increased Flask Charges gained
 		{
 			LookupAffixAndSetInfoLine("data\FlaskChargesGained.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Flask effect duration
+		IfInString, LoopField, increased Flask effect duration
 		{
 			LookupAffixAndSetInfoLine("data\FlaskDuration.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
 		
-		IfInString, A_LoopField, increased Quantity of Items found
+		IfInString, LoopField, increased Quantity of Items found
 		{
 			If (Item.IsShaperBase)
 			{
@@ -5214,12 +5229,12 @@ ParseAffixes(ItemDataAffixes, Item)
 			LookupAffixAndSetInfoLine(File, "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, Life gained on Kill
+		IfInString, LoopField, Life gained on Kill
 		{
 			LookupAffixAndSetInfoLine("data\LifeOnKill.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, Life gained for each Enemy hit ; Cuts off the rest to accommodate both "by Attacks" and "by your Attacks"
+		IfInString, LoopField, Life gained for each Enemy hit ; Cuts off the rest to accommodate both "by Attacks" and "by your Attacks"
 		{
 			If (ItemBaseType = "Weapon") {
 				File := "data\LifeOnHit_Weapon.txt"
@@ -5233,12 +5248,12 @@ ParseAffixes(ItemDataAffixes, Item)
 			LookupAffixAndSetInfoLine(File, "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, of Life Regenerated per second
+		IfInString, LoopField, of Life Regenerated per second
 		{
 			LookupAffixAndSetInfoLine("data\LifeRegenPercent.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, Life Regenerated per second
+		IfInString, LoopField, Life Regenerated per second
 		{
 			If (ItemSubType = "BodyArmour"){
 				LookupAffixAndSetInfoLine("data\LifeRegen_BodyArmour.txt", "Suffix", ItemLevel, CurrValue)
@@ -5249,27 +5264,27 @@ ParseAffixes(ItemDataAffixes, Item)
 				Continue
 			}
 		}
-		IfInString, A_LoopField, Mana Gained on Kill
+		IfInString, LoopField, Mana Gained on Kill
 		{
 			LookupAffixAndSetInfoLine("data\ManaOnKill.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Mana Regeneration Rate
+		IfInString, LoopField, increased Mana Regeneration Rate
 		{
 			LookupAffixAndSetInfoLine("data\ManaRegen.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Projectile Speed
+		IfInString, LoopField, increased Projectile Speed
 		{
 			LookupAffixAndSetInfoLine("data\ProjectileSpeed.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, reduced Attribute Requirements
+		IfInString, LoopField, reduced Attribute Requirements
 		{
 			LookupAffixAndSetInfoLine("data\ReducedAttrReqs.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, to all Elemental Resistances
+		IfInString, LoopField, to all Elemental Resistances
 		{
 			If (ItemSubType = "Amulet"){
 				LookupAffixAndSetInfoLine("data\ToAllResist_Amulet.txt", "Suffix", ItemLevel, CurrValue)
@@ -5280,42 +5295,42 @@ ParseAffixes(ItemDataAffixes, Item)
 				Continue
 			}
 		}
-		IfInString, A_LoopField, to Fire Resistance
+		IfInString, LoopField, to Fire Resistance
 		{
 			LookupAffixAndSetInfoLine("data\ToFireResist.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, to Cold Resistance
+		IfInString, LoopField, to Cold Resistance
 		{
 			LookupAffixAndSetInfoLine("data\ToColdResist.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, to Lightning Resistance
+		IfInString, LoopField, to Lightning Resistance
 		{
 			LookupAffixAndSetInfoLine("data\ToLightningResist.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, to Chaos Resistance
+		IfInString, LoopField, to Chaos Resistance
 		{
 			LookupAffixAndSetInfoLine("data\ToChaosResist.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Stun Duration on Enemies
+		IfInString, LoopField, increased Stun Duration on Enemies
 		{
 			LookupAffixAndSetInfoLine("data\StunDuration.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, reduced Enemy Stun Threshold
+		IfInString, LoopField, reduced Enemy Stun Threshold
 		{
 			LookupAffixAndSetInfoLine("data\StunThreshold.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, additional Physical Damage Reduction
+		IfInString, LoopField, additional Physical Damage Reduction
 		{
 			LookupAffixAndSetInfoLine("data\AdditionalPhysicalDamageReduction.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, chance to Dodge Attacks
+		IfInString, LoopField, chance to Dodge Attacks
 		{
 			If (ItemSubType = "BodyArmour")
 			{
@@ -5328,106 +5343,106 @@ ParseAffixes(ItemDataAffixes, Item)
 				Continue
 			}
 		}
-		IfInString, A_LoopField, of Energy Shield Regenerated per second
+		IfInString, LoopField, of Energy Shield Regenerated per second
 		{
 			LookupAffixAndSetInfoLine("data\EnergyShieldRegeneratedPerSecond.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, additional Block Chance against Projectiles
+		IfInString, LoopField, additional Block Chance against Projectiles
 		{
 			LookupAffixAndSetInfoLine("data\AdditionalBlockChanceAgainstProjectiles.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, chance to Avoid being Stunned
+		IfInString, LoopField, chance to Avoid being Stunned
 		{
 			LookupAffixAndSetInfoLine("data\ChanceToAvoidBeingStunned.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, chance to Avoid Elemental Ailments
+		IfInString, LoopField, chance to Avoid Elemental Ailments
 		{
 			LookupAffixAndSetInfoLine("data\ChanceToAvoidElementalAilments.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, chance to Dodge Spell Damage
+		IfInString, LoopField, chance to Dodge Spell Damage
 		{
 			LookupAffixAndSetInfoLine("data\ChanceToDodgeSpellDamage.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, Chance to Block Spells
+		IfInString, LoopField, Chance to Block Spells
 		{
 			LookupAffixAndSetInfoLine("data\ChanceToBlockSpells.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, Life gained when you Block
+		IfInString, LoopField, Life gained when you Block
 		{
 			LookupAffixAndSetInfoLine("data\LifeOnBlock.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, Mana gained when you Block
+		IfInString, LoopField, Mana gained when you Block
 		{
 			LookupAffixAndSetInfoLine("data\ManaOnBlock.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Attack and Cast Speed
+		IfInString, LoopField, increased Attack and Cast Speed
 		{
 			LookupAffixAndSetInfoLine("data\AttackAndCastSpeed_Shield.txt", "Suffix", ItemLevel, CurrValue)
 			Continue
 		}
 		If (ItemBaseType = "Weapon")
 		{
-			IfInString, A_LoopField, Chance to Ignite
+			IfInString, LoopField, Chance to Ignite
 			{
 				LookupAffixAndSetInfoLine("data\ChanceToIgnite.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, Chance to Freeze
+			IfInString, LoopField, Chance to Freeze
 			{
 				LookupAffixAndSetInfoLine("data\ChanceToFreeze.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, Chance to Shock
+			IfInString, LoopField, Chance to Shock
 			{
 				LookupAffixAndSetInfoLine("data\ChanceToShock.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, chance to cause Bleeding on Hit
+			IfInString, LoopField, chance to cause Bleeding on Hit
 			{
 				If (CurrValue = 25)
 				{
 					; Vagan/Tora prefix
-					AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "Vagan 7 or Buy:Tora 4", ""), A_Index)
+					AppendAffixInfo(MakeAffixDetailLine(LoopField, "Prefix", "Vagan 7 or Buy:Tora 4", ""), A_Index)
 					Continue
 				}
 				
 				LookupAffixAndSetInfoLine("data\ChanceToBleed.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, chance to Poison on Hit
+			IfInString, LoopField, chance to Poison on Hit
 			{
 				LookupAffixAndSetInfoLine("data\ChanceToPoison.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Burning Damage
+			IfInString, LoopField, increased Burning Damage
 			{
 				LookupAffixAndSetInfoLine("data\IncrBurningDamage.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Damage with Poison
+			IfInString, LoopField, increased Damage with Poison
 			{
 				LookupAffixAndSetInfoLine("data\IncrPoisonDamage.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Damage with Bleeding
+			IfInString, LoopField, increased Damage with Bleeding
 			{
 				LookupAffixAndSetInfoLine("data\IncrBleedingDamage.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Poison Duration
+			IfInString, LoopField, increased Poison Duration
 			{
 				LookupAffixAndSetInfoLine("data\PoisonDuration.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Bleed duration
+			IfInString, LoopField, increased Bleed duration
 			{
 				LookupAffixAndSetInfoLine("data\BleedDuration.txt", "Suffix", ItemLevel, CurrValue)
 				Continue
@@ -5437,7 +5452,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		
 		; Prefixes
 		
-		If RegExMatch(A_LoopField, "Adds \d+? to \d+? Physical Damage")
+		If RegExMatch(LoopField, "Adds \d+? to \d+? Physical Damage")
 		{
 			If (ItemBaseType = "Weapon")
 			{
@@ -5468,9 +5483,9 @@ ParseAffixes(ItemDataAffixes, Item)
 			Continue
 		}
 		
-		If RegExMatch(A_LoopField, "Adds \d+? to \d+? Cold Damage")
+		If RegExMatch(LoopField, "Adds \d+? to \d+? Cold Damage")
 		{
-			If RegExMatch(A_LoopField, "Adds \d+? to \d+? Cold Damage to Spells")
+			If RegExMatch(LoopField, "Adds \d+? to \d+? Cold Damage to Spells")
 			{
 				If (ItemGripType = "1H"){
 					File := "data\SpellAddsCold_1H.txt"
@@ -5499,9 +5514,9 @@ ParseAffixes(ItemDataAffixes, Item)
 			Continue
 		}
 		
-		If RegExMatch(A_LoopField, "Adds \d+? to \d+? Fire Damage")
+		If RegExMatch(LoopField, "Adds \d+? to \d+? Fire Damage")
 		{
-			If RegExMatch(A_LoopField, "Adds \d+? to \d+? Fire Damage to Spells")
+			If RegExMatch(LoopField, "Adds \d+? to \d+? Fire Damage to Spells")
 			{
 				If (ItemGripType = "1H"){
 					File := "data\SpellAddsFire_1H.txt"
@@ -5530,9 +5545,9 @@ ParseAffixes(ItemDataAffixes, Item)
 			Continue
 		}
 		
-		If RegExMatch(A_LoopField, "Adds \d+? to \d+? Lightning Damage")
+		If RegExMatch(LoopField, "Adds \d+? to \d+? Lightning Damage")
 		{
-			If RegExMatch(A_LoopField, "Adds \d+? to \d+? Lightning Damage to Spells")
+			If RegExMatch(LoopField, "Adds \d+? to \d+? Lightning Damage to Spells")
 			{
 				If (ItemGripType = "1H"){
 					File := "data\SpellAddsLightning_1H.txt"
@@ -5562,7 +5577,7 @@ ParseAffixes(ItemDataAffixes, Item)
 			Continue
 		}
 		
-		If RegExMatch(A_LoopField, "Adds \d+? to \d+? Chaos Damage")
+		If RegExMatch(LoopField, "Adds \d+? to \d+? Chaos Damage")
 		{
 			If ((ItemGripType = "1H") or (ItemSubType = "Bow")){
 				; Added damage for bows follows 1H tiers
@@ -5579,41 +5594,41 @@ ParseAffixes(ItemDataAffixes, Item)
 			Continue
 		}
 		
-		IfInString, A_LoopField, increased maximum Energy Shield
+		IfInString, LoopField, increased maximum Energy Shield
 		{
 			; Contrary to %Armour and %Evasion this one has a unique wording due to "maximum" and is clearly from Amulets (or Legacy Rings)
 			LookupAffixAndSetInfoLine("data\IncrMaxEnergyShield_Amulet.txt", "Prefix", ItemLevel, CurrValue)
 			Continue
 		}
 		
-		IfInString, A_LoopField, Physical Damage to Melee Attackers
+		IfInString, LoopField, Physical Damage to Melee Attackers
 		{
 			LookupAffixAndSetInfoLine("data\PhysDamagereturn.txt", "Prefix", ItemLevel, CurrValue)
 			Continue
 		}
 		
-		IfInString, A_LoopField, to Level of Socketed
+		IfInString, LoopField, to Level of Socketed
 		{
-			If RegExMatch(A_LoopField, "(Fire|Cold|Lightning)"){
+			If RegExMatch(LoopField, "(Fire|Cold|Lightning)"){
 				File := "data\GemLevel_Elemental.txt"
 			}
-			Else If (InStr(A_LoopField, "Chaos")){
+			Else If (InStr(LoopField, "Chaos")){
 				File := "data\GemLevel_Chaos.txt"
 			}
-			Else If (InStr(A_LoopField, "Bow")){
+			Else If (InStr(LoopField, "Bow")){
 				File := "data\GemLevel_Bow.txt"
 			}
-			Else If (InStr(A_LoopField, "Melee")){
+			Else If (InStr(LoopField, "Melee")){
 				File := "data\GemLevel_Melee.txt"
 			}
-			Else If (InStr(A_LoopField, "Minion")){
+			Else If (InStr(LoopField, "Minion")){
 				File := "data\GemLevel_Minion.txt"
 			}
 			; Catarina prefix
-			Else If (InStr(A_LoopField, "Support")){
+			Else If (InStr(LoopField, "Support")){
 				File := "data\GemLevel_Support.txt"
 			}
-			Else If (InStr(A_LoopField, "Socketed Gems"))
+			Else If (InStr(LoopField, "Socketed Gems"))
 			{
 				If (ItemSubType = "Ring"){
 					File := "data\GemLevel_UnsetRing.txt"
@@ -5625,12 +5640,12 @@ ParseAffixes(ItemDataAffixes, Item)
 			LookupAffixAndSetInfoLine(File, "Prefix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, Physical Attack Damage Leeched as
+		IfInString, LoopField, Physical Attack Damage Leeched as
 		{
 			LookupAffixAndSetInfoLine("data\PhysicalAttackDamageLeeched.txt", "Prefix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, Movement Speed
+		IfInString, LoopField, Movement Speed
 		{
 			If (ItemSubType = "Boots")
 			{
@@ -5643,7 +5658,7 @@ ParseAffixes(ItemDataAffixes, Item)
 				Continue
 			}
 		}
-		IfInString, A_LoopField, increased Elemental Damage with Attack Skills
+		IfInString, LoopField, increased Elemental Damage with Attack Skills
 		{
 			If (ItemBaseType = "Weapon"){
 				; Because GGG apparently thought having the exact same iLvls and tiers except for one single percentage point is necessary. T1-2: 31-37|38-42 vs. 31-36|37-42
@@ -5661,29 +5676,29 @@ ParseAffixes(ItemDataAffixes, Item)
 			}
 		}
 		; Flask effects (on belts)
-		IfInString, A_LoopField, increased Flask Mana Recovery rate
+		IfInString, LoopField, increased Flask Mana Recovery rate
 		{
 			LookupAffixAndSetInfoLine("data\FlaskManaRecoveryRate.txt", "Prefix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Flask Life Recovery rate
+		IfInString, LoopField, increased Flask Life Recovery rate
 		{
 			LookupAffixAndSetInfoLine("data\FlaskLifeRecoveryRate.txt", "Prefix", ItemLevel, CurrValue)
 			Continue
 		}
 		If (ItemSubType = "Shield"){
-			IfInString, A_LoopField, increased Global Physical Damage
+			IfInString, LoopField, increased Global Physical Damage
 			{
 				HasIncrPhysDmg := False	; No worries about hybrid here.
 				LookupAffixAndSetInfoLine("data\IncrPhysDamage_Shield.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Elemental Damage
+			IfInString, LoopField, increased Elemental Damage
 			{
 				LookupAffixAndSetInfoLine("data\IncrEleDamage_Shield.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
 			}
-			IfInString, A_LoopField, increased Attack Damage
+			IfInString, LoopField, increased Attack Damage
 			{
 				LookupAffixAndSetInfoLine("data\IncrAttackDamage_Shield.txt", "Prefix", ItemLevel, CurrValue)
 				Continue
@@ -5693,101 +5708,101 @@ ParseAffixes(ItemDataAffixes, Item)
 		; --- MASTER CRAFT/BUY ONLY AFFIXES ---
 		
 		; Can be either Leo prefix or jewel suffix. Jewels are checked already, so it's Leo.
-		If RegExMatch(A_LoopField, ".*increased Damage$")
+		If RegExMatch(LoopField, ".*increased Damage$")
 		{
 			LookupAffixAndSetInfoLine("data\IncrDamageLeo.txt", "Prefix", ItemLevel, CurrValue)
 			Continue
 		}
 		; Haku prefix
-		IfInString, A_LoopField, to Quality of Socketed Support Gems
+		IfInString, LoopField, to Quality of Socketed Support Gems
 		{
 			LookupAffixAndSetInfoLine("data\GemQuality_Support.txt", "Prefix", ItemLevel, CurrValue)
 			Continue
 		}
 		; Elreon prefix
-		IfInString, A_LoopField, to Mana Cost of Skills
+		IfInString, LoopField, to Mana Cost of Skills
 		{
 			CurrValue := Abs(CurrValue)	; Turn potentially negative number into positive.
 			LookupAffixAndSetInfoLine("data\ManaCostOfSkills.txt", "Prefix", ItemLevel, CurrValue)
 			Continue
 		}
 		; Vorici prefix
-		IfInString, A_LoopField, increased Life Leeched per Second
+		IfInString, LoopField, increased Life Leeched per Second
 		{
 			LookupAffixAndSetInfoLine("data\LifeLeechedPerSecond.txt", "Prefix", ItemLevel, CurrValue)
 			Continue
 		}
 		; Tora dual suffixes
-		IfInString, A_LoopField, increased Trap Throwing Speed
+		IfInString, LoopField, increased Trap Throwing Speed
 		{
 			LookupAffixAndSetInfoLine("data\IncrTrapThrowingMineLayingSpeed.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Mine Laying Speed
+		IfInString, LoopField, increased Mine Laying Speed
 		{
 			LookupAffixAndSetInfoLine("data\IncrTrapThrowingMineLayingSpeed.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Trap Damage
+		IfInString, LoopField, increased Trap Damage
 		{
 			LookupAffixAndSetInfoLine("data\IncrTrapMineDamage.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 			Continue
 		}
-		IfInString, A_LoopField, increased Mine Damage
+		IfInString, LoopField, increased Mine Damage
 		{
 			LookupAffixAndSetInfoLine("data\IncrTrapMineDamage.txt", "Hybrid Suffix", ItemLevel, CurrValue)
 			Continue
 		}
 		; Vagan suffix
-		IfInString, A_LoopField, to Weapon range
+		IfInString, LoopField, to Weapon range
 		{
 			LookupAffixAndSetInfoLine("data\ToWeaponRange.txt", "Suffix", ItemLevel, CurrValue)
 		}
 		
 		
 		
-		IfInString, A_LoopField, Gems in this item are Supported by Lvl 1 Blood Magic
+		IfInString, LoopField, Gems in this item are Supported by Lvl 1 Blood Magic
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(LoopField, "Prefix", "", ""), A_Index)
 			Continue
 		}
-				IfInString, A_LoopField, Hits can't be Evaded
+		IfInString, LoopField, Hits can't be Evaded
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(LoopField, "Prefix", "", ""), A_Index)
 			Continue
 		}
 		
 		
 		; Meta Craft Mods
 		
-		IfInString, A_LoopField, Can have multiple Crafted Mods
+		IfInString, LoopField, Can have multiple Crafted Mods
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(LoopField, "Suffix", "", ""), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, Prefixes Cannot Be Changed
+		IfInString, LoopField, Prefixes Cannot Be Changed
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(LoopField, "Suffix", "", ""), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, Suffixes Cannot Be Changed
+		IfInString, LoopField, Suffixes Cannot Be Changed
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Prefix", "", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(LoopField, "Prefix", "", ""), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, Cannot roll Attack Mods
+		IfInString, LoopField, Cannot roll Attack Mods
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(LoopField, "Suffix", "", ""), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, Cannot roll Caster Mods
+		IfInString, LoopField, Cannot roll Caster Mods
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(LoopField, "Suffix", "", ""), A_Index)
 			Continue
 		}
-		IfInString, A_LoopField, Cannot roll Mods with Required Lvl above Lvl 28
+		IfInString, LoopField, Cannot roll Mods with Required Lvl above Lvl 28
 		{
-			AppendAffixInfo(MakeAffixDetailLine(A_Loopfield, "Suffix", "", ""), A_Index)
+			AppendAffixInfo(MakeAffixDetailLine(LoopField, "Suffix", "", ""), A_Index)
 			Continue
 		}
 	}
@@ -7843,7 +7858,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		If (corrMatch) {
 			Item.IsCorrupted := True
 		}
-		RegExMatch(Trim(A_LoopField), "i)^(Elder|Shaper) Item$", match)
+		RegExMatch(Trim(A_LoopField), "i)^(Elder|Shaper|Synthesised|Fractured) Item$", match)
 		If (match) {
 			Item["Is" match1 "Base"] := True
 		}
@@ -8084,7 +8099,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	If (Item.IsLeagueStone or Item.IsScarab) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
-	If (Item.IsBeast) {
+	Else If (Item.IsProphecy) {
+		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
+	}
+	Else If (Item.IsBeast) {
 		ItemDataIndexAffixes := ItemDataIndexAffixes - 1
 	}
 	ItemData.Affixes := RegExReplace(ItemDataParts%ItemDataIndexAffixes%, "[\r\n]+([a-z])", " $1")
@@ -8102,13 +8120,26 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		}
 		
 		; Check that there is no ":" in the retrieved text = can only be an implicit mod
-		If (!InStr(ItemDataParts%ItemDataIndexImplicit%, ":")) {
+		_implicitFound := !InStr(ItemDataParts%ItemDataIndexImplicit%, ":")
+		If (_implicitFound) {
 			tempImplicit	:= ItemDataParts%ItemDataIndexImplicit%
 			Loop, Parse, tempImplicit, `n, `r
 			{
 				Item.Implicit.push(A_LoopField)
 			}
 			Item.hasImplicit := True
+		}
+
+		; Check if there is a second "possible implicit" which means the first one is actually an enchantmet
+		_ItemDataIndexImplicit := ItemDataIndexImplicit - 1
+		If (_implicitFound and !InStr(ItemDataParts%_ItemDataIndexImplicit%, ":")) {			
+			tempImplicit	:= ItemDataParts%_ItemDataIndexImplicit%
+			Loop, Parse, tempImplicit, `n, `r
+			{
+				Item.Enchantment.push(A_LoopField)
+			}
+			Item.hasImplicit := True
+			Item.hasEnchantment := True
 		}
 	}
 	
@@ -8124,6 +8155,9 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = False and not (Item.IsLeaguestone or Item.IsScarab))  ; Code added by Bahnzo to avoid maps showing affixes
 	{
+		ParseAffixes(ItemData.Affixes, Item)
+	}
+	Else If (Item.IsProphecy) {
 		ParseAffixes(ItemData.Affixes, Item)
 	}
 	Else If (RarityLevel > 1 and RarityLevel < 4 and Item.IsMap = True)
@@ -8155,6 +8189,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.BaseName := ItemBaseName
 	
 	pseudoMods := PreparePseudoModCreation(ItemData.Affixes, Item.Implicit, RarityLevel, Item.isMap)
+	fracturedModsCount :=  ; can't be reliably determined that easily since a hybrid mod (which counts as as single ractured mod) gets displayed as two fractured mods in the item data
 	
 	; Start assembling the text for the tooltip
 	TT := Item.Name
@@ -8549,7 +8584,7 @@ GetNegativeAffixOffset(Item)
 	{
 		NegativeAffixOffset += 1
 	}
-	If (Item.IsElderBase or Item.IsShaperBase)
+	If (Item.IsElderBase or Item.IsShaperBase or Item.IsSynthesisedBase or Item.IsFracturedBase)
 	{
 		NegativeAffixOffset += 1
 	}
@@ -8608,6 +8643,11 @@ ModStringToObject(string, isImplicit) {
 	StringReplace, val, val, `n,, All
 	values := []
 
+	RegExMatch(val, "i) \((fractured)\)$", sType)
+	spawnType := sType1
+	
+	val := RegExReplace(val, "i) \((fractured|crafted)\)$")
+
 	; Collect all numeric values in the mod-string
 	Pos        := 0
 	While Pos := RegExMatch(val, "i)(-?[.0-9]+)", value, Pos + (StrLen(value) ? StrLen(value) : 1)) {
@@ -8636,6 +8676,22 @@ ModStringToObject(string, isImplicit) {
 		}
 		If (RegExMatch(val, "i)lightning")) {
 			Matches.push("Lightning")
+		}
+	}
+	; Matching "x% fire/cold/lgitning and chaos resistance"
+	If (RegExMatch(val, "i)to (cold|fire|lightning) and (chaos) resistance") and not RegExMatch(val, "i)Minion|Totem")) {
+		type := "Resistance"
+		If (RegExMatch(val, "i)fire")) {
+			Matches.push("Fire")
+		}
+		If (RegExMatch(val, "i)cold")) {
+			Matches.push("Cold")
+		}
+		If (RegExMatch(val, "i)lightning")) {
+			Matches.push("Lightning")
+		}
+		If (RegExMatch(val, "i)chaos")) {
+			Matches.push("Chaos")
 		}
 	}
 
@@ -8681,7 +8737,7 @@ ModStringToObject(string, isImplicit) {
 	;
 	arr := []
 	Loop % (Matches.Length() ? Matches.Length() : 1) {
-		temp := {}
+		temp := {}		
 		temp.name_orig := Matches[A_Index]
 		Loop {
 			temp.name_orig := RegExReplace(temp.name_orig, "-?#", values[A_Index], Count, 1)
@@ -8713,6 +8769,9 @@ ModStringToObject(string, isImplicit) {
 		
 		temp.name		:= RegExReplace(s, "i)# ?to ? #", "#", isRange)
 		temp.isVariable:= false
+		If (StrLen(spawnType)) {
+			temp.spawnType := spawnType	
+		}
 		temp.type		:= (isImplicit and Matches.Length() <= 1) ? "implicit" : "explicit"
 		arr.push(temp)
 	}
@@ -8783,6 +8842,13 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	; Note that at this point combined mods/attributes have already been separated into two mods
 	; like '+ x % to fire and lightning resist' would be '+ x % to fire resist' AND '+ x % to lightning resist' as 2 different mods
 	For key, mod in mods {
+		RegExMatch(mod.name, "i) \((fractured)\)$", spawnType)
+		If (StrLen(spawnType1)) {
+			mod.spawnType := spawnType1	
+		}		
+		
+		mod.name := RegExReplace(mod.name, "i) \((fractured|crafted)\)$")
+		
 		; ### Base stats
 		; life and mana
 		If (RegExMatch(mod.name, "i)to maximum (Life|Mana)$", stat)) {
@@ -8848,6 +8914,13 @@ CreatePseudoMods(mods, returnAllMods := False) {
 		Else If (RegExMatch(mod.name, "i)to (Cold|Fire|Lightning|Chaos) Resistance$", resistType) and not RegExMatch(mod.name, "i)Minion|Totem")) {
 			%resistType1%Resist := %resistType1%Resist + mod.values[1]
 			mod.simplifiedName := "xTo" resistType1 "Resistance"
+		}
+		Else If (RegExMatch(mod.name, "i)to (Cold|Fire|Lightning) and (Chaos) Resistances$") and not RegExMatch(mod.name, "i)Minion|Totem")) {
+			%resistType1%Resist := %resistType1%Resist + mod.values[1]
+			mod.simplifiedName := "xTo" resistType1 "Resistance"
+			
+			chaosResist := chaosResist + mod.values[1]
+			mod.simplifiedName := "xToChaosResistance"
 		}
 
 		; ### Percent damages
@@ -9590,7 +9663,7 @@ GuiUpdateDropdownList(Contents="", Selected="", AssocVar="", Options="", GuiName
 	}
 }
 
-AddToolTip(con, text, Modify=0){
+AddToolTip(con, text, Modify=0) {
 	Static TThwnd, GuiHwnd
 	TInfo =
 	UInt := "UInt"
@@ -9680,7 +9753,8 @@ CreateSettingsUI()
 {
 	Global
 	
-	Gui, Color, ffffff, ffffff
+	Gui, SettingsUI:Color, ffffff, ffffff
+	Gui, SettingsUI:Default
 
 	; ItemInfo is not included in other scripts
 	If (not SkipItemInfoUpdateCall) {
@@ -9693,145 +9767,145 @@ CreateSettingsUI()
 		}
 
 		StringTrimRight, TabNames, TabNames, 1
-		Gui, Add, Tab3, Choose1 h660 x0, %TabNames%
+		Gui, SettingsUI:Add, Tab3, Choose1 h660 x0, %TabNames%
 	}
 	
 	; Note: window handles (hwnd) are only needed if a UI tooltip should be attached.
 	
 	generalHeight := SkipItemInfoUpdateCall ? "150" : "240"		; "180" : "270" with ParseItemHotKey
-	topGroupBoxYPos := SkipItemInfoUpdateCall ? "y53" : "y30"
+	topGroupBoxYPos := SkipItemInfoUpdateCall ? "y51" : "y30"
 	
 	; General
-	GuiAddGroupBox("General", "x7 " topGroupBoxYPos " w310 h" generalHeight " Section")
-	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w250 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH")
+	GuiAddGroupBox("General", "x7 " topGroupBoxYPos " w310 h" generalHeight " Section", "", "", "", "", "SettingsUI")
+	GuiAddCheckbox("Only show tooltip if PoE is frontmost", "xs10 yp+20 w250 h30", Opts.OnlyActiveIfPOEIsFront, "OnlyActiveIfPOEIsFront", "OnlyActiveIfPOEIsFrontH", "", "", "SettingsUI")
 	AddToolTip(OnlyActiveIfPOEIsFrontH, "When checked the script only activates while you are ingame`n(technically while the game window is the frontmost)")
 	
 	;GuiAddHotkey(Opts.ParseItemHotKey, "xs75 yp+37 w120 h20", "ParseItemHotKey")
 	;GuiAddText("Hotkey:", "xs27 yp+2 w50 h20 0x0100", "LblParseItemHotKey")
 	; Change next from yp+30 to yp+25 when this is implemented.
 	
-	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 yp+30 w250 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH")
+	GuiAddCheckbox("Put tooltip results on clipboard", "xs10 yp+30 w250 h30", Opts.PutResultsOnClipboard, "PutResultsOnClipboard", "PutResultsOnClipboardH", "", "", "SettingsUI")
 	AddToolTip(PutResultsOnClipboardH, "Put tooltip result text into the system clipboard`n(overwriting the raw text PoE itself put there to begin with)")
 	
-	GuiAddCheckbox("Enable Map Mod Warnings", "xs10 yp+30 w250 h30", Opts.EnableMapModWarnings, "EnableMapModWarnings", "EnableMapModWarningsH")
+	GuiAddCheckbox("Enable Map Mod Warnings", "xs10 yp+30 w250 h30", Opts.EnableMapModWarnings, "EnableMapModWarnings", "EnableMapModWarningsH", "", "", "SettingsUI")
 	AddToolTip(EnableMapModWarningsH, "Enables or disables the entire Map Mod Warnings function.")
-	
+
 	If (!SkipItemInfoUpdateCall) {
-		GuiAddCheckbox("Update: Show Notifications", "xs10 yp+30 w250 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH")
+		GuiAddCheckbox("Update: Show Notifications", "xs10 yp+30 w250 h30", Opts.ShowUpdateNotification, "ShowUpdateNotification", "ShowUpdateNotificationH", "", "", "SettingsUI")
 		AddToolTip(ShowUpdateNotificationH, "Notifies you when there's a new release available.")
 		
-		GuiAddCheckbox("Update: Skip folder selection", "xs10 yp+30 w250 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH")
+		GuiAddCheckbox("Update: Skip folder selection", "xs10 yp+30 w250 h30", Opts.UpdateSkipSelection, "UpdateSkipSelection", "UpdateSkipSelectionH", "", "", "SettingsUI")
 		AddToolTip(UpdateSkipSelectionH, "Skips selecting an update location.`nThe current script directory will be used as default.")
 		
-		GuiAddCheckbox("Update: Skip backup", "xs10 yp+30 w250 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH")
+		GuiAddCheckbox("Update: Skip backup", "xs10 yp+30 w250 h30", Opts.UpdateSkipBackup, "UpdateSkipBackup", "UpdateSkipBackupH", "", "", "SettingsUI")
 		AddToolTip(UpdateSkipBackupH, "Skips making a backup of the install location/folder.")
 	}	
 	
 	; GDI+
-	GDIShift := SkipItemInfoUpdateCall ? 190 : 280
-	GuiAddGroupBox("GDI+", "x7 ym+" GDIShift " w310 h320 Section")
+	GDIShift := SkipItemInfoUpdateCall ? 210 : 300
+	GuiAddGroupBox("GDI+", "x7 ym+" GDIShift " w310 h320 Section", "", "", "", "", "SettingsUI")
 	
-	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w115", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI")
+	GuiAddCheckBox("Enable GDI+", "xs10 yp+20 w115", Opts.UseGDI, "UseGDI", "UseGDIH", "SettingsUI_ChkUseGDI", "", "SettingsUI")
 	AddToolTip(UseGDIH, "Enables rendering of tooltips using Windows gdip.dll`n(allowing limited styling options).")
-	GuiAddCheckBox("Rendering Fix", "xs10 yp+30 w115", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH")
+	GuiAddCheckBox("Rendering Fix", "xs10 yp+30 w115", Opts.GDIRenderingFix, "GDIRenderingFix", "GDIRenderingFixH", "", "", "SettingsUI")
 	AddToolTip(GDIRenderingFixH, "In the case that rendered graphics (window, border and text) are`nunsharp/blurry this should fix the issue.")
-	GuiAddText("(Restart script after disabling GDI+. Enabling might cause general FPS drops.)", "xs120 ys+20 w185 cRed", "")
+	GuiAddText("(Restart script after disabling GDI+. Enabling might cause general FPS drops.)", "xs120 ys+20 w185 cRed", "", "", "", "", "SettingsUI")
 	
-	GuiAddButton("Edit Window", "xs9 ys80 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys85 w200", "LblGDIWindowColor")
-	GuiAddEdit(Opts.GDIWindowColor, "xs240 ys82 w60", "GDIWindowColor", "GDIWindowColorH")
-	GuiAddText("Opactiy (0-100):", "xs100 ys115 w200", "LblGDIWindowOpacity")
-	GuiAddEdit(Opts.GDIWindowOpacity, "xs240 ys112 w60", "GDIWindowOpacity", "GDIWindowOpacityH")	
-	GuiAddButton("Edit Border", "xs9 ys140 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys145 w200", "LblGDIBorderColor")
-	GuiAddEdit(Opts.GDIBorderColor, "xs240 ys142 w60", "GDIBorderColor", "GDIBorderColorH")	
-	GuiAddText("Opacity (0-100):", "xs100 ys175 w200", "LblGDIBorderOpacity")
-	GuiAddEdit(Opts.GDIBorderOpacity, "xs240 ys172 w60", "GDIBorderOpacity", "GDIBorderOpacityH")	
-	GuiAddButton("Edit Text", "xs9 ys200 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor")
-	GuiAddText("Color (hex RGB):", "xs100 ys205 w200", "LblGDITextColor")
-	GuiAddEdit(Opts.GDITextColor, "xs240 ys202 w60", "GDITextColor", "GDITextColorH")
-	GuiAddText("Opacity (0-100):", "xs100 ys235 w200", "LblGDITextOpacity")
-	GuiAddEdit(Opts.GDITextOpacity, "xs240 ys232 w60", "GDITextOpacity", "GDITextOpacityH")
-	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys260 w260", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH")
+	GuiAddButton("Edit Window", "xs9 ys80 w80 h23", "SettingsUI_BtnGDIWindowColor", "BtnGDIWindowColor", "", "", "SettingsUI")
+	GuiAddText("Color (hex RGB):", "xs100 ys85 w200", "LblGDIWindowColor", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDIWindowColor, "xs240 ys82 w60", "GDIWindowColor", "GDIWindowColorH", "", "", "SettingsUI")
+	GuiAddText("Opactiy (0-100):", "xs100 ys115 w200", "LblGDIWindowOpacity", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDIWindowOpacity, "xs240 ys112 w60", "GDIWindowOpacity", "GDIWindowOpacityH", "", "", "SettingsUI")
+	GuiAddButton("Edit Border", "xs9 ys140 w80 h23", "SettingsUI_BtnGDIBorderColor", "BtnGDIBorderColor", "", "", "SettingsUI")
+	GuiAddText("Color (hex RGB):", "xs100 ys145 w200", "LblGDIBorderColor", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDIBorderColor, "xs240 ys142 w60", "GDIBorderColor", "GDIBorderColorH", "", "", "SettingsUI")
+	GuiAddText("Opacity (0-100):", "xs100 ys175 w200", "LblGDIBorderOpacity", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDIBorderOpacity, "xs240 ys172 w60", "GDIBorderOpacity", "GDIBorderOpacityH", "", "", "SettingsUI")
+	GuiAddButton("Edit Text", "xs9 ys200 w80 h23", "SettingsUI_BtnGDITextColor", "BtnGDITextColor", "", "", "SettingsUI")
+	GuiAddText("Color (hex RGB):", "xs100 ys205 w200", "LblGDITextColor", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDITextColor, "xs240 ys202 w60", "GDITextColor", "GDITextColorH", "", "", "SettingsUI")
+	GuiAddText("Opacity (0-100):", "xs100 ys235 w200", "LblGDITextOpacity", "", "", "", "SettingsUI")
+	GuiAddEdit(Opts.GDITextOpacity, "xs240 ys232 w60", "GDITextOpacity", "GDITextOpacityH", "", "", "SettingsUI")
+	GuiAddCheckBox("Style border depending on checked item.", "xs10 ys260 w260", Opts.GDIConditionalColors, "GDIConditionalColors", "GDIConditionalColorsH", "", "", "SettingsUI")
 	
-	GuiAddButton("GDI Defaults", "xs9 ys290 w100 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH")
-	GuiAddButton("Preview", "xs210 ys290 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH")
+	GuiAddButton("GDI Defaults", "xs9 ys290 w100 h23", "SettingsUI_BtnGDIDefaults", "BtnGDIDefaults", "BtnGDIDefaultsH", "", "SettingsUI")
+	GuiAddButton("Preview", "xs210 ys290 w80 h23", "SettingsUI_BtnGDIPreviewTooltip", "BtnGDIPreviewTooltip", "BtnGDIPreviewTooltipH", "", "SettingsUI")
 
 	; Tooltip
-	GuiAddGroupBox("Tooltip", "x327 " topGroupBoxYPos " w310 h140 Section")
+	GuiAddGroupBox("Tooltip", "x327 " topGroupBoxYPos " w310 h140 Section", "", "", "", "", "SettingsUI")
 
-	GuiAddEdit(Opts.MouseMoveThreshold, "xs250 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH")
-	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w200 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH")
+	GuiAddEdit(Opts.MouseMoveThreshold, "xs250 yp+22 w50 h20 Number", "MouseMoveThreshold", "MouseMoveThresholdH", "", "", "SettingsUI")
+	GuiAddText("Mouse move threshold (px):", "xs27 yp+3 w200 h20 0x0100", "LblMouseMoveThreshold", "LblMouseMoveThresholdH", "", "", "SettingsUI")
 	AddToolTip(LblMouseMoveThresholdH, "Hide tooltip when the mouse cursor moved x pixel away from the initial position.`nEffectively permanent tooltip when using a value larger than the monitor diameter.")
 	
-	GuiAddEdit(Opts.ToolTipTimeoutSeconds, "xs250 yp+27 w50 Number", "ToolTipTimeoutSeconds")
-	GuiAddCheckBox("Use tooltip timeout (seconds)", "xs10 yp+3 w200", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout")
+	GuiAddEdit(Opts.ToolTipTimeoutSeconds, "xs250 yp+27 w50 Number", "ToolTipTimeoutSeconds", "", "", "", "SettingsUI")
+	GuiAddCheckBox("Use tooltip timeout (seconds)", "xs10 yp+3 w200", Opts.UseTooltipTimeout, "UseTooltipTimeout", "UseTooltipTimeoutH", "SettingsUI_ChkUseTooltipTimeout", "", "SettingsUI")
 	AddToolTip(UseTooltipTimeoutH, "Hide tooltip automatically after defined time.")
 	
-	GuiAddCheckbox("Display at fixed coordinates", "xs10 yp+30 w280", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords")
+	GuiAddCheckbox("Display at fixed coordinates", "xs10 yp+30 w280", Opts.DisplayToolTipAtFixedCoords, "DisplayToolTipAtFixedCoords", "DisplayToolTipAtFixedCoordsH", "SettingsUI_ChkDisplayToolTipAtFixedCoords", "", "SettingsUI")
 	AddToolTip(DisplayToolTipAtFixedCoordsH, "Show tooltip in virtual screen space at the fixed`ncoordinates given below. Virtual screen space means`nthe full desktop frame, including any secondary`nmonitors. Coords are relative to the top left edge`nand increase going down and to the right.")
-		GuiAddEdit(Opts.ScreenOffsetX, "xs50 yp+22 w50", "ScreenOffsetX")
-		GuiAddEdit(Opts.ScreenOffsetY, "xs130 yp+0 w50", "ScreenOffsetY")
-		GuiAddText("X", "xs35 yp+3 w15", "LblScreenOffsetX")
-		GuiAddText("Y", "xs115 yp+0 w15", "LblScreenOffsetY")
+		GuiAddEdit(Opts.ScreenOffsetX, "xs50 yp+22 w50", "ScreenOffsetX", "", "", "", "SettingsUI")
+		GuiAddEdit(Opts.ScreenOffsetY, "xs130 yp+0 w50", "ScreenOffsetY", "", "", "", "SettingsUI")
+		GuiAddText("X", "xs35 yp+3 w15", "LblScreenOffsetX", "", "", "", "SettingsUI")
+		GuiAddText("Y", "xs115 yp+0 w15", "LblScreenOffsetY", "", "", "", "SettingsUI")
 	
 	
-	; Display	
-	GuiAddGroupBox("Display", "x327 ym+" 180 " w310 h295 Section")
+	; Display
+	GuiAddGroupBox("Display", "x327 ym+" 200 " w310 h295 Section", "", "", "", "", "SettingsUI")
 	
-	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w260 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH")
+	GuiAddCheckbox("Show header for affix overview", "xs10 yp+20 w260 h30", Opts.ShowHeaderForAffixOverview, "ShowHeaderForAffixOverview", "ShowHeaderForAffixOverviewH", "", "", "SettingsUI")
 	AddToolTip(ShowHeaderForAffixOverviewH, "Include a header above the affix overview:`n   TierRange ilvl   Total ilvl  Tier")
 	
-	GuiAddCheckbox("Show explanation for used notation", "xs10 yp+30 w260 h30", Opts.ShowExplanationForUsedNotation, "ShowExplanationForUsedNotation", "ShowExplanationForUsedNotationH")
+	GuiAddCheckbox("Show explanation for used notation", "xs10 yp+30 w260 h30", Opts.ShowExplanationForUsedNotation, "ShowExplanationForUsedNotation", "ShowExplanationForUsedNotationH", "", "", "SettingsUI")
 	AddToolTip(ShowExplanationForUsedNotationH, "Explain abbreviations and special notation symbols at`nthe end of the tooltip when they are used")
 	
-	GuiAddEdit(Opts.AffixTextEllipsis, "xs260 y+5 w40 h20", "AffixTextEllipsis")
-	GuiAddText("Affix text ellipsis:", "xs10 yp+3 w170 h20 0x0100", "LblAffixTextEllipsis", "AffixTextEllipsisH")
+	GuiAddEdit(Opts.AffixTextEllipsis, "xs260 y+5 w40 h20", "AffixTextEllipsis", "", "", "", "SettingsUI")
+	GuiAddText("Affix text ellipsis:", "xs10 yp+3 w170 h20 0x0100", "LblAffixTextEllipsis", "AffixTextEllipsisH", "", "", "SettingsUI")
 	AddToolTip(AffixTextEllipsisH, "Symbol used when affix text is shortened, such as:`n50% increased Spell…")
 	
-	GuiAddEdit(Opts.AffixColumnSeparator, "xs260 y+7 w40 h20", "AffixColumnSeparator")
-	GuiAddText("Affix column separator:", "xs10 yp+3 w170 h20 0x0100", "LblAffixColumnSeparator", "AffixColumnSeparatorH")
-	AddToolTip(AffixColumnSeparatorH, "Select separator (default: 2 spaces) for the \\ spots:`n50% increased Spell…\\50-59 (46)\\75-79 (84)\\T4 P")
+	GuiAddEdit(Opts.AffixColumnSeparator, "xs260 y+7 w40 h20", "AffixColumnSeparator", "", "", "", "SettingsUI")
+	GuiAddText("Affix column separator:", "xs10 yp+3 w170 h20 0x0100", "LblAffixColumnSeparator", "AffixColumnSeparatorH", "", "", "SettingsUI")
+	AddToolTip(AffixColumnSeparatorH, "Select separator (default: 2 spaces) for the \\ spots:`n50% increased Spell�\\50-59 (46)\\75-79 (84)\\T4 P")
 	
-	GuiAddEdit(Opts.DoubleRangeSeparator, "xs260 y+7 w40 h20", "DoubleRangeSeparator")
-	GuiAddText("Double range separator:", "xs10 yp+3 w170 h20 0x0100", "LblDoubleRangeSeparator", "DoubleRangeSeparatorH")
+	GuiAddEdit(Opts.DoubleRangeSeparator, "xs260 y+7 w40 h20", "DoubleRangeSeparator", "", "", "", "SettingsUI")
+	GuiAddText("Double range separator:", "xs10 yp+3 w170 h20 0x0100", "LblDoubleRangeSeparator", "DoubleRangeSeparatorH", "", "", "SettingsUI")
 	AddToolTip(DoubleRangeSeparatorH, "Select separator (default: | ) for double ranges from 'added damage' mods:`na-b to c-d is displayed as a-b|c-d")
 	
-	GuiAddCheckbox("Use compact double ranges", "xs10 y+3 w210 h30", Opts.UseCompactDoubleRanges, "UseCompactDoubleRanges", "UseCompactDoubleRangesH", "SettingsUI_ChkUseCompactDoubleRanges")
+	GuiAddCheckbox("Use compact double ranges", "xs10 y+3 w210 h30", Opts.UseCompactDoubleRanges, "UseCompactDoubleRanges", "UseCompactDoubleRangesH", "SettingsUI_ChkUseCompactDoubleRanges", "", "SettingsUI")
 	AddToolTip(UseCompactDoubleRangesH, "Show double ranges from 'added damage' mods as one range,`ne.g. a-b to c-d becomes a-d")
 	
-	GuiAddCheckbox("Only compact for 'Total' column", "xs30 yp+30 w210 h30", Opts.OnlyCompactForTotalColumn, "OnlyCompactForTotalColumn", "OnlyCompactForTotalColumnH")
+	GuiAddCheckbox("Only compact for 'Total' column", "xs30 yp+30 w210 h30", Opts.OnlyCompactForTotalColumn, "OnlyCompactForTotalColumn", "OnlyCompactForTotalColumnH", "", "", "SettingsUI")
 	AddToolTip(OnlyCompactForTotalColumnH, "Only use compact double ranges for the second range column`nin the affix overview (with the header 'total')")
 	
-	GuiAddEdit(Opts.MultiTierRangeSeparator, "xs260 y+6 w40 h20", "MultiTierRangeSeparator")
-	GuiAddText("Multi tier range separator:", "xs10 yp+3 w170 h20 0x0100", "LblMultiTierRangeSeparator", "MultiTierRangeSeparatorH")
-	AddToolTip(MultiTierRangeSeparatorH, "Select separator (default: … ) for a multi tier roll range with uncertainty:`n83% increased Light…   73-85…83-95   102-109 (84)  T1-4 P + T1-6 S`n	                     There--^")
+	GuiAddEdit(Opts.MultiTierRangeSeparator, "xs260 y+6 w40 h20", "MultiTierRangeSeparator", "", "", "", "SettingsUI")
+	GuiAddText("Multi tier range separator:", "xs10 yp+3 w170 h20 0x0100", "LblMultiTierRangeSeparator", "MultiTierRangeSeparatorH", "", "", "SettingsUI")
+	AddToolTip(MultiTierRangeSeparatorH, "Select separator (default: � ) for a multi tier roll range with uncertainty:`n83% increased Light�   73-85�83-95   102-109 (84)  T1-4 P + T1-6 S`n	                     There--^")
 	
-	GuiAddEdit(Opts.FontSize, "xs260 y+6 w40 h20 Number", "FontSize")
-	GuiAddText("Font Size:", "xs10 yp+3 w180 h20 0x0100")
+	GuiAddEdit(Opts.FontSize, "xs260 y+6 w40 h20 Number", "FontSize", "", "", "", "SettingsUI")
+	GuiAddText("Font Size:", "xs10 yp+3 w180 h20 0x0100", "", "", "", "", "SettingsUI")
 
 	; Buttons
 	ButtonsShiftX := "x659 "
-	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX " y63 w290 h30 0x0100")
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX " y63 w290 h30 0x0100", "", "", "", "", "SettingsUI")
 	
-	GuiAddButton("Defaults", ButtonsShiftX "y+8 w90 h23", "SettingsUI_BtnDefaults")
-	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK")
-	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")	
+	GuiAddButton("Defaults", ButtonsShiftX "y+8 w90 h23", "SettingsUI_BtnDefaults", "", "", "", "SettingsUI")
+	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK", "", "", "", "SettingsUI")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel", "", "", "", "SettingsUI")
 	
 	If (SkipItemInfoUpdateCall) {
-		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+10 w250 h50 cRed")
-		GuiAddText("", "x10 y10 w250 h10")
-	}	
+		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+10 w250 h50 cRed", "", "", "", "", "SettingsUI")
+		GuiAddText("", "x10 y10 w250 h10", "", "", "", "", "SettingsUI")
+	}
 	
 	; Begin Additional Macros Tab
 	If (SkipItemInfoUpdateCall) {
-		Gui, Tab, 3 
+		Gui, SettingsUI:Tab, 3 
 	} Else {
-		Gui, Tab, 2
+		Gui, SettingsUI:Tab, 2
 	}
 	
 	; AM Hotkeys
-	GuiAddGroupBox("[AdditionalMacros] Hotkeys", "x7 " topGroupBoxYPos " w630 h625")	
+	GuiAddGroupBox("[AdditionalMacros] Hotkeys", "x7 " topGroupBoxYPos " w630 h625", "", "", "", "", "SettingsUI")
 	
 	If (not AM_Config) {
 		GoSub, AM_Init
@@ -9846,19 +9920,19 @@ CreateSettingsUI()
 		If (sectionName != "General") {
 			; hotkey checkboxes (enable/disable)
 			HKCheckBoxID := "AM_" sectionName "_State"
-			GuiAddCheckbox(sectionName ":", "x17 yp+" chkBoxShiftY " w" chkBoxWidth " h20 0x0100", AM_Config[sectionName].State, HKCheckBoxID, HKCheckBoxID "H")
+			GuiAddCheckbox(sectionName ":", "x17 yp+" chkBoxShiftY " w" chkBoxWidth " h20 0x0100", AM_Config[sectionName].State, HKCheckBoxID, HKCheckBoxID "H", "", "", "SettingsUI")
 			AddToolTip(%HKCheckBoxID%H, RegExReplace(AM_ConfigDefault[sectionName].Description, "i)(\(Default = .*\))|\\n", "`n$1"))	; read description from default config
 			
 			For keyIndex, keyValue in StrSplit(AM_Config[sectionName].Hotkeys, ", ") {	
 				HotKeyID := "AM_" sectionName "_HotKeys_" keyIndex
 				LV_shiftY := keyIndex > 1 ? 1 : 0 
-				GuiAddListView("1|2", "x+10 yp+" LV_shiftY " h20 w" LVWidth, HotKeyID, HotKeyID "H", "", "r1 -Hdr -LV0x20 r1 C454444 Backgroundf0f0f0")			
+				GuiAddListView("1|2", "x+10 yp+" LV_shiftY " h20 w" LVWidth, HotKeyID, HotKeyID "H", "", "r1 -Hdr -LV0x20 r1 C454444 Backgroundf0f0f0", "SettingsUI")
 				LV_ModifyCol(1, 0)
 				LV_ModifyCol(2, LVWidth - 5)
 				LV_Delete(1)
 				LV_Add("","", keyValue)			
 
-				GuiAddButton("Edit", "xp+" LVWidth " yp-1 w30 h22 v" HotKeyID "_Trigger", "LV_HotkeyEdit")
+				GuiAddButton("Edit", "xp+" LVWidth " yp-1 w30 h22 v" HotKeyID "_Trigger", "LV_HotkeyEdit", "", "", "", "SettingsUI")
 			}
 			
 			For keyIndex, keyValue in AM_Config[sectionName] {
@@ -9866,35 +9940,35 @@ CreateSettingsUI()
 					If (RegExMatch(sectionName, "i)HighlightItems|HighlightItemsAlt")) {
 						If (keyIndex = "Arg2") {
 							CheckBoxID := "AM_" sectionName "_Arg2"
-							GuiAddCheckbox("Leave search field.", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY, keyValue, CheckBoxID, CheckBoxID "H")
+							GuiAddCheckbox("Leave search field.", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY, keyValue, CheckBoxID, CheckBoxID "H", "", "", "SettingsUI")
 						}
 						If (keyIndex = "Arg3") {
 							CheckBoxID := "AM_" sectionName "_Arg3"
-							GuiAddCheckbox("Enable hideout stash search.", "x+10 yp+0", keyValue, CheckBoxID, CheckBoxID "H")
+							GuiAddCheckbox("Enable hideout stash search.", "x+10 yp+0", keyValue, CheckBoxID, CheckBoxID "H", "", "", "SettingsUI")
 						}
 						If (keyIndex = "Arg4") {
 							EditID := "AM_" sectionName "_" keyIndex
-							GuiAddText("Decoration stash search field coordinates:  ", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w260 h20 0x0100", "LblHighlighting", "LblHighlightingH")
+							GuiAddText("Decoration stash search field coordinates:  ", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w260 h20 0x0100", "LblHighlighting", "LblHighlightingH", "", "", "SettingsUI")
 							AddToolTip(LblHighlightingH, "Refers to the decoration stash on the right side`nof the screen, not the master vendor window.`n`nCoordinates are relative to the PoE game window and`nare neccessary to click into/focus the search field.")
-							GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-15 yp+0 w15 h-1 0x0100", "HighlightInfo", "HighlightH", "")
-							GuiAddText("x= ", "x+5 yp+0 w20 h20 0x0100")
-							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID)
+							GuiAddPicture(A_ScriptDir "\resources\images\info-blue.png", "x+-15 yp+0 w15 h-1 0x0100", "HighlightInfo", "HighlightH", "", "", "SettingsUI")
+							GuiAddText("x= ", "x+5 yp+0 w20 h20 0x0100", "", "", "", "", "SettingsUI")
+							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID, "", "", "", "SettingsUI")
 						}
 						If (keyIndex = "Arg5") {
 							EditID := "AM_" sectionName "_" keyIndex
-							GuiAddText("y=", "x+5 yp+2 w20 h20 0x0100")
-							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID)
+							GuiAddText("y=", "x+5 yp+2 w20 h20 0x0100", "", "", "", "", "SettingsUI")
+							GuiAddEdit(keyValue, "x+0 yp-2 w40 h20", EditID, "", "", "", "SettingsUI")
 						}
 					}
 					Else If (RegExMatch(sectionName, "i)JoinChannel|KickYourself")) {
 						EditID := "AM_" sectionName "_" keyIndex
-						GuiAddText(keyIndex ":", "x+10 yp+4 w85 h20 0x0100")
-						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID)
+						GuiAddText(keyIndex ":", "x+10 yp+4 w85 h20 0x0100", "", "", "", "", "SettingsUI")
+						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID, "", "", "", "SettingsUI")
 					} 
 					Else {
 						EditID := "AM_" sectionName "_" keyIndex
-						GuiAddText(keyIndex ":", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w85 h20 0x0100")
-						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID)
+						GuiAddText(keyIndex ":", "x" 17 + chkBoxWidth + 10 " yp+" chkBoxShiftY " w85 h20 0x0100", "", "", "", "", "SettingsUI")
+						GuiAddEdit(keyValue, "x+0 yp-2 w99 h20", EditID, "", "", "", "SettingsUI")
 					}					
 				}
 			}
@@ -9903,17 +9977,17 @@ CreateSettingsUI()
 	
 	; AM General
 
-	GuiAddGroupBox("[AdditionalMacros] General", "x647 " topGroupBoxYPos " w310 h60")
+	GuiAddGroupBox("[AdditionalMacros] General", "x647 " topGroupBoxYPos " w310 h60", "", "", "", "", "SettingsUI")
 	
 	_i := 0
 	For keyIndex, keyValue in AM_Config.General {
 		If (not RegExMatch(keyIndex, ".*_Description$")) {
 			elementYPos := _i > 0 ? 20 : 30
-			
+
 			If (RegExMatch(keyIndex, ".*State$") and not (InStr(keyIndex, "KeyToSC", 0))) {
 				RegExMatch(AM_ConfigDefault.General[keyIndex "_Description"], ".*Short\$(.*)Long\$(.*)""", _description)		; read description from default config
 				ControlID := "AM_General_" keyIndex
-				GuiAddCheckbox(Trim(_description1), "x657 yp+" elementYPos " w250 h30", AM_Config.General[keyIndex], ControlID, ControlID "H")
+				GuiAddCheckbox(Trim(_description1), "x657 yp+" elementYPos " w250 h30", AM_Config.General[keyIndex], ControlID, ControlID "H", "", "", "SettingsUI")
 				AddToolTip(%ControlID%H, Trim(_description2))
 			}
 			_i++
@@ -9922,73 +9996,78 @@ CreateSettingsUI()
 	
 	; AM Buttons
 	
-	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX "yp+60 w290 h30 0x0100")	
-	GuiAddButton("Defaults", "xp-5 y+8 w90 h23", "SettingsUI_AM_BtnDefaults")
-	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK")
-	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")
-	GuiAddText("Any change here currently requires a script restart!", ButtonsShiftX "y+10 w280 h50 cGreen")
+	GuiAddText("Mouse over settings or see the GitHub Wiki page for comments on what these settings do exactly.", ButtonsShiftX "yp+60 w290 h30 0x0100", "", "", "", "", "SettingsUI")
+	GuiAddButton("Defaults", "xp-5 y+8 w90 h23", "SettingsUI_AM_BtnDefaults", "", "", "", "SettingsUI")
+	GuiAddButton("OK", "Default x+5 yp+0 w90 h23", "SettingsUI_BtnOK", "", "", "", "SettingsUI")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel", "", "", "", "SettingsUI")
+	GuiAddText("Any change here currently requires a script restart!", ButtonsShiftX "y+10 w280 h50 cGreen", "", "", "", "", "SettingsUI")
 	
 	If (SkipItemInfoUpdateCall) {
-		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+5 w280 h50 cRed")
+		GuiAddText("Use these buttons to change ItemInfo and AdditionalMacros settings (TradeMacro has it's own buttons).", ButtonsShiftX "y+5 w280 h50 cRed", "", "", "", "", "SettingsUI")
 	}
 	
-	GuiAddText("Experimental Feature!", ButtonsShiftX "y+35 w280 h200 cRed")
+	GuiAddText("Experimental Feature!", ButtonsShiftX "y+35 w280 h200 cRed", "", "", "", "", "SettingsUI")
 	experimentalNotice := "This new feature to assign hotkeys may cause issues for users with non-latin keyboard layouts."
 	experimentalNotice .= "`n`n" . "AHKs default UI element for selecting hotkeys doesn't support any special keys and mouse buttons."
 	experimentalNotice .= "`n`n" . "Please report any issues that you are experiencing."
 	experimentalNotice .= " You can still assign your settings directly using the AdditionalMacros.ini like before."
 	experimentalNotice .= " (Right-click system tray icon -> Edit Files)."
-	GuiAddText(experimentalNotice, ButtonsShiftX "yp+25 w290")
+	GuiAddText(experimentalNotice, ButtonsShiftX "yp+25 w290", "", "", "", "", "SettingsUI")
 	
 	; Begin Lutbot Tab
 	If (SkipItemInfoUpdateCall) {
-		Gui, Tab, 4 
+		Gui, SettingsUI:Tab, 4 
 	} Else {
-		Gui, Tab, 3
+		Gui, SettingsUI:Tab, 3
 	}
 	
-	GuiAddGroupBox("[Lutbot Logout]", "x7 " topGroupBoxYPos " w630 h625")
+	GuiAddGroupBox("[Lutbot Logout]", "x7 " topGroupBoxYPos " w630 h625", "", "", "", "", "SettingsUI")
 
 	lb_desc := "Lutbot's macro is a collection of features like TCP disconnect logout, whisper replies, ladder tracker and more.`n"
 	lb_desc .= "The included logout macro is the most advanced logout feature currently out there."
-	GuiAddText(lb_desc, "x17 yp+28 w600 h40 0x0100", "", "")
+	GuiAddText(lb_desc, "x17 yp+28 w600 h40 0x0100", "", "", "", "", "SettingsUI")
 	
 	lb_desc := "Since running the main version of this script alongside " Globals.Get("Projectname") " can cause some issues`n"
 	lb_desc .= "and hotkey conflicts, Lutbot also released a lite version that only contains the logout features."
-	GuiAddText(lb_desc, "x17 y+10 w600 h35 0x0100", "", "")
+	GuiAddText(lb_desc, "x17 y+10 w600 h35 0x0100", "", "", "", "", "SettingsUI")
 	
-	Gui, Add, Link, x17 y+5 cBlue, <a href="http://lutbot.com/#/ahk">Website and download</a>
+	Gui, SettingsUI:Add, Link, x17 y+5 cBlue, <a href="http://lutbot.com/#/ahk">Website and download</a>
 	
 	lb_desc := Globals.Get("Projectname") " can manage running this lite version for you, keeping it an independant script."
-	GuiAddText(lb_desc, "x17 y+20 w600 h20 0x0100", "", "")
+	GuiAddText(lb_desc, "x17 y+20 w600 h20 0x0100", "", "", "", "", "SettingsUI")
 	
-	GuiAddCheckbox("Run lutbot on script start if the lutbot macro exists (requires you to have run it once before).", "x17 yp+20 w600 h30", Opts.Lutbot_CheckScript, "Lutbot_CheckScript", "Lutbot_CheckScriptH")
+	GuiAddCheckbox("Run lutbot on script start if the lutbot macro exists (requires you to have run it once before).", "x17 yp+20 w600 h30", Opts.Lutbot_CheckScript, "Lutbot_CheckScript", "Lutbot_CheckScriptH", "", "", "SettingsUI")
 	
-	GuiAddCheckbox("Warn in case of hotkey conflicts", "x17 yp+30 w290 h30", Opts.Lutbot_WarnConflicts, "Lutbot_WarnConflicts", "Lutbot_WarnConflictsH")
+	GuiAddCheckbox("Warn in case of hotkey conflicts", "x17 yp+30 w290 h30", Opts.Lutbot_WarnConflicts, "Lutbot_WarnConflicts", "Lutbot_WarnConflictsH", "", "", "SettingsUI")
 	AddToolTip(Lutbot_CheckScriptH, "Check if the lutbot macro exists and run it.")
 	
-	GuiAddButton("Open Lutbot folder", "Default x17 y+10 w130 h23", "OpenLutbotDocumentsFolder")
+	GuiAddButton("Open Lutbot folder", "Default x17 y+10 w130 h23", "OpenLutbotDocumentsFolder", "", "", "", "SettingsUI")
 	
 	lb_desc := "If you have any issues related to"
-	GuiAddText(lb_desc, "x17 y+40 w600 h20 0x0100", "", "")
+	GuiAddText(lb_desc, "x17 y+40 w600 h20 0x0100", "", "", "", "", "SettingsUI")
 	lb_desc := "- " Globals.Get("Projectname") " starting the lutbot script or checking for conflicts report here:"
-	GuiAddText(lb_desc, "x17 y+0 w600 h20 0x0100", "", "")
-	Gui, Add, Link, x35 y+5 cBlue h20, - <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues">Github</a>
-	Gui, Add, Link, x35 y+0 cBlue h20, - <a href="https://discord.gg/taKZqWw">Discord</a>
-	Gui, Add, Link, x35 y+0 cBlue h20, - <a href="https://www.pathofexile.com/forum/view-thread/1757730">Forum</a>
+	GuiAddText(lb_desc, "x17 y+0 w600 h20 0x0100", "", "", "", "", "SettingsUI")
+	Gui, SettingsUI:Add, Link, x35 y+5 cBlue h20, - <a href="https://github.com/PoE-TradeMacro/POE-TradeMacro/issues">Github</a>
+	Gui, SettingsUI:Add, Link, x35 y+0 cBlue h20, - <a href="https://discord.gg/taKZqWw">Discord</a>
+	Gui, SettingsUI:Add, Link, x35 y+0 cBlue h20, - <a href="https://www.pathofexile.com/forum/view-thread/1757730">Forum</a>
 
 	lb_desc := "- Lutbots script not working correctly in any way report here:"
-	GuiAddText(lb_desc, "x17 y+5 w600 h20 0x0100", "", "")
-	Gui, Add, Link, x35 y+5 cBlue h20, - <a href="https://discord.gg/nttekWT">Discord</a>
+	GuiAddText(lb_desc, "x17 y+5 w600 h20 0x0100", "", "", "", "", "SettingsUI")
+	Gui, SettingsUI:Add, Link, x35 y+5 cBlue h20, - <a href="https://discord.gg/nttekWT">Discord</a>
 	
 	; Lutbot Buttons
 	
-	GuiAddText("Mouse over settings to see what these settings do exactly.", ButtonsShiftX "y60 w290 h30 0x0100")
-	GuiAddButton("OK", "Default xp-5 y+8 w90 h23", "SettingsUI_BtnOK")
-	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel")
+	GuiAddText("Mouse over settings to see what these settings do exactly.", ButtonsShiftX "y60 w290 h30 0x0100", "", "", "", "", "SettingsUI")
+	GuiAddButton("OK", "Default xp-5 y+8 w90 h23", "SettingsUI_BtnOK", "", "", "", "SettingsUI")
+	GuiAddButton("Cancel", "x+5 yp+0 w90 h23", "SettingsUI_BtnCancel", "", "", "", "SettingsUI")
 	
 	; close tabs
-	Gui, Tab
+	Gui, SettingsUI:Tab
+	
+	GoSub, SettingsUI_ChkUseCompactDoubleRanges
+	GoSub, SettingsUI_ChkDisplayToolTipAtFixedCoords
+	GoSub, SettingsUI_ChkUseTooltipTimeout
+	GoSub, SettingsUI_ChkUseGDI
 }
 
 UpdateSettingsUI()
@@ -10118,7 +10197,7 @@ ShowSettingsUI()
 	; The TradeMacro needs much more space for all the options.
 	SettingsUIHeight := Globals.Get("SettingsUIHeight", 615)
 	SettingsUITitle := Globals.Get("SettingsUITitle", "PoE ItemInfo Settings")
-	Gui, Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
+	Gui, SettingsUI:Show, w%SettingsUIWidth% h%SettingsUIHeight%, %SettingsUITitle%
 }
 
 ShowUpdateNotes()
@@ -10536,8 +10615,8 @@ ShowAssignedHotkeys(returnList = false) {
 	Gui, ShowHotkeys:Color, ffffff, ffffff
 	Gui, ShowHotkeys:Add, Text, , List of this scripts assigned hotkeys.
 	Gui, ShowHotkeys:Default
-	Gui, Font, , Courier New
-	Gui, Font, , Consolas
+	Gui, ShowHotkeys:Font, , Courier New
+	Gui, ShowHotkeys:Font, , Consolas
 	Gui, ShowHotkeys:Add, ListView, r25 w800 NoSortHdr Grid ReadOnly, Type | Enabled | Level | Running | Key combination (Code) | Key combination (ENG name)
 	For key, val in hotkeys {
 		If (key != 1) {
@@ -10565,7 +10644,7 @@ ShowAssignedHotkeys(returnList = false) {
 	Gui, ShowHotkeys:Add, Text, , % text
 
 	Gui, ShowHotkeys:Show, w820 xCenter yCenter, Assigned Hotkeys
-	Gui, 1:Default
+	Gui, SettingsUI:Default
 	Gui, Font
 }
 
@@ -11451,7 +11530,7 @@ ShowSettingsUI:
 
 SettingsUI_BtnOK:
 	Global Opts
-	Gui, Submit
+	Gui, SettingsUI:Submit
 	Sleep, 50
 	WriteConfig()
 	AM_WriteConfig()
@@ -11460,11 +11539,11 @@ SettingsUI_BtnOK:
 	return
 
 SettingsUI_BtnCancel:
-	Gui, Cancel
+	Gui, SettingsUI:Cancel
 	return
 
 SettingsUI_BtnDefaults:
-	Gui, Cancel
+	Gui, SettingsUI:Cancel
 	RemoveConfig()
 	Sleep, 75
 	CopyDefaultConfig()
@@ -11476,7 +11555,7 @@ SettingsUI_BtnDefaults:
 	return
 	
 SettingsUI_AM_BtnDefaults:
-	Gui, Cancel
+	Gui, SettingsUI:Cancel
 	RemoveConfig("AdditionalMacros.ini")
 	Sleep, 75
 	CopyDefaultConfig("AdditionalMacros.ini")
@@ -11564,10 +11643,10 @@ SettingsUI_BtnGDIPreviewTooltip:
 		Base Level:    55
 		Max Sockets:    4
 		--------
-		+1 to Level of Socketed Elem…          
-		Increased Critical Strike Ch… 125-150  
+		+1 to Level of Socketed Elem�          
+		Increased Critical Strike Ch� 125-150  
 		Increased Energy Shield       180-250  
-		Increased Mana Cost of Skill…   80-40  
+		Increased Mana Cost of Skill�   80-40  
 		Energy Shield gained on Kill    15-20
 	)
 	
@@ -11788,9 +11867,9 @@ ShowAssignedHotkeys:
 	Gui, 3:Cancel
 	return
 
-GuiEscape: 
+SettingsUIGuiEscape: 
 	; settings 
-	Gui, Cancel
+	Gui, SettingsUI:Cancel
 Return
 
 AboutGuiEscape:
@@ -11833,13 +11912,13 @@ CheckForUpdates:
 
 	hasUpdate := PoEScripts_Update(globalUpdateInfo.user, globalUpdateInfo.repo, globalUpdateInfo.releaseVersion, globalUpdateInfo.skipUpdateCheck, userDirectory, isDevVersion, globalUpdateInfo.skipSelection, globalUpdateInfo.skipBackup)
 	If (hasUpdate = "no update" and not firstUpdateCheck) {
-		SplashTextOn, , , No update available
+		SplashUI.SetSubMessage("No update available")
 		Sleep 2000
-		SplashTextOff
+		SplashUI.DestroyUI()
 	}
 	return
 
-CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, isFallbackRequest = false, league = "", project = "", tmpFileName = "", fallbackDir = "", ByRef usedFallback = false, ByRef loggedCurrencyRequestAtStartup = false, ByRef loggedTempLeagueCurrencyRequest = false) {
+CurrencyDataDownloadURLtoJSON(url, sampleValue, critical = false, isFallbackRequest = false, league = "", project = "", tmpFileName = "", fallbackDir = "", ByRef usedFallback = false, ByRef loggedCurrencyRequestAtStartup = false, ByRef loggedTempLeagueCurrencyRequest = false, CurlTimeout = 35) {
 	errorMsg := "Parsing the currency data (json) from poe.ninja failed.`n"
 	errorMsg .= "This should only happen when the servers are down / unavailable."
 	errorMsg .= "`n`n"
@@ -11847,21 +11926,22 @@ CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, isFallbackReque
 	errorMsg .= "`n`n"
 	errorMsg .= "You can find a log file with some debug information:"
 	errorMsg .= "`n" """" A_ScriptDir "\temp\StartupLog.txt"""
+	errorMsg .= "`n`nTry opening the settings menu and selecting a league/making sure that one is selected."
 	errorMsg .= "`n`n"
 
 	errors := 0
 	parsingError := false	
 	Try {
+		options := ""
+		options	.= "`n" "TimeOut: " CurlTimeout
+		
 		reqHeaders.push("Connection: keep-alive")
 		reqHeaders.push("Cache-Control: max-age=0")
 		reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")	
 		reqHeaders.push("User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36")
 		currencyData := PoEScripts_Download(url, postData, reqHeaders, options, true, true, false, "", reqHeadersCurl)
 		
-		If (FileExist(A_ScriptDir "\temp\currencyHistory_" league ".txt")) {
-			FileDelete, % A_ScriptDir "\temp\currencyHistory_" league ".txt"	
-		}
-		FileAppend, %currencyData%, % A_ScriptDir "\temp\currencyHistory_" league ".txt"
+		deleteError := PoEScripts_SaveWriteTextFile(A_ScriptDir "\temp\currencyHistory_" league ".txt", currencyData, "utf-8", true, true)
 		
 		Try {
 			parsedJSON := JSON.Load(currencyData)
@@ -11877,6 +11957,9 @@ CurrencyDataDowloadURLtoJSON(url, sampleValue, critical = false, isFallbackReque
 			loggedCurrencyRequestAtStartup := true
 			If (not loggedTempLeagueCurrencyRequest and not isTempLeague) {
 				loggedTempLeagueCurrencyRequest := true
+			}
+			If (deleteError) {
+				WriteToLogFile("Failed to delete " A_ScriptDir "\temp\currencyHistory_" league ".txt before writing data to it. `n", "StartupLog.txt", project)	
 			}
 		}
 		; first currency data parsing (script start)
@@ -11926,7 +12009,7 @@ FetchCurrencyData:
 
 		url		:= "https://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
 		critical	:= StrLen(Globals.Get("LastCurrencyUpdate")) ? false : true
-		parsedJSON := CurrencyDataDowloadURLtoJSON(url, sampleValue, critical, false, currencyLeague, "PoE-ItemInfo", file, A_ScriptDir "\data", usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)		
+		parsedJSON := CurrencyDataDownloadURLtoJSON(url, sampleValue, critical, false, currencyLeague, "PoE-ItemInfo", file, A_ScriptDir "\data", usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)		
 
 		Try {
 			If (parsedJSON) {		
@@ -12124,6 +12207,8 @@ ShowItemFilterFormatting(Item, advanced = false) {
 	search.LinkedSockets := Item.Links
 	search.ShaperItem := Item.IsShaperBase
 	search.ElderItem := Item.IsElderBase
+	search.FracturedItem := Item.IsFracturedBase
+	search.SynthesisedItem := Item.IsSynthesisedBase
 	search.ItemLevel := Item.Level
 	search.BaseType := [Item.BaseName]
 	search.HasExplicitMod :=					; HasExplicitMod "of Crafting" "of Spellcraft" "of Weaponcraft"
@@ -12464,7 +12549,7 @@ ParseItemLootFilter(filter, item, parsingNeeded, advanced = false) {
 					rules[rules.MaxIndex()].conditions.push(condition)
 				}
 				
-				Else If (RegExMatch(line, "i)^.*?(Identified|Corrupted|ElderItem|ShaperItem|ShapedMap|ElderMap)\s")) {
+				Else If (RegExMatch(line, "i)^.*?(Identified|Corrupted|ElderItem|SynthesisedItem|FracturedItem|ShaperItem|ShapedMap|ElderMap)\s")) {
 					RegExMatch(line, "i)(.*?)\s(.*)", match)		
 					
 					condition := {}
@@ -12515,7 +12600,7 @@ ParseItemLootFilter(filter, item, parsingNeeded, advanced = false) {
 					}	
 				}				
 			}
-			Else If (RegExMatch(condition.name, "i)(Identified|Corrupted|ElderItem|ShaperItem|ShapedMap)", match1)) {
+			Else If (RegExMatch(condition.name, "i)(Identified|Corrupted|ElderItem|SynthesisedItem|FracturedItem|ShaperItem|ShapedMap)", match1)) {
 				If (item[match1] == condition.value) {
 					matchingConditions++
 					matching_rules.push(condition.name)
@@ -12694,7 +12779,8 @@ StartLutbot:
 Return
 
 OpenLutbotDocumentsFolder:
-	OpenUserSettingsFolder("Lutbot", A_MyDocuments "\AutoHotKey\LutTools")
+	;OpenUserSettingsFolder("Lutbot", A_MyDocuments "\AutoHotKey\LutTools")
+	OpenUserSettingsFolder("Lutbot", LutBotSettings.variables.launcherPath)
 Return
 
 CheckForLutBotHotkeyConflicts(hotkeys, config) {
@@ -12841,7 +12927,7 @@ AssignHotKey(Label, key, vkey, enabledState = "on") {
 }
 
 ShowHotKeyConflictUI(hkeyObj, hkey, hkeyLabel, oldLabel = "", preventedAssignment = false) {
-	SplashTextOff
+	SplashUI.DestroyUI()
 	
 	Gui, HotkeyConflict:Destroy
 	Gui, HotkeyConflict:Font,, Consolas

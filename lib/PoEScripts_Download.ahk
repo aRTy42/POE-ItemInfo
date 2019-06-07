@@ -21,14 +21,21 @@
 	curl		:= """" A_ScriptDir "\lib\curl.exe"" "	
 	headers	:= ""
 	cookies	:= ""
-	For key, val in ioHdr {
+	uAgent	:= ""
+
+	For key, val in ioHdr {		
 		val := Trim(RegExReplace(val, "i)(.*?)\s*:\s*(.*)", "$1:$2"))
+
 		If (RegExMatch(val, "i)^Cookie:(.*)", cookie)) {
 			cookies .= cookie1 " "		
 		}
+		If (RegExMatch(val, "i)^User-Agent:(.*)", ua)) {
+			uAgent := ua1 " "		
+		}
 	}
 	cookies := StrLen(cookies) ? "-b """ Trim(cookies) """ " : ""
-
+	uAgent := StrLen(uAgent) ? "-A """ Trim(uAgent) """ " : ""
+	
 	redirect := "L"
 	PreventErrorMsg := false
 	validateResponse := 1
@@ -67,8 +74,8 @@
 			}	
 		}			
 	}
-	If (not timeout) {
-		timeout := 20
+	If (not timeout or timeout < 5) {
+		timeout := 25
 	}
 	
 	e := {}
@@ -91,19 +98,23 @@
 			
 			If (appendRetHeaders) {
 				commandData  .= " -w '%{http_code}' "
+				commandHdr  .= " -w '%{http_code}' "
 			}
 		}			
-		
-		If (StrLen(headers)) {
-			If (not requestType = "GET") {
-				commandData .= headers
-				commandHdr  .= headers	
-			}				
-			If (StrLen(cookies)) {
-				commandData .= cookies
-				commandHdr  .= cookies
-			}
+
+		If (not requestType = "GET") {
+			commandData .= headers
+			commandHdr  .= headers
+		}			
+		If (StrLen(cookies)) {
+			commandData .= cookies
+			commandHdr  .= cookies
 		}
+		If (StrLen(uAgent)) {
+			commandData .= uAgent
+			commandHdr  .= uAgent
+		}
+
 		If (StrLen(ioData) and not requestType = "GET") {
 			If (requestType = "POST") {
 				commandData .= "-X POST "
@@ -117,11 +128,12 @@
 			commandData	.= "--connect-timeout " timeout " "
 			commandData	.= "--connect-timeout " timeout " "
 		} Else {
-			commandData	.= "--max-time " timeout " "
-			commandHdr	.= "--max-time " timeout " "
+			commandData	.= "--connect-timeout " timeout " --max-time " timeout + 15 " "
+			commandHdr	.= "--connect-timeout " timeout " --max-time " timeout + 15 " "
 		}
 		; get data
 		html	:= StdOutStream(curl """" url """" commandData)
+		
 		;html := ReadConsoleOutputFromFile(curl """" url """" commandData, "commandData") ; alternative function
 		
 		If (returnCurl) {
@@ -143,7 +155,7 @@
 		} Else {
 			ioHdr := html
 		}
-		
+		;msgbox % curl """" url """" commandData "`n`n" commandHdr
 		reqHeadersCurl := commandHdr
 	} Catch e {
 
@@ -153,7 +165,7 @@
 		handle any issues
 	*/	
 	; check if response has a good status code or is valid JSON (shouldn't be an erroneous response in that case)
-	goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
+	goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/(.*)((200|302)\s?(OK|Found)?)")
 	Try {
 		isJSON := isObject(JSON.Load(ioHdr))
 	} Catch er {
@@ -161,7 +173,7 @@
 	}
 
 	;goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
-	If (RegExMatch(ioHdr, "i)HTTP\/1.1 403 Forbidden") and not handleAccessForbidden) {
+	If (RegExMatch(ioHdr, "i)HTTP\/(.*)((403)\s?(Forbidden)?)") and not handleAccessForbidden) {
 		PreventErrorMsg		:= true
 		handleAccessForbidden	:= "403 Forbidden"
 	}
@@ -178,7 +190,7 @@
 		; check returned request headers
 		ioHdr := ParseReturnedHeaders(ioHdr)
 		
-		goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/1.1 (200 OK|302 Found)")
+		goodStatusCode := RegExMatch(ioHdr, "i)HTTP\/(.*)((200|302)\s?(OK|Found)?)")
 		If (not goodStatusCode) {
 			MsgBox, 16,, % "Error downloading file to " SavePath
 			Return "Error: Wrong Status"
@@ -221,9 +233,9 @@ ParseReturnedHeaders(output) {
 		LastPos := Pos
 		LastMatch := match
 	}
-	
+
 	If (not headerGroups.Length()) {
-		RegExMatch(output, "is).*(HTTP\/1.1.*)", dlStats)
+		RegExMatch(output, "is).*(HTTP\/(1.1|2).*)", dlStats)
 		dlStats := dlStats1
 		headerGroups.push(dlStats)
 	} Else {
@@ -264,7 +276,7 @@ ParseReturnedHeaders(output) {
 			}
 		}
 		
-		RegExMatch(output, "i)HTTP\/1.1 (200 OK|302 Found)", code)		
+		RegExMatch(output, "i)HTTP\/(.*)((200|302)\s?(OK|Found)?)", code)	
 		out := code "`n"
 		out .= "Content-Length: " fLength
 	}
@@ -300,7 +312,7 @@ ThrowError(e, critical = false, errorMsg = "", PreventErrorMsg = false) {
 	}
 	msg := StrLen(errorMsg) ? msg "`n`n" errorMsg : msg
 	
-	If (RegExMatch(errorMsg, "i)HTTP\/1.1 403 Forbidden")) {
+	If (RegExMatch(errorMsg, "i)HTTP\/(.*)((403)\s?(Forbidden)?)")) {
 		cookiesRequired := "Access forbidden, a likely reason for this is that necessary cookies are missing.`nYou may have to use"
 	}
 	msg := StrLen(cookiesRequired) ? msg "`n`n" cookiesRequired : msg

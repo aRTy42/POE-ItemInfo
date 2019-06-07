@@ -6,6 +6,7 @@
 		msg .= exit ? "`n`nScript will be closed." : ""
 		
 		SplashTextOff
+		SplashUI.DestroyUI()
 		If (exit) {		
 			MsgBox, 16, Invalid %project% Script Location, % msg
 			ExitApp	

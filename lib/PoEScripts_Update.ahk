@@ -1,13 +1,13 @@
 ﻿#Include, %A_ScriptDir%\lib\JSON.ahk
 #Include, %A_ScriptDir%\lib\zip.ahk
 
-PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "", debugState = false) {
+PoEScripts_Update(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "", debugState = false, repeatedCheck = false) {
 	debug := (debugState) ? 1 : 0
-	status := GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle, debug)
+	status := GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle, debug, repeatedCheck)
 	Return status
 }
 
-GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "", debug = 0) {
+GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirectory, isDevVersion, skipSelection, skipBackup, SplashScreenTitle = "", debug = 0, repeatedCheck = false) {
 	If (ShowUpdateNotification = 0) {
 		return
 	}
@@ -66,10 +66,14 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 		downloadFile 		:= UrlParts[UrlParts.MaxIndex()] . ".zip"
 		downloadURL_zip 	:= "https://github.com/" . user . "/" . repo . "/archive/" . downloadFile
 		downloadURL_asset 	:= ""
+
 		If (LatestRelease.assets.MaxIndex()) {
 			For key, val in LatestRelease.assets {
 				If (InStr(val.content_type, "zip")) {
 					downloadURL_asset := val.browser_download_url
+					If (RegExMatch(val.browser_download_url, "i)" RegExReplace(LatestRelease.tag_name, "i)^v") "\.zip$")) {
+						Break
+					}
 				}
 			}
 		}
@@ -93,7 +97,14 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 		versions := ParseVersionStringsToObject(releaseTag, ReleaseVersion)
 		
 		newRelease := CompareVersions(versions.latest, versions.current)
-		If (newRelease) {
+		If (newRelease and repo = "PoE-TradeMacro") {
+			Menu, Tray, Icon, %A_ScriptDir%\resources\images\poe-trade-bl-update.ico
+		}
+		
+		If (newRelease and repeatedCheck) {
+			TrayTip, %repo%, Update available.
+		}
+		Else If (newRelease) {
 			If (SplashScreenTitle) {
 				Try {
 					WinSet, AlwaysOnTop, Off, %SplashScreenTitle%
@@ -104,7 +115,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 			Gui, UpdateNotification:Color, ffffff, ffffff
 			Gui, UpdateNotification:Font,, Consolas
 
-			Gui, UpdateNotification:Add, GroupBox, w630 h80 cGreen, Update available!			
+			Gui, UpdateNotification:Add, GroupBox, w630 h80 cGreen, Update available!	
 			If (isPrerelease) {
 				Gui, UpdateNotification:Add, Text, x20 yp+20, Warning: This is a pre-release.
 				Gui, UpdateNotification:Add, Text, x20 y+10, Installed version:
@@ -118,7 +129,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 			Gui, UpdateNotification:Add, Text, x150 yp+0,  %currentLabel%	
 			
 			Gui, UpdateNotification:Add, Text, x20 y+0, Latest version:
-			
+
 			Gui, UpdateNotification:Add, Text, x150 yp+0,  %latestLabel%
 			Gui, UpdateNotification:Add, Link, x+20 yp+0 cBlue, <a href="%releaseURL%">Download it here</a>
 			Gui, UpdateNotification:Add, Button, x+20 yp-5 gUpdateScript, Update
@@ -144,8 +155,10 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 			Return s
 		}
 	} Catch e {
-		SplashTextOff
-		MsgBox,,, % "Update-Check failed, Exception thrown!`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
+		If (not repeatedCheck) {
+			SplashTextOff
+			MsgBox,,, % "Update-Check failed, Exception thrown!`n`nwhat: " e.what "`nfile: " e.file "`nline: " e.line "`nmessage: " e.message "`nextra: " e.extra
+		}
 	}
 	
 	Return
