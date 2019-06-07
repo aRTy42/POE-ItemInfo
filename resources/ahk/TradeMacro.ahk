@@ -5609,8 +5609,12 @@ OverwriteSettingsNameTimer:
 	If (o) {
 		RelVer := TradeGlobals.Get("ReleaseVersion")
 		TradeFunc_SetMenuTrayTip("Path of Exile TradeMacro - " RelVer)
-		If (TradeOpts.SearchLeague) {			
-			TradeFunc_SetMenuTrayTip("`nSelected league: """ TradeOpts.SearchLeague """", true)
+		If (TradeOpts.SearchLeague) {
+			_l := ""
+			If (TradeGlobals.Get("Leagues")[SearchLeague]) {
+				_l := " (" TradeGlobals.Get("Leagues")[SearchLeague] ")"
+			}
+			TradeFunc_SetMenuTrayTip("`nSelected league: """ TradeOpts.SearchLeague """" _l, true)
 		}
 
 		OldMenuTrayName := Globals.Get("SettingsUITitle")
@@ -5962,6 +5966,15 @@ TradeFunc_ChangeLeague() {
 	TradeGlobals.Set("LeagueName", TradeGlobals.Get("Leagues")[SearchLeague])
 	WriteTradeConfig()
 	UpdateTradeSettingsUI()
+
+	If (TradeOpts.SearchLeague) {
+		RelVer := TradeGlobals.Get("ReleaseVersion")
+		_l := "Selected league: """ TradeOpts.SearchLeague """"
+		If (TradeGlobals.Get("Leagues")[SearchLeague]) {			
+			_l .= " (" TradeGlobals.Get("Leagues")[SearchLeague] ")"
+		}		
+		TradeFunc_SetMenuTrayTip("Path of Exile TradeMacro - " RelVer "`n" _l)
+	}
 
 	TempChangingLeagueInProgress := True
 	GoSub, ReadPoeNinjaCurrencyData
