@@ -14,7 +14,7 @@ Enemies Cannot Leech Life From you
 #% increased Cast Speed
 #% chance to Avoid being Frozen
 #% chance to Avoid being Ignited
-Hits have +#% additional Critical Stike Chance against you
+Hits have #% increased Critical Strike Chance against you
 #% chance to Dodge Attack Hits
 #% chance to Cause Monsters to Flee
 #% increased Chaos Damage for each Corrupted Item Equipped
@@ -134,6 +134,7 @@ Discipline has #% increased Aura Effect
 Grace has #% increased Aura Effect
 Hatred has #% increased Aura Effect
 Malevolence has #% increased Aura Effect
+Pride has #% increased Aura Effect
 Wrath has #% increased Aura Effect
 Zealotry has #% increased Aura Effect
 #% increased Burning Damage
@@ -179,6 +180,7 @@ Gain #% of Physical Damage as Extra Lightning Damage
 #% of Physical Damage from Hits taken as Fire Damage
 #% of Physical Damage from Hits taken as Lightning Damage
 Point Blank
+Grants Level # Pride Skill
 #% reduced Chaos Damage taken
 #% reduced Cold Damage taken
 #% reduced Area Damage taken from Hits

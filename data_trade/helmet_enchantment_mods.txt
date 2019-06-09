@@ -200,11 +200,11 @@ Flamethrower Trap has #% increased Cast Speed
 Flamethrower Trap has #% increased Cooldown Recovery Speed
 Flamethrower Trap deals #% increased Damage
 Flamethrower Trap has #% increased Skill Effect Duration
-Consecrated Ground created with Holy Flame Totem applies #% increased Damage taken to Enemies
-#% increased Flame Totem Damage
-Flame Totem fires an additional Projectile
-Flame Totem fires # additional Projectiles
-#% increased Flame Totem Projectile Speed
+Consecrated Ground from Holy Flame Totem applies #% increased Damage taken to Enemies
+Holy Flame Totem deals #% increased Damage
+Holy Flame Totem fires an additional Projectile
+Holy Flame Totem fires # additional Projectiles
+Holy Flame Totem has #% increased Projectile Speed
 #% increased Flammability Curse Effect
 #% increased Flammability Duration
 Flesh Offering grants an additional #% increased Attack Speed
@@ -288,7 +288,7 @@ Ice Trap Damage Penetrates #% Cold Resistance
 #% increased Ice Trap Damage
 #% increased Ice Trap Area of Effect
 #% increased Immortal Call Duration
-#% chance for Immortal Call to increase Duration without removing Endurance Charges
+Immortal Call has #% increased Buff Duration per Endurance Charge removed
 Incinerate has #% increased Area of Effect
 #% increased Incinerate Damage
 #% increased Incinerate Damage for each stage
@@ -339,7 +339,7 @@ Mirror Arrow and Mirror Arrow Clones have #% increased Attack Speed
 #% increased Mirror Arrow Cooldown Recovery Speed
 Mirror Arrow and Mirror Arrow Clones deal #% increased Damage
 #% increased Molten Shell Buff Effect
-#% increased Molten Shell Damage
+Molten Shell has #% increased Skill Effect Duration
 #% increased Molten Strike Damage
 Molten Strike fires an additional Projectile
 Molten Strike fires # additional Projectiles
@@ -359,6 +359,8 @@ Power Siphon fires # additional Projectiles
 #% increased Power Siphon Attack Speed
 #% increased Power Siphon Damage
 #% Chance to gain an additional Power Charge on Kill with Power Siphon
+Precision has #% reduced Mana Reservation
+Pride has #% reduced Mana Reservation
 #% increased Projectile Weakness Curse Effect
 #% increased Projectile Weakness Duration
 #% increased Puncture Damage
@@ -378,7 +380,7 @@ Purity of Lightning has #% reduced Mana Reservation
 #% increased Rain of Arrows Area of Effect
 Rain of Arrows has #% chance to fire an additional sequence of arrows
 Spectres have #% increased Damage
-Zombies deal #% increased Damage
+Raised Zombies deal #% increased Damage
 #% increased Rallying Cry Buff Effect
 #% increased Rallying Cry Duration
 #% increased Reave Damage
@@ -462,11 +464,11 @@ Storm Burst has a #% chance to create an additional Orb
 #% increased Orb of Storms Critical Strike Chance
 #% increased Orb of Storms Area of Effect
 Summon Raging Spirit has #% chance to summon an extra Minion
-#% increased Summon Raging Spirit Duration
+Summon Raging Spirit has #% increased Duration
 Flame Golems have #% increased Damage
 Ice Golems deal #% increased Damage
 Lightning Golems deal #% increased Damage
-Raging Spirits have #% increased Damage
+Summoned Raging Spirits deal #% increased Damage
 Skeletons deal #% increased Damage
 #% chance to Summon an additional Skeleton Warrior with Summon Skeleton
 Stone Golems deal #% increased Damage
@@ -526,7 +528,7 @@ Wither #% increased Duration
 Wither has #% increased Area of Effect
 Wrath has #% reduced Mana Reservation
 Zealotry has #% reduced Mana Reservation
-Zombies have #% increased Attack Speed
-+#% to Raised Zombie Elemental Resistances
+Raised Zombies have #% increased Attack Speed
+Raised Zombies have +#% to Elemental Resistances
 Storm Brand has a #% chance to Chain an additional time
 Storm Brand Damage Penetrates #% of Branded Enemy's Lightning Resistance
