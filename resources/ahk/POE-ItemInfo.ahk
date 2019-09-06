@@ -11327,7 +11327,7 @@ LookUpAffixes() {
 				prefix	:= boots . chest . gloves . helmet . shield . gripType . ac . jw
 				StringLower, prefix, prefix
 
-				url		.= prefix "-" suffix ; ".html"
+				url		.= prefix "-" suffix ".html"
 			}
 			openWith := AssociatedProgram("html")
 			OpenWebPageWith(openWith, Url)
@@ -11995,6 +11995,46 @@ CurrencyDataDownloadURLtoJSON(url, sampleValue, critical = false, isFallbackRequ
 	Return parsedJSON
 }
 
+PoENinjaPriceDataDownloadURLtoJSON(url, category, critical = false, isFallbackRequest = false, league = "", project = "", tmpFileName = "", fallbackDir = "", ByRef usedFallback = false, CurlTimeout = 35) {	
+	errorMsg := "Parsing the " category " data (json) from poe.ninja failed.`n"
+	errorMsg .= "This should only happen when the servers are down / unavailable."
+	errorMsg .= "`n`n"
+	errorMsg .= "This can fix itself when the servers are up again and the data gets updated automatically or if you restart the script at such a time."
+	errorMsg .= "`n`n"
+	errorMsg .= "You can find a log file with some debug information:"
+	errorMsg .= "`n" """" A_ScriptDir "\temp\StartupLog.txt"""
+	errorMsg .= "`n`nTry opening the settings menu and selecting a league/making sure that one is selected."
+	errorMsg .= "`n`n"
+
+	errors := 0
+	parsingError := false	
+	Try {
+		options := ""
+		options	.= "`n" "TimeOut: " CurlTimeout
+		
+		reqHeaders.push("Connection: keep-alive")
+		reqHeaders.push("Cache-Control: max-age=0")
+		reqHeaders.push("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")	
+		reqHeaders.push("User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36")
+		priceData := PoEScripts_Download(url, postData, reqHeaders, options, true, true, false, "", reqHeadersCurl)
+		
+		deleteError := PoEScripts_SaveWriteTextFile(A_ScriptDir "\temp\" category "History_" league ".txt", priceData, "utf-8", true, true)
+
+		Try {
+			parsedJSON := JSON.Load(priceData)
+		} Catch e {
+			parsingError := true
+		}
+	} Catch error {
+		; first currency data parsing (script start)
+		If (critical and (not sampleValue or isFallbackRequest)) {
+			errors++
+		}
+	}
+
+	Return parsedJSON
+}
+
 FetchCurrencyData:
 	_CurrencyDataJSON	:= {}
 	currencyLeagues	:= ["Standard", "Hardcore", "tmpstandard", "tmphardcore", "eventstandard", "eventhardcore"]
@@ -12003,11 +12043,11 @@ FetchCurrencyData:
 	loggedTempLeagueCurrencyRequest := loggedTempLeagueCurrencyRequest ? loggedTempLeagueCurrencyRequest : false
 	
 	Loop, % currencyLeagues.Length() {
-		currencyLeague := currencyLeagues[A_Index]
-		url  := "https://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
+		currencyLeague := currencyLeagues[A_Index]	
+		url	:= "https://poe.ninja/api/data/ItemOverview?league=" . currencyLeague . "&type=Currency"
 		file := A_ScriptDir . "\temp\currencyData_" . currencyLeague . ".json"
 
-		url		:= "https://poe.ninja/api/Data/GetCurrencyOverview?league=" . currencyLeague
+		url	:= "https://poe.ninja/api/data/ItemOverview?league=" . currencyLeague . "&type=Currency"
 		critical	:= StrLen(Globals.Get("LastCurrencyUpdate")) ? false : true
 		parsedJSON := CurrencyDataDownloadURLtoJSON(url, sampleValue, critical, false, currencyLeague, "PoE-ItemInfo", file, A_ScriptDir "\data", usedFallback, loggedCurrencyRequestAtStartup, loggedTempLeagueCurrencyRequest)		
 

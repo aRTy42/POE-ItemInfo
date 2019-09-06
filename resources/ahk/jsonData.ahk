@@ -54,8 +54,11 @@ If (PoEScripts_SaveWriteTextFile(A_ScriptDir "\temp\currentLeagues.json", parsed
 }
 
 errorMsg := "Parsing the league data (json) from the Path of Exile API failed."
-errorMsg .= "`nThis should only happen when the servers are down for maintenance." 
-errorMsg .= "`n`nThe script execution will be stopped, please try again at a later time."
+errorMsg .= "`nThis should only happen when the pathofexile.com servers are down for maintenance or if you have network issues and can't connect to the site." 
+errorMsg .= "`n`nMost likely the servers are down, please check by visiting pathofexile.com and try again later."
+errorMsg .= "`n`nThe script execution will be stopped."
+errorMsg .= "`n`nPlease do not report this issue if the pathofexile.com servers are down for maintenance!"
+errorMsg .= "`nNobody can help you in that case, you'll have to wait until they are up again."
 
 Try {	
 	test := FileExist(A_ScriptDir "\temp\currentLeagues.json")

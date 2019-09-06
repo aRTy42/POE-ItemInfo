@@ -1,5 +1,12 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.15.1
+================================================================================================
+* Fixed the url for the item affix lookup function.
+* Added poe.ninja price history data to normal price requests for certain item types (maps, currency, fossils).
+* Updated data files.
+* Fixed poe.ninja API urls, which where changed, breaking some requests.
+
 2.15.0
 ================================================================================================
 * Added support for the korean PoE game client.

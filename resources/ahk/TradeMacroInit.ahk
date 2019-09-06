@@ -250,7 +250,10 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 	oldLeague := TradeOpts.SearchLeague
 	oldAltCurrencySearch := TradeOpts.AlternativeCurrencySearch
 
-	UpdateOldTradeOptsFromVars()
+	UpdateOldTradeOptsFromVars()	
+	TradeOpts.ShowItemResults := RegExReplace(TradeOpts.ShowItemResults, "\D")
+	TradeOpts.ShowItemResults := (not StrLen(TradeOpts.ShowItemResults)) ? 15 : TradeOpts.ShowItemResults
+	
 	TradeOpts.SearchLeague := TradeFunc_CheckIfLeagueIsActive(TradeOpts.SearchLeague, "2")
 	oldLeagueName := TradeGlobals.Get("LeagueName")
 	newLeagueName := TradeGlobals.Get("Leagues")[TradeOpts.SearchLeague]
@@ -264,6 +267,7 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 	If ((TradeOpts.SearchLeague != oldLeague and AlternativeCurrencySearch) or (AlternativeCurrencySearch and oldAltCurrencySearch != AlternativeCurrencySearch)) {
 		GoSub, ReadPoeNinjaCurrencyData
 	}
+
 	TradeOpts_New := UpdateNewTradeOptsFromOld(TradeOpts_New)
 	TradeFunc_SyncUpdateSettings()
 	TradeFunc_AssignAllHotkeys()
