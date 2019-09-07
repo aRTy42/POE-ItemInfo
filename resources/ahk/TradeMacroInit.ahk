@@ -190,8 +190,7 @@ TradeFunc_FinishTMInit(argumentMergeScriptPath)
 ; ----------------------------------------------------------- Functions ----------------------------------------------------------------
 
 ; TODO: rewrite/remove after refactoring UI
-ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini", ByRef updateWriteConfig = false)
-{
+ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini", ByRef updateWriteConfig = false) {
 	Global
 
 	If (StrLen(TradeConfigDir) < 1) {
@@ -225,8 +224,7 @@ ReadTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini", ByRef
 	Return
 }
 
-TradeFunc_AssignAllHotkeys()
-{
+TradeFunc_AssignAllHotkeys() {
 	Global
 	For keyName, keyVal in TradeOpts_New.Hotkeys {
 		state := TradeOpts_New.HotkeyStates[keyName] ? "on" : "off"
@@ -277,22 +275,11 @@ WriteTradeConfig(TradeConfigDir = "", TradeConfigFile = "config_trade.ini") {
 }
 
 ; NB: this is temporary hack
-MakeOldTradeOptsAndVars(ConfigObject)
+UpdateOldTradeOptsFromVars()
 {
 	Global
-	TradeOpts := {}
-	for sectionName, sectionKeys in ConfigObject {
-		for keyName, keyVal in sectionKeys {
-			if (sectionName == "Hotkeys") {
-				keyName := keyName "HotKey"
-				keyVal := KeyNameToKeyCode(keyVal, ConfigObject.General.KeyToSCState)
-			}
-			if (sectionName == "HotkeyStates") {
-				keyName := keyName "Enabled"
-			}
-			%keyName% := keyVal
-			TradeOpts.Insert(keyName, keyVal)
-		}
+	for key, val in TradeOpts {
+		TradeOpts[key] := %key%
 	}
 	return
 }
@@ -318,15 +305,27 @@ UpdateNewTradeOptsFromOld(ConfigObject)
 			ConfigObject[sectionName, keyName] := keyValTemp
 		}
 	}
+
 	return ConfigObject
 }
 
 ; NB: this is temporary hack
-UpdateOldTradeOptsFromVars()
+MakeOldTradeOptsAndVars(ConfigObject)
 {
 	Global
-	for key, val in TradeOpts {
-		TradeOpts[key] := %key%
+	TradeOpts := {}
+	for sectionName, sectionKeys in ConfigObject {
+		for keyName, keyVal in sectionKeys {
+			if (sectionName == "Hotkeys") {
+				keyName := keyName "HotKey"
+				keyVal := KeyNameToKeyCode(keyVal, ConfigObject.General.KeyToSCState)
+			}
+			if (sectionName == "HotkeyStates") {
+				keyName := keyName "Enabled"
+			}
+			%keyName% := keyVal
+			TradeOpts.Insert(keyName, keyVal)
+		}
 	}
 	return
 }
@@ -385,7 +384,6 @@ TradeFunc_CheckIfLeagueIsActive(LeagueName, debug = "") {
 ; ------------------ ASSIGN HOTKEY AND HANDLE ERRORS ------------------
 TradeFunc_AssignHotkey(Key, Label, state) {
 	VKey := KeyNameToKeyCode(Key, TradeOpts.KeyToSCState)
-	
 	AssignHotKey(Label, key, vkey, state)
 }
 
@@ -809,7 +807,7 @@ CreateTradeSettingsUI()
 	GuiAddHotkey(TradeOpts.ChangeLeagueHotkey, "x+1 yp-2 w124 h20", "ChangeLeagueHotkey", "ChangeLeagueHotkeyH", "", "", "SettingsUI")
 	AddToolTip(ChangeLeagueHotkeyH, "Press key/key combination.`nDefault: ctrl + l")
 	
-	GuiAddCheckbox("Get currency ratio note:", "x657 yp+32 w165 h20 0x0100", TradeOpts.SetCurrencyRatio, "SetCurrencyRatio", "SetCurrencyRatioH", "", "", "SettingsUI")
+	GuiAddCheckbox("Get currency ratio note:", "x657 yp+32 w165 h20 0x0100", TradeOpts.SetCurrencyRatioEnabled, "SetCurrencyRatioEnabled", "SetCurrencyRatioEnabledH", "", "", "SettingsUI")
 	AddToolTip(SetCurrencyRatioH, "Copies an item note for premium tabs to your clipboard`nthat creates a valid currency ratio on all trade sites.")
 	GuiAddHotkey(TradeOpts.SetCurrencyRatioHotkey, "x+1 yp-2 w124 h20", "SetCurrencyRatioHotkey", "SetCurrencyRatioHotkeyH", "", "", "SettingsUI")
 	AddToolTip(SetCurrencyRatioHotkeyH, "Press key/key combination.`nDefault: alt + r")
@@ -909,7 +907,7 @@ UpdateTradeSettingsUI()
 	return
 }
 
-TradeFunc_SyncUpdateSettings(){
+TradeFunc_SyncUpdateSettings() {
 	globalUpdateInfo.skipSelection 	:= TradeOpts.UpdateSkipSelection
 	globalUpdateInfo.skipBackup 		:= TradeOpts.UpdateSkipBackup
 	globalUpdateInfo.skipUpdateCheck 	:= TradeOpts.ShowUpdateNotification
@@ -1584,24 +1582,10 @@ TradeFunc_StartSplashScreen(TradeReleaseVersion) {
 		, "Helping Alva discover the Jungle Hideout...", "Conning EngineeringEternity with the Atlas City Shuffle...", "Vendoring stat-sticks..."]
 	*/
 	
-	initArray := ["Loading Carnage league data..."
-		,"Taking the element out of elementalist..."
-		,"Grinding Artifact Power to fight the legion..."
-		,"Moving all map drops to the Memory Nexus..."
-		,"Corrupting passives..."
-		,"Deleting elementalist for performance reasons..."
-		,"Compiling angry reddit threads..."
-		,"Lowering prices of Energy Shield gear..."
-		,"Reenacting the Battle of the Five Armies..."
-		,"Unlocking the fifth sloth..."
-		,"Welcoming our new Korean top-racers..."
+	initArray := ["Compiling angry reddit threads..."
 		,"Updating price fixing algorithms..."
-		,"Booting up second life..."
-		,"Interfacing with the better legion expansion..."
-		,"Preparing funeral for Occultist..."
 		,"Hiding Mirrors of Kalandra in the currently selected lootfilter..."
 		,"Searching for the crying woman in Crossroads..."
-		,"Forcing Soul of Steel allocation..."
 		,"Replacing toucan copypasta with the new sloth overlord..."
 		,"Blocking access to the auction house..."]
 

@@ -1,5 +1,11 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.15.2
+================================================================================================
+* Fixed an issue where it wasn't possible to disable the "Set Currency Ratio" hotkey.
+* Implemented a simple keybinding conflict check between the Path of Exile game client and the macro which warns the user to resolve those conflicts.
+* Updated data files (uniques etc.).
+
 2.15.1
 ================================================================================================
 * Fixed the url for the item affix lookup function.

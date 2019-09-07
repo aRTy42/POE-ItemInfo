@@ -44,10 +44,15 @@ Barrage fires an additional Projectile
 #% increased Bear Trap Cooldown Recovery Speed
 #% increased Bear Trap Damage
 Enemies affected by Bear Trap take #% increased Damage from Trap or Mine Hits
+Berserk has #% increased Buff Effect
+Berserk has #% reduced Rage loss per second
 Bladefall has an additional Volley
 #% increased Bladefall Critical Strike Chance
 #% increased Bladefall Damage
 #% increased Bladefall Area of Effect
+Bladestorm deals #% increased Damage
++# to maximum number of Bladestorms
+Sand Bladestorms move with #% increased speed
 Blade Vortex has +#% to Critical Strike Multiplier for each blade
 #% increased Blade Vortex Spell Damage
 #% increased Blade Vortex Duration
@@ -61,22 +66,29 @@ Blight has #% increased Hinder Duration
 Blink Arrow and Blink Arrow Clones have #% increased Attack Speed
 #% increased Blink Arrow Cooldown Recovery Speed
 Blink Arrow and Blink Arrow Clones have #% increased Damage
+Blood and Sand has #% increased Buff Effect
 Blood Rage grants additional #% increased Attack Speed
 Blood Rage grants additional #% chance to gain a Frenzy Charge on Kill
 #% increased Bodyswap Cast Speed
 #% increased Bodyswap Damage
 #% increased Unearth Cast Speed
-Unearth Creates Corpses with +# Level
+Unearth Spawns corpses with +# Level
 #% increased Unearth Damage
 Bone Offering grants an additional +#% Chance to Block Attack Damage
 #% increased Bone Offering Duration
 #% increased Burning Arrow Damage
 Burning Arrow has +#% chance to Ignite
 #% of Burning Arrow Physical Damage gained as Extra Fire Damage
+Summoned Carrion Golems deal #% increased Damage
+Summoned Carrion Golems have +#% to all Elemental Resistances
+#% increased Effect of the Buff granted by your Carrion Golems
 #% increased Caustic Arrow Damage
 #% increased Caustic Arrow Duration
 #% increased Caustic Arrow Area of Effect
 Caustic Arrow has #% chance to inflict Withered on Hit for # seconds base Duration
+Chain Hook has +# Radius per # Rage
+Chain Hook deals #% increased Damage
+Chain Hook has a #% chance to grant +# Rage if it Hits Enemies
 +#% to Chaos Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Chaos Golems
 #% increased Blade Flurry Damage
@@ -90,6 +102,12 @@ Clarity has #% reduced Mana Reservation
 #% increased Cleave Attack Speed
 #% increased Cleave Damage
 #% increased Cleave Area of Effect
+Cobra Lash deals #% increased Damage
+Cobra Lash Chains # additional times
+Cobra Lash has #% increased Projectile Speed
+Icicle Mine has +#% to Critical Strike Multiplier
+Icicle Mine deals #% increased Damage
+Icicle Mine has #% increased Throwing Speed
 #% increased Cold Snap Cooldown Recovery Speed
 #% increased Cold Snap Damage
 #% increased Cold Snap Area of Effect
@@ -112,18 +130,21 @@ Cremation can have up to # additional Geyser at a time
 #% increased Cyclone Damage
 #% increased Dark Pact Cast Speed
 #% increased Dark Pact Area of Effect
+Dash has +# Cooldown
+Dash has +# Cooldowns
+Dash travels #% increased distance
 #% increased Decoy Totem Life
 #% increased Decoy Totem Area of Effect
-Desecrate summons # additional corpses
-#% increased Desecrate Cooldown Recovery Speed
+Desecrate Spawns # additional corpses
+#% increased Desecrate Duration
 #% increased Despair Duration
 #% increased Despair Curse Effect
 Determination has #% reduced Mana Reservation
 #% increased Detonate Dead Damage
-Detonate Dead has a #% chance to detonate an additional Corpse
+Detonate Dead has a #% chance to detonate an additional corpse
 #% increased Detonate Dead Area of Effect
 #% increased Devouring Totem Leech per second
-#% increased Chance to consume an additional Corpse with Devouring Totem
+Devouring Totem has #% Chance to Consume an additional corpse
 #% chance for Discharge to deal Damage without removing Charges
 #% increased Discharge Damage
 #% increased Discharge Radius
@@ -175,9 +196,10 @@ Fireball has +#% chance to Ignite
 #% increased Scorching Ray Cast Speed
 #% increased Scorching Ray Damage
 #% increased Scorching Ray beam length
-#% increased Fire Nova Cast Speed
-#% increased Fire Nova Mine Damage
-Fire Nova Mine repeats an additional # times
+Pyroclast Mine has #% increased Throwing Speed
+Pyroclast Mine deals #% increased Damage
+Pyroclast Mine fires an additional Projectile
+Pyroclast Mine fires # additional Projectiles
 #% increased Firestorm Damage
 #% increased Firestorm Duration
 #% increased Firestorm explosion Area of Effect
@@ -207,13 +229,13 @@ Holy Flame Totem fires # additional Projectiles
 Holy Flame Totem has #% increased Projectile Speed
 #% increased Flammability Curse Effect
 #% increased Flammability Duration
+Flesh and Stone has #% reduced Mana Reservation
 Flesh Offering grants an additional #% increased Attack Speed
 #% increased Flesh Offering Duration
 #% increased Flicker Strike Cooldown Recovery Speed
 #% increased Flicker Strike Damage
 #% increased Flicker Strike Damage per Frenzy Charge
-Freeze Mine causes Enemies to lose an additional #% Cold Resistance while Frozen
-#% increased Freeze Mine Area of Effect
+#% increased Icicle Mine Throwing Speed
 #% increased Freezing Pulse Cast Speed
 #% increased Freezing Pulse Damage
 #% increased Freezing Pulse Projectile Speed
@@ -224,6 +246,8 @@ Freeze Mine causes Enemies to lose an additional #% Cold Resistance while Frozen
 #% increased Frostbite Duration
 #% increased Frost Blades Damage
 #% increased Frost Blades Projectile Speed
+Frostblink has #% increased Cooldown Recovery Speed
+Frostblink has #% increased maximum travel distance
 #% increased Frostbolt Cast Speed
 #% increased Frostbolt Damage
 Frostbolt has +#% chance to Freeze
@@ -310,6 +334,9 @@ Lancing Steel's primary Projectile Pierces # additional Targets
 Lightning Arrow hits an additional Enemy
 Lightning Arrow hits # additional Enemies
 #% increased Lightning Arrow Area of Effect
+Stormblast Mine has #% increased Aura Effect
+Stormblast Mine deals #% increased Damage
+Stormblast Mine has #% increased Throwing Speed
 +#% to Lightning Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Lightning Golems
 Lightning Strike pierces # additional Targets
@@ -335,6 +362,9 @@ Magma Orb Chains an additional time
 Magma Orb Chains an additional # times
 #% increased Magma Orb Area of Effect
 Malevolence has #% reduced Mana Reservation
+Pestilent Strike has #% increased Area of Effect
+Pestilent Strike deals #% increased Damage
+Pestilent Strike has #% increased Duration
 Mirror Arrow and Mirror Arrow Clones have #% increased Attack Speed
 #% increased Mirror Arrow Cooldown Recovery Speed
 Mirror Arrow and Mirror Arrow Clones deal #% increased Damage
@@ -346,12 +376,18 @@ Molten Strike fires # additional Projectiles
 #% increased Molten Strike Area of Effect
 Orb of Storms has #% increased Cast Speed
 #% increased Orb of Storms Damage
+Perforate has #% increased Area of Effect
+Perforate deals #% increased Damage
+Perforate creates +# Spike
+Perforate creates +# Spikes
 #% increased Phase Run Duration
 #% chance for Phase Run to increase Duration without removing Frenzy Charges
 Seismic Trap releases an additional Wave
 Seismic Trap has #% increased Cooldown Recovery Speed
 Seismic Trap deals #% increased Damage
 Seismic Trap has #% increased Skill Effect Duration
+Plague Bearer Buff grants +#% to Poison Damage over Time Multiplier while Infecting
+Plague Bearer deals Damage based on an additional #% of Plague Value
 #% increased Poacher's Mark Curse Effect
 #% increased Poacher's Mark Duration
 Power Siphon fires an additional Projectile
@@ -428,6 +464,9 @@ Smite has #% increased Aura Effect
 Smite deals #% increased Damage
 #% increased Smoke Mine Duration
 Smoke Mine grants additional #% increased Movement Speed
+Venom Gyre has a #% chance to keep caught Projectiles fired by using Whirling Blades
+Venom Gyre deals #% increased Damage
+Venom Gyre has a #% chance to inflict Withered for # seconds on Hit
 Soulrend also Hinders Enemies, with #% reduced Movement Speed
 Soulrend deals #% increased Damage
 Soulrend fires an additional Projectile
@@ -451,6 +490,8 @@ Split Arrow fires # additional Projectiles
 #% increased Static Strike Duration
 Static Strike has +# maximum Beam Targets
 #% increased Static Strike Area of Effect
+Steelskin grants #% additional Physical Damage Reduction
+Steelskin Buff can take #% increased amount of Damage
 +#% to Stone Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Stone Golems
 Storm Brand deals #% increased Damage
@@ -471,6 +512,8 @@ Lightning Golems deal #% increased Damage
 Summoned Raging Spirits deal #% increased Damage
 Skeletons deal #% increased Damage
 #% chance to Summon an additional Skeleton Warrior with Summon Skeleton
+Summoned Skitterbots have #% increased Area of Effect
+Summon Skitterbots has #% reduced Mana Reservation
 Stone Golems deal #% increased Damage
 Chaos Golems deal #% increased Damage
 #% increased Sunder Attack Speed
@@ -490,7 +533,6 @@ Tempest Shield chains an additional # times
 #% increased Tornado Shot Critical Strike Chance
 #% increased Tornado Shot Damage
 Tornado Shot fires an additional secondary Projectile
-Tornado Shot fires # additional secondary Projectiles
 Toxic Rain deals #% increased Damage
 Toxic Rain fires # additional Arrow
 Toxic Rain gains #% of Physical Damage as Extra Chaos Damage
@@ -504,7 +546,7 @@ Toxic Rain gains #% of Physical Damage as Extra Chaos Damage
 Vitality has #% reduced Mana Reservation
 #% increased Volatile Dead Cast Speed
 #% increased Volatile Dead Damage
-Volatile Dead destroys up to # additional Corpse
+Volatile Dead Consumes up to # additional corpse
 Vortex has #% increased Area of Effect when Cast on Frostbolt
 Vortex has #% increased Cooldown Recovery Speed
 #% increased Vortex Damage
@@ -524,7 +566,9 @@ Wave of Conviction has #% increased Duration
 Wild Strike Chains an additional # times
 #% increased Wild Strike Area of Effect
 Winter Orb deals #% increased Damage
-Wither #% increased Duration
+Wither has #% increased Duration
+Withering Step has #% increased Elusive Effect
+Withering Step inflicts # additional Withered Debuffs
 Wither has #% increased Area of Effect
 Wrath has #% reduced Mana Reservation
 Zealotry has #% reduced Mana Reservation

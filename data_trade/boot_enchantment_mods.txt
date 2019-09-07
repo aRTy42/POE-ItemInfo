@@ -6,10 +6,11 @@ Adds # to # Cold Damage if you've been Hit Recently
 #% increased Critical Strike Chance if you haven't Crit Recently
 #% Chance to Dodge Attack Hits if you've taken a Critical Strike Recently
 Damage Penetrates #% of Enemy Elemental Resistances if you haven't Killed Recently
-#% of Damage Leeched as Life and Mana if you've Killed Recently
-Regenerate #% of Life and Mana per second if you were Hit Recently
+#% of Damage Leeched as Life if you've Killed Recently
+Regenerate #% of Life per second if you were Hit Recently
 Adds # to # Lightning Damage if you haven't Killed Recently
 #% reduced Mana Cost of Skills if you've been Hit Recently
+#% increased Mana Regeneration Rate if you've cast a Spell Recently
 #% increased Movement Speed if you haven't been Hit Recently
 #% chance to Dodge Spell Hits if you've taken Spell Damage Recently
 #% chance to Avoid being Stunned if you've Killed Recently

@@ -30,7 +30,7 @@ Curse Enemies with Level # Vulnerability on Hit
 #% of Physical Damage Converted to Cold Damage
 #% of Physical Damage Converted to Fire Damage
 #% of Physical Damage Converted to Lightning Damage
--# Physical Damage taken from Attacks
+-# Physical Damage taken from Attack Hits
 #% of Damage is taken from Mana before Life
 #% increased Damage while Dead
 Grants Level # Determination Skill
@@ -149,7 +149,7 @@ Zealotry has #% increased Aura Effect
 #% increased Global Physical Damage
 #% increased Intelligence (4-6)% increased Dexterity
 #% increased maximum Life
-#% of Life Regenerated per second
+Regenerate #% of Life per second
 #% increased Movement Speed during any Flask Effect
 Projectiles deal #% increased Damage for each time they have Chained
 Projectiles deal #% increased Damage for each Enemy Pierced
@@ -189,7 +189,7 @@ You take #% reduced Extra Damage from Critical Strikes
 #% reduced Fire Damage taken
 #% reduced Lightning Damage taken
 #% reduced Mana Reserved
-# Life Regenerated per second while moving
+Regenerate # Life per second while moving
 Resolute Technique
 +# to Level of Socketed AoE Gems
 +# to Level of Socketed Aura Gems
@@ -204,7 +204,7 @@ Socketed Gems are supported by Level # Faster Projectiles
 Socketed Gems are Supported by Level # Fortify
 Socketed Gems are Supported by Level # Life Gain On Hit
 Socketed Gems are Supported by Level # Onslaught
-Socketed Gems are Supported by Level # Reduced Mana
+Socketed Gems are Supported by Level # Inspiration
 #% chance to gain Unholy Might for 3 seconds on Kill
 #% increased Elemental Damage with Attack Skills
 Grants Level # Wrath Skill

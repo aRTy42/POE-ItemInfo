@@ -552,6 +552,7 @@ If (Opts.Lutbot_CheckScript) {
 	SetTimer, StartLutbot, 2000
 }
 
+CheckForGameHotkeyConflicts()
 SplashUI.DestroyUI() ; init finished
 
 ; ----------------------------------------------------------- Functions and Labels ----------------------------------------------------------------
@@ -12865,6 +12866,150 @@ CheckForLutBotHotkeyConflicts(hotkeys, config) {
 	}
 }
 
+ConvertGameIniAsciiKeysToVK(value) {
+	values := StrSplit(value, " ")	; split string on spaces, which signals the combination of multiple keys
+	vkey := ""
+	
+	Loop, % values.MaxIndex() {
+		If (values[A_Index] < 32) {
+			If (values.MaxIndex() <= 1) {				
+				RegExMatch(values[A_Index], "i)(16|17|18)", match)	; 16 = shift (+), 17 = ctrl (^),  18 = alt (!)
+				If (match1 = "16") {
+					vkey := "+" vkey
+				} Else If (match1 = "17") {
+					vkey := "^" vkey
+				} Else If (match1 = "18") {
+					vkey := "!" vkey
+				}
+			}			
+			Else {				
+				RegExMatch(values[A_Index], "i)(1|2|3)", match)	; for some reason shift, ctrl and alt have different values when in combination with other keys
+				If (match1 = "1") {
+					vkey := "+" vkey
+				} Else If (match1 = "2") {
+					vkey := "^" vkey
+				} Else If (match1 = "3") {
+					vkey := "!" vkey
+				}
+			}
+		}		
+		Else {
+			vkey .= StrReplace(FHex(values[A_Index]), "0x", "VK")
+		}
+	}
+	
+	Return vkey
+}
+
+FHex( int, pad=0 ) { 
+	; Function by [VxE]. Formats an integer (decimals are truncated) as hex.
+	; "Pad" may be the minimum number of digits that should appear on the right of the "0x".
+	Static hx := "0123456789ABCDEF"
+
+	If !( 0 < int |= 0 )
+		Return !int ? "0x0" : "-" FHex( -int, pad )
+
+	s := 1 + Floor( Ln( int ) / Ln( 16 ) )
+	h := SubStr( "0x0000000000000000", 1, pad := pad < s ? s + 2 : pad < 16 ? pad + 2 : 18 )
+	u := A_IsUnicode = 1
+
+	Loop % s
+		NumPut( *( &hx + ( ( int & 15 ) << u ) ), h, pad - A_Index << u, "UChar" ), int >>= 4
+
+	Return h
+}
+
+CheckForGameHotkeyConflicts() {	
+	iniPath		:= A_MyDocuments . "\My Games\Path of Exile\"
+	configs 		:= []
+	productionIni	:= iniPath . "production_Config.ini"
+	betaIni		:= iniPath . "beta_Config.ini"	
+	
+	configs.push(productionIni)
+	configs.push(betaIni)
+	If (not FileExist(productionIni) and not FileExist(betaIni)) {
+		Loop %iniPath%\*.ini
+		{
+			configs.push(iniPath . A_LoopFileName) 
+		}	
+	}
+
+	conflicts := []
+	For config in configs {
+		current_config := class_EasyIni(configs[config])
+		convertedKeys := []
+		
+		For iniKey, iniValue in current_config["ACTION_KEYS"] {
+			convertedKey := { "label" : iniKey, "value" : ConvertGameIniAsciiKeysToVK(iniValue)}
+			convertedKeys.push(convertedKey)
+		}
+
+		assignedKeyList := ShowAssignedHotkeys(true)
+
+		For aKey, assignedKey in assignedKeyList {
+			For cKey, convertedKey in convertedKeys {
+				If (assignedKey[5] = convertedKey.value) {
+					obj := {"vk":assignedKey[5], "name": assignedKey[6], "game_label": convertedKey.label}
+					conflicts.push(obj)
+				}
+			}
+		} 
+	}
+	
+	If (conflicts.MaxIndex() > 10) {
+		project := Globals.Get("ProjectName")		
+		msg := project " detected a hotkey conflict with the Path of Exile keybindings, "
+		msg .= "which should be resolved before playing the game."
+		msg .= "`n`n" "Conflicting hotkey(s):"
+		For key, val in conflicts {
+			msg .= "`n"   "- Path of Exile function: """ val.game_label """ (Virtual Key: " val.vk ", ENG name: " val.name ")"
+		}
+		
+		MsgBox, 16, Path of Exile - %project% hotkey conflict, %msg%
+	}
+	
+	If (conflicts.MaxIndex()) {
+		project := Globals.Get("ProjectName")
+		
+		Gui, ShowGameHotkeyConflicts:Color, ffffff, ffffff
+		msg := project " detected a hotkey conflict with the Path of Exile keybindings, "
+		msg .= "which should be resolved before playing the game."
+		msg .= "Otherwise " project " may block some of the games functions."
+		Gui, ShowGameHotkeyConflicts:Add, Text, w600, % msg
+		
+		Gui, ShowGameHotkeyConflicts:Default
+		Gui, ShowGameHotkeyConflicts:Font, , Courier New		
+		Gui, ShowGameHotkeyConflicts:Font, , Consolas
+		Gui, ShowGameHotkeyConflicts:Add, ListView, r15 w600 NoSortHdr Grid ReadOnly, Game function name | Key combination (Code) | Key combination (ENG name)
+		For key, val in conflicts {
+			eng_name := val.name
+			eng_name := RegExReplace(eng_name, "i)\^", " control ")
+			eng_name := RegExReplace(eng_name, "i)\!", " alt ")
+			eng_name := RegExReplace(eng_name, "i)\+", " shift ")
+			eng_name := RegExReplace(eng_name, "i)(shift|control|alt)", "$1 +")
+			LV_Add("", val.game_label, val.vk, eng_name)
+			LV_ModifyCol()		
+		}
+
+		i := 0
+		Loop % LV_GetCount("Column")
+		{
+			i++
+			LV_ModifyCol(a_index,"AutoHdr")
+		}
+		
+		text := " ^ : ctrl key modifier" . "`n"
+		text .= " ! : alt key modifier" . "`n"
+		text .= " + : shift key modifier" . "`n"
+		text .= "`n" . "VK : Virtual Key Code"
+		Gui, ShowGameHotkeyConflicts:Add, Text, , % text
+	
+		Gui, ShowGameHotkeyConflicts:Show, w620 xCenter yCenter, Path of Exile - %project% keybinding conflicts
+		Gui, SettingsUI:Default
+		Gui, Font
+	}
+}
+
 SaveAssignedHotkey(label, key, vkey, state) {
 	hk := {}
 	hk.key := key
@@ -12913,7 +13058,7 @@ GetAssignedHotkeysEnglishKey(vkey) {
 AssignHotKey(Label, key, vkey, enabledState = "on") {
 	assignedState := ""
 	assignedLabel := GetAssignedHotkeysLabel(Label, key, vkey, assignedState)
-	
+
 	If (assignedLabel = Label and enabledState = assignedState) {
 		; new hotkey is already assigned to the target label
 
