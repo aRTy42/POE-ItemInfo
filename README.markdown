@@ -10,7 +10,7 @@ Welcome to POE-TradeMacro!
 **PoE TradeMacro** is an Autohotkey (AHK) script that provides several convenient QoL features for Path of Exile Trading.
 
 This builds on top of [PoE-ItemInfo](https://github.com/aRTy42/POE-ItemInfo) which provides very useful item information on **ctrl+c**.
-With TradeMacro, price checking is added via **ctrl+d**, **ctrl+alt+d** or **ctrl+i**. You can also open the items wiki page via **ctrl+w** or open the item search on poe.trade instead via **ctrl+q**.   
+With TradeMacro, price checking is added via **alt+d**, **alt+shift+d** or **alt+i**. You can also open the items wiki page via **alt+w** or open the item search on poe.trade instead via **alt+q**. (Before TradeMacro version 2.15.3 `ctrl` was used instead of `alt` as defaults).  
 TradeMacro will be updated to always have the latest PoE-ItemInfo code, you don't have to run their script since it's included here.
 
 
