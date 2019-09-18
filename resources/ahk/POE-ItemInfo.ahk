@@ -712,7 +712,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 	; Check stats section first as weapons usually have their sub type as first line
 	Loop, Parse, ItemDataStats, `n, `r
 	{
-		If (RegExMatch(A_LoopField, "i)\b((One Handed|Two Handed) (Axe|Sword|Mace)|Sceptre|Staff|Dagger|Claw|Bow|Wand)\b", match))
+		If (RegExMatch(A_LoopField, "i)\b((One Handed|Two Handed) (Axe|Sword|Mace)|Sceptre|Warstaff|Staff|Dagger|Claw|Bow|Wand)\b", match))
 		{
 			BaseType	:= "Weapon"
 			If (RegExMatch(match1, "i)(Sword|Axe|Mace)", subMatch)) {
@@ -720,7 +720,7 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 			} Else {
 				SubType	:= match1
 			}
-			GripType	:= (RegExMatch(match1, "i)\b(Two Handed|Staff|Bow)\b")) ? "2H" : "1H"
+			GripType	:= (RegExMatch(match1, "i)\b(Two Handed|Warstaff|Staff|Bow)\b")) ? "2H" : "1H"
 			return
 		}
 	}
@@ -768,12 +768,10 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 				mapMatch := mapMatchList[A_Index]
 				IfInString, LoopField, %mapMatch%
 				{
-					If (RegExMatch(LoopField, "\bShaped " . mapMatch))
-					{
-						SubType = Shaped %mapMatch%
+					If (RegExMatch(LoopField, "\b(Shaped|Blighted|Elder) " . mapMatch, subTypeMatch)) {
+						SubType = %subTypeMatch1% %mapMatch%
 					}
-					Else
-					{
+					Else {
 						SubType = %mapMatch%
 					}
 					return
@@ -8644,7 +8642,7 @@ ModStringToObject(string, isImplicit) {
 	StringReplace, val, val, `n,, All
 	values := []
 
-	RegExMatch(val, "i) \((fractured)\)$", sType)
+	RegExMatch(val, "i) \((fractured|crafted)\)$", sType)
 	spawnType := sType1
 	
 	val := RegExReplace(val, "i) \((fractured|crafted)\)$")
@@ -8667,7 +8665,7 @@ ModStringToObject(string, isImplicit) {
 
 	type := ""
 	; Matching "x% fire and cold resistance" or "x% to cold resist", excluding "to maximum cold resistance" and "damage penetrates x% cold resistance" and minion/totem related mods
-	If (RegExMatch(val, "i)to ((cold|fire|lightning)( and (cold|fire|lightning))?) resistance") and not RegExMatch(val, "i)Minion|Totem")) {
+	If (RegExMatch(val, "i)to ((cold|fire|lightning)( and (cold|fire|lightning))?) resistance") and not RegExMatch(val, "i)Minion|Totem|Enemies")) {
 		type := "Resistance"
 		If (RegExMatch(val, "i)fire")) {
 			Matches.push("Fire")
@@ -8680,7 +8678,7 @@ ModStringToObject(string, isImplicit) {
 		}
 	}
 	; Matching "x% fire/cold/lgitning and chaos resistance"
-	If (RegExMatch(val, "i)to (cold|fire|lightning) and (chaos) resistance") and not RegExMatch(val, "i)Minion|Totem")) {
+	If (RegExMatch(val, "i)to (cold|fire|lightning) and (chaos) resistance") and not RegExMatch(val, "i)Minion|Totem|Enemies")) {
 		type := "Resistance"
 		If (RegExMatch(val, "i)fire")) {
 			Matches.push("Fire")
@@ -8725,7 +8723,7 @@ ModStringToObject(string, isImplicit) {
 		Matches[A_Index] := match1 ? sign . "#% to " . Matches[A_Index] . " " . match1 : sign . "#" . type . "" . Matches[A_Index]
 	}
 
-	If (RegExMatch(val, "i)to all attributes|to all elemental (Resistances)", match) and not RegExMatch(val, "i)Minion|Totem")) {
+	If (RegExMatch(val, "i)to all attributes|to all elemental (Resistances)", match) and not RegExMatch(val, "i)Minion|Totem|Enemies")) {
 		resist := match1 ? true : false
 		Matches[1] := resist ? "+#% to Fire Resistance" : "+# to Strength"
 		Matches[2] := resist ? "+#% to Lightning Resistance" : "+# to Intelligence"
@@ -8843,7 +8841,7 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	; Note that at this point combined mods/attributes have already been separated into two mods
 	; like '+ x % to fire and lightning resist' would be '+ x % to fire resist' AND '+ x % to lightning resist' as 2 different mods
 	For key, mod in mods {
-		RegExMatch(mod.name, "i) \((fractured)\)$", spawnType)
+		RegExMatch(mod.name, "i) \((fractured|crafted)\)$", spawnType)
 		If (StrLen(spawnType1)) {
 			mod.spawnType := spawnType1	
 		}		
@@ -8907,16 +8905,16 @@ CreatePseudoMods(mods, returnAllMods := False) {
 
 		; ### Resistances
 		; % to all resistances ( careful about 'max all resistances' )
-		Else If (RegExMatch(mod.name, "i)to all Elemental Resistances$") and not RegExMatch(mod.name, "i)Minion|Totem")) {
+		Else If (RegExMatch(mod.name, "i)to all Elemental Resistances$") and not RegExMatch(mod.name, "i)Minion|Totem|Enemies")) {
 			toAllElementalResist := toAllElementalResist + mod.values[1]
 			mod.simplifiedName := "xToAllElementalResistances"
 		}
 		; % to base resistances
-		Else If (RegExMatch(mod.name, "i)to (Cold|Fire|Lightning|Chaos) Resistance$", resistType) and not RegExMatch(mod.name, "i)Minion|Totem")) {
+		Else If (RegExMatch(mod.name, "i)to (Cold|Fire|Lightning|Chaos) Resistance$", resistType) and not RegExMatch(mod.name, "i)Minion|Totem|Enemies")) {
 			%resistType1%Resist := %resistType1%Resist + mod.values[1]
 			mod.simplifiedName := "xTo" resistType1 "Resistance"
 		}
-		Else If (RegExMatch(mod.name, "i)to (Cold|Fire|Lightning) and (Chaos) Resistances$") and not RegExMatch(mod.name, "i)Minion|Totem")) {
+		Else If (RegExMatch(mod.name, "i)to (Cold|Fire|Lightning) and (Chaos) Resistances$") and not RegExMatch(mod.name, "i)Minion|Totem|Enemies")) {
 			%resistType1%Resist := %resistType1%Resist + mod.values[1]
 			mod.simplifiedName := "xTo" resistType1 "Resistance"
 			
@@ -10603,22 +10601,26 @@ ShowAssignedHotkeys(returnList = false) {
 	For key, val in hotkeys {
 		If (key = 1) {
 			val.Push("NameENG")
+			val.Push("NameENGPretty")
 		}
 		Else {
-			val.Push(KeyCodeToKeyName(val[5]))
+			_keyName := KeyCodeToKeyName(val[5])
+			val.Push(_keyName)
+			val.Push(PrettyKeyName(_keyName))
 		}
 	}
-	
+
+
 	If (returnList) {
 		Return hotkeys
 	}
-	
+
 	Gui, ShowHotkeys:Color, ffffff, ffffff
 	Gui, ShowHotkeys:Add, Text, , List of this scripts assigned hotkeys.
 	Gui, ShowHotkeys:Default
 	Gui, ShowHotkeys:Font, , Courier New
 	Gui, ShowHotkeys:Font, , Consolas
-	Gui, ShowHotkeys:Add, ListView, r25 w800 NoSortHdr Grid ReadOnly, Type | Enabled | Level | Running | Key combination (Code) | Key combination (ENG name)
+	Gui, ShowHotkeys:Add, ListView, r25 w800 NoSortHdr Grid ReadOnly, Type | Enabled | Level | Running | Key combination (Code) | Key combination (ENG name) | Key combination (ENG pretty name)
 	For key, val in hotkeys {
 		If (key != 1) {
 			LV_Add("", val*)
@@ -10643,7 +10645,8 @@ ShowAssignedHotkeys(returnList = false) {
 	text .= "Enabled: Hotkey is assigned but enabled/disabled [on/off] via the Hotkey command." . "`n"
 
 	Gui, ShowHotkeys:Add, Text, , % text
-
+	Gui, ShowHotkeys:Add, Link, x10 y+10 w210 h20 cBlue BackgroundTrans, <a href="http://www.autohotkey.com/docs/Hotkeys.htm">Hotkey Options</a>	
+	
 	Gui, ShowHotkeys:Show, w820 xCenter yCenter, Assigned Hotkeys
 	Gui, SettingsUI:Default
 	Gui, Font
@@ -12590,7 +12593,7 @@ ParseItemLootFilter(filter, item, parsingNeeded, advanced = false) {
 					rules[rules.MaxIndex()].conditions.push(condition)
 				}
 				
-				Else If (RegExMatch(line, "i)^.*?(Identified|Corrupted|ElderItem|SynthesisedItem|FracturedItem|ShaperItem|ShapedMap|ElderMap)\s")) {
+				Else If (RegExMatch(line, "i)^.*?(Identified|Corrupted|ElderItem|SynthesisedItem|FracturedItem|ShaperItem|ShapedMap|ElderMap|BlightedMap)\s")) {
 					RegExMatch(line, "i)(.*?)\s(.*)", match)		
 					
 					condition := {}
@@ -12638,10 +12641,10 @@ ParseItemLootFilter(filter, item, parsingNeeded, advanced = false) {
 					If (CompareNumValues(item[match1], condition.value, condition.operator)) {
 						matchingConditions++
 						matching_rules.push(condition.name)
-					}	
-				}				
+					}
+				}
 			}
-			Else If (RegExMatch(condition.name, "i)(Identified|Corrupted|ElderItem|SynthesisedItem|FracturedItem|ShaperItem|ShapedMap)", match1)) {
+			Else If (RegExMatch(condition.name, "i)(Identified|Corrupted|ElderItem|SynthesisedItem|FracturedItem|ShaperItem|ShapedMap|BlightedMap|ElderMap)", match1)) {
 				If (item[match1] == condition.value) {
 					matchingConditions++
 					matching_rules.push(condition.name)
@@ -12919,7 +12922,7 @@ FHex( int, pad=0 ) {
 	Return h
 }
 
-CheckForGameHotkeyConflicts() {	
+CheckForGameHotkeyConflicts() {
 	iniPath		:= A_MyDocuments . "\My Games\Path of Exile\"
 	configs 		:= []
 	productionIni	:= iniPath . "production_Config.ini"
@@ -12949,23 +12952,11 @@ CheckForGameHotkeyConflicts() {
 		For aKey, assignedKey in assignedKeyList {
 			For cKey, convertedKey in convertedKeys {
 				If (assignedKey[5] = convertedKey.value) {
-					obj := {"vk":assignedKey[5], "name": assignedKey[6], "game_label": convertedKey.label}
+					obj := {"vk":assignedKey[5], "name": assignedKey[6], "game_label": convertedKey.label, "pretty_name": assignedKey[7]}
 					conflicts.push(obj)
 				}
 			}
 		} 
-	}
-	
-	If (conflicts.MaxIndex() > 10) {
-		project := Globals.Get("ProjectName")		
-		msg := project " detected a hotkey conflict with the Path of Exile keybindings, "
-		msg .= "which should be resolved before playing the game."
-		msg .= "`n`n" "Conflicting hotkey(s):"
-		For key, val in conflicts {
-			msg .= "`n"   "- Path of Exile function: """ val.game_label """ (Virtual Key: " val.vk ", ENG name: " val.name ")"
-		}
-		
-		MsgBox, 16, Path of Exile - %project% hotkey conflict, %msg%
 	}
 	
 	If (conflicts.MaxIndex()) {
@@ -12973,38 +12964,38 @@ CheckForGameHotkeyConflicts() {
 		
 		Gui, ShowGameHotkeyConflicts:Color, ffffff, ffffff
 		msg := project " detected a hotkey conflict with the Path of Exile keybindings, "
-		msg .= "which should be resolved before playing the game."
+		msg .= "which should be resolved before playing the game. "
 		msg .= "Otherwise " project " may block some of the games functions."
 		Gui, ShowGameHotkeyConflicts:Add, Text, w600, % msg
 		
 		Gui, ShowGameHotkeyConflicts:Default
 		Gui, ShowGameHotkeyConflicts:Font, , Courier New		
 		Gui, ShowGameHotkeyConflicts:Font, , Consolas
-		Gui, ShowGameHotkeyConflicts:Add, ListView, r15 w600 NoSortHdr Grid ReadOnly, Game function name | Key combination (Code) | Key combination (ENG name)
-		For key, val in conflicts {
-			eng_name := val.name
-			eng_name := RegExReplace(eng_name, "i)\^", " control ")
-			eng_name := RegExReplace(eng_name, "i)\!", " alt ")
-			eng_name := RegExReplace(eng_name, "i)\+", " shift ")
-			eng_name := RegExReplace(eng_name, "i)(shift|control|alt)", "$1 +")
-			LV_Add("", val.game_label, val.vk, eng_name)
-			LV_ModifyCol()		
-		}
-
-		i := 0
-		Loop % LV_GetCount("Column")
-		{
-			i++
-			LV_ModifyCol(a_index,"AutoHdr")
-		}
 		
+		Gui, ShowGameHotkeyConflicts:Font, bold
+		Gui, ShowGameHotkeyConflicts:Add, Text, x20  y55 h20 w200, Game function name
+		Gui, ShowGameHotkeyConflicts:Add, Text, x+20 yp+0 h20 w150, Key combination (Code)
+		Gui, ShowGameHotkeyConflicts:Add, Text, x+20 yp+0 h20 w200, Key combination (ENG name)
+		Gui, ShowGameHotkeyConflicts:Add, Text, x+20 yp+0 h20 w250, Key combination (pretty name)
+		Gui, ShowGameHotkeyConflicts:Font, norm
+		
+		_height := 35
+		For key, val in conflicts {
+			_height := _height + 25
+			Gui, ShowGameHotkeyConflicts:Add, Text, x20  y+2 h20 w200, % val.game_label
+			Gui, ShowGameHotkeyConflicts:Add, Text, x+20 yp+0 h20 w150, % val.vk
+			Gui, ShowGameHotkeyConflicts:Add, Text, x+20 yp+0 h20 w200, % val.name
+			Gui, ShowGameHotkeyConflicts:Add, Text, x+20 yp+0 h20 w250, % val.pretty_name
+		}
+		Gui, ShowGameHotkeyConflicts:Add, GroupBox, w850 h%_height% y40 x10, Conflicts
+	
 		text := " ^ : ctrl key modifier" . "`n"
 		text .= " ! : alt key modifier" . "`n"
 		text .= " + : shift key modifier" . "`n"
 		text .= "`n" . "VK : Virtual Key Code"
-		Gui, ShowGameHotkeyConflicts:Add, Text, , % text
-	
-		Gui, ShowGameHotkeyConflicts:Show, w620 xCenter yCenter, Path of Exile - %project% keybinding conflicts
+		Gui, ShowGameHotkeyConflicts:Add, Text, x10 y+15, % text
+		Gui, ShowGameHotkeyConflicts:Add, Button, x770 y+-25 h25 w90 gShowSettingsUI, Open Settings
+		Gui, ShowGameHotkeyConflicts:Show, w870 xCenter yCenter, Path of Exile - %project% keybinding conflicts		
 		Gui, SettingsUI:Default
 		Gui, Font
 	}
@@ -13082,12 +13073,12 @@ AssignHotKey(Label, key, vkey, enabledState = "on") {
 			; only assign it when it's enabled
 			Hotkey, %VKey%, %Label%, UseErrorLevel %stateValue%
 			SaveAssignedHotkey(Label, key, vkey, enabledState)
-		}		
+		}
 	}
 
 	If (ErrorLevel) {
 		If (errorlevel = 1)
-			str := str . "`nASCII " . VKey . " - 1) The Label parameter specifies a nonexistent label name."
+			str := str . "`nASCII " . VKey . " - 1) The Label parameter (" Label ") specifies a nonexistent label name."
 		Else If (errorlevel = 2)
 			str := str . "`nASCII " . VKey . " - 2) The KeyName parameter specifies one or more keys that are either not recognized or not supported by the current keyboard layout/language. Switching to the english layout should solve this for now."
 		Else If (errorlevel = 3)

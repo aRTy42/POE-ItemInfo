@@ -1233,20 +1233,23 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	/*
 		maps
 		*/
-	If (Item.IsMap) {		
+	If (Item.IsMap) {	
 		; add Item.subtype to make sure to only find maps
 		RegExMatch(Item.Name, "i)The Beachhead.*", isHarbingerMap)
 		RegExMatch(Item.SubType, "i)Unknown Map", isUnknownMap)
 		isElderMap := RegExMatch(Item.Name, ".*?Elder .*") and Item.MapTier = 16
-		
+		isBlightedMap := RegExMatch(Item.SubType, "\bBlighted .*")
+
 		mapTypes := TradeGlobals.Get("ItemTypeList")["Map"]
 		typeFound := TradeUtils.IsInArray(Item.SubType, mapTypes)
-		
+
 		If (not isHarbingerMap and not isUnknownMap and typeFound) {
 			RequestParams.xbase := Item.SubType
 			RequestParams.xtype := ""		
 			If (isElderMap) {
 				RequestParams.name := "Elder"
+			} Else If (isBlightedMap) {
+				RequestParams.name := "Blighted"
 			}
 		} Else {
 			RequestParams.xbase := ""
@@ -1254,16 +1257,17 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		}		
 
 		If (not Item.IsUnique) {
-			If (StrLen(isHarbingerMap)) {
-				; Beachhead Map workaround (unique but not flagged as such on poe.trade)
-				RequestParams.name := Item.Name			
-			} Else If (not typeFound) {
-				RequestParams.name := Item.Name
+			If (not typeFound) {			
+				RequestParams.name := Item.BaseName
 				RequestParams.level_min := Item.MapTier
 				RequestParams.level_max := Item.MapTier
 			} Else If (not isElderMap) {
 				RequestParams.name := ""
 			}
+		} Else If (Item.IsUnique and isHarbingerMap) {
+			RequestParams.corrupted := "1"
+			RequestParams.level_min := Item.MapTier
+			RequestParams.level_max := Item.MapTier
 		}
 	
 		If (StrLen(isUnknownMap)) {
@@ -3619,7 +3623,7 @@ TradeFunc_RemoveAlternativeVersionsMods(_item, Affixes) {
 		negativeValue := false
 		spawnType := ""
 		For key, val in Affixes {
-			RegExMatch(Trim(val), "i)\((fractured)\)", sType)
+			RegExMatch(Trim(val), "i)\((fractured|crafted)\)", sType)
 			val := RegExReplace(Trim(val), "i)\((fractured|crafted)\)")
 
 			; remove negative sign also			
@@ -3690,7 +3694,7 @@ TradeFunc_RemoveAlternativeVersionsMods(_item, Affixes) {
 	return _item
 }
 
-; Return items mods and ranges
+; Return an items mods and ranges
 TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = false, Corruption = false, isMap = false, isBeast = false, isSynthesisedBase = false) {
 	Affixes	:= StrSplit(Affixes, "`n")
 	mods		:= []
@@ -3781,7 +3785,7 @@ TradeFunc_PrepareNonUniqueItemMods(Affixes, Implicit, Rarity, Enchantment = fals
 	temp			:= TradeFunc_GetItemsPoeTradeMods(tempItem, isMap)
 	tempItem.mods	:= temp.mods
 	tempItem.IsUnique := false
-	
+
 	Return tempItem
 }
 
@@ -3835,17 +3839,25 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["elder"], _item.mods[k])
 			}
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["synthesised"], _item.mods[k])
-			}
-			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["abyss jewels"], _item.mods[k])
+			}			
+			
+			
+			; check crafted before unique explicit and synthesised if spawntype is crafted, otherwise check afte	
+			If (StrLen(_item.mods[k]["param"]) < 1 and _item.mods[k].spawnType = "crafted") {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["crafted"], _item.mods[k])
 			}
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["unique explicit"], _item.mods[k])
 			}
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["synthesised"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["crafted"], _item.mods[k])
-			}		
+			}
+			
+			
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
 			}
@@ -3869,7 +3881,7 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 			}
 			
 			; Handle special mods like "Has # Abyssal Sockets" which technically has no rolls but different mod variants.
-			; It's also not available on poe.trade as a mod but as a seperate form option.		
+			; It's also not available on poe.trade as a mod but as a seperate form option.
 			If (RegExMatch(_item.mods[k].name, "i)Has # Abyssal (Socket|Sockets)")) {
 				_item.mods[k].showModAsSeperateOption := true
 			}
@@ -5751,6 +5763,15 @@ TradeSettingsUI_BtnDefaults:
 	ReadTradeConfig(A_ScriptDir "\resources\default_UserFiles")
 	Sleep, 75
 	UpdateTradeSettingsUI()
+	ShowSettingsUI()
+Return
+
+TradeSettingsUI_BtnRestoreAlternativeHotkeys:
+	Gui, SettingsUI:Cancel
+	Sleep, 75
+	ReadTradeConfig(A_ScriptDir "\resources\default_UserFiles")
+	Sleep, 75
+	RestoreAlternativeHotkeys()
 	ShowSettingsUI()
 Return
 

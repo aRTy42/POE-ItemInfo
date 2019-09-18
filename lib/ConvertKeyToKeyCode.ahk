@@ -133,6 +133,22 @@ KeyNameToKeyCode(Key, SC:=true) {
   Return _Result
 }
 
+PrettyKeyName(KeyName) {
+	_Result := KeyName
+	_Result := RegExReplace(_Result, "i)[#]", "Win|")
+	_Result := RegExReplace(_Result, "i)[!]", "alt|")
+	_Result := RegExReplace(_Result, "i)[+]", "shift|")
+	_Result := RegExReplace(_Result, "i)[~]", "(non blocking) ")
+	_Result := RegExReplace(_Result, "i)[&]", "+")
+	_Result := RegExReplace(_Result, "i)[\^]", "ctrl|")
+	_Result := RegExReplace(_Result, "i)[<]", "(left) ")
+	_Result := RegExReplace(_Result, "i)[>]", "(right) ")
+	
+	_Result := Trim(RegExReplace(_Result, "i)[|]", " + "))
+	_Result := Trim(RegExReplace(_Result, "i)[+]$", ""))
+	
+	Return _Result
+}
 
 KeyToSC(Key) {
   Return KeyNameToKeyCode(Key, true)
