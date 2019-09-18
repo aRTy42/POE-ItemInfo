@@ -34,18 +34,18 @@ Never completely trust any price checking tool. Inform yourself about what this 
 #### Shortcuts ####
 
 
-|Shortcut|Description|
-|---	|---	|
-| `ctrl+c`      | See item info (via PoE-ItemInfo). 
-| `ctrl+d`      | Search item on poe.trade.
-| `ctrl+alt+d`  | Advanced item search (select mods). 
-| `ctrl+i`      | Opens a text input where you can type an item name to search for.
-| `ctrl+w`      | Open the items wiki page. 
-| `ctrl+q`      | Open the item search on poe.trade instead of showing a tooltip with results.
-| `ctrl+shift+d`  | Open an item on poeapp.com.
-| `ctrl+e`      | Show item age (own listed items if account name is specified in settings).
-| `ctrl+l`      | Switch leagues.
-| `alt+r`      | Copies an item note for premium tabs to your clipboard that creates a valid currency ratio on all trade sites.
+|Shortcut|Old Shortcut|Description|
+|---	|---	|---	|
+| `alt+c`      | `ctrl+c`      | See item info (via PoE-ItemInfo). 
+| `alt+d`      | `ctrl+d`      | Search item on poe.trade.
+| `alt+shift+d`  | `ctrl+alt+d`  | Advanced item search (select mods). 
+| `alt+i`      | `ctrl+i`      | Opens a text input where you can type an item name to search for.
+| `alt+w`      | `ctrl+w`      | Open the items wiki page. 
+| `alt+q`      | `ctrl+q`      | Open the item search on poe.trade instead of showing a tooltip with results.
+| `alt+shift+q`  | `ctrl+alt+q`  | Open an item on poeapp.com.
+| `alt+e`      | `alt+e`      | Show item age (own listed items if account name is specified in settings).
+| `alt+l`      |`alt+l`      | Switch leagues.
+| `alt+r`      | `alt+r` | Copies an item note for premium tabs to your clipboard that creates a valid currency ratio on all trade sites.
 
 #### Additional Macros ####
 
