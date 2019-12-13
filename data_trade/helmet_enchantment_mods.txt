@@ -512,6 +512,7 @@ Lightning Golems deal #% increased Damage
 Summoned Raging Spirits deal #% increased Damage
 Skeletons deal #% increased Damage
 #% chance to Summon an additional Skeleton Warrior with Summon Skeleton
+#% chance to Summon an additional Skeleton Warrior with Summon Skeletons
 Summoned Skitterbots have #% increased Area of Effect
 Summon Skitterbots has #% reduced Mana Reservation
 Stone Golems deal #% increased Damage

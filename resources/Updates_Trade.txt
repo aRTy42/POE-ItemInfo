@@ -1,5 +1,19 @@
 The following is a list of what has been updated, starting with 1.1.0
 
+2.15.4
+================================================================================================
+* Added parsing and search options for the new influence types (Hunter, Redeemer, Warlord, Crusader).
+* Added support for multiple influences on items.
+* Added basic search options for quality (catalysed) on rings and amulets.
+* Maps now have always their map tier included in searches.
+* Searches using the item type now use "Staff"/"Dagger" instead of "Warstaff"/"Rune Dagger" as a bad workaround for poe.trade not knowing these types exist.
+* Changed the item affix lookup macro to now use poedb.tw instead of poeaffix.net.
+* Updated cURL.
+* Fixed rare items with abyssal sockets not being parsed correctly for the advanced search.
+* Fixed wrong number of normal sockets being included in the advanced search when an item has an abyssal socket.
+* Fixed macro update version check exception/error message activate focused, which could unfocus the game. Which is bad.
+* Updated data files (uniques etc.).
+
 2.15.3
 ================================================================================================
 * Changed the default (main) hotkeys from using "ctrl" to using "alt" to prevent conflicts with PoEs new second skillbar hotkeys. This will not change any settings of existing TradeMacro installations.

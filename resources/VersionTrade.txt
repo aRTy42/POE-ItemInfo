@@ -1,2 +1,2 @@
-TradeReleaseVersion := "v2.15.3"
+TradeReleaseVersion := "v2.15.4"
 TradeAHKVersionRequired := "1.1.26.00"

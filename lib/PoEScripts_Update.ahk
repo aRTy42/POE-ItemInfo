@@ -94,7 +94,7 @@ GetLatestRelease(user, repo, ReleaseVersion, ShowUpdateNotification, userDirecto
 		description := LatestRelease.body
 		
 		RegExReplace(releaseTag, "^v", releaseTag)
-		versions := ParseVersionStringsToObject(releaseTag, ReleaseVersion)
+		versions := ParseVersionStringsToObject(releaseTag, ReleaseVersion, repo)
 		
 		newRelease := CompareVersions(versions.latest, versions.current)
 		If (newRelease and repo = "PoE-TradeMacro") {
@@ -251,7 +251,7 @@ RemoveLeadingZeros(in) {
 	Return LTrim(in, "0")
 }
 
-ParseVersionStringsToObject(latest, current) {
+ParseVersionStringsToObject(latest, current, repo) {
      ; requires valid semantic versioning
 	; x.x.x
 	; vx.x.x
@@ -262,7 +262,13 @@ ParseVersionStringsToObject(latest, current) {
 	RegExMatch(current, "(\d+).(\d+).(\d+)(.*)", currentVersion)
 
 	If (StrLen(latest) < 1) {
-		MsgBox, 16,, % "Exception thrown! Parsing release information from Github failed."
+		Gui, UpdateVersionException:New
+		Gui, UpdateVersionException:Font, Verdana
+		Gui, UpdateVersionException:Add, Text, , % "Exception thrown while checking for updates!`n`nParsing release information from Github failed."
+		Gui, UpdateVersionException:Show, NA w300, %repo% - Error 
+		
+		;TrayTip, %repo%, % "Update check failed while parsing`nrelease information from Github."
+		;MsgBox, 16,, % "Exception thrown! Parsing release information from Github failed."
 	}
 	
 	versions := {}
