@@ -29,6 +29,10 @@ Arctic Breath's Chilling Area has #% increased Movement Speed
 #% increased Arctic Breath Duration
 #% increased Arctic Breath Area of Effect
 Armageddon Brand deals #% increased Damage
+Artillery Ballista Projectiles fall in two perpendicular lines instead
+Artillery Ballista fires an additional Arrow
+Artillery Ballista fires # additional Arrows
+Artillery Ballista Damage Penetrates #% Fire Resistance
 #% increased Assassin's Mark Curse Effect
 #% increased Assassin's Mark Duration
 Ball Lightning fires an additional Projectile
@@ -57,9 +61,10 @@ Blade Vortex has +#% to Critical Strike Multiplier for each blade
 #% increased Blade Vortex Spell Damage
 #% increased Blade Vortex Duration
 #% increased Blade Vortex Area of Effect
-Blast Rain has a #% chance for an additional blast
-#% increased Blast Rain Damage
-#% increased Blast Rain Area of Effect
+Blast Rain has a #% chance to fire an additional Arrow
+Blast Rain fires an additional Arrow
+Blast Rain deals #% increased Damage
+Blast Rain has #% increased Area of Effect
 #% increased Blight Damage
 #% increased Blight Area of Effect
 Blight has #% increased Hinder Duration
@@ -77,6 +82,7 @@ Unearth Spawns corpses with +# Level
 Bone Offering grants an additional +#% Chance to Block Attack Damage
 #% increased Bone Offering Duration
 #% increased Burning Arrow Damage
+Burning Arrow has #% increased Debuff Effect
 Burning Arrow has +#% chance to Ignite
 #% of Burning Arrow Physical Damage gained as Extra Fire Damage
 Summoned Carrion Golems deal #% increased Damage
@@ -182,14 +188,18 @@ Elemental Hit deals #% increased Damage
 #% increased Enduring Cry Buff Effect
 #% increased Enfeeble Curse Effect
 #% increased Enfeeble Duration
+Ensnaring Arrow has #% increased Area of Effect
+Ensnaring Arrow has #% increased Debuff Effect
 #% increased Essence Drain Damage
 #% increased Essence Drain Duration
 #% increased Ethereal Knives Damage
 Ethereal Knives Pierces an additional Target
 #% increased Ethereal Knives Projectile Speed
-#% increased Explosive Arrow Attack Speed
-#% increased Explosive Arrow Damage
-#% increased Explosive Arrow Area of Effect
+Explosive Arrow has #% increased Attack Speed
+Explosive Arrow deals #% increased Damage
+Explosive Arrow has #% increased Duration
+Explosive Arrow has #% increased Area of Effect
+Explosive Arrow has #% reduced Duration
 #% increased Fireball Cast Speed
 #% increased Fireball Damage
 Fireball has +#% chance to Ignite
@@ -259,6 +269,7 @@ Winter Orb has +# Maximum Stages
 Winter Orb has #% increased Area of Effect per Stage
 #% increased Frost Wall Cooldown Recovery Speed
 #% increased Frost Wall Duration
+Galvanic Arrow has #% increased Projectile Speed
 #% increased Glacial Cascade Damage
 #% of Glacial Cascade Physical Damage Converted to Cold Damage
 #% increased Glacial Cascade Area of Effect
@@ -296,8 +307,8 @@ Summoned Holy Relics have #% increased Area of Effect
 Ice Nova has +#% chance to Freeze
 Chills from Ice Nova Hits always reduce Action Speed by at least #%
 #% increased Ice Nova Area of Effect
+Ice Shot has #% increased Area of Effect angle
 #% increased Ice Shot Damage
-#% increased Ice Shot Duration
 #% increased Ice Shot Area of Effect
 Siphoning Trap has #% increased Chill Effect
 Siphoning Trap deals #% increased Damage
@@ -448,16 +459,19 @@ Shock Nova ring deals #% increased Damage
 #% increased Shockwave Totem Cast Speed
 #% increased Shockwave Totem Damage
 #% increased Shockwave Totem Area of Effect
-#% increased Shrapnel Shot Damage
-#% of Shrapnel Shot Physical Damage gained as extra Lightning Damage
-#% increased Shrapnel Shot Area of Effect
+Shrapnel Ballista fires an additional Arrow
+Shrapnel Ballista Pierces # additional Targets
+Shrapnel Ballista has #% increased Projectile Speed
+#% increased Galvanic Arrow Damage
+#% of Galvanic Arrow Physical Damage gained as extra Lightning Damage
+#% increased Galvanic Arrow Area of Effect
 Explosive Trap deals #% increased Damage
 Explosive Trap has #% increased Area of Effect
 Explosive Trap causes an additional smaller explosion
 Explosive Trap causes # additional smaller explosions
-#% increased Siege Ballista Attack Speed
-#% increased Siege Ballista Damage
-#% increased Siege Ballista Totem Placement Speed
+Siege Ballista has #% increased Attack Speed
+Siege Ballista deals #% increased Damage
+Siege Ballista has #% increased Totem Placement Speed
 #% increased Dark Pact Damage
 Smite has a #% chance for lightning to strike another target
 Smite has #% increased Aura Effect
@@ -512,7 +526,6 @@ Lightning Golems deal #% increased Damage
 Summoned Raging Spirits deal #% increased Damage
 Skeletons deal #% increased Damage
 #% chance to Summon an additional Skeleton Warrior with Summon Skeleton
-#% chance to Summon an additional Skeleton Warrior with Summon Skeletons
 Summoned Skitterbots have #% increased Area of Effect
 Summon Skitterbots has #% reduced Mana Reservation
 Stone Golems deal #% increased Damage
@@ -521,7 +534,7 @@ Chaos Golems deal #% increased Damage
 #% increased Sunder Damage
 #% increased Sunder Area of Effect
 #% increased Sweep Damage
-+#% Sweep Knockback Chance
+Sweep has a #% chance to grant an Endurance Charge on Hit
 #% increased Sweep Area of Effect
 #% increased Tectonic Slam Area of Effect
 Tectonic Slam has #% chance to create a Charged Slam
@@ -564,7 +577,7 @@ Wave of Conviction has #% increased Duration
 #% increased Whirling Blades Attack Speed
 #% increased Whirling Blades Damage
 #% increased Wild Strike Damage
-Wild Strike Chains an additional # times
+Wild Strike's Beam Chains an additional # times
 #% increased Wild Strike Area of Effect
 Winter Orb deals #% increased Damage
 Wither has #% increased Duration

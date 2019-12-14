@@ -1130,7 +1130,7 @@ TradeFunc_CheckIfCloudFlareBypassNeeded() {
 	SplashUI.SetSubMessage("Testing connection to poe.trade...")
 	; call this function without parameters to access poe.trade without cookies
 	; if it succeeds we don't need any cookies
-	If (!TradeFunc_TestCloudflareBypass("http://poe.trade", "", "", "", false, "PreventErrorMsg")) {
+	If (!TradeFunc_TestCloudflareBypass("https://poe.trade", "", "", "", false, "PreventErrorMsg")) {
 		TradeFunc_ReadCookieData()
 	}
 }
@@ -1253,7 +1253,7 @@ TradeFunc_ReadCookieData() {
 	; test connection to poe.trade
 	If (!CookieErrorLevel) {
 		accessForbidden := ""
-		If (!TradeFunc_TestCloudflareBypass("http://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"), true, "", accessForbidden)) {
+		If (!TradeFunc_TestCloudflareBypass("https://poe.trade", TradeGlobals.Get("UserAgent"), TradeGlobals.Get("cfduid"), TradeGlobals.Get("cfClearance"), true, "", accessForbidden)) {
 			BypassFailed := 1
 		}
 	}
