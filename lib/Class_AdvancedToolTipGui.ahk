@@ -1,4 +1,4 @@
-; AutoHotkey
+﻿; AutoHotkey
 ; Language:       	English 
 ; Authors:		Eruyome |	https://github.com/eruyome
 ;

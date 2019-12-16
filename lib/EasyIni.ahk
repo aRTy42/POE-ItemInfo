@@ -1,4 +1,4 @@
-; #############################################################################################################
+﻿; #############################################################################################################
 ; # Verdlin's INI library
 ; # Original thread: https://autohotkey.com/board/topic/91578-class-easyini-native-syntax-inisectionkey-val-formatting-retained/
 ; # Original source code: https://github.com/Aatoz/AutoHotKey/blob/master/Lib/class_EasyIni.ahk

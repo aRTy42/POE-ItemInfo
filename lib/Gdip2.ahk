@@ -1,4 +1,4 @@
-class Gdip
+﻿class Gdip
 {
 	__New()
 	{

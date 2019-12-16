@@ -1,4 +1,4 @@
-;: Title: _Struct by HotKeyIt
+﻿;: Title: _Struct by HotKeyIt
 ;
 
 ; Function: _Struct

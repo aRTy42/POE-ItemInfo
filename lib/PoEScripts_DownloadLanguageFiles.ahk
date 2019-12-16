@@ -1,4 +1,4 @@
-PoEScripts_DownloadLanguageFiles(ByRef currentLocale, dlAll = false, SplashTitle = "", SplashText = "", onlyParseFiles = false) {
+﻿PoEScripts_DownloadLanguageFiles(ByRef currentLocale, dlAll = false, SplashTitle = "", SplashText = "", onlyParseFiles = false) {
 	; onlyParseFiles = skip downloading anything for development purposes (if the data files exist).
 	currentLocale := PoEScripts_GetClientLanguage()
 	If (currentLocale = "en" or not currentLocale) {

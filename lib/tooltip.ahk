@@ -1,4 +1,4 @@
-
+﻿
 Gosub, Example1 ;Simple ToolTip
 
 Gosub, Example2 ;Links in ToolTip

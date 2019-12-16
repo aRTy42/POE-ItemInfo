@@ -1,4 +1,4 @@
-;###########----------------------- Additional Macros -------------------------###########
+﻿;###########----------------------- Additional Macros -------------------------###########
 ;# Use AdditionaMacros.ini in the user folder to enable/disable hotkeys and set a key    #
 ;# combination.                                                                          #
 ;#                                                                                       #

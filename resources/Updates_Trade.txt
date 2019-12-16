@@ -1,4 +1,10 @@
-The following is a list of what has been updated, starting with 1.1.0
+﻿The following is a list of what has been updated, starting with 1.1.0
+
+2.15.6
+================================================================================================
+* Fixed incorrect request parameter for the Crusader influence on items.
+* Converted all files to UTF-8 BOM to improve support for korean characters.
+* Updated data files (uniques etc).
 
 2.15.5
 ================================================================================================

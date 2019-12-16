@@ -646,7 +646,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			}
 		}
 		
-		; special bases (elder/shaper/fractured/synthesised/redeemer/hunter/conquerer/warlord)
+		; special bases (elder/shaper/fractured/synthesised/redeemer/hunter/crusader/warlord)
 		If (Item.HasInfluence.length() or Item.isFracturedBase or Item.isSynthesisedBase) {
 			If (Item.HasInfluence.length()) {
 				Item.UsedInSearch.specialBase := ""
@@ -802,7 +802,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			RequestParams.corrupted := "0"
 		}
 		
-		; special bases (elder/shaper/synthesised/fractured/conquerer/warlord/redeemer/hunter)
+		; special bases (elder/shaper/synthesised/fractured/crusader/warlord/redeemer/hunter)
 		If (s.useSpecialBase) {
 			If (Item.HasInfluence.length()) {
 				For key, val in Item.HasInfluence {
@@ -818,7 +818,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		} Else {
 			RequestParams.Shaper	:= ""
 			RequestParams.Elder		:= ""
-			RequestParams.Conquerer	:= ""
+			RequestParams.crusader	:= ""
 			RequestParams.Warlord	:= ""
 			RequestParams.Redeemer	:= ""
 			RequestParams.Hunter	:= ""			
@@ -969,7 +969,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 		If (isAdvancedPriceCheckRedirect and not TradeGlobals.Get("AdvancedPriceCheckItem").useSpecialBase) {
 			RequestParams.Shaper	:= ""
 			RequestParams.Elder		:= ""
-			RequestParams.Conquerer	:= ""
+			RequestParams.crusader	:= ""
 			RequestParams.Warlord	:= ""
 			RequestParams.Redeemer	:= ""
 			RequestParams.Hunter	:= ""
@@ -3487,7 +3487,7 @@ class RequestParams_ {
 	shaper		:= ""
 	elder		:= ""
 	hunter		:= ""	; check todo
-	conquerer		:= ""	; check
+	crusader		:= ""	; check
 	redeemer		:= ""	; check
 	warlord		:= ""	; check
 	synthesised	:= ""
@@ -3881,7 +3881,7 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["hunter"], _item.mods[k])
 			}
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
-				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["conquerer"], _item.mods[k])
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["crusader"], _item.mods[k])
 			}
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["redeemer"], _item.mods[k])
@@ -5181,7 +5181,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 	iLvlValue		:= ""
 	If (advItem.specialBase or advItem.IsBeast) {
 		iLvlCheckState := TradeOpts.AdvancedSearchCheckILVL ? "Checked" : ""
-		iLvlValue := advItem.iLvl 											; use itemlevel to fill the box in any case (elder/shaper/conquerer/redeemer/hunter/warlord)
+		iLvlValue := advItem.iLvl 											; use itemlevel to fill the box in any case (elder/shaper/crusader/redeemer/hunter/warlord)
 	}
 	Else If (TradeOpts.AdvancedSearchCheckILVL) {
 		iLvlCheckState := "Checked"
