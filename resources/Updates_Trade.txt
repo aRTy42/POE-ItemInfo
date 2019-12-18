@@ -1,5 +1,14 @@
 ﻿The following is a list of what has been updated, starting with 1.1.0
 
+2.15.7
+================================================================================================
+* Added information about metamorph sample types able to drop from a map to a maps ctrl + c ItemInfo tooltip.
+* Added information about maps able to drop specific metamorph samples to a samples ctrl + c ItemInfo tooltip.
+* Fixed an issue with a data file which partly broke the "Get currency note ratio" function.
+* Improved basic metamorph sample search. Advanced search continues to be unavailable since poe.trade doesn't support the item mods.
+* Fixed the url for ES shields for the item affix lookup on poedb.tw.
+* Updated data files (uniques etc).
+
 2.15.6
 ================================================================================================
 * Fixed incorrect request parameter for the Crusader influence on items.

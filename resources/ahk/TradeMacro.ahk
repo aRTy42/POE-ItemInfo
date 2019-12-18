@@ -985,23 +985,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 					Item.UsedInSearch.specialBase .= key == 1 ? val : ", " val
 				}
 			}
-			/*
-			If (Item.IsShaperBase) {
-				RequestParams.Shaper := 1
-				Item.UsedInSearch.specialBase := "Shaper"
-			}
-			Else {
-				RequestParams.Shaper := 0
-			}
-			
-			If (Item.IsElderBase) {
-				RequestParams.Elder := 1
-				Item.UsedInSearch.specialBase := "Elder"
-			}
-			Else {			
-				RequestParams.Elder := 0
-			}
-			*/
+
 			If (Item.IsFracturedBase) {
 				RequestParams.Fractured := 1
 				Item.UsedInSearch.specialBase := "Fractured"
@@ -1152,6 +1136,17 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 				}
 			}			
 		}
+	}
+	
+	/*
+		metamorph samples
+	*/
+	If (Item.IsMetamorphSample) {
+		;RequestParams.xtype := "Metamorph"
+		RequestParams.xBase	:= Item.SubType
+		UsedInSearch.Type	:= Item.SubType
+		RequestParams.Name	:= Item.Name
+		UsedInSearch.Name	:= Item.Name
 	}
 	
 	/*

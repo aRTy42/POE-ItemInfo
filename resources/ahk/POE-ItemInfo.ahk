@@ -95,6 +95,9 @@ Globals.Set("CurrentItemFilter", "")
 /*
 */
 
+; Parse metamorph data
+global MetamorphData := { "mapToOrgan" : ReadJSONDataFromFile(A_ScriptDir "\data\metamorph_mapToOrgan.json", "mapToOrgan"), "organToMap" : ReadJSONDataFromFile(A_ScriptDir "\data\metamorph_organToMap.json", "organToMap")}
+
 class UserOptions {	
 	ScanUI()
 	{
@@ -384,6 +387,7 @@ class Item_ {
 		This.IsMapFragment	:= False
 		This.IsEssence		:= False
 		This.IsRelic		:= False
+		This.IsMetamorphSample := False
 		
 		This.IsElderBase	:= False
 		This.IsShaperBase	:= False
@@ -712,7 +716,7 @@ CheckRarityLevel(RarityString)
 	return 0 ; unknown rarity. shouldn't happen!
 }
 
-ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, ByRef GripType,  RarityLevel)
+ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, ByRef GripType, RarityLevel, IsMetamorphSample)
 {
 	; Grip type only matters for weapons at this point. For all others it will be 'None'.
 	; Note that shields are armour and not weapons, they are not 1H.
@@ -801,6 +805,13 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		If (RegExMatch(LoopField, "i)(Murderous|Hypnotic|Searching|Ghastly) Eye Jewel", match)) {
 			BaseType = Jewel
 			SubType := match1 " Eye Jewel"
+			return
+		}
+		
+		; Metamorph samples
+		If (IsMetamorphSample and RegExMatch(Loopfield, "i)(Eye|Liver|Heart|Lung|Brain)$", match)) {
+			BaseType := "Metamorph"
+			SubType := "Metamorph " match1
 			return
 		}
 		
@@ -1525,6 +1536,71 @@ ParseMapTier(ItemDataText)
 			return Result
 		}
 	}
+}
+
+MapMetamorphOrganToMap(ItemName) {
+	organ := RegExReplace(ItemName, "i).*(Brain|Liver|Lung|Eye|Heart)$", "$1")
+	mapList := ""
+	For key, val in MetamorphData.organToMap {
+		If (key = organ) {
+			i := 0
+			For Index, Value In val {
+				i++
+				mapList .= ", " . RegExReplace(Value, "i)\s?Map")				
+				If (i >= 7) {
+					mapList .= "`n"
+					i := 0
+				}
+			}
+			mapList := LTrim(mapList, ", ")
+		}
+	}
+	Return { "default" : mapList, "sorted" : MapMetamorphOrganToMapSorted(ItemName)}
+}
+
+MapMetamorphOrganToMapSorted(ItemName) {
+	organ := RegExReplace(ItemName, "i).*(Brain|Liver|Lung|Eye|Heart)$", "$1")
+	mapList := ""
+	
+	sortedList := [[],[],[],[]]
+	For key, val in MetamorphData.mapToOrgan {
+		If (IsInArray(organ, val)) {
+			sortedList[val.MaxIndex()-1].push(key)
+		}
+	}
+	
+	listStr := ""
+	For i, organLimit in sortedList {
+		k := 0
+		lineStr := ""
+		For j, map in organLimit {
+			k++
+			lineStr .= RegExReplace(map, "i)\s?Map") ", "
+			If (k >= 8) {				
+				If (j > 1) {
+					lineStr .= "`n" . "       "
+				} Else {
+					lineStr .= "`n"
+				}
+				k := 0
+			}		
+		}
+		listStr .= "`n`n" . "[ " i " ]: " RegExReplace(lineStr,"i),\s+?$")
+	}
+
+	Return listStr
+}
+
+MapMetamorphMapToOrgan(map) {
+	organList := ""
+	For key, val in MetamorphData.mapToOrgan {
+		If (key = map) {
+			For Index, Value In val
+				organList .= ", " . Value
+			organList := LTrim(organList, ", ")
+		}
+	}
+	Return organList
 }
 
 ParseGemLevel(ItemDataText, PartialString="Level:")
@@ -7872,6 +7948,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			Item["Is" match1 "Base"] := True
 			Item.HasInfluence.push(match1)
 		}
+		RegExMatch(Trim(A_LoopField), "i)^Combine this with four other different samples in Tane's Laboratory.", match)
+		If (match) {
+			Item.IsMetamorphSample := True
+		}
 	}
 	
 	; AHK only allows splitting on single chars, so first
@@ -8039,7 +8119,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 				ItemLevelWord	:= "Item Level:"	
 			}			
 			If (Not Item.IsBeast) {
-				ParseItemType(ItemData.Stats, ItemData.NamePlate, ItemBaseType, ItemSubType, ItemGripType, RarityLevel)
+				ParseItemType(ItemData.Stats, ItemData.NamePlate, ItemBaseType, ItemSubType, ItemGripType, RarityLevel, Item.IsMetamorphSample)
 				Item.BaseType	:= ItemBaseType
 				Item.SubType	:= ItemSubType
 				Item.GripType	:= ItemGripType
@@ -8157,7 +8237,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	}
 	
 	ItemData.Stats := ItemDataParts2
-	
+
 	If (Item.IsFlask)
 	{
 		ParseFlaskAffixes(ItemData.Affixes)
@@ -8371,6 +8451,10 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		If (MapDescription)
 		{
 			TT .= MapDescription
+			Metamorph := MapMetamorphMapToOrgan(Item.SubType)
+			If (Metamorph) {
+				TT .= "`n`nMetamorph organs (boss):`n    " Metamorph
+			}			
 		}
 		
 		If (RarityLevel > 1 and RarityLevel < 4 and Not Item.IsUnidentified)
@@ -8491,7 +8575,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 		}
 	}
 	
-	Else If (ItemData.Rarity == "Unique")
+	Else If (ItemData.Rarity == "Unique" and not Item.IsMetamorphSample)
 	{
 		If (FindUnique(Item.Name) == False and Not Item.IsUnidentified)
 		{
@@ -8503,6 +8587,11 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			AffixDetails := AssembleAffixDetails()
 			TT = %TT%`n--------%AffixDetails%
 		}
+	}
+	
+	If (Item.IsMetamorphSample) {
+		Metamorph := MapMetamorphOrganToMap(Item.Name)	; object
+		TT .= "`n--------`n" . "Where to find this organ type, sorted by number of additional types of organs in the drop pool: `n" Metamorph.sorted
 	}
 
 	If (pseudoMods.Length())
@@ -11434,7 +11523,7 @@ LookUpAffixes() {
 					url	.= StrLen(shield) ? ",dex_shield" : ""
 				} Else If (es) {
 					url	.= "&an=int_armour"
-					url	.= StrLen(shield) ? ",int_shield" : ""
+					url	.= StrLen(shield) ? ",focus" : ""
 				}
 			}
 			Else If (StrLen(accessory)) {

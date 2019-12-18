@@ -1096,8 +1096,8 @@ TradeFunc_DownloadDataFiles() {
 	url		:= "https://raw.githubusercontent.com/" . owner . "/" . repo . "/master/data_trade/"
 	dir		= %A_ScriptDir%\data_trade
 	bakDir	= %A_ScriptDir%\data_trade\old_data_files
-	files	:= ["boot_enchantment_mods.txt", "crafting_bases.txt", "glove_enchantment_mods.txt", "helmet_enchantment_mods.txt"
-				, "mods.json", "uniques.json", "relics.json", "item_bases_armour.json", "item_bases_weapon.json"]
+	files	:= ["boot_enchantment_mods.txt", "crafting_bases.txt", "glove_enchantment_mods.txt", "helmet_enchantment_mods.txt", "currency_tags.json", "prophecy_details.json"
+				, "mods.json", "uniques.json", "relics.json", "item_bases_armour.json", "item_bases_weapon.json", "item_bases.json"]
 
 	; create .bak files and download (overwrite) data files
 	; if downloaded file exists move .bak-file to backup folder, otherwise restore .bak-file
