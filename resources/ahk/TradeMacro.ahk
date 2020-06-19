@@ -181,8 +181,8 @@ TradeFunc_OpenWikiHotkey(priceCheckTest = false, itemData = "") {
 				UrlAffix := Item.SubType
 			} Else If (Item.IsMap) {
 				UrlPage := "area.php?n="				
-				UrlAffix := RegExMatch(Item.SubType, "i)Unknown Map") ? Item.BaseName : Item.SubType
-			} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
+				UrlAffix := RegExMatch(Item.SubType, "i)Unknown Map") ? Item.BaseName : Item.SubType			
+			} Else If (RegExMatch(Item.Name, "i)Sacrifice At|Fragment of|Mortal |Offering to |'s Key|Breachstone|Simulacrum")) {
 				UrlAffix := Item.Name
 			} Else {
 				UrlAffix := Item.BaseName
@@ -195,7 +195,7 @@ TradeFunc_OpenWikiHotkey(priceCheckTest = false, itemData = "") {
 				UrlAffix := Item.Name
 			} Else If (Item.IsFlask or Item.IsMap) {
 				UrlAffix := Item.SubType
-			} Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone")) {
+			} Else If (RegExMatch(Item.Name, "i)Sacrifice At|Fragment of|Mortal |Offering to |'s Key|Breachstone|Simulacrum")) {
 				UrlAffix := Item.Name
 			} Else {
 				UrlAffix := Item.BaseName
@@ -235,9 +235,9 @@ TradeFunc_SetCurrencyRatio() {
 	TradeFunc_PreventClipboardGarbageAfterInit()
 	scancode_c := Globals.Get("Scancodes").c
 	Send ^{%scancode_c%}
-	Sleep 250
+	Sleep, 250
 	TradeFunc_DoParseClipboard()
-	
+
 	If (not Item.name or (not Item.IsCurrency or Item.IsEssence or Item.IsDivinationCard)) {
 		ShowToolTip("Item not supported by this function.`nWorks only on currency.")
 		Return
@@ -454,9 +454,11 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 	Corruption  := false
 
 	If (Item.hasImplicit or Item.hasEnchantment) {
-		Enchantment := TradeFunc_GetEnchantment(Item, Item.SubType)
-		If (StrLen(Enchantment) and Item.hasImplicit and not Item.hasEnchantment) {
-			Item.hasImplicit := false	; implicit was assumed but is actually an enchantment
+		If (not Item.IsClusterJewel) {			
+			Enchantment := TradeFunc_GetEnchantment(Item, Item.SubType)
+			If (StrLen(Enchantment) and Item.hasImplicit and not Item.hasEnchantment) {
+				Item.hasImplicit := false	; implicit was assumed but is actually an enchantment
+			}		
 		}
 		Corruption  := Item.IsCorrupted ? TradeFunc_GetCorruption(Item) : false
 	}
@@ -477,6 +479,18 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 			Item.BeastData.GenusMod.name		:= RegExReplace(Item.BeastData.GenusMod.name_orig, "i)\d+", "#")
 			Item.BeastData.GenusMod.param		:= TradeFunc_FindInModGroup(TradeGlobals.Get("ModsData")["bestiary"], Item.BeastData.GenusMod)
 		}
+		/*
+		If (Item.IsClusterJewel) {
+			For key, val in Item.Enchantments {
+				Item.BeastData.GenusMod 			:= {}
+				Item.BeastData.GenusMod.name_orig	:= "(beast) Genus: " Item.BeastData.Genus
+				Item.BeastData.GenusMod.name		:= RegExReplace(Item.BeastData.GenusMod.name_orig, "i)\d+", "#")
+				Item.BeastData.GenusMod.param		:= TradeFunc_FindInModGroup(TradeGlobals.Get("ModsData")["bestiary"], Item.BeastData.GenusMod)
+				Item.BeastData.GenusMod.param		:= TradeFunc_FindInModGroup(TradeGlobals.Get("ModsData")["bestiary"], {"name_orig": Item[Enchantment][key], "name" : RegExReplace(Item[Enchantment][key], "i)\d+", "#") })	
+			} 
+			
+		}
+		*/
 		
 		preparedItem  := TradeFunc_PrepareNonUniqueItemMods(ItemData.Affixes, Item.Implicit, Item.RarityLevel, Enchantment, Corruption, Item.IsMap, Item.IsBeast, Item.IsSynthesisedBase)
 		preparedItem.maxSockets	:= Item.maxSockets
@@ -1127,7 +1141,7 @@ TradeFunc_Main(openSearchInBrowser = false, isAdvancedPriceCheck = false, isAdva
 							modParam.mod_name := imod.param
 							modParam.mod_min  := ""
 							RequestParams.modGroups[1].AddMod(modParam)
-							
+
 							If (StrLen(useOnlyThisBeastMod)) {
 								RequestParams.ilvl_min := 70
 							}
@@ -3654,8 +3668,8 @@ TradeFunc_RemoveAlternativeVersionsMods(_item, Affixes) {
 		negativeValue := false
 		spawnType := ""
 		For key, val in Affixes {
-			RegExMatch(Trim(val), "i)\((fractured|crafted)\)", sType)
-			val := RegExReplace(Trim(val), "i)\((fractured|crafted)\)")
+			RegExMatch(Trim(val), "i)\((fractured|crafted|enchant)\)", sType)
+			val := RegExReplace(Trim(val), "i)\((fractured|crafted|enchant)\)")
 
 			; remove negative sign also			
 			t := TradeUtils.CleanUp(RegExReplace(val, "i)-?[\d\.]+", "#"))
@@ -3697,7 +3711,7 @@ TradeFunc_RemoveAlternativeVersionsMods(_item, Affixes) {
 	}
 
 	For key, val in Affixes {
-		val := RegExReplace(Trim(val), "i)\((fractured|crafted)\)")
+		val := RegExReplace(Trim(val), "i)\((fractured|crafted|enchant)\)")
 		
 		t := TradeUtils.CleanUp(RegExReplace(val, "i)-?[\d\.]+", "#"))		
 		modFound := false
@@ -3913,6 +3927,9 @@ TradeFunc_GetItemsPoeTradeMods(_item, isMap = false) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["implicit"], _item.mods[k])
 			}
 			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
+				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["cluster jewels"], _item.mods[k])
+			}
+			If (StrLen(_item.mods[k]["param"]) < 1 and not isMap) {
 				_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["enchantments"], _item.mods[k])
 			}
 			If (StrLen(_item.mods[k]["param"]) < 1) {
@@ -3970,6 +3987,9 @@ TradeFunc_GetItemsPoeTradeUniqueMods(_item) {
 		}
 		If (StrLen(_item.mods[k]["param"]) < 1) {
 			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["synthesised"], _item.mods[k])
+		}
+		If (StrLen(_item.mods[k]["param"]) < 1) {
+			_item.mods[k]["param"] := TradeFunc_FindInModGroup(mods["cluster jewels"], _item.mods[k])
 		}
 		
 		; Handle special mods like "Has # Abyssal Sockets" which technically has no rolls but different mod variants.
@@ -4169,7 +4189,7 @@ TradeFunc_GetModValueGivenPoeTradeMod(itemModifiers, poeTradeMod) {
 		{
 			Continue ; Not interested in blank lines
 		}		
-		LoopField := Trim(RegExReplace(A_LoopField, "i)\((fractured|crafted)\)"))
+		LoopField := Trim(RegExReplace(A_LoopField, "i)\((fractured|crafted|enchant)\)"))
 		
 		ModStr := ""
 		CurrValues := []
@@ -4630,6 +4650,7 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		}
 		Gui, SelectModsGui:Add, Text, x+10 yp+0 cc8c8c8 BackgroundTrans, %tLinksSockets%
 	}
+	Gui, SelectModsGui:Add, Text, x+10 yp+0 cc8c8c8 BackgroundTrans, % " -  iLvl : " advItem.iLvl
 
 	Gui, SelectModsGui:Add, Text, x0 w800 yp+13 cBlack BackgroundTrans, %line%
 
@@ -5183,7 +5204,10 @@ TradeFunc_AdvancedPriceCheckGui(advItem, Stats, Sockets, Links, UniqueStats = ""
 		iLvlValue		:= advItem.iLvl
 	}
 	Else {
-		If (advItem.maxSockets > 1) {
+		If (advItem.iLvl > 60) {
+			iLvlValue := advItem.iLvl
+		}		
+		Else If (advItem.maxSockets > 1) {
 			If (advItem.iLvl >= 50 and advItem.maxSockets > 5) {
 				iLvlValue := 50
 			} Else If (advItem.iLvl >= 35 and advItem.maxSockets > 4) {

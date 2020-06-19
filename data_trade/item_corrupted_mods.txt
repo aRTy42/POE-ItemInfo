@@ -52,7 +52,7 @@ Grants Level # Hatred Skill
 #% increased total Recovery per second from Life Leech for each Corrupted Item Equipped
 #% of Lightning Damage Leeched as Life
 Adds # to # Chaos Damage
-+# to Weapon range
++# to Weapon Range
 #% increased total Recovery per second from Mana Leech for each Corrupted Item Equipped
 +# Mana gained for each Enemy hit by your Attacks
 #% of Damage taken gained as Mana over 4 seconds when Hit
@@ -104,6 +104,7 @@ Skills Chain +# times
 #% additional Physical Damage Reduction while stationary
 Skills fire an additional Projectile
 +#% to all Elemental Resistances
+Enemies have -#% to Total Physical Damage Reduction against your Hits
 Cannot be Ignited
 Cannot be Blinded
 Cannot be Poisoned
@@ -115,6 +116,7 @@ Bleeding cannot be inflicted on you
 #% chance to gain Onslaught for 4 seconds on Kill
 #% chance to gain a Power Charge on Critical Strike
 #% chance to Dodge Spell Hits
+Damage Penetrates #% Cold Resistance
 Corrupted Blood cannot be inflicted on you
 Curse Enemies with Level # Despair on Hit
 Curse Enemies with Level # Enfeeble on Hit
@@ -122,10 +124,11 @@ Grants Level # Despair Skill
 #% chance to Dodge Attack Hits while moving
 #% chance to Dodge Spell Hits while moving
 Damage Penetrates #% Elemental Resistances
+Damage Penetrates #% Fire Resistance
 Gain a Frenzy Charge after Spending a total of # Mana
 +#% to Global Critical Strike Multiplier
 You cannot be Hindered
-#% increased Effect of non-Damaging Ailments on Enemies
+#% increased Effect of Non-Damaging Ailments
 Attacks have +#% to Critical Strike Chance
 #% increased Attack Speed during any Flask Effect
 Anger has #% increased Aura Effect
@@ -162,6 +165,7 @@ Spells have +#% to Critical Strike Chance
 +# to Level of Socketed Cold Gems
 +# to Level of Socketed Fire Gems
 +# to Level of Socketed Lightning Gems
+Damage Penetrates #% Lightning Resistance
 Adds # to # Cold Damage
 Adds # to # Fire Damage
 Adds # to # Lightning Damage

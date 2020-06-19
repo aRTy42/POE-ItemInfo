@@ -18,6 +18,8 @@ Animated Guardians deal #% increased Damage
 #% chance to create an additional Animate Weapon copy
 Animated Weapons deal #% increased Damage
 #% increased Animate Weapon Duration
+Arcane Cloak Spends an additional #% of current Mana
+Arcane Cloak grants Life Regeneration equal to #% of Mana Spent per Second
 #% increased Arc Damage
 Arc deals #% increased Damage for each time it has Chained
 Arc Chains an additional time
@@ -50,6 +52,9 @@ Barrage fires an additional Projectile
 Enemies affected by Bear Trap take #% increased Damage from Trap or Mine Hits
 Berserk has #% increased Buff Effect
 Berserk has #% reduced Rage loss per second
+Blade Blast has #% increased Area of Effect
+Blade Blast deals #% increased Damage
+Blade Blast detonates other Lingering Blades within an #% increased Area
 Bladefall has an additional Volley
 #% increased Bladefall Critical Strike Chance
 #% increased Bladefall Damage
@@ -61,7 +66,6 @@ Blade Vortex has +#% to Critical Strike Multiplier for each blade
 #% increased Blade Vortex Spell Damage
 #% increased Blade Vortex Duration
 #% increased Blade Vortex Area of Effect
-Blast Rain has a #% chance to fire an additional Arrow
 Blast Rain fires an additional Arrow
 Blast Rain deals #% increased Damage
 Blast Rain has #% increased Area of Effect
@@ -136,8 +140,8 @@ Cremation can have up to # additional Geyser at a time
 #% increased Cyclone Damage
 #% increased Dark Pact Cast Speed
 #% increased Dark Pact Area of Effect
-Dash has +# Cooldown
-Dash has +# Cooldowns
+Dash has +# Cooldown Use
+Dash has +# Cooldown Uses
 Dash travels #% increased distance
 #% increased Decoy Totem Life
 #% increased Decoy Totem Area of Effect
@@ -335,6 +339,10 @@ Infernal Blow Debuff deals an additional #% of Damage per Charge
 #% increased Kinetic Blast Damage
 Kinetic Blast has a #% chance for an additional explosion
 #% increased Kinetic Blast Area of Effect
+Kinetic Bolt has #% increased Attack Speed
+Kinetic Bolt changes direction # additional time
+Kinetic Bolt changes direction # additional times
+Kinetic Bolt has #% increased Projectile Speed
 Lancing Steel deals #% increased Damage
 Lancing Steel's additional Projectiles have +#% chance to Impale Enemies
 Lancing Steel's primary Projectile Pierces # additional Targets
@@ -441,6 +449,8 @@ Gain #% of Rejuvenation Totem Life Regeneration as extra Mana Regeneration
 Righteous Fire grants #% increased Spell Damage
 #% increased Riposte Cooldown Recovery Speed
 #% increased Riposte Damage
+Rune Blast teleports you to the detonated Rune if you have not detonated Runes in the past # second
+Rune Blast teleports you to the detonated Rune if you have not detonated Runes in the past # seconds
 Scourge Arrow creates an additional spore pod at Maximum Stages
 Scourge Arrow has #% chance to Poison per Stage
 Scourge Arrow deals #% increased Damage
@@ -495,6 +505,8 @@ Spectral Shield Throw fires # additional Shard Projectiles
 #% increased Spectral Throw Projectile Speed
 Spectres have #% increased Attack and Cast Speed
 +#% to Raised Spectre Elemental Resistances
+Skills Supported by Spellslinger have #% increased Cooldown Recovery Speed
+Skills Supported by Spellslinger have #% reduced Mana Reservation
 #% increased Spirit Offering Duration
 Spirit Offering grants +#% of Physical Damage as Extra Chaos Damage
 #% increased Split Arrow Critical Strike Chance
@@ -508,6 +520,8 @@ Steelskin grants #% additional Physical Damage Reduction
 Steelskin Buff can take #% increased amount of Damage
 +#% to Stone Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Stone Golems
+Stormbind has #% increased Area of Effect
+Stormbind deals #% increased Damage
 Storm Brand deals #% increased Damage
 Storm Burst has a #% chance to create an additional Orb
 #% chance to Avoid interruption from Stuns while Casting Storm Burst

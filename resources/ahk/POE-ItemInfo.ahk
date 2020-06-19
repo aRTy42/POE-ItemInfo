@@ -401,6 +401,7 @@ class Item_ {
 		This.IsFracturedBase:= False
 		
 		This.IsAbyssJewel	:= False
+		This.IsClusterJewel	:= False
 		This.IsBeast		:= False
 		This.IsHideoutObject:= False
 		This.IsFossil		:= False		
@@ -805,6 +806,12 @@ ParseItemType(ItemDataStats, ItemDataNamePlate, ByRef BaseType, ByRef SubType, B
 		If (RegExMatch(LoopField, "i)(Murderous|Hypnotic|Searching|Ghastly) Eye Jewel", match)) {
 			BaseType = Jewel
 			SubType := match1 " Eye Jewel"
+			return
+		}
+		; Jewels
+		If (RegExMatch(LoopField, "i)(Small|Medium|Large) Cluster Jewel", match)) {
+			BaseType = Jewel
+			SubType := match1 " Cluster Jewel"
 			return
 		}
 		
@@ -1835,7 +1842,7 @@ MakeAffixDetailLine(AffixLine, AffixType, ValueRange, Tier, CountAffixTotals=Tru
 		}
 	}
 	
-	If (Item.IsJewel and not Item.IsAbyssJewel)
+	If (Item.IsJewel and not (Item.IsAbyssJewel or Item.IsClusterJewel))
 	{
 		TierAndType := AffixTypeShort(AffixType)	; Discard tier since it's always T1
 		
@@ -2002,7 +2009,7 @@ AssembleAffixDetails()
 			}
 		}
 		
-		If ( not ((Item.IsJewel and not Item.IsAbyssJewel) or Item.IsFlask) and Opts.ShowHeaderForAffixOverview)
+		If ( not ((Item.IsJewel and not (Item.IsAbyssJewel or Item.IsClusterJewel)) or Item.IsFlask) and Opts.ShowHeaderForAffixOverview)
 		{
 			; Add a header line above the affix infos.			
 			ProcessedLine := "`n"
@@ -2031,7 +2038,7 @@ AssembleAffixDetails()
 					AffixText := StrPad(AffixText, round( (TextLineWidth + StrLen(AffixText))/2 ), "left")	; align mid
 				}
 				
-				If ((Item.IsJewel and not Item.IsAbyssJewel) or Item.IsFlask)
+				If ((Item.IsJewel and (Item.IsAbyssJewel or Item.IsClusterJewel)) or Item.IsFlask)
 				{
 					If (StrLen(AffixText) > TextLineWidthJewel)
 					{
@@ -4043,7 +4050,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		; --- PRE-PASS ---
 		Loop, Parse, ItemDataChunk, `n, `r
 		{			
-			LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured|crafted\)$")
+			LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured|crafted|enchant\)$")
 			If StrLen(LoopField) = 0
 			{
 				Continue ; Not interested in blank lines
@@ -4298,7 +4305,7 @@ ParseAffixes(ItemDataAffixes, Item)
 		; --- PRE-PASS ---
 		Loop, Parse, ItemDataChunk, `n, `r
 		{
-			LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured|crafted\)$")
+			LoopField := RegExReplace(Trim(A_LoopField), "i) \(fractured|crafted|enchant\)$")
 			If StrLen(LoopField) = 0
 			{
 				Continue ; Not interested in blank lines
@@ -8057,7 +8064,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsFossil	:= (RegExMatch(ItemData.NamePlate, "i)Fossil$")) ? true : false
 	Item.IsScarab	:= (RegExMatch(ItemData.NamePlate, "i)Scarab$")) ? true : false
 	
-	regex := ["^Sacrifice At", "^Fragment of", "^Mortal ", "^Offering to ", "'s Key$", "Ancient Reliquary Key", "Timeworn Reliquary Key", "Breachstone", "Divine Vessel"]
+	regex := ["^Sacrifice At", "^Fragment of", "^Mortal ", "^Offering to ", "'s Key$", "Ancient Reliquary Key", "Timeworn Reliquary Key", "Breachstone", "Divine Vessel", "^Simulacrum"]
 	For key, val in regex {
 		If (RegExMatch(Item.Name, "i)" val "")) {
 			Item.IsMapFragment := True
@@ -8147,6 +8154,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 	Item.IsLeaguestone	:= (Item.BaseType == "Leaguestone")
 	Item.IsJewel		:= (Item.BaseType == "Jewel")
 	Item.IsAbyssJewel	:= (Item.IsJewel and RegExMatch(Item.SubType, "i)(Murderous|Hypnotic|Searching|Ghastly) Eye"))
+	Item.IsClusterJewel	:= (Item.IsJewel and RegExMatch(Item.SubType, "i)(Small|Medium|Large|) Cluster"))
 	Item.IsMirrored	:= (ItemIsMirrored(ItemDataText) and Not Item.IsCurrency)
 	Item.IsEssence		:= Item.IsCurrency and RegExMatch(Item.Name, "i)Essence of |Remnant of Corruption")
 	Item.Note			:= Globals.Get("ItemNote")
@@ -8213,6 +8221,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			TODO: rework this after 3.9 hits, implicits are now flagged,  not sure about enchantments
 		*/
 		; Check that there is no ":" in the retrieved text = can only be an implicit mod
+/*
 		_implicitFound := !InStr(ItemDataParts%ItemDataIndexImplicit%, ":")
 		If (_implicitFound) {
 			tempImplicit	:= ItemDataParts%ItemDataIndexImplicit%
@@ -8223,7 +8232,7 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			Item.hasImplicit := True
 		}
 
-		; Check if there is a second "possible implicit" which means the first one is actually an enchantmet
+		; Check if there is a second "possible implicit" which means the first one is actually an enchantment
 		_ItemDataIndexImplicit := ItemDataIndexImplicit - 1
 		If (_implicitFound and !InStr(ItemDataParts%_ItemDataIndexImplicit%, ":")) {			
 			tempImplicit	:= ItemDataParts%_ItemDataIndexImplicit%
@@ -8234,6 +8243,28 @@ ParseItemData(ItemDataText, ByRef RarityLevel="")
 			Item.hasImplicit := True
 			Item.hasEnchantment := True
 		}
+		*/
+		
+		_ItemDataIndexImplicit := ItemDataIndexImplicit - 1
+		_implicitsArr := [ItemDataParts%ItemDataIndexImplicit%, ItemDataParts%_ItemDataIndexImplicit%]
+
+		For key, imp in _implicitsArr {
+			_implicitFound := RegExMatch(imp, "i)(.*)\(Implicit|Enchant\)")
+			If (_implicitFound) {
+				Loop, Parse, imp, `n, `r
+				{
+					If (RegExMatch(A_LoopField, "i)(.*)\(Enchant\)")) {
+						Item.Enchantment.push(RegExReplace(A_LoopField, "i)(.*)\(Enchant\)", "$1"))
+						Item.hasEnchantment := True
+					}
+					Else {
+						Item.Implicit.push(RegExReplace(A_LoopField, "i)(.*)\(Implicit\)", "$1"))
+						Item.hasImplicit := True
+					}
+				}
+			}
+		}
+		
 	}
 	
 	ItemData.Stats := ItemDataParts2
@@ -8748,10 +8779,10 @@ ModStringToObject(string, isImplicit) {
 	StringReplace, val, val, `n,, All
 	values := []
 
-	RegExMatch(val, "i) \((fractured|crafted)\)$", sType)
+	RegExMatch(val, "i) \((fractured|crafted|enchant)\)$", sType)
 	spawnType := sType1
 	
-	val := RegExReplace(val, "i) \((fractured|crafted)\)$")
+	val := RegExReplace(val, "i) \((fractured|crafted|enchant)\)$")
 
 	; Collect all numeric values in the mod-string
 	Pos        := 0
@@ -8947,12 +8978,12 @@ CreatePseudoMods(mods, returnAllMods := False) {
 	; Note that at this point combined mods/attributes have already been separated into two mods
 	; like '+ x % to fire and lightning resist' would be '+ x % to fire resist' AND '+ x % to lightning resist' as 2 different mods
 	For key, mod in mods {
-		RegExMatch(mod.name, "i) \((fractured|crafted)\)$", spawnType)
+		RegExMatch(mod.name, "i) \((fractured|crafted|enchant)\)$", spawnType)
 		If (StrLen(spawnType1)) {
 			mod.spawnType := spawnType1	
 		}		
 		
-		mod.name := RegExReplace(mod.name, "i) \((fractured|crafted)\)$")
+		mod.name := RegExReplace(mod.name, "i) \((fractured|crafted|enchant)\)$")
 		
 		; ### Base stats
 		; life and mana
@@ -10994,9 +11025,9 @@ HighlightItems(broadTerms = false, leaveSearchField = true, focusHideoutFilter =
 				}
 			}
 			; offerings / sacrifice and mortal fragments / guardian fragments / council keys / breachstones / reliquary keys
-			Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone") or RegExMatch(Item.Name, "i)Reliquary Key")) {
+			Else If (RegExMatch(Item.Name, "i)Sacrifice At") or RegExMatch(Item.Name, "i)Fragment of") or RegExMatch(Item.Name, "i)Mortal ") or RegExMatch(Item.Name, "i)Offering to ") or RegExMatch(Item.Name, "i)'s Key") or RegExMatch(Item.Name, "i)Breachstone") or RegExMatch(Item.Name, "i)Reliquary Key") or RegExMatch(Item.Name, "i)Simulacrum")) {
 				If (broadTerms) {
-					tmpName := RegExReplace(Item.Name, "i)(Sacrifice At).*|(Fragment of).*|(Mortal).*|.*('s Key)|.*(Breachstone)|(Reliquary Key)", "$1$2$3$4$5$6")
+					tmpName := RegExReplace(Item.Name, "i)(Sacrifice At).*|(Fragment of).*|(Mortal).*|.*('s Key)|.*(Breachstone)|(Reliquary Key)|(Simulacrum)", "$1$2$3$4$5$6$7")
 					terms.push(tmpName)
 				} Else {
 					terms.push(Item.Name)
@@ -11282,7 +11313,7 @@ AntiquaryGetType(Item) {
 			return "Map"	
 		}		
 	}
-	If (RegExMatch(Item.Name, "(Sacrifice|Mortal|Fragment).*|Offering to the Goddess|Divine Vesse|.*(Breachstone|s Key)")) {
+	If (RegExMatch(Item.Name, "(Sacrifice|Mortal|Fragment).*|Offering to the Goddess|Divine Vessel|Simulacrum|.*(Breachstone|s Key)")) {
 		return "Fragment"
 	}
 	If (Item.IsCurrency) {
@@ -12382,6 +12413,13 @@ GetScanCodes() {
 		sc := {"c" : "sc017", "v" : "sc034", "f" : "sc015", "a" : "sc01E", "enter" : "sc01C"}
 		project := Globals.Set("ProjectName")
 		msg := "Using Dvorak keyboard layout mode!`n`nMsgBox closes after 15s."
+		MsgBox, 0, %project%, %msg%, 15
+		Return sc
+	} Else If (RegExMatch(InputLocaleID, "i)^(0xF0C00407).*")) {
+		; german dvorak (neo)
+		sc := {"c" : "sc013", "v" : "sc011", "f" : "sc018", "a" : "sc020", "enter" : "sc01C"}
+		project := Globals.Set("ProjectName")
+		msg := "Using German Dvorak (neo) keyboard layout mode!`n`nMsgBox closes after 15s."
 		MsgBox, 0, %project%, %msg%, 15
 		Return sc
 	} Else {

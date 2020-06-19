@@ -1,5 +1,12 @@
 ﻿The following is a list of what has been updated, starting with 1.1.0
 
+2.16.0
+================================================================================================
+* Added/improved parsing for some Delirium league items.
+* Advanced search item level improvements.
+* Added an additional Dvorak keyboard layout.
+* Updated data files.
+
 2.15.7
 ================================================================================================
 * Added information about metamorph sample types able to drop from a map to a maps ctrl + c ItemInfo tooltip.
