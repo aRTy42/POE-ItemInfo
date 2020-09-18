@@ -1,7 +1,7 @@
 Armageddon Brand Damage Penetrates #% of Branded Enemy's Fire Resistance
 Armageddon Brand has #% increased Activation Frequency
-#% increased Abyssal Cry Damage
-#% increased Abyssal Cry Duration
+#% increased Infernal Cry Damage
+Infernal Cry has #% increased Cooldown Recovery Speed
 Ancestral Protector Totem grants #% increased Attack Speed while Active
 Ancestral Protector Totem deals #% increased Damage
 +#% to Ancestral Protector Totem Elemental Resistances
@@ -12,6 +12,8 @@ Ancestral Warchief Totem grants #% increased Melee Damage while Active
 Ancestral Blademaster Totem grants #% of Physical Damage as Extra Fire Damage while Active
 #% increased Ancestral Blademaster Totem Damage
 #% increased Ancestral Blademaster Totem Area of Effect
+Attacks Exerted by Ancestral Cry deal #% increased Damage
+Ancestral Cry has a minimum of # Power
 Anger has #% reduced Mana Reservation
 Animated Guardians deal #% increased Damage
 +#% to Animated Guardian Elemental Resistances
@@ -20,16 +22,18 @@ Animated Weapons deal #% increased Damage
 #% increased Animate Weapon Duration
 Arcane Cloak Spends an additional #% of current Mana
 Arcane Cloak grants Life Regeneration equal to #% of Mana Spent per Second
+Arcanist Brand has #% increased Cast Speed
+Spells Triggered by Arcanist Brand Unnerve enemies on Hit for # seconds
 #% increased Arc Damage
 Arc deals #% increased Damage for each time it has Chained
 Arc Chains an additional time
 Arc has +#% chance to Shock
 #% increased Arctic Armour Buff Effect
 Arctic Armour has #% reduced Mana Reservation
-Arctic Breath's Chilling Area has #% increased Movement Speed
-#% increased Arctic Breath Damage
-#% increased Arctic Breath Duration
-#% increased Arctic Breath Area of Effect
+Creeping Frost's Chilling Area has #% increased Movement Speed
+#% increased Creeping Frost Damage
+#% increased Creeping Frost Duration
+#% increased Creeping Frost Area of Effect
 Armageddon Brand deals #% increased Damage
 Artillery Ballista Projectiles fall in two perpendicular lines instead
 Artillery Ballista fires an additional Arrow
@@ -181,15 +185,19 @@ Dread Banner has #% increased Aura Effect
 #% increased Dual Strike Critical Strike Chance
 #% increased Dual Strike Damage
 #% increased Earthquake Damage
+Earthquake deals #% increased Damage per # seconds Duration
 #% reduced Earthquake Duration
 #% increased Earthquake Area of Effect
+Earthshatter deals #% increased Damage
+Earthshatter has #% increased Area of Effect
+Earthshatter creates +# fissures
 #% increased Elemental Hit Attack Speed
 Elemental Hit has +#% chance to Freeze, Shock and Ignite
 Elemental Hit deals #% increased Damage
 #% increased Elemental Weakness Curse Effect
 #% increased Elemental Weakness Duration
+Enduring Cry grants # additional Endurance Charge
 #% increased Enduring Cry Cooldown Recovery Speed
-#% increased Enduring Cry Buff Effect
 #% increased Enfeeble Curse Effect
 #% increased Enfeeble Duration
 Ensnaring Arrow has #% increased Area of Effect
@@ -274,6 +282,8 @@ Winter Orb has #% increased Area of Effect per Stage
 #% increased Frost Wall Cooldown Recovery Speed
 #% increased Frost Wall Duration
 Galvanic Arrow has #% increased Projectile Speed
+General's Cry has +# to maximum number of Mirage Warriors
+General's Cry has #% increased Cooldown Recovery Speed
 #% increased Glacial Cascade Damage
 #% of Glacial Cascade Physical Damage Converted to Cold Damage
 #% increased Glacial Cascade Area of Effect
@@ -336,6 +346,9 @@ Incinerate has +# to maximum stages
 Infernal Blow Debuff deals an additional #% of Damage per Charge
 #% of Infernal Blow Physical Damage gained as Extra Fire Damage
 #% increased Infernal Blow Area of Effect
+Combust has #% increased Area of Effect
+Intimidating Cry has #% increased Area of Effect
+Intimidating Cry has #% increased Cooldown Recovery Speed
 #% increased Kinetic Blast Damage
 Kinetic Blast has a #% chance for an additional explosion
 #% increased Kinetic Blast Area of Effect
@@ -378,7 +391,6 @@ Lightning Trap Damage Penetrates #% Lightning Resistance
 #% reduced Lightning Warp Duration
 #% increased Magma Orb Damage
 Magma Orb Chains an additional time
-Magma Orb Chains an additional # times
 #% increased Magma Orb Area of Effect
 Malevolence has #% reduced Mana Reservation
 Pestilent Strike has #% increased Area of Effect
@@ -395,6 +407,9 @@ Molten Strike fires # additional Projectiles
 #% increased Molten Strike Area of Effect
 Orb of Storms has #% increased Cast Speed
 #% increased Orb of Storms Damage
+Penance Brand has #% increased Cast Speed
+Penance Brand deals #% increased Damage
+Penance Brand has #% increased Area of Effect
 Perforate has #% increased Area of Effect
 Perforate deals #% increased Damage
 Perforate creates +# Spike
@@ -436,8 +451,8 @@ Purity of Lightning has #% reduced Mana Reservation
 Rain of Arrows has #% chance to fire an additional sequence of arrows
 Spectres have #% increased Damage
 Raised Zombies deal #% increased Damage
+Rallying Cry Exerts # additional Attack
 #% increased Rallying Cry Buff Effect
-#% increased Rallying Cry Duration
 #% increased Reave Damage
 #% increased Reave Radius
 #% increased Reckoning Cooldown Recovery Speed
@@ -457,6 +472,8 @@ Scourge Arrow deals #% increased Damage
 #% increased Searing Bond Damage
 #% increased Searing Bond Totem Elemental Resistances
 #% increased Searing Bond Totem Placement Speed
+Attacks Exerted by Seismic Cry deal #% increased Damage
+Seismic Cry has a minimum of # Power
 Shattering Steel fires an additional Projectile
 Shattering Steel deals #% increased Damage
 Shattering Steel grants Fortify on Hitting an Enemy at Close Range
@@ -544,16 +561,16 @@ Summoned Skitterbots have #% increased Area of Effect
 Summon Skitterbots has #% reduced Mana Reservation
 Stone Golems deal #% increased Damage
 Chaos Golems deal #% increased Damage
-#% increased Sunder Attack Speed
-#% increased Sunder Damage
-#% increased Sunder Area of Effect
+Sunder has #% increased Attack Speed
+Sunder has #% increased Damage
+Sunder has #% increased Area of Effect
+Sunder has #% reduced delay between Areas in the Wave
 #% increased Sweep Damage
 Sweep has a #% chance to grant an Endurance Charge on Hit
 #% increased Sweep Area of Effect
-#% increased Tectonic Slam Area of Effect
-Tectonic Slam has #% chance to create a Charged Slam
-#% chance to create a Charged Slam
-#% increased Tectonic Slam Damage
+Tectonic Slam has #% increased Area of Effect
+Tectonic Slam has +#% fissure branching chance
+Tectonic Slam deals #% increased Damage
 #% increased Tempest Shield Damage
 Tempest Shield chains an additional # times
 #% increased Temporal Chains Curse Effect
@@ -593,6 +610,9 @@ Wave of Conviction has #% increased Duration
 #% increased Wild Strike Damage
 Wild Strike's Beam Chains an additional # times
 #% increased Wild Strike Area of Effect
+Wintertide Brand has #% increased Chill Effect
+Wintertide Brand deals #% increased Damage
+Wintertide Brand has +# to maximum Stages
 Winter Orb deals #% increased Damage
 Wither has #% increased Duration
 Withering Step has #% increased Elusive Effect

@@ -104,7 +104,7 @@ Skills Chain +# times
 #% additional Physical Damage Reduction while stationary
 Skills fire an additional Projectile
 +#% to all Elemental Resistances
-Enemies have -#% to Total Physical Damage Reduction against your Hits
+Overwhelm #% Physical Damage Reduction
 Cannot be Ignited
 Cannot be Blinded
 Cannot be Poisoned
