@@ -24,9 +24,9 @@ Grants Level # Clarity Skill
 Grants Level # Conductivity Skill
 Grants Level # Assassin's Mark Skill
 Culling Strike
-Curse Enemies with Level # Elemental Weakness on Hit
-Curse Enemies with Level # Temporal Chains on Hit
-Curse Enemies with Level # Vulnerability on Hit
+Curse Enemies with Elemental Weakness on Hit, with #% increased Effect
+Curse Enemies with Temporal Chains on Hit, with #% increased Effect
+Curse Enemies with Vulnerability on Hit, with #% increased Effect
 #% of Physical Damage Converted to Cold Damage
 #% of Physical Damage Converted to Fire Damage
 #% of Physical Damage Converted to Lightning Damage
@@ -62,7 +62,7 @@ Adds # to # Chaos Damage
 +# to Maximum Power Charges
 Minions deal #% increased Damage
 #% increased Movement Speed
-Grants Level # Projectile Weakness Skill
+Grants Level # Sniper's Mark Skill
 Grants Level # Purity of Ice Skill
 Grants Level # Purity of Fire Skill
 Grants Level # Purity of Lightning Skill
@@ -118,8 +118,8 @@ Bleeding cannot be inflicted on you
 #% chance to Dodge Spell Hits
 Damage Penetrates #% Cold Resistance
 Corrupted Blood cannot be inflicted on you
-Curse Enemies with Level # Despair on Hit
-Curse Enemies with Level # Enfeeble on Hit
+Curse Enemies with Despair on Hit, with #% increased Effect
+Curse Enemies with Enfeeble on Hit, with #% increased Effect
 Grants Level # Despair Skill
 #% chance to Dodge Attack Hits while moving
 #% chance to Dodge Spell Hits while moving
@@ -142,7 +142,7 @@ Wrath has #% increased Aura Effect
 Zealotry has #% increased Aura Effect
 #% increased Burning Damage
 #% increased Cast Speed during any Flask Effect
-#% increased Effect of Chill
+#% increased Effect of Cold Ailments
 #% increased Global Critical Strike Chance
 #% increased Critical Strike Chance during any Flask Effect
 #% increased Damage
@@ -157,7 +157,7 @@ Regenerate #% of Life per second
 Projectiles deal #% increased Damage for each time they have Chained
 Projectiles deal #% increased Damage for each Enemy Pierced
 #% increased Effect of Shock
-Spells have +#% to Critical Strike Chance
++#% to Spell Critical Strike Chance
 #% increased Spell Damage
 #% increased Strength (4-6)% increased Intelligence
 #% increased Quantity of Items found

@@ -1,7 +1,7 @@
 Armageddon Brand Damage Penetrates #% of Branded Enemy's Fire Resistance
 Armageddon Brand has #% increased Activation Frequency
 #% increased Infernal Cry Damage
-Infernal Cry has #% increased Cooldown Recovery Speed
+Infernal Cry has #% increased Cooldown Recovery Rate
 Ancestral Protector Totem grants #% increased Attack Speed while Active
 Ancestral Protector Totem deals #% increased Damage
 +#% to Ancestral Protector Totem Elemental Resistances
@@ -51,7 +51,7 @@ Bane deals #% increased Damage
 #% increased Barrage Attack Speed
 #% increased Barrage Damage
 Barrage fires an additional Projectile
-#% increased Bear Trap Cooldown Recovery Speed
+Bear Trap has #% increased Cooldown Recovery Rate
 #% increased Bear Trap Damage
 Enemies affected by Bear Trap take #% increased Damage from Trap or Mine Hits
 Berserk has #% increased Buff Effect
@@ -73,11 +73,14 @@ Blade Vortex has +#% to Critical Strike Multiplier for each blade
 Blast Rain fires an additional Arrow
 Blast Rain deals #% increased Damage
 Blast Rain has #% increased Area of Effect
+Blazing Salvo deals #% increased Damage
+Blazing Salvo fires an additional Projectile
+Blazing Salvo Projectiles land in a #% increased Area
 #% increased Blight Damage
 #% increased Blight Area of Effect
 Blight has #% increased Hinder Duration
 Blink Arrow and Blink Arrow Clones have #% increased Attack Speed
-#% increased Blink Arrow Cooldown Recovery Speed
+Blink Arrow has #% increased Cooldown Recovery Rate
 Blink Arrow and Blink Arrow Clones have #% increased Damage
 Blood and Sand has #% increased Buff Effect
 Blood Rage grants additional #% increased Attack Speed
@@ -122,7 +125,7 @@ Cobra Lash has #% increased Projectile Speed
 Icicle Mine has +#% to Critical Strike Multiplier
 Icicle Mine deals #% increased Damage
 Icicle Mine has #% increased Throwing Speed
-#% increased Cold Snap Cooldown Recovery Speed
+Cold Snap has #% increased Cooldown Recovery Rate
 #% increased Cold Snap Damage
 #% increased Cold Snap Area of Effect
 #% increased Conductivity Curse Effect
@@ -133,13 +136,16 @@ Consecrated Path has #% increased teleport range
 #% increased Contagion Damage
 #% increased Contagion Duration
 #% increased Contagion Area of Effect
-#% increased Conversion Trap Cooldown Recovery Speed
+Conversion Trap #% increased Cooldown Recovery Rate
 Converted Enemies have #% increased Damage
-#% increased Convocation Cooldown Recovery Speed
+Convocation has #% increased Cooldown Recovery Rate
 #% increased Convocation Buff Effect
 #% increased Cremation Cast Speed
 #% increased Cremation Damage
 Cremation can have up to # additional Geyser at a time
+Crackling Lance has #% increased Cast Speed
+Crackling Lance deals #% increased Damage
+Crackling Lance has #% increased branching angle
 #% increased Cyclone Attack Speed
 #% increased Cyclone Damage
 #% increased Dark Pact Cast Speed
@@ -159,9 +165,9 @@ Detonate Dead has a #% chance to detonate an additional corpse
 #% increased Detonate Dead Area of Effect
 #% increased Devouring Totem Leech per second
 Devouring Totem has #% Chance to Consume an additional corpse
+Discharge has +# to Radius
 #% chance for Discharge to deal Damage without removing Charges
 #% increased Discharge Damage
-#% increased Discharge Radius
 Discipline has #% reduced Mana Reservation
 Divine Ire's beam has #% increased width
 Divine Ire deals #% increased Damage
@@ -197,7 +203,7 @@ Elemental Hit deals #% increased Damage
 #% increased Elemental Weakness Curse Effect
 #% increased Elemental Weakness Duration
 Enduring Cry grants # additional Endurance Charge
-#% increased Enduring Cry Cooldown Recovery Speed
+Enduring Cry has #% increased Cooldown Recovery Rate
 #% increased Enfeeble Curse Effect
 #% increased Enfeeble Duration
 Ensnaring Arrow has #% increased Area of Effect
@@ -231,7 +237,7 @@ Pyroclast Mine fires # additional Projectiles
 #% increased Flameblast Critical Strike Chance
 #% increased Flameblast Damage
 #% increased Flameblast Area of Effect
-#% increased Flame Dash Cooldown Recovery Speed
+Flame Dash has #% increased Cooldown Recovery Rate
 #% increased Flame Dash Damage
 +#% to increased Flame Golem Elemental Resistances
 #% increased Effect of the Buff granted by your Flame Golems
@@ -241,7 +247,7 @@ Pyroclast Mine fires # additional Projectiles
 Flamethrower Trap has an additional Flame
 Flamethrower Trap has # additional Flames
 Flamethrower Trap has #% increased Cast Speed
-Flamethrower Trap has #% increased Cooldown Recovery Speed
+Flamethrower Trap has #% increased Cooldown Recovery Rate
 Flamethrower Trap deals #% increased Damage
 Flamethrower Trap has #% increased Skill Effect Duration
 Consecrated Ground from Holy Flame Totem applies #% increased Damage taken to Enemies
@@ -249,12 +255,14 @@ Holy Flame Totem deals #% increased Damage
 Holy Flame Totem fires an additional Projectile
 Holy Flame Totem fires # additional Projectiles
 Holy Flame Totem has #% increased Projectile Speed
+Flame Wall grants # to # Added Fire Damage to Projectiles
+Flame Wall deals #% increased Damage
 #% increased Flammability Curse Effect
 #% increased Flammability Duration
 Flesh and Stone has #% reduced Mana Reservation
 Flesh Offering grants an additional #% increased Attack Speed
 #% increased Flesh Offering Duration
-#% increased Flicker Strike Cooldown Recovery Speed
+Flicker Strike has #% increased Cooldown Recovery Rate
 #% increased Flicker Strike Damage
 #% increased Flicker Strike Damage per Frenzy Charge
 #% increased Icicle Mine Throwing Speed
@@ -268,24 +276,25 @@ Flesh Offering grants an additional #% increased Attack Speed
 #% increased Frostbite Duration
 #% increased Frost Blades Damage
 #% increased Frost Blades Projectile Speed
-Frostblink has #% increased Cooldown Recovery Speed
+Frostblink has #% increased Cooldown Recovery Rate
 Frostblink has #% increased maximum travel distance
 #% increased Frostbolt Cast Speed
 #% increased Frostbolt Damage
 Frostbolt has +#% chance to Freeze
-#% increased Frost Bomb Cooldown Recovery Speed
+Frost Bomb has #% increased Cooldown Recovery Rate
 #% increased Frost Bomb Damage
 Frost Bomb has #% increased Debuff Duration
 #% increased Frost Bomb Area of Effect
 Winter Orb has +# Maximum Stages
 Winter Orb has #% increased Area of Effect per Stage
-#% increased Frost Wall Cooldown Recovery Speed
+Frost Shield has +# Cooldown Use
+Frost Wall has #% increased Cooldown Recovery Rate
 #% increased Frost Wall Duration
 Galvanic Arrow has #% increased Projectile Speed
 General's Cry has +# to maximum number of Mirage Warriors
-General's Cry has #% increased Cooldown Recovery Speed
+General's Cry has #% increased Cooldown Recovery Rate
 #% increased Glacial Cascade Damage
-#% of Glacial Cascade Physical Damage Converted to Cold Damage
+Glacial Cascade gains #% of Physical Damage as Extra Cold Damage
 #% increased Glacial Cascade Area of Effect
 #% increased Glacial Hammer Damage
 Glacial Hammer has +#% chance to Freeze
@@ -309,6 +318,9 @@ Herald of Ice has #% reduced Mana Reservation
 Herald of Purity has #% reduced Mana Reservation
 #% increased Herald of Thunder Damage
 Herald of Thunder has #% reduced Mana Reservation
+Hexblast has #% chance to not remove a Hex
+Hexblast deals #% increased Damage
+Hexblast has #% increased Area of Effect
 Summoned Holy Relics have #% increased Buff Effect
 Summoned Holy Relics deal #% increased Damage
 Summoned Holy Relics have #% increased Area of Effect
@@ -348,7 +360,7 @@ Infernal Blow Debuff deals an additional #% of Damage per Charge
 #% increased Infernal Blow Area of Effect
 Combust has #% increased Area of Effect
 Intimidating Cry has #% increased Area of Effect
-Intimidating Cry has #% increased Cooldown Recovery Speed
+Intimidating Cry has #% increased Cooldown Recovery Rate
 #% increased Kinetic Blast Damage
 Kinetic Blast has a #% chance for an additional explosion
 #% increased Kinetic Blast Area of Effect
@@ -356,9 +368,9 @@ Kinetic Bolt has #% increased Attack Speed
 Kinetic Bolt changes direction # additional time
 Kinetic Bolt changes direction # additional times
 Kinetic Bolt has #% increased Projectile Speed
+Lancing Steel has #% chance count as consumeing Steel Shards without Consuming them
 Lancing Steel deals #% increased Damage
-Lancing Steel's additional Projectiles have +#% chance to Impale Enemies
-Lancing Steel's primary Projectile Pierces # additional Targets
+Lancing Steel fires an additional Projectile
 #% increased Leap Slam Attack Speed
 #% increased Leap Slam Damage
 #% increased Leap Slam Area of Effect
@@ -379,13 +391,13 @@ Lightning Strike fires # additional Projectiles
 #% increased Lightning Tendrils Area of Effect
 Lightning Spire Trap strikes an additional area
 Lightning Spire Trap has #% increased Cast Speed
-Lightning Spire Trap has #% increased Cooldown Recovery Speed
+Lightning Spire Trap has #% increased Cooldown Recovery Rate
 Lightning Spire Trap deals #% increased Damage
 Lightning Spire Trap has #% increased Skill Effect Duration
 Lightning Trap pierces # additional Targets
 #% increased Lightning Trap Damage
 Lightning Trap Damage Penetrates #% Lightning Resistance
-#% increased Lightning Trap Shock Effect
+#% increased Lightning Trap Lightning Ailment Effect
 #% increased Lightning Warp Cast Speed
 #% increased Lightning Warp Damage
 #% reduced Lightning Warp Duration
@@ -397,7 +409,7 @@ Pestilent Strike has #% increased Area of Effect
 Pestilent Strike deals #% increased Damage
 Pestilent Strike has #% increased Duration
 Mirror Arrow and Mirror Arrow Clones have #% increased Attack Speed
-#% increased Mirror Arrow Cooldown Recovery Speed
+Mirror Arrow has #% increased Cooldown Recovery Rate
 Mirror Arrow and Mirror Arrow Clones deal #% increased Damage
 #% increased Molten Shell Buff Effect
 Molten Shell has #% increased Skill Effect Duration
@@ -417,7 +429,7 @@ Perforate creates +# Spikes
 #% increased Phase Run Duration
 #% chance for Phase Run to increase Duration without removing Frenzy Charges
 Seismic Trap releases an additional Wave
-Seismic Trap has #% increased Cooldown Recovery Speed
+Seismic Trap has #% increased Cooldown Recovery Rate
 Seismic Trap deals #% increased Damage
 Seismic Trap has #% increased Skill Effect Duration
 Plague Bearer Buff grants +#% to Poison Damage over Time Multiplier while Infecting
@@ -431,8 +443,8 @@ Power Siphon fires # additional Projectiles
 #% Chance to gain an additional Power Charge on Kill with Power Siphon
 Precision has #% reduced Mana Reservation
 Pride has #% reduced Mana Reservation
-#% increased Projectile Weakness Curse Effect
-#% increased Projectile Weakness Duration
+Sniper's Mark has #% increased Curse Effect
+Sniper's Mark has #% increased Duration
 #% increased Puncture Damage
 #% increased Puncture Duration
 #% Chance for Puncture to Maim on hit
@@ -455,14 +467,14 @@ Rallying Cry Exerts # additional Attack
 #% increased Rallying Cry Buff Effect
 #% increased Reave Damage
 #% increased Reave Radius
-#% increased Reckoning Cooldown Recovery Speed
+Reckoning has #% increased Cooldown Recovery Rate
 #% increased Reckoning Damage
 #% increased Rejuvenation Totem Aura Effect
 Gain #% of Rejuvenation Totem Life Regeneration as extra Mana Regeneration
 #% increased Righteous Fire Damage
 #% increased Righteous Fire Area of Effect
 Righteous Fire grants #% increased Spell Damage
-#% increased Riposte Cooldown Recovery Speed
+Riposte has #% increased Cooldown Recovery Rate
 #% increased Riposte Damage
 Rune Blast teleports you to the detonated Rune if you have not detonated Runes in the past # second
 Rune Blast teleports you to the detonated Rune if you have not detonated Runes in the past # seconds
@@ -474,7 +486,7 @@ Scourge Arrow deals #% increased Damage
 #% increased Searing Bond Totem Placement Speed
 Attacks Exerted by Seismic Cry deal #% increased Damage
 Seismic Cry has a minimum of # Power
-Shattering Steel fires an additional Projectile
+Shattering Steel has #% chance to not consume Steel Shards
 Shattering Steel deals #% increased Damage
 Shattering Steel grants Fortify on Hitting an Enemy at Close Range
 #% increased Shield Charge Attack Speed
@@ -499,6 +511,8 @@ Explosive Trap causes # additional smaller explosions
 Siege Ballista has #% increased Attack Speed
 Siege Ballista deals #% increased Damage
 Siege Ballista has #% increased Totem Placement Speed
+Sigil of Power's Buff also grants #% increased Critical Strike Chance per Stage
+Sigil of Power requires #% reduced Mana Spent to gain a Stage
 #% increased Dark Pact Damage
 Smite has a #% chance for lightning to strike another target
 Smite has #% increased Aura Effect
@@ -522,13 +536,16 @@ Spectral Shield Throw fires # additional Shard Projectiles
 #% increased Spectral Throw Projectile Speed
 Spectres have #% increased Attack and Cast Speed
 +#% to Raised Spectre Elemental Resistances
-Skills Supported by Spellslinger have #% increased Cooldown Recovery Speed
+Skills Supported by Spellslinger have #% increased Cooldown Recovery Rate
 Skills Supported by Spellslinger have #% reduced Mana Reservation
 #% increased Spirit Offering Duration
 Spirit Offering grants +#% of Physical Damage as Extra Chaos Damage
 #% increased Split Arrow Critical Strike Chance
 #% increased Split Arrow Damage
 Split Arrow fires # additional Projectiles
+Splitting Steel has #% increased Area of Effect
+Splitting Steel has #% chance to not consume Steel Shards
+Splitting Steel deals #% increased Damage
 #% increased Static Strike Damage
 #% increased Static Strike Duration
 Static Strike has +# maximum Beam Targets
@@ -581,7 +598,7 @@ Tornado Shot fires an additional secondary Projectile
 Toxic Rain deals #% increased Damage
 Toxic Rain fires # additional Arrow
 Toxic Rain gains #% of Physical Damage as Extra Chaos Damage
-#% increased Vengeance Cooldown Recovery Speed
+Vengeance has #% increased Cooldown Recovery Rate
 #% increased Vengeance Damage
 #% increased Vigilant Strike Damage
 #% increased Vigilant Strike Fortify Duration
@@ -589,11 +606,14 @@ Toxic Rain gains #% of Physical Damage as Extra Chaos Damage
 #% increased Viper Strike Damage
 #% increased Viper Strike Duration
 Vitality has #% reduced Mana Reservation
+Void Sphere has #% increased Cooldown Recovery Rate
+Enemies in Void Sphere's range take up to #% increased Damage, based on distance from the Void Sphere
+Void Sphere has #% increased Pulse Frequency
 #% increased Volatile Dead Cast Speed
 #% increased Volatile Dead Damage
 Volatile Dead Consumes up to # additional corpse
 Vortex has #% increased Area of Effect when Cast on Frostbolt
-Vortex has #% increased Cooldown Recovery Speed
+Vortex has #% increased Cooldown Recovery Rate
 #% increased Vortex Damage
 #% increased Vortex Duration
 #% increased Vortex Area of Effect
